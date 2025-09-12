@@ -54,6 +54,10 @@ const User = sequelize.define('User', {
   resetCodeExpires: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  lastSyncAt: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   tableName: 'users',

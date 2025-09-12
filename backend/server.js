@@ -300,6 +300,7 @@ app.use('/api/exams', require('./src/routes/exams'));
 app.use('/api/payments', require('./src/routes/payments'));
 app.use('/api/questions', require('./src/routes/questions'));
 app.use('/api/bulk-upload', require('./src/routes/bulkUpload'));
+app.use('/api/offline', require('./src/routes/offline'));
 
 // Root endpoint
 app.get('/', (req, res) => {
