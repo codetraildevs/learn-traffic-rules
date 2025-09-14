@@ -301,6 +301,9 @@ app.use('/api/payments', require('./src/routes/payments'));
 app.use('/api/questions', require('./src/routes/questions'));
 app.use('/api/bulk-upload', require('./src/routes/bulkUpload'));
 app.use('/api/offline', require('./src/routes/offline'));
+app.use('/api/analytics', require('./src/routes/analytics'));
+app.use('/api/notifications', require('./src/routes/notifications'));
+app.use('/api/achievements', require('./src/routes/achievements'));
 
 // Root endpoint
 app.get('/', (req, res) => {
