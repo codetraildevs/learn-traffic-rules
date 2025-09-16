@@ -1,24 +1,52 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-// Database configuration
-const sequelize = new Sequelize(
-  process.env.DB_NAME || 'traffic_rules_db',
-  process.env.DB_USER || 'root',
-  process.env.DB_PASSWORD || '',
-  {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 3306,
-    dialect: 'mysql',
-    logging: false, // Disable SQL query logging
-    pool: {
-      max: 5,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
-    }
+// Determine database dialect based on environment
+const getDatabaseConfig = () => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const databaseUrl = process.env.DATABASE_URL; // Render provides this for PostgreSQL
+  
+  if (databaseUrl && isProduction) {
+    // Production PostgreSQL configuration (Render)
+    return {
+      url: databaseUrl,
+      dialect: 'postgres',
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false
+        }
+      },
+      logging: false,
+      pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000
+      }
+    };
+  } else {
+    // Development MySQL configuration
+    return {
+      database: process.env.DB_NAME || 'traffic_rules_db',
+      username: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      dialect: 'mysql',
+      logging: false,
+      pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000
+      }
+    };
   }
-);
+};
+
+// Database configuration
+const sequelize = new Sequelize(getDatabaseConfig());
 
 // Test database connection
 const testConnection = async () => {
