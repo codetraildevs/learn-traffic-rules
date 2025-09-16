@@ -50,14 +50,12 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `http://localhost:${PORT}`,
-        description: 'Development server'
-      },
-      {
         url: process.env.NODE_ENV === 'production' 
           ? `https://${process.env.RENDER_EXTERNAL_URL || 'learn-traffic-rules.onrender.com'}`
-          : 'https://learn-traffic-rules.onrender.com',
-        description: 'Production server (Render)'
+          : `http://localhost:${PORT}`,
+        description: process.env.NODE_ENV === 'production' 
+          ? 'Production server (Render)'
+          : 'Development server'
       }
     ],
     components: {
