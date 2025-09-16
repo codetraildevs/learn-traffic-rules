@@ -10,6 +10,10 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+# excluded files
+info.txt
+tech-stack-documentation.md
+backend/test-server.js
 
 # Logs
 logs
