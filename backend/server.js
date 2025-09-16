@@ -54,8 +54,10 @@ const swaggerOptions = {
         description: 'Development server'
       },
       {
-        url: 'https://api.trafficrules.com',
-        description: 'Production server'
+        url: process.env.NODE_ENV === 'production' 
+          ? `https://${process.env.RENDER_EXTERNAL_URL || 'learn-traffic-rules.onrender.com'}`
+          : 'https://learn-traffic-rules.onrender.com',
+        description: 'Production server (Render)'
       }
     ],
     components: {
