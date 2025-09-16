@@ -51,7 +51,7 @@ const swaggerOptions = {
     servers: [
       {
         url: process.env.NODE_ENV === 'production' 
-          ? `https://${process.env.RENDER_EXTERNAL_URL || 'learn-traffic-rules.onrender.com'}`
+          ? `https://learn-traffic-rules.onrender.com`
           : `http://localhost:${PORT}`,
         description: process.env.NODE_ENV === 'production' 
           ? 'Production server (Render)'
