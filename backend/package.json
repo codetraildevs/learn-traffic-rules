@@ -9,8 +9,7 @@
     "test": "jest",
     "seed": "node seed.js",
     "seed:clear": "node seed.js clear",
-    "seed:fresh": "node seed.js fresh",
-    "postinstall": "npm run seed"
+    "seed:fresh": "node seed.js fresh"
   },
   "keywords": [
     "traffic-rules",
