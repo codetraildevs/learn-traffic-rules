@@ -61,15 +61,25 @@ const getDatabaseConfig = () => {
 // Database configuration
 const sequelize = new Sequelize(getDatabaseConfig());
 
-// Test database connection
-const testConnection = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('✅ Database connected successfully');
-  } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
-    console.error('🔍 Full error details:', error);
+// Test database connection with retry logic
+const testConnection = async (retries = 3, delay = 5000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      console.log(`🔄 Attempting database connection (${i + 1}/${retries})...`);
+      await sequelize.authenticate();
+      console.log('✅ Database connected successfully');
+      return true;
+    } catch (error) {
+      console.error(`❌ Database connection attempt ${i + 1} failed:`, error.message);
+      if (i === retries - 1) {
+        console.error('🔍 Final error details:', error);
+        return false;
+      }
+      console.log(`⏳ Waiting ${delay/1000} seconds before retry...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
   }
+  return false;
 };
 
 // Initialize database tables

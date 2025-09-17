@@ -305,13 +305,29 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 }));
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Server is running',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
+app.get('/health', async (req, res) => {
+  try {
+    // Test database connection
+    const { sequelize } = require('./src/config/database');
+    await sequelize.authenticate();
+    
+    res.json({
+      success: true,
+      message: 'Server is running',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      database: 'connected'
+    });
+  } catch (error) {
+    res.json({
+      success: true,
+      message: 'Server is running',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      database: 'disconnected',
+      databaseError: error.message
+    });
+  }
 });
 
 // API routes (will be added)
@@ -371,11 +387,16 @@ app.use((err, req, res, next) => {
 // Initialize database and start server
 const startServer = async () => {
   try {
-    // Test database connection
-    await testConnection();
+    // Test database connection with retry
+    const dbConnected = await testConnection(5, 10000); // 5 retries, 10 second delay
     
-    // Initialize database tables
-    await initializeTables();
+    if (!dbConnected) {
+      console.log('⚠️  Database connection failed, but starting server anyway...');
+      console.log('📝 Some features may not work until database is available');
+    } else {
+      // Initialize database tables only if connection successful
+      await initializeTables();
+    }
     
     // Start server
     app.listen(PORT, () => {
