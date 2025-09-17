@@ -36,7 +36,7 @@ services:
         value: API documentation for Traffic Rules Practice App
       - key: DATABASE_URL
         fromDatabase:
-          name: traffic-rules-postgres00000
+          name: traffic-rules-postgres
           property: connectionString
 
 databases:

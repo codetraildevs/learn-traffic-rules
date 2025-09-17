@@ -10,6 +10,16 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Debug logging for production
+if (process.env.NODE_ENV === 'production') {
+  console.log('🔍 Production Environment Check:', {
+    PORT: process.env.PORT,
+    NODE_ENV: process.env.NODE_ENV,
+    DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Not set',
+    RENDER_EXTERNAL_URL: process.env.RENDER_EXTERNAL_URL
+  });
+}
+
 // Security middleware
 app.use(helmet());
 app.use(cors({
@@ -361,7 +371,7 @@ const startServer = async () => {
     // Start server
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+      console.log(`📚 API Documentation:${process.env.NODE_ENV==='production' ?'https://learn-traffic-rules.onrender.com':'http://localhost:'}${PORT}/api-docs`);
       console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
       console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
