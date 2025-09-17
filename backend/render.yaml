@@ -40,8 +40,12 @@ services:
         fromDatabase:
           name: traffic-rules-postgres
           property: connectionString
+    databases:
+      - name: traffic-rules-postgres
+
 databases:
   - name: traffic-rules-postgres
     plan: free
     databaseName: traffic_rules_db
     user: traffic_rules_db_user
+    region: oregon
