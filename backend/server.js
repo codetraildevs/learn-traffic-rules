@@ -18,6 +18,15 @@ if (process.env.NODE_ENV === 'production') {
     DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Not set',
     RENDER_EXTERNAL_URL: process.env.RENDER_EXTERNAL_URL
   });
+  
+  // Show first part of DATABASE_URL for debugging (without password)
+  if (process.env.DATABASE_URL) {
+    const url = process.env.DATABASE_URL;
+    const urlParts = url.split('@');
+    if (urlParts.length > 1) {
+      console.log('🔍 DATABASE_URL preview:', urlParts[0] + '@' + urlParts[1].split('/')[0] + '/...');
+    }
+  }
 }
 
 // Security middleware
@@ -371,7 +380,7 @@ const startServer = async () => {
     // Start server
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📚 API Documentation:${process.env.NODE_ENV==='production' ?'https://learn-traffic-rules.onrender.com':'http://localhost:'}${PORT}/api-docs`);
+      console.log(`📚 API Documentation: ${process.env.NODE_ENV==='production' ? 'https://learn-traffic-rules.onrender.com' : `http://localhost:${PORT}`}/api-docs`);
       console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
       console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
