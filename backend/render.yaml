@@ -34,9 +34,13 @@ services:
         value: 1.0.0
       - key: SWAGGER_DESCRIPTION
         value: API documentation for Traffic Rules Practice App
+      - key: DATABASE_URL
+        fromDatabase:
+          name: traffic-rules-postgres00000
+          property: connectionString
 
 databases:
   - name: traffic-rules-postgres
     plan: free
     databaseName: traffic_rules_db
-    user: traffic_rules_user
+    user: traffic_rules_db_user

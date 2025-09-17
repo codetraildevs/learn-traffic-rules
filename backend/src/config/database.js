@@ -6,6 +6,19 @@ const getDatabaseConfig = () => {
   const isProduction = process.env.NODE_ENV === 'production';
   const databaseUrl = process.env.DATABASE_URL; // Render provides this for PostgreSQL
   
+  // Debug logging only in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔍 Environment check:', {
+      NODE_ENV: process.env.NODE_ENV,
+      DATABASE_URL: databaseUrl ? 'Set' : 'Not set',
+      isProduction,
+      DB_NAME: process.env.DB_NAME,
+      DB_HOST: process.env.DB_HOST
+    });
+  }
+  
+  // Use PostgreSQL if DATABASE_URL is set AND we're in production
+  // OR if we explicitly want PostgreSQL in development
   if (databaseUrl && isProduction) {
     // Production PostgreSQL configuration (Render)
     return {
@@ -17,7 +30,7 @@ const getDatabaseConfig = () => {
           rejectUnauthorized: false
         }
       },
-      logging: false,
+      logging: false, // Disable logging in production
       pool: {
         max: 5,
         min: 0,
@@ -55,6 +68,7 @@ const testConnection = async () => {
     console.log('✅ Database connected successfully');
   } catch (error) {
     console.error('❌ Database connection failed:', error.message);
+    console.error('🔍 Full error details:', error);
   }
 };
 
@@ -83,6 +97,7 @@ const initializeTables = async () => {
     }
   } catch (error) {
     console.error('❌ Database synchronization failed:', error.message);
+    console.error('🔍 Full sync error details:', error);
   }
 };
 
