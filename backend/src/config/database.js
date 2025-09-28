@@ -352,6 +352,123 @@ const createPostgreSQLTables = async (sequelize) => {
       console.log('✅ Data already exists, skipping import');
     }
     
+    // Create admin user if it doesn't exist
+    console.log('👤 Ensuring admin user exists...');
+    try {
+      const adminExists = await sequelize.query(
+        'SELECT id FROM users WHERE "phoneNumber" = $1',
+        { 
+          replacements: ['admin123'],
+          type: Sequelize.QueryTypes.SELECT 
+        }
+      );
+      
+      if (adminExists.length === 0) {
+        await sequelize.query(`
+          INSERT INTO users (id, "fullName", "phoneNumber", "deviceId", role, "isActive", "createdAt", "updatedAt")
+          VALUES (
+            gen_random_uuid(),
+            'Admin User',
+            'admin123',
+            'admin-device-bypass',
+            'ADMIN',
+            true,
+            NOW(),
+            NOW()
+          )
+        `);
+        console.log('✅ Admin user created');
+      } else {
+        console.log('✅ Admin user already exists');
+      }
+    } catch (adminError) {
+      console.log('⚠️  Admin user creation failed:', adminError.message);
+    }
+    
+    // Create sample exams and questions if they don't exist
+    console.log('📚 Ensuring sample data exists...');
+    try {
+      const examCount = await sequelize.query(
+        'SELECT COUNT(*) as count FROM exams',
+        { type: Sequelize.QueryTypes.SELECT }
+      );
+      
+      if (examCount[0].count === 0) {
+        // Create sample exam
+        await sequelize.query(`
+          INSERT INTO exams (id, title, description, category, difficulty, duration, "passingScore", "isActive", "createdAt", "updatedAt")
+          VALUES (
+            '1',
+            'Free Exam',
+            'Traffic rules examination 1',
+            'Traffic Rules',
+            'MEDIUM',
+            20,
+            60,
+            true,
+            NOW(),
+            NOW()
+          )
+          ON CONFLICT (id) DO NOTHING
+        `);
+        
+        // Create sample questions
+        const questions = [
+          {
+            id: '1_q1',
+            examId: '1',
+            question: 'What should you do when approaching a red traffic light?',
+            option1: 'a) Stop completely',
+            option2: 'b) Slow down and proceed if clear',
+            option3: 'c) Speed up to beat the light',
+            option4: 'd) Honk and proceed',
+            correctAnswer: 'a) Stop completely',
+            points: 1,
+            questionOrder: 1
+          },
+          {
+            id: '1_q2',
+            examId: '1',
+            question: 'What is the speed limit in a school zone?',
+            option1: 'a) 30 mph',
+            option2: 'b) 25 mph',
+            option3: 'c) 35 mph',
+            option4: 'd) 40 mph',
+            correctAnswer: 'b) 25 mph',
+            points: 1,
+            questionOrder: 2
+          }
+        ];
+        
+        for (const question of questions) {
+          await sequelize.query(`
+            INSERT INTO questions (id, "examId", question, option1, option2, option3, option4, "correctAnswer", points, "createdAt", "updatedAt", "questionOrder")
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW(), $10)
+            ON CONFLICT (id) DO NOTHING
+          `, {
+            replacements: [
+              question.id,
+              question.examId,
+              question.question,
+              question.option1,
+              question.option2,
+              question.option3,
+              question.option4,
+              question.correctAnswer,
+              question.points,
+              question.questionOrder
+            ]
+          });
+        }
+        
+        console.log('✅ Sample exam and questions created');
+      } else {
+        console.log('✅ Sample data already exists');
+      }
+    } catch (dataError) {
+      console.log('⚠️  Sample data creation failed:', dataError.message);
+    }
+    
     console.log('🎉 PostgreSQL tables created successfully!');
     
   } catch (error) {
