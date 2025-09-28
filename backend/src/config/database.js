@@ -358,7 +358,7 @@ const createPostgreSQLTables = async (sequelize) => {
       const adminExists = await sequelize.query(
         'SELECT id FROM users WHERE "phoneNumber" = $1',
         { 
-          replacements: ['admin123'],
+          replacements: ['0780494000'],
           type: Sequelize.QueryTypes.SELECT 
         }
       );
@@ -369,7 +369,7 @@ const createPostgreSQLTables = async (sequelize) => {
           VALUES (
             gen_random_uuid(),
             'Admin User',
-            'admin123',
+            '0780494000',
             'admin-device-bypass',
             'ADMIN',
             true,
