@@ -179,6 +179,7 @@ const testConnection = async () => {
         console.error('   3. Ensure database server is running and accessible');
         console.error('   4. Check if database is in the same region as your service');
         console.error('   5. Verify the database URL format is correct');
+        console.error('   6. Try using individual DB_* environment variables instead of DATABASE_URL');
         
         // Show the actual DATABASE_URL format for debugging
         const databaseUrl = process.env.DATABASE_URL;
@@ -186,6 +187,14 @@ const testConnection = async () => {
           console.error('🔍 Current DATABASE_URL format:', databaseUrl.replace(/:[^:@]+@/, ':***@'));
           console.error('🔍 Expected format: postgresql://username:password@hostname:port/database_name');
         }
+        
+        // Show individual environment variables
+        console.error('🔍 Individual DB variables:');
+        console.error('   DB_NAME:', process.env.DB_NAME || 'NOT SET');
+        console.error('   DB_USER:', process.env.DB_USER || 'NOT SET');
+        console.error('   DB_HOST:', process.env.DB_HOST || 'NOT SET');
+        console.error('   DB_PORT:', process.env.DB_PORT || 'NOT SET');
+        console.error('   DB_PASSWORD:', process.env.DB_PASSWORD ? 'SET' : 'NOT SET');
       }
       
       if (retryCount < maxRetries) {
@@ -196,6 +205,7 @@ const testConnection = async () => {
   }
   
   console.error('❌ All database connection attempts failed');
+  console.error('💡 Try using individual DB_* environment variables instead of DATABASE_URL');
   return false;
 };
 
