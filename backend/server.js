@@ -386,13 +386,18 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
   try {
     // Test database connection
-    await testConnection();
+    const dbConnected = await testConnection();
     
-    // Initialize database tables
-    await initializeTables();
-    
-    // Create default admin user
-    await createDefaultAdmin();
+    if (!dbConnected) {
+      console.error('❌ Database connection failed. Server will start but database features will be unavailable.');
+      console.error('💡 Please check your database configuration and try again.');
+    } else {
+      // Initialize database tables
+      await initializeTables();
+      
+      // Create default admin user
+      await createDefaultAdmin();
+    }
     
     // Initialize notification service with Socket.IO
     notificationService.setSocketIO(io);
@@ -421,9 +426,14 @@ const startServer = async () => {
       console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🔑 Admin credentials: admin123 / admin123`);
       console.log(`🔌 Socket.IO enabled for real-time notifications`);
+      
+      if (!dbConnected) {
+        console.log(`⚠️  WARNING: Database is not connected. Some features may not work.`);
+      }
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);
+    console.error('🔍 Error details:', error);
     process.exit(1);
   }
 };
