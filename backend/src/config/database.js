@@ -240,20 +240,69 @@ const initializeTables = async () => {
     console.log('✅ Model associations set up');
 
     // Sync all models - create tables if they don't exist
-    if (process.env.FORCE_SYNC === 'true') {
-      console.log('🔄 Force syncing database to apply new structure...');
-      await sequelize.sync({ force: true });
-      console.log('✅ Database tables recreated with new structure');
-    } else {
-      // For production, use alter: true to create missing tables
-      console.log('🔄 Syncing database tables (alter: true)...');
-      await sequelize.sync({ force: false, alter: true });
-      console.log('✅ Database tables synchronized successfully');
-    }
+    try {
+      if (process.env.FORCE_SYNC === 'true') {
+        console.log('🔄 Force syncing database to apply new structure...');
+        await sequelize.sync({ force: true });
+        console.log('✅ Database tables recreated with new structure');
+      } else {
+        // For production, use alter: true to create missing tables
+        console.log('🔄 Syncing database tables (alter: true)...');
+        await sequelize.sync({ force: false, alter: true });
+        console.log('✅ Database tables synchronized successfully');
+      }
 
-    // Verify tables were created
-    const tables = await sequelize.getQueryInterface().showAllTables();
-    console.log('📋 Created tables:', tables);
+      // Verify tables were created
+      const tables = await sequelize.getQueryInterface().showAllTables();
+      console.log('📋 Created tables:', tables);
+      
+      if (tables.length === 0) {
+        throw new Error('No tables were created during sync');
+      }
+      
+    } catch (syncError) {
+      console.error('❌ Database sync failed:', syncError.message);
+      console.error('🔍 Sync error details:', {
+        name: syncError.name,
+        code: syncError.code,
+        parent: syncError.parent?.code,
+        original: syncError.original?.code,
+        sql: syncError.sql
+      });
+      
+      // Try alternative sync methods
+      console.log('🔄 Trying alternative sync methods...');
+      
+      try {
+        // Try with just alter: false
+        console.log('🔄 Attempting sync with alter: false...');
+        await sequelize.sync({ force: false, alter: false });
+        console.log('✅ Database tables created with alter: false');
+      } catch (altError) {
+        console.error('❌ Alternative sync also failed:', altError.message);
+        
+        // Try creating tables manually
+        console.log('🔄 Attempting manual table creation...');
+        try {
+          await sequelize.authenticate();
+          console.log('✅ Database connection verified');
+          
+          // Create tables one by one
+          const models = [User, Exam, PaymentRequest, AccessCode, Question, ExamResult, Notification, StudyReminder, NotificationPreferences];
+          for (const model of models) {
+            try {
+              await model.sync({ force: false });
+              console.log(`✅ Created table: ${model.name}`);
+            } catch (modelError) {
+              console.error(`❌ Failed to create table ${model.name}:`, modelError.message);
+            }
+          }
+        } catch (manualError) {
+          console.error('❌ Manual table creation failed:', manualError.message);
+          throw manualError;
+        }
+      }
+    }
     
   } catch (error) {
     console.error('❌ Database synchronization failed:', error.message);
