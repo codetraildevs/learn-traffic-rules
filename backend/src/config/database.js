@@ -195,6 +195,13 @@ const testConnection = async () => {
         console.error('   DB_HOST:', process.env.DB_HOST || 'NOT SET');
         console.error('   DB_PORT:', process.env.DB_PORT || 'NOT SET');
         console.error('   DB_PASSWORD:', process.env.DB_PASSWORD ? 'SET' : 'NOT SET');
+        
+        // If hostname not found, suggest using external hostname
+        if (error.name === 'SequelizeHostNotFoundError') {
+          console.error('💡 Hostname resolution failed. Try using external hostname:');
+          console.error('   For Render PostgreSQL, use: dpg-xxxxx.ohio-postgres.render.com');
+          console.error('   Instead of: dpg-xxxxx');
+        }
       }
       
       if (retryCount < maxRetries) {
