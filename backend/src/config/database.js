@@ -6,19 +6,6 @@ const getDatabaseConfig = () => {
   const isProduction = process.env.NODE_ENV === 'production';
   const databaseUrl = process.env.DATABASE_URL; // Render provides this for PostgreSQL
   
-  // Debug logging only in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 Environment check:', {
-      NODE_ENV: process.env.NODE_ENV,
-      DATABASE_URL: databaseUrl ? 'Set' : 'Not set',
-      isProduction,
-      DB_NAME: process.env.DB_NAME,
-      DB_HOST: process.env.DB_HOST
-    });
-  }
-  
-  // Use PostgreSQL if DATABASE_URL is set AND we're in production
-  // OR if we explicitly want PostgreSQL in development
   if (databaseUrl && isProduction) {
     // Production PostgreSQL configuration (Render)
     return {
@@ -30,7 +17,7 @@ const getDatabaseConfig = () => {
           rejectUnauthorized: false
         }
       },
-      logging: false, // Disable logging in production
+      logging: false,
       pool: {
         max: 5,
         min: 0,
@@ -61,25 +48,14 @@ const getDatabaseConfig = () => {
 // Database configuration
 const sequelize = new Sequelize(getDatabaseConfig());
 
-// Test database connection with retry logic
-const testConnection = async (retries = 3, delay = 5000) => {
-  for (let i = 0; i < retries; i++) {
-    try {
-      console.log(`🔄 Attempting database connection (${i + 1}/${retries})...`);
-      await sequelize.authenticate();
-      console.log('✅ Database connected successfully');
-      return true;
-    } catch (error) {
-      console.error(`❌ Database connection attempt ${i + 1} failed:`, error.message);
-      if (i === retries - 1) {
-        console.error('🔍 Final error details:', error);
-        return false;
-      }
-      console.log(`⏳ Waiting ${delay/1000} seconds before retry...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
+// Test database connection
+const testConnection = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('✅ Database connected successfully');
+  } catch (error) {
+    console.error('❌ Database connection failed:', error.message);
   }
-  return false;
 };
 
 // Initialize database tables
@@ -92,22 +68,25 @@ const initializeTables = async () => {
     const AccessCode = require('../models/AccessCode');
     const Question = require('../models/Question');
     const ExamResult = require('../models/ExamResult');
+    const Notification = require('../models/Notification');
+    const StudyReminder = require('../models/StudyReminder');
+    const NotificationPreferences = require('../models/NotificationPreferences');
 
     // Setup associations
     const setupAssociations = require('./associations');
     setupAssociations();
 
-    // Sync all models - use alter: true for development, force: false for production
-    if (process.env.NODE_ENV === 'development') {
-      await sequelize.sync({ alter: true });
-      console.log('✅ Database tables synchronized successfully');
+    // Sync all models - only force sync when explicitly requested
+    if (process.env.FORCE_SYNC === 'true') {
+      console.log('🔄 Force syncing database to apply new structure...');
+      await sequelize.sync({ force: true });
+      console.log('✅ Database tables recreated with new structure');
     } else {
-      await sequelize.sync({ force: false });
+      await sequelize.sync({ force: false, alter: false });
       console.log('✅ Database tables synchronized successfully');
     }
   } catch (error) {
     console.error('❌ Database synchronization failed:', error.message);
-    console.error('🔍 Full sync error details:', error);
   }
 };
 

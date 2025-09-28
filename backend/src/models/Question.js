@@ -9,11 +9,7 @@ const Question = sequelize.define('Question', {
   },
   examId: {
     type: DataTypes.UUID,
-    allowNull: false,
-    references: {
-      model: 'exams',
-      key: 'id'
-    }
+    allowNull: false
   },
   question: {
     type: DataTypes.TEXT,
@@ -22,37 +18,32 @@ const Question = sequelize.define('Question', {
       len: [10, 1000]
     }
   },
-  options: {
-    type: DataTypes.JSON,
-    allowNull: false,
-    validate: {
-      isValidOptions(value) {
-        if (!Array.isArray(value) || value.length < 2) {
-          throw new Error('Options must be an array with at least 2 items');
-        }
-      }
-    }
+  option1: {
+    type: DataTypes.TEXT,
+    allowNull: false
+  },
+  option2: {
+    type: DataTypes.TEXT,
+    allowNull: false
+  },
+  option3: {
+    type: DataTypes.TEXT,
+    allowNull: false
+  },
+  option4: {
+    type: DataTypes.TEXT,
+    allowNull: false
   },
   correctAnswer: {
-    type: DataTypes.STRING(10),
+    type: DataTypes.TEXT,
     allowNull: false,
     validate: {
       isValidAnswer(value) {
-        const validAnswers = ['A', 'B', 'C', 'D', 'E'];
-        if (!validAnswers.includes(value.toUpperCase())) {
-          throw new Error('Correct answer must be A, B, C, D, or E');
+        if (!value || value.trim().length === 0) {
+          throw new Error('Correct answer cannot be empty');
         }
       }
     }
-  },
-  explanation: {
-    type: DataTypes.TEXT,
-    allowNull: true
-  },
-  difficulty: {
-    type: DataTypes.ENUM('EASY', 'MEDIUM', 'HARD'),
-    defaultValue: 'MEDIUM',
-    allowNull: false
   },
   points: {
     type: DataTypes.INTEGER,
@@ -63,19 +54,15 @@ const Question = sequelize.define('Question', {
       max: 10
     }
   },
-  imageUrl: {
-    type: DataTypes.STRING(500),
-    allowNull: true,
-    validate: {
-      len: [0, 500]
-    }
+  questionOrder: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+    comment: 'Order of question within the exam (1, 2, 3, etc.)'
   },
   questionImgUrl: {
     type: DataTypes.STRING(500),
-    allowNull: true,
-    validate: {
-      len: [0, 500]
-    }
+    allowNull: true
   }
 }, {
   tableName: 'questions',
@@ -90,12 +77,12 @@ Question.prototype.toJSON = function() {
     id: this.id,
     examId: this.examId,
     question: this.question,
-    options: this.options,
+    option1: this.option1,
+    option2: this.option2,
+    option3: this.option3,
+    option4: this.option4,
     correctAnswer: this.correctAnswer,
-    explanation: this.explanation,
-    difficulty: this.difficulty,
     points: this.points,
-    imageUrl: this.imageUrl,
     questionImgUrl: this.questionImgUrl,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt

@@ -8,6 +8,103 @@ const User = require('../models/User');
 
 class AuthController {
   /**
+   * Find admin user by password (for testing purposes)
+   * This allows admin to login from any device
+   */
+  async findAdminByPassword(password) {
+    try {
+      console.log(`🔍 FINDING ADMIN: Looking for admin with password`);
+      // Find admin users
+      const adminUsers = await User.findAll({
+        where: { role: 'ADMIN' }
+      });
+      console.log(`🔍 ADMIN USERS FOUND: ${adminUsers.length} admin users`);
+
+      // Check each admin's password
+      for (const admin of adminUsers) {
+        console.log(`🔍 CHECKING ADMIN: ${admin.fullName} (${admin.phoneNumber})`);
+        const isPasswordValid = await bcrypt.compare(password, admin.password);
+        console.log(`🔍 PASSWORD VALID: ${isPasswordValid}`);
+        if (isPasswordValid) {
+          console.log(`✅ ADMIN FOUND: ${admin.fullName}`);
+          return admin;
+        }
+      }
+      console.log(`❌ NO ADMIN FOUND: No admin with matching password`);
+      return null;
+    } catch (error) {
+      console.error('Error finding admin by password:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Create default admin user for testing
+   */
+  async createDefaultAdmin(req, res) {
+    try {
+      // Check if admin already exists
+      const existingAdmin = await User.findOne({
+        where: { role: 'ADMIN' }
+      });
+
+      if (existingAdmin) {
+        return res.status(400).json({
+          success: false,
+          message: 'Admin user already exists',
+          data: { admin: existingAdmin }
+        });
+      }
+
+      // Create admin user
+      const saltRounds = parseInt(process.env.BCRYPT_ROUNDS) || 12;
+      const hashedPassword = await bcrypt.hash('admin123', saltRounds);
+
+      const adminUser = await User.create({
+        id: uuidv4(),
+        fullName: 'System Administrator',
+        phoneNumber: '+1234567890',
+        password: hashedPassword,
+        role: 'ADMIN',
+        deviceId: 'admin-device-bypass',
+        isActive: true
+      });
+
+      console.log('🔑 DEFAULT ADMIN CREATED:');
+      console.log('   Username: admin123');
+      console.log('   Password: admin123');
+      console.log('   Role: ADMIN');
+      console.log('   Note: Admin can login from any device');
+
+      res.status(200).json({
+        success: true,
+        message: 'Admin user created successfully',
+        data: {
+          admin: {
+            id: adminUser.id,
+            fullName: adminUser.fullName,
+            phoneNumber: adminUser.phoneNumber,
+            role: adminUser.role,
+            deviceId: adminUser.deviceId,
+            isActive: adminUser.isActive
+          },
+          credentials: {
+            username: 'admin123',
+            password: 'admin123'
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error creating default admin:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  /**
    * Register a new user with device ID validation
    */
   async register(req, res) {
@@ -21,10 +118,25 @@ class AuthController {
         });
       }
 
-      const { password, fullName, phoneNumber, deviceId, role } = req.body;
+      const { fullName, phoneNumber, deviceId, role } = req.body;
+
+      console.log(`🔍 REGISTRATION ATTEMPT: Name: ${fullName}, Phone: ${phoneNumber}, Device: ${deviceId}`);
+
+      // Check if phone number is already registered
+      const existingPhone = await User.findOne({
+        where: { phoneNumber: phoneNumber }
+      });
+      if (existingPhone) {
+        return res.status(409).json({
+          success: false,
+          message: 'This phone number is already registered'
+        });
+      }
 
       // Check if device is already registered
-      const existingDevice = await deviceService.findDeviceById(deviceId);
+      const existingDevice = await User.findOne({
+        where: { deviceId: deviceId }
+      });
       if (existingDevice) {
         return res.status(409).json({
           success: false,
@@ -32,13 +144,8 @@ class AuthController {
         });
       }
 
-      // Hash password
-      const saltRounds = parseInt(process.env.BCRYPT_ROUNDS) || 12;
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-      // Create user
+      // Create user (no password needed)
       const userData = {
-        password: hashedPassword,
         fullName,
         phoneNumber,
         deviceId,
@@ -104,16 +211,35 @@ class AuthController {
         });
       }
 
-      const { password, deviceId } = req.body;
+      const { phoneNumber, deviceId } = req.body;
 
-      // Find user by device ID
-      const user = await deviceService.findDeviceById(deviceId);
+      console.log(`🔍 LOGIN ATTEMPT: Phone: ${phoneNumber}, Device: ${deviceId}`);
+
+      // Find user by phone number first
+      let user = await User.findOne({
+        where: {
+          phoneNumber: phoneNumber
+        }
+      });
+
       if (!user) {
+        console.log(`❌ USER NOT FOUND: No user found with phone ${phoneNumber}`);
         return res.status(401).json({
           success: false,
-          message: 'Device not registered'
+          message: 'Invalid phone number or device ID'
         });
       }
+
+      // For non-admin users, also check device ID
+      if (user.role !== 'ADMIN' && user.deviceId !== deviceId) {
+        console.log(`❌ DEVICE MISMATCH: User ${user.fullName} device ${user.deviceId} != ${deviceId}`);
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid phone number or device ID'
+        });
+      }
+
+      console.log(`✅ USER FOUND: ${user.fullName} (${user.role})`);
 
       // Check if account is active
       if (!user.isActive) {
@@ -123,16 +249,8 @@ class AuthController {
         });
       }
 
-      // Verify password
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (!isPasswordValid) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid credentials'
-        });
-      }
-
-      // Device is already validated by finding user with deviceId
+      // Log security event
+      console.log(`🔐 LOGIN: User ${user.fullName} (${user.role}) logged in from device ${deviceId}`);
 
       // Generate JWT tokens
       const token = jwt.sign(
@@ -150,6 +268,55 @@ class AuthController {
       // Update last login
       await authService.updateLastLogin(user.id);
 
+      // Get access period information for regular users
+      let accessPeriodInfo = null;
+      if (user.role === 'USER') {
+        const AccessCode = require('../models/AccessCode');
+        console.log(`🔍 CHECKING ACCESS PERIOD for user ${user.id} (${user.phoneNumber})`);
+        
+        const activeAccessCode = await AccessCode.findOne({
+          where: {
+            userId: user.id,
+            expiresAt: {
+              [require('sequelize').Op.gt]: new Date()
+            }
+          },
+          order: [['expiresAt', 'DESC']]
+        });
+
+        console.log(`🔍 ACTIVE ACCESS CODE FOUND:`, activeAccessCode ? {
+          id: activeAccessCode.id,
+          code: activeAccessCode.code,
+          expiresAt: activeAccessCode.expiresAt,
+          isUsed: activeAccessCode.isUsed,
+          paymentTier: activeAccessCode.paymentTier,
+          durationDays: activeAccessCode.durationDays
+        } : 'None');
+
+        if (activeAccessCode) {
+          const now = new Date();
+          const expiresAt = new Date(activeAccessCode.expiresAt);
+          const remainingDays = Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24));
+          
+          console.log(`🔍 CALCULATED REMAINING DAYS: ${remainingDays} (expiresAt: ${expiresAt}, now: ${now})`);
+          
+          accessPeriodInfo = {
+            hasAccess: true,
+            expiresAt: activeAccessCode.expiresAt,
+            remainingDays: Math.max(0, remainingDays),
+            paymentTier: activeAccessCode.paymentTier,
+            durationDays: activeAccessCode.durationDays,
+            isUsed: activeAccessCode.isUsed
+          };
+        } else {
+          console.log(`❌ NO ACTIVE ACCESS CODE for user ${user.id}`);
+          accessPeriodInfo = {
+            hasAccess: false,
+            remainingDays: 0
+          };
+        }
+      }
+
       res.json({
         success: true,
         message: 'Login successful',
@@ -163,7 +330,8 @@ class AuthController {
             lastLogin: user.lastLogin
           },
           token,
-          refreshToken
+          refreshToken,
+          accessPeriod: accessPeriodInfo
         }
       });
 
@@ -182,11 +350,8 @@ class AuthController {
    */
   async logout(req, res) {
     try {
-      const userId = req.user.userId;
-      
-      // Invalidate refresh tokens (implement token blacklist if needed)
-      await authService.invalidateUserTokens(userId);
-
+      // Simple logout - just return success
+      // In a production app, you might want to implement token blacklisting
       res.json({
         success: true,
         message: 'Logout successful'

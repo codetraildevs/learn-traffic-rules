@@ -81,14 +81,12 @@ const deviceMiddleware = require('../middleware/deviceMiddleware');
  */
 router.post('/register', 
   [
-    body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
     body('fullName').trim().isLength({ min: 2 }).withMessage('Full name must be at least 2 characters'),
     body('phoneNumber').isMobilePhone().withMessage('Invalid phone number'),
-    body('deviceId').isLength({ min: 10 }).withMessage('Device ID must be at least 10 characters'),
-    body('role').optional().isIn(['USER', 'MANAGER', 'ADMIN']).withMessage('Invalid role'),
-    deviceMiddleware.checkDeviceNotRegistered
+    body('deviceId').isLength({ min: 5 }).withMessage('Device ID must be at least 5 characters'),
+    body('role').optional().isIn(['USER', 'MANAGER', 'ADMIN']).withMessage('Invalid role')
   ],
-  authController.register
+  authController.register.bind(authController)
 );
 
 /**
@@ -163,11 +161,39 @@ router.post('/register',
  */
 router.post('/login',
   [
-    body('password').notEmpty().withMessage('Password is required'),
-    body('deviceId').isLength({ min: 10 }).withMessage('Device ID must be at least 10 characters')
+    body('phoneNumber').isMobilePhone().withMessage('Invalid phone number'),
+    body('deviceId').isLength({ min: 5 }).withMessage('Device ID must be at least 5 characters')
   ],
-  authController.login
+  authController.login.bind(authController)
 );
+
+/**
+ * @swagger
+ * /api/auth/create-admin:
+ *   post:
+ *     summary: Create default admin user for testing
+ *     tags: [Authentication]
+ *     responses:
+ *       200:
+ *         description: Admin user created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     admin:
+ *                       type: object
+ *       400:
+ *         description: Admin user already exists
+ */
+router.post('/create-admin', authController.createDefaultAdmin.bind(authController));
 
 /**
  * @swagger
@@ -201,7 +227,7 @@ router.post('/login',
 router.post('/logout',
   authMiddleware.authenticateToken,
   deviceMiddleware.validateDeviceId,
-  authController.logout
+  authController.logout.bind(authController)
 );
 
 /**
@@ -261,7 +287,7 @@ router.post('/refresh',
     body('refreshToken').notEmpty().withMessage('Refresh token is required'),
     deviceMiddleware.validateDeviceId
   ],
-  authController.refreshToken
+  authController.refreshToken.bind(authController)
 );
 
 
@@ -324,7 +350,7 @@ router.post('/device-change-request',
     body('reason').trim().isLength({ min: 10 }).withMessage('Reason must be at least 10 characters'),
     deviceMiddleware.validateDeviceId
   ],
-  authController.requestDeviceChange
+  authController.requestDeviceChange.bind(authController)
 );
 
 /**
@@ -355,7 +381,7 @@ router.post('/forgot-password',
   [
     body('phoneNumber').notEmpty().withMessage('Phone number is required')
   ],
-  authController.forgotPassword
+  authController.forgotPassword.bind(authController)
 );
 
 /**
@@ -397,7 +423,7 @@ router.post('/reset-password',
     body('resetCode').isLength({ min: 6, max: 6 }).withMessage('Reset code must be 6 digits'),
     body('newPassword').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
   ],
-  authController.resetPassword
+  authController.resetPassword.bind(authController)
 );
 
 /**
@@ -433,7 +459,7 @@ router.post('/delete-account',
   [
     body('password').notEmpty().withMessage('Password is required for account deletion')
   ],
-  authController.deleteAccount
+  authController.deleteAccount.bind(authController)
 );
 
 module.exports = router;

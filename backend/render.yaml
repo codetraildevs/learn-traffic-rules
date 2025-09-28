@@ -10,10 +10,6 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: RENDER_PORT
-        value: 10000
-      - key: RENDER_EXTERNAL_URL
-        value: learn-traffic-rules.onrender.com
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
@@ -36,16 +32,9 @@ services:
         value: 1.0.0
       - key: SWAGGER_DESCRIPTION
         value: API documentation for Traffic Rules Practice App
-      - key: DATABASE_URL
-        fromDatabase:
-          name: traffic-rules-postgres
-          property: connectionString
-    databases:
-      - name: traffic-rules-postgres
 
 databases:
   - name: traffic-rules-postgres
     plan: free
     databaseName: traffic_rules_db
-    user: traffic_rules_db_user
-    region: oregon
+    user: traffic_rules_user

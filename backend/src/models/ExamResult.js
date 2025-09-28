@@ -67,6 +67,17 @@ const ExamResult = sequelize.define('ExamResult', {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
     allowNull: false
+  },
+  isFreeExam: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+    comment: 'Whether this exam was taken as a free exam'
+  },
+  questionResults: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    comment: 'Detailed question-by-question results with correct/incorrect answers'
   }
 }, {
   tableName: 'exam_results',
@@ -88,6 +99,8 @@ ExamResult.prototype.toJSON = function() {
     answers: this.answers,
     passed: this.passed,
     completedAt: this.completedAt,
+    isFreeExam: this.isFreeExam,
+    questionResults: this.questionResults,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt
   };

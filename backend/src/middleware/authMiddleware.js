@@ -89,30 +89,6 @@ const requireActiveUser = async (req, res, next) => {
   }
 };
 
-/**
- * Check if user email is verified
- */
-const requireVerifiedEmail = async (req, res, next) => {
-  try {
-    const authService = require('../services/authService');
-    const user = await authService.findUserById(req.user.userId);
-    
-    if (!user || !user.emailVerified) {
-      return res.status(403).json({
-        success: false,
-        message: 'Email verification required'
-      });
-    }
-
-    next();
-  } catch (error) {
-    console.error('Email verification check error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-};
 
 module.exports = {
   authenticate: authenticateToken,
@@ -121,5 +97,4 @@ module.exports = {
   requireAdmin,
   requireManager,
   requireActiveUser,
-  requireVerifiedEmail
 };

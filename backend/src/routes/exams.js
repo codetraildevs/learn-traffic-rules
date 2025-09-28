@@ -3,6 +3,7 @@ const router = express.Router();
 const { body } = require('express-validator');
 const examController = require('../controllers/examController');
 const authMiddleware = require('../middleware/authMiddleware');
+const { uploadSingle, uploadQuestionImage, uploadMultiple } = require('../middleware/upload');
 
 /**
  * @swagger
@@ -40,9 +41,6 @@ const authMiddleware = require('../middleware/authMiddleware');
  *         duration:
  *           type: integer
  *           description: Exam duration in minutes
- *         questionCount:
- *           type: integer
- *           description: Number of questions
  *         passingScore:
  *           type: integer
  *           description: Minimum score to pass (percentage)
@@ -111,6 +109,67 @@ router.get('/', examController.getAllExams);
  *       404:
  *         description: Exam not found
  */
+// Regular user route for taking exams (must be before /:id route)
+router.get('/:id/take-exam',
+  authMiddleware.authenticate,
+  examController.getExamQuestionsForTaking
+);
+
+/**
+ * @swagger
+ * /api/exams/user-results:
+ *   get:
+ *     summary: Get user's exam results
+ *     tags: [Exams]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User's exam results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       examId:
+ *                         type: string
+ *                       score:
+ *                         type: integer
+ *                       totalQuestions:
+ *                         type: integer
+ *                       correctAnswers:
+ *                         type: integer
+ *                       passed:
+ *                         type: boolean
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       Exam:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           title:
+ *                             type: string
+ *                           category:
+ *                             type: string
+ *                           difficulty:
+ *                             type: string
+ */
+router.get('/user-results', 
+  authMiddleware.authenticate,
+  examController.getUserExamResults
+);
+
 router.get('/:id', examController.getExamById);
 
 /**
@@ -272,7 +331,6 @@ router.post('/',
     body('category').notEmpty().withMessage('Category is required'),
     body('difficulty').isIn(['EASY', 'MEDIUM', 'HARD']).withMessage('Invalid difficulty level'),
     body('duration').isInt({ min: 1 }).withMessage('Duration must be a positive integer'),
-    body('questionCount').isInt({ min: 1 }).withMessage('Question count must be a positive integer'),
     body('passingScore').isInt({ min: 0, max: 100 }).withMessage('Passing score must be between 0 and 100')
   ],
   examController.createExam
@@ -367,6 +425,84 @@ router.patch('/:id/deactivate',
 
 /**
  * @swagger
+ * /exams/{id}/toggle-status:
+ *   put:
+ *     summary: Toggle exam active status
+ *     tags: [Exams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Exam ID
+ *     responses:
+ *       200:
+ *         description: Exam status toggled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/Exam'
+ *       404:
+ *         description: Exam not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/:id/toggle-status', 
+  authMiddleware.authenticate,
+  authMiddleware.requireRole(['ADMIN', 'MANAGER']),
+  examController.toggleExamStatus
+);
+
+/**
+ * @swagger
+ * /exams/{id}:
+ *   delete:
+ *     summary: Delete an exam
+ *     tags: [Exams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Exam ID
+ *     responses:
+ *       200:
+ *         description: Exam deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Exam not found
+ *       500:
+ *         description: Server error
+ */
+router.delete('/:id', 
+  authMiddleware.authenticate,
+  authMiddleware.requireRole(['ADMIN', 'MANAGER']),
+  examController.deleteExam
+);
+
+/**
+ * @swagger
  * /api/exams/submit:
  *   post:
  *     summary: Submit exam answers and get results
@@ -413,15 +549,78 @@ router.post('/submit',
 
 /**
  * @swagger
- * /api/exams/results:
- *   get:
- *     summary: Get user's exam results
+ * /api/exams/submit-result:
+ *   post:
+ *     summary: Submit exam result (for both free and paid exams)
  *     tags: [Exams]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - examId
+ *               - answers
+ *               - timeSpent
+ *               - isFreeExam
+ *             properties:
+ *               examId:
+ *                 type: string
+ *                 description: Exam ID
+ *               answers:
+ *                 type: object
+ *                 description: User answers (questionId to answer mapping)
+ *               timeSpent:
+ *                 type: integer
+ *                 description: Time spent in seconds
+ *               isFreeExam:
+ *                 type: boolean
+ *                 description: Whether this is a free exam attempt
  *     responses:
  *       200:
- *         description: User's exam results
+ *         description: Exam result submitted successfully
+ *       403:
+ *         description: Access denied or no free exams remaining
+ *       404:
+ *         description: Exam not found
+ */
+router.post('/submit-result', 
+  authMiddleware.authenticate,
+  [
+    body('examId').notEmpty().withMessage('Exam ID is required'),
+    body('answers').isObject().withMessage('Answers must be an object'),
+    body('timeSpent').isInt({ min: 0 }).withMessage('Time spent must be a non-negative integer'),
+    body('isFreeExam').isBoolean().withMessage('isFreeExam must be a boolean')
+  ],
+  examController.submitExamResult
+);
+
+
+/**
+ * @swagger
+ * /api/exams/upload-image:
+ *   post:
+ *     summary: Upload exam image (Admin/Manager only)
+ *     tags: [Exams]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image file to upload
+ *     responses:
+ *       200:
+ *         description: Image uploaded successfully
  *         content:
  *           application/json:
  *             schema:
@@ -429,41 +628,369 @@ router.post('/submit',
  *               properties:
  *                 success:
  *                   type: boolean
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                       examId:
- *                         type: string
- *                       score:
- *                         type: integer
- *                       totalQuestions:
- *                         type: integer
- *                       correctAnswers:
- *                         type: integer
- *                       passed:
- *                         type: boolean
- *                       createdAt:
- *                         type: string
- *                         format: date-time
- *                       Exam:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: string
- *                           title:
- *                             type: string
- *                           category:
- *                             type: string
- *                           difficulty:
- *                             type: string
+ *                 message:
+ *                   type: string
+ *                 imageUrl:
+ *                   type: string
  */
-router.get('/results', 
+router.post('/upload-image',
   authMiddleware.authenticate,
-  examController.getUserExamResults
+  authMiddleware.requireRole(['ADMIN', 'MANAGER']),
+  uploadSingle,
+  examController.uploadExamImage
+);
+
+/**
+ * @swagger
+ * /api/exams/upload-question-image:
+ *   post:
+ *     summary: Upload question image (Admin/Manager only)
+ *     tags: [Exams]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               questionImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Question image file
+ *     responses:
+ *       200:
+ *         description: Image uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 imageUrl:
+ *                   type: string
+ *       400:
+ *         description: Bad request - no image provided
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - insufficient permissions
+ */
+router.post('/upload-question-image',
+  authMiddleware.authenticate,
+  authMiddleware.requireRole(['ADMIN', 'MANAGER']),
+  uploadQuestionImage,
+  examController.uploadQuestionImage
+);
+
+/**
+ * @swagger
+ * /api/exams/{id}/upload-single-question:
+ *   post:
+ *     summary: Upload single question (Admin/Manager only)
+ *     tags: [Exams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Exam ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - question
+ *               - option1
+ *               - option2
+ *               - correctAnswer
+ *             properties:
+ *               question:
+ *                 type: string
+ *                 description: The question text
+ *               option1:
+ *                 type: string
+ *                 description: First option
+ *               option2:
+ *                 type: string
+ *                 description: Second option
+ *               option3:
+ *                 type: string
+ *                 description: Third option (optional)
+ *               option4:
+ *                 type: string
+ *                 description: Fourth option (optional)
+ *               correctAnswer:
+ *                 type: string
+ *                 description: The correct answer
+ *               questionImgUrl:
+ *                 type: string
+ *                 description: URL to question image (optional)
+ *               points:
+ *                 type: integer
+ *                 description: Points awarded (default 1)
+ *     responses:
+ *       201:
+ *         description: Question added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request - validation failed
+ *       404:
+ *         description: Exam not found
+ */
+/**
+ * @swagger
+ * /api/exams/{id}/questions:
+ *   get:
+ *     summary: Get all questions for an exam (Admin/Manager only)
+ *     tags: [Exams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Exam ID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Number of questions per page
+ *     responses:
+ *       200:
+ *         description: Questions retrieved successfully
+ *       404:
+ *         description: Exam not found
+ */
+// Admin/Manager route for managing questions
+router.get('/:id/questions',
+  authMiddleware.authenticate,
+  authMiddleware.requireRole(['ADMIN', 'MANAGER']),
+  examController.getExamQuestions
+);
+
+
+/**
+ * @swagger
+ * /api/exams/{id}/questions/{questionId}:
+ *   get:
+ *     summary: Get single question by ID (Admin/Manager only)
+ *     tags: [Exams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Exam ID
+ *       - in: path
+ *         name: questionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Question ID
+ *     responses:
+ *       200:
+ *         description: Question retrieved successfully
+ *       404:
+ *         description: Exam or question not found
+ */
+router.get('/:id/questions/:questionId',
+  authMiddleware.authenticate,
+  authMiddleware.requireRole(['ADMIN', 'MANAGER']),
+  examController.getQuestionById
+);
+
+/**
+ * @swagger
+ * /api/exams/{id}/questions/{questionId}:
+ *   put:
+ *     summary: Update question (Admin/Manager only)
+ *     tags: [Exams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Exam ID
+ *       - in: path
+ *         name: questionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Question ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               question:
+ *                 type: string
+ *                 description: Question text
+ *               option1:
+ *                 type: string
+ *                 description: First option
+ *               option2:
+ *                 type: string
+ *                 description: Second option
+ *               option3:
+ *                 type: string
+ *                 description: Third option
+ *               option4:
+ *                 type: string
+ *                 description: Fourth option
+ *               correctAnswer:
+ *                 type: string
+ *                 description: Correct answer
+ *               points:
+ *                 type: integer
+ *                 description: Points for this question (default 1)
+ *               questionImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Question image (optional)
+ *     responses:
+ *       200:
+ *         description: Question updated successfully
+ *       404:
+ *         description: Exam or question not found
+ */
+router.put('/:id/questions/:questionId',
+  authMiddleware.authenticate,
+  authMiddleware.requireRole(['ADMIN', 'MANAGER']),
+  uploadQuestionImage,
+  examController.updateQuestion
+);
+
+/**
+ * @swagger
+ * /api/exams/{id}/questions/{questionId}:
+ *   delete:
+ *     summary: Delete question (Admin/Manager only)
+ *     tags: [Exams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Exam ID
+ *       - in: path
+ *         name: questionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Question ID
+ *     responses:
+ *       200:
+ *         description: Question deleted successfully
+ *       404:
+ *         description: Exam or question not found
+ */
+router.delete('/:id/questions/:questionId',
+  authMiddleware.authenticate,
+  authMiddleware.requireRole(['ADMIN', 'MANAGER']),
+  examController.deleteQuestion
+);
+
+router.post('/:id/upload-single-question',
+  authMiddleware.authenticate,
+  authMiddleware.requireRole(['ADMIN', 'MANAGER']),
+  uploadQuestionImage,
+  [
+    body('question').notEmpty().withMessage('Question is required'),
+    body('option1').notEmpty().withMessage('Option 1 is required'),
+    body('option2').notEmpty().withMessage('Option 2 is required'),
+    body('correctAnswer').notEmpty().withMessage('Correct answer is required')
+  ],
+  examController.uploadSingleQuestion
+);
+
+/**
+ * @swagger
+ * /api/exams/{id}/upload-questions:
+ *   post:
+ *     summary: Upload questions in bulk (Admin/Manager only)
+ *     tags: [Exams]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Exam ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               files:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: CSV or Excel files containing questions
+ *     responses:
+ *       200:
+ *         description: Questions uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 questionsAdded:
+ *                   type: integer
+ */
+router.post('/:id/upload-questions',
+  authMiddleware.authenticate,
+  authMiddleware.requireRole(['ADMIN', 'MANAGER']),
+  uploadMultiple,
+  examController.uploadQuestions
 );
 
 module.exports = router;
