@@ -218,73 +218,129 @@ const testConnection = async () => {
   return false;
 };
 
-// Create tables from SQL file
-const createTablesFromSQL = async (sequelize) => {
+// Create PostgreSQL-compatible tables
+const createPostgreSQLTables = async (sequelize) => {
   try {
-    // Read SQL file
-    const sqlFilePath = path.join(__dirname, '../../traffic_rules_db.sql');
-    if (!fs.existsSync(sqlFilePath)) {
-      throw new Error(`SQL file not found: ${sqlFilePath}`);
-    }
+    console.log('🔄 Creating PostgreSQL-compatible tables...');
     
-    const sqlContent = fs.readFileSync(sqlFilePath, 'utf8');
-    console.log('📄 SQL file loaded successfully');
+    // Create tables with PostgreSQL-compatible syntax
+    const tables = [
+      // Notifications table
+      `CREATE TABLE IF NOT EXISTS notifications (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "userId" UUID NOT NULL,
+        type VARCHAR(50) NOT NULL CHECK (type IN ('EXAM_REMINDER','ACHIEVEMENT_ALERT','STUDY_REMINDER','SYSTEM_UPDATE','PAYMENT_NOTIFICATION','WEEKLY_REPORT','PAYMENT_APPROVED','PAYMENT_REJECTED','EXAM_PASSED','EXAM_FAILED','NEW_EXAM','ACCESS_GRANTED','ACCESS_REVOKED','GENERAL')),
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        data JSONB DEFAULT '{}',
+        "isRead" BOOLEAN DEFAULT false,
+        "isPushSent" BOOLEAN DEFAULT false,
+        "scheduledFor" TIMESTAMP WITH TIME ZONE,
+        priority VARCHAR(20) DEFAULT 'MEDIUM' CHECK (priority IN ('LOW','MEDIUM','HIGH','URGENT')),
+        category VARCHAR(20) NOT NULL CHECK (category IN ('EXAM','PAYMENT','ACHIEVEMENT','SYSTEM','STUDY','ACCESS','GENERAL')),
+        "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        FOREIGN KEY ("userId") REFERENCES users(id) ON DELETE CASCADE
+      )`,
+      
+      // Study reminders table
+      `CREATE TABLE IF NOT EXISTS studyreminders (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "userId" UUID NOT NULL,
+        "isEnabled" BOOLEAN DEFAULT true,
+        "reminderTime" TIME NOT NULL,
+        "daysOfWeek" JSONB NOT NULL DEFAULT '[]',
+        "studyGoalMinutes" INTEGER DEFAULT 30,
+        timezone VARCHAR(50) DEFAULT 'UTC',
+        "lastSentAt" TIMESTAMP WITH TIME ZONE,
+        "nextScheduledAt" TIMESTAMP WITH TIME ZONE,
+        "isActive" BOOLEAN DEFAULT true,
+        "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        FOREIGN KEY ("userId") REFERENCES users(id) ON DELETE CASCADE
+      )`,
+      
+      // Notification preferences table
+      `CREATE TABLE IF NOT EXISTS notificationpreferences (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "userId" UUID NOT NULL UNIQUE,
+        "pushNotifications" BOOLEAN DEFAULT true,
+        "studyReminders" BOOLEAN DEFAULT true,
+        "examReminders" BOOLEAN DEFAULT true,
+        "achievementAlerts" BOOLEAN DEFAULT true,
+        "paymentNotifications" BOOLEAN DEFAULT true,
+        "systemUpdates" BOOLEAN DEFAULT true,
+        "weeklyReports" BOOLEAN DEFAULT true,
+        "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        FOREIGN KEY ("userId") REFERENCES users(id) ON DELETE CASCADE
+      )`
+    ];
     
-    // Split SQL into individual statements
-    const statements = sqlContent
-      .split(';')
-      .map(stmt => stmt.trim())
-      .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
-    
-    console.log(`📋 Found ${statements.length} SQL statements to execute`);
-    
-    // Execute statements one by one
-    for (let i = 0; i < statements.length; i++) {
-      const statement = statements[i];
-      if (statement.trim()) {
-        try {
-          console.log(`🔄 Executing statement ${i + 1}/${statements.length}...`);
-          await sequelize.query(statement);
-          console.log(`✅ Statement ${i + 1} executed successfully`);
-        } catch (error) {
-          // Skip errors for tables that already exist
-          if (error.message.includes('already exists') || 
-              (error.message.includes('relation') && error.message.includes('already exists'))) {
-            console.log(`⚠️  Statement ${i + 1} skipped (table already exists)`);
-            continue;
-          }
-          console.error(`❌ Statement ${i + 1} failed:`, error.message);
+    // Create tables
+    for (let i = 0; i < tables.length; i++) {
+      try {
+        console.log(`🔄 Creating table ${i + 1}/${tables.length}...`);
+        await sequelize.query(tables[i]);
+        console.log(`✅ Table ${i + 1} created successfully`);
+      } catch (error) {
+        if (error.message.includes('already exists')) {
+          console.log(`⚠️  Table ${i + 1} already exists, skipping`);
+        } else {
+          console.error(`❌ Failed to create table ${i + 1}:`, error.message);
           throw error;
         }
       }
     }
     
-    // Create default admin user
-    console.log('👤 Creating default admin user...');
-    try {
-      await sequelize.query(`
-        INSERT INTO users (id, fullName, phoneNumber, password, role, isActive, createdAt, updatedAt)
-        VALUES (
-          gen_random_uuid(),
-          'Admin User',
-          'admin123',
-          '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
-          'ADMIN',
-          true,
-          NOW(),
-          NOW()
-        )
-        ON CONFLICT (phoneNumber) DO NOTHING
-      `);
-      console.log('✅ Default admin user created');
-    } catch (adminError) {
-      console.log('⚠️  Admin user may already exist:', adminError.message);
+    // Create indexes
+    console.log('🔄 Creating indexes...');
+    const indexes = [
+      'CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications("userId")',
+      'CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type)',
+      'CREATE INDEX IF NOT EXISTS idx_notifications_scheduled_for ON notifications("scheduledFor")',
+      'CREATE INDEX IF NOT EXISTS idx_studyreminders_user_id ON studyreminders("userId")',
+      'CREATE INDEX IF NOT EXISTS idx_studyreminders_is_enabled ON studyreminders("isEnabled")',
+      'CREATE INDEX IF NOT EXISTS idx_notificationpreferences_user_id ON notificationpreferences("userId")'
+    ];
+    
+    for (const index of indexes) {
+      try {
+        await sequelize.query(index);
+        console.log('✅ Index created');
+      } catch (error) {
+        console.log('⚠️  Index may already exist:', error.message);
+      }
     }
     
-    console.log('🎉 SQL tables created successfully!');
+    // Insert sample notification data
+    console.log('📊 Inserting sample notification data...');
+    try {
+      // Get a user ID to use for sample data
+      const users = await sequelize.query('SELECT id FROM users LIMIT 1', { type: Sequelize.QueryTypes.SELECT });
+      if (users.length > 0) {
+        const userId = users[0].id;
+        
+        // Insert sample notifications
+        await sequelize.query(`
+          INSERT INTO notifications (id, "userId", type, title, message, data, "isRead", "isPushSent", priority, category, "createdAt", "updatedAt")
+          VALUES 
+            (gen_random_uuid(), $1, 'STUDY_REMINDER', 'Time to Study! 📖', 'Haven''t studied today? Take a practice exam to keep your skills sharp!', '{"studyGoalMinutes":30}', false, false, 'MEDIUM', 'STUDY', NOW(), NOW()),
+            (gen_random_uuid(), $1, 'SYSTEM_UPDATE', 'Welcome to Traffic Rules App! 🚗', 'Welcome! Start your learning journey with our comprehensive traffic rules course.', '{}', false, false, 'HIGH', 'SYSTEM', NOW(), NOW())
+          ON CONFLICT (id) DO NOTHING
+        `, {
+          replacements: [userId]
+        });
+        console.log('✅ Sample notification data inserted');
+      }
+    } catch (error) {
+      console.log('⚠️  Sample data insertion failed:', error.message);
+    }
+    
+    console.log('🎉 PostgreSQL tables created successfully!');
     
   } catch (error) {
-    console.error('❌ SQL table creation failed:', error.message);
+    console.error('❌ PostgreSQL table creation failed:', error.message);
     throw error;
   }
 };
@@ -329,8 +385,8 @@ const initializeTables = async () => {
         
         if (missingTables.length > 0) {
           console.log('🔄 Missing tables found:', missingTables);
-          console.log('🔄 Importing missing tables...');
-          await createTablesFromSQL(sequelize);
+          console.log('🔄 Creating missing tables...');
+          await createPostgreSQLTables(sequelize);
         } else {
           console.log('✅ All required tables exist');
         }
@@ -354,7 +410,11 @@ const initializeTables = async () => {
     // Try to create tables individually if sync fails
     console.log('🔄 Attempting to create tables individually...');
     try {
-      await sequelize.sync({ force: false, alter: false });
+      // Create a new connection to avoid transaction issues
+      const newSequelize = new Sequelize(sequelize.config);
+      await newSequelize.authenticate();
+      await createPostgreSQLTables(newSequelize);
+      await newSequelize.close();
       console.log('✅ Database tables created successfully');
     } catch (individualError) {
       console.error('❌ Individual table creation also failed:', individualError.message);
