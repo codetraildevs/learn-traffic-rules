@@ -234,13 +234,14 @@ const initializeTables = async () => {
     const setupAssociations = require('./associations');
     setupAssociations();
 
-    // Sync all models - only force sync when explicitly requested
+    // Sync all models - create tables if they don't exist
     if (process.env.FORCE_SYNC === 'true') {
       console.log('🔄 Force syncing database to apply new structure...');
       await sequelize.sync({ force: true });
       console.log('✅ Database tables recreated with new structure');
     } else {
-      await sequelize.sync({ force: false, alter: false });
+      // For production, use alter: true to create missing tables
+      await sequelize.sync({ force: false, alter: true });
       console.log('✅ Database tables synchronized successfully');
     }
   } catch (error) {
