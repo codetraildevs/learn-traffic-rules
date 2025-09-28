@@ -28,8 +28,13 @@ const getDatabaseConfig = () => {
     }
     // If it's an internal URL without port, add port
     else if (databaseUrl.includes('@dpg-') && !databaseUrl.includes(':5432')) {
-      fixedDatabaseUrl = databaseUrl.replace('@dpg-', ':5432@dpg-');
-      console.log('🔧 Fixed DATABASE_URL to include port:', fixedDatabaseUrl.replace(/:[^:@]+@/, ':***@'));
+      // Check if there's already a port after the @ symbol
+      const atIndex = databaseUrl.indexOf('@');
+      const afterAt = databaseUrl.substring(atIndex);
+      if (!afterAt.includes(':')) {
+        fixedDatabaseUrl = databaseUrl.replace('@dpg-', ':5432@dpg-');
+        console.log('🔧 Fixed DATABASE_URL to include port:', fixedDatabaseUrl.replace(/:[^:@]+@/, ':***@'));
+      }
     }
     
     return {
