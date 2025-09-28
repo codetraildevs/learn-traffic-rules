@@ -16,6 +16,8 @@ const getDatabaseConfig = () => {
   if (databaseUrl) {
     // Production PostgreSQL configuration (Render)
     console.log('🐘 Using PostgreSQL configuration for production');
+    console.log('🔍 DATABASE_URL:', databaseUrl.replace(/:[^:@]+@/, ':***@')); // Hide password in logs
+    
     return {
       url: databaseUrl,
       dialect: 'postgres',
@@ -31,11 +33,39 @@ const getDatabaseConfig = () => {
         min: 0,
         acquire: 30000,
         idle: 10000
+      },
+      retry: {
+        match: [
+          /ETIMEDOUT/,
+          /EHOSTUNREACH/,
+          /ECONNRESET/,
+          /ECONNREFUSED/,
+          /ETIMEDOUT/,
+          /ESOCKETTIMEDOUT/,
+          /EHOSTUNREACH/,
+          /EPIPE/,
+          /EAI_AGAIN/,
+          /SequelizeConnectionError/,
+          /SequelizeConnectionRefusedError/,
+          /SequelizeHostNotFoundError/,
+          /SequelizeHostNotReachableError/,
+          /SequelizeInvalidConnectionError/,
+          /SequelizeConnectionTimedOutError/
+        ],
+        max: 3
       }
     };
   } else if (isProduction) {
     // Production without DATABASE_URL - use individual env vars
     console.log('🐘 Using PostgreSQL configuration with individual env vars');
+    console.log('🔍 Database config:', {
+      database: process.env.DB_NAME || 'traffic_rules_db',
+      username: process.env.DB_USER || process.env.POSTGRES_USER,
+      host: process.env.DB_HOST || process.env.POSTGRES_HOST || 'localhost',
+      port: process.env.DB_PORT || process.env.POSTGRES_PORT || 5432,
+      hasPassword: !!(process.env.DB_PASSWORD || process.env.POSTGRES_PASSWORD)
+    });
+    
     return {
       database: process.env.DB_NAME || 'traffic_rules_db',
       username: process.env.DB_USER || process.env.POSTGRES_USER,
@@ -55,6 +85,26 @@ const getDatabaseConfig = () => {
         min: 0,
         acquire: 30000,
         idle: 10000
+      },
+      retry: {
+        match: [
+          /ETIMEDOUT/,
+          /EHOSTUNREACH/,
+          /ECONNRESET/,
+          /ECONNREFUSED/,
+          /ETIMEDOUT/,
+          /ESOCKETTIMEDOUT/,
+          /EHOSTUNREACH/,
+          /EPIPE/,
+          /EAI_AGAIN/,
+          /SequelizeConnectionError/,
+          /SequelizeConnectionRefusedError/,
+          /SequelizeHostNotFoundError/,
+          /SequelizeHostNotReachableError/,
+          /SequelizeInvalidConnectionError/,
+          /SequelizeConnectionTimedOutError/
+        ],
+        max: 3
       }
     };
   } else {
@@ -83,30 +133,51 @@ const sequelize = new Sequelize(getDatabaseConfig());
 
 // Test database connection
 const testConnection = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('✅ Database connected successfully');
-    return true;
-  } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
-    console.error('🔍 Error details:', {
-      name: error.name,
-      code: error.code,
-      parent: error.parent?.code,
-      original: error.original?.code
-    });
-    
-    // If it's a connection refused error, provide helpful message
-    if (error.name === 'SequelizeConnectionRefusedError' || error.code === 'ECONNREFUSED') {
-      console.error('💡 Database connection troubleshooting:');
-      console.error('   1. Check if DATABASE_URL is set in environment variables');
-      console.error('   2. Verify database credentials are correct');
-      console.error('   3. Ensure database server is running and accessible');
-      console.error('   4. Check firewall settings and network connectivity');
+  const maxRetries = 3;
+  let retryCount = 0;
+  
+  while (retryCount < maxRetries) {
+    try {
+      console.log(`🔄 Attempting database connection (attempt ${retryCount + 1}/${maxRetries})...`);
+      await sequelize.authenticate();
+      console.log('✅ Database connected successfully');
+      return true;
+    } catch (error) {
+      retryCount++;
+      console.error(`❌ Database connection failed (attempt ${retryCount}/${maxRetries}):`, error.message);
+      console.error('🔍 Error details:', {
+        name: error.name,
+        code: error.code,
+        parent: error.parent?.code,
+        original: error.original?.code
+      });
+      
+      // If it's a connection refused error, provide helpful message
+      if (error.name === 'SequelizeConnectionRefusedError' || error.code === 'ECONNREFUSED') {
+        console.error('💡 Database connection troubleshooting:');
+        console.error('   1. Check if DATABASE_URL is set correctly in environment variables');
+        console.error('   2. Verify database credentials are correct');
+        console.error('   3. Ensure database server is running and accessible');
+        console.error('   4. Check if database is in the same region as your service');
+        console.error('   5. Verify the database URL format is correct');
+        
+        // Show the actual DATABASE_URL format for debugging
+        const databaseUrl = process.env.DATABASE_URL;
+        if (databaseUrl) {
+          console.error('🔍 Current DATABASE_URL format:', databaseUrl.replace(/:[^:@]+@/, ':***@'));
+          console.error('🔍 Expected format: postgresql://username:password@hostname:port/database_name');
+        }
+      }
+      
+      if (retryCount < maxRetries) {
+        console.log(`⏳ Retrying in 5 seconds...`);
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
     }
-    
-    return false;
   }
+  
+  console.error('❌ All database connection attempts failed');
+  return false;
 };
 
 // Initialize database tables
