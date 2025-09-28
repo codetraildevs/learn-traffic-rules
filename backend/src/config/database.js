@@ -321,7 +321,19 @@ const initializeTables = async () => {
         console.log('🔄 No tables found, creating from SQL...');
         await createTablesFromSQL(sequelize);
       } else {
-        console.log('✅ Database tables already exist, skipping creation');
+        console.log('✅ Database tables already exist, checking for missing tables...');
+        
+        // Check if notification tables are missing
+        const requiredTables = ['notifications', 'studyreminders', 'notificationpreferences'];
+        const missingTables = requiredTables.filter(table => !tables.includes(table));
+        
+        if (missingTables.length > 0) {
+          console.log('🔄 Missing tables found:', missingTables);
+          console.log('🔄 Importing missing tables...');
+          await createTablesFromSQL(sequelize);
+        } else {
+          console.log('✅ All required tables exist');
+        }
       }
       
     } catch (error) {
