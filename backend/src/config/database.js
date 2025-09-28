@@ -219,6 +219,8 @@ const testConnection = async () => {
 // Initialize database tables
 const initializeTables = async () => {
   try {
+    console.log('🔄 Starting database table initialization...');
+    
     // Import models
     const User = require('../models/User');
     const Exam = require('../models/Exam');
@@ -230,9 +232,12 @@ const initializeTables = async () => {
     const StudyReminder = require('../models/StudyReminder');
     const NotificationPreferences = require('../models/NotificationPreferences');
 
+    console.log('✅ All models imported successfully');
+
     // Setup associations
     const setupAssociations = require('./associations');
     setupAssociations();
+    console.log('✅ Model associations set up');
 
     // Sync all models - create tables if they don't exist
     if (process.env.FORCE_SYNC === 'true') {
@@ -241,11 +246,34 @@ const initializeTables = async () => {
       console.log('✅ Database tables recreated with new structure');
     } else {
       // For production, use alter: true to create missing tables
+      console.log('🔄 Syncing database tables (alter: true)...');
       await sequelize.sync({ force: false, alter: true });
       console.log('✅ Database tables synchronized successfully');
     }
+
+    // Verify tables were created
+    const tables = await sequelize.getQueryInterface().showAllTables();
+    console.log('📋 Created tables:', tables);
+    
   } catch (error) {
     console.error('❌ Database synchronization failed:', error.message);
+    console.error('🔍 Error details:', {
+      name: error.name,
+      code: error.code,
+      parent: error.parent?.code,
+      original: error.original?.code,
+      sql: error.sql
+    });
+    
+    // Try to create tables individually if sync fails
+    console.log('🔄 Attempting to create tables individually...');
+    try {
+      await sequelize.sync({ force: false, alter: false });
+      console.log('✅ Database tables created successfully');
+    } catch (individualError) {
+      console.error('❌ Individual table creation also failed:', individualError.message);
+      throw individualError;
+    }
   }
 };
 
