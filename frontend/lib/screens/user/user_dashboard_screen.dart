@@ -1,0 +1,458 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:learn_traffic_rules/core/theme/app_theme.dart';
+import 'package:learn_traffic_rules/models/user_management_model.dart';
+import 'package:learn_traffic_rules/services/user_management_service.dart';
+import 'package:learn_traffic_rules/widgets/loading_widget.dart';
+
+class UserDashboardScreen extends ConsumerStatefulWidget {
+  const UserDashboardScreen({super.key});
+
+  @override
+  ConsumerState<UserDashboardScreen> createState() =>
+      _UserDashboardScreenState();
+}
+
+class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
+  final UserManagementService _userManagementService = UserManagementService();
+  RemainingDaysData? _remainingDaysData;
+  bool _isLoading = false;
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRemainingDays();
+    _startRefreshTimer();
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startRefreshTimer() {
+    // Refresh every 24 hours (86400000 milliseconds)
+    _refreshTimer = Timer.periodic(const Duration(hours: 24), (timer) {
+      if (mounted) {
+        _loadRemainingDays();
+      }
+    });
+  }
+
+  Future<void> _loadRemainingDays() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      print('🔄 Loading remaining days...');
+      final response = await _userManagementService.getMyRemainingDays();
+      print('🔄 Remaining days response: ${response.success}');
+
+      if (response.success) {
+        setState(() {
+          _remainingDaysData = response.data;
+        });
+      } else {
+        print('❌ Failed to load remaining days: ${response.message}');
+        _showErrorSnackBar(
+          'Failed to load remaining days: ${response.message}',
+        );
+      }
+    } catch (e) {
+      print('❌ Error loading remaining days: $e');
+      _showErrorSnackBar('Error loading remaining days: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.white),
+        ),
+        backgroundColor: AppColors.error,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.grey50,
+      appBar: AppBar(
+        title: const Text('My Dashboard', style: AppTextStyles.heading2),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: _loadRemainingDays,
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+          ),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: LoadingWidget())
+          : _remainingDaysData == null
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64.sp,
+                    color: AppColors.error,
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'Failed to load dashboard data',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: AppColors.grey600,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  ElevatedButton(
+                    onPressed: _loadRemainingDays,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            )
+          : SingleChildScrollView(
+              padding: EdgeInsets.all(16.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Welcome Card
+                  Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16.r),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [AppColors.primary, AppColors.secondary],
+                        ),
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(20.w),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.person,
+                                  color: AppColors.white,
+                                  size: 32.sp,
+                                ),
+                                SizedBox(width: 12.w),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Welcome Back!',
+                                        style: AppTextStyles.heading2.copyWith(
+                                          color: AppColors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Track your access and progress',
+                                        style: AppTextStyles.bodyMedium
+                                            .copyWith(
+                                              color: AppColors.white
+                                                  .withOpacity(0.9),
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: 20.h),
+
+                  // Access Status Card
+                  Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(20.w),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.vpn_key,
+                                color: AppColors.primary,
+                                size: 24.sp,
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(
+                                'Access Status',
+                                style: AppTextStyles.heading3.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 16.h),
+
+                          if (_remainingDaysData!.hasActiveAccess) ...[
+                            // Active Access
+                            Container(
+                              padding: EdgeInsets.all(16.w),
+                              decoration: BoxDecoration(
+                                color: AppColors.success.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12.r),
+                                border: Border.all(
+                                  color: AppColors.success.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.check_circle,
+                                        color: AppColors.success,
+                                        size: 20.sp,
+                                      ),
+                                      SizedBox(width: 8.w),
+                                      Text(
+                                        'Active Access',
+                                        style: AppTextStyles.bodyLarge.copyWith(
+                                          color: AppColors.success,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 8.h),
+                                  Text(
+                                    'You have ${_remainingDaysData!.remainingDays} days remaining',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: AppColors.grey700,
+                                    ),
+                                  ),
+                                  if (_remainingDaysData!.activeCodesCount > 1)
+                                    Text(
+                                      '${_remainingDaysData!.activeCodesCount} active access codes',
+                                      style: AppTextStyles.caption.copyWith(
+                                        color: AppColors.grey600,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ] else ...[
+                            // No Active Access
+                            Container(
+                              padding: EdgeInsets.all(16.w),
+                              decoration: BoxDecoration(
+                                color: AppColors.warning.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12.r),
+                                border: Border.all(
+                                  color: AppColors.warning.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.warning,
+                                        color: AppColors.warning,
+                                        size: 20.sp,
+                                      ),
+                                      SizedBox(width: 8.w),
+                                      Text(
+                                        'No Active Access',
+                                        style: AppTextStyles.bodyLarge.copyWith(
+                                          color: AppColors.warning,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 8.h),
+                                  Text(
+                                    'You don\'t have any active access codes',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: AppColors.grey700,
+                                    ),
+                                  ),
+                                  SizedBox(height: 12.h),
+                                  ElevatedButton.icon(
+                                    onPressed: () {
+                                      // TODO: Navigate to payment screen
+                                      _showErrorSnackBar(
+                                        'Payment screen coming soon!',
+                                      );
+                                    },
+                                    icon: const Icon(Icons.payment),
+                                    label: const Text('Get Access'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      foregroundColor: AppColors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: 20.h),
+
+                  // Quick Actions
+                  Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.all(20.w),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.dashboard,
+                                color: AppColors.primary,
+                                size: 24.sp,
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(
+                                'Quick Actions',
+                                style: AppTextStyles.heading3.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 16.h),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildQuickActionButton(
+                                  icon: Icons.quiz,
+                                  label: 'Take Exam',
+                                  color: AppColors.primary,
+                                  onPressed: () {
+                                    // TODO: Navigate to exams
+                                    _showErrorSnackBar('Exams coming soon!');
+                                  },
+                                ),
+                              ),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: _buildQuickActionButton(
+                                  icon: Icons.history,
+                                  label: 'My Results',
+                                  color: AppColors.success,
+                                  onPressed: () {
+                                    // TODO: Navigate to results
+                                    _showErrorSnackBar('Results coming soon!');
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 12.h),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildQuickActionButton(
+                                  icon: Icons.payment,
+                                  label: 'Get Access',
+                                  color: AppColors.warning,
+                                  onPressed: () {
+                                    // TODO: Navigate to payment
+                                    _showErrorSnackBar('Payment coming soon!');
+                                  },
+                                ),
+                              ),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: _buildQuickActionButton(
+                                  icon: Icons.help,
+                                  label: 'Help & Support',
+                                  color: AppColors.info,
+                                  onPressed: () {
+                                    // TODO: Navigate to help
+                                    _showErrorSnackBar('Help coming soon!');
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildQuickActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 18.sp),
+      label: Text(
+        label,
+        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color.withOpacity(0.1),
+        foregroundColor: color,
+        elevation: 0,
+        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.r),
+          side: BorderSide(color: color.withOpacity(0.3)),
+        ),
+      ),
+    );
+  }
+}

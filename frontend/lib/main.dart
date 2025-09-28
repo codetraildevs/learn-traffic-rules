@@ -1,24 +1,61 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flash_message/flash_message.dart';
+// import 'package:firebase_core/firebase_core.dart';  // Temporarily disabled
 import 'package:learn_traffic_rules/screens/splash/splash_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
 import 'services/api_service.dart';
+import 'services/notification_service.dart';
+import 'services/simple_notification_service.dart';
+import 'services/notification_polling_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/app_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'screens/user/view_profile_screen.dart';
+import 'screens/user/about_app_screen.dart';
+import 'screens/user/privacy_policy_screen.dart';
+import 'screens/user/terms_conditions_screen.dart';
+import 'screens/user/delete_account_screen.dart';
+import 'screens/user/notifications_screen.dart';
+import 'screens/user/study_reminders_screen.dart';
+import 'screens/user/help_support_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase (temporarily disabled)
+  // try {
+  //   await Firebase.initializeApp();
+  //   debugPrint('✅ Firebase initialized successfully');
+  // } catch (e) {
+  //   debugPrint('⚠️ Firebase initialization failed: $e');
+  // }
 
   // Initialize shared preferences
   await SharedPreferences.getInstance();
 
   // Initialize API service
   await ApiService().initialize();
+
+  // Initialize notification service with fallback
+  try {
+    await NotificationService().initialize();
+  } catch (e) {
+    print('⚠️ Main notification service failed, using simple fallback: $e');
+    await SimpleNotificationService().initialize();
+  }
+
+  // Start notification polling service
+  try {
+    await NotificationPollingService().startPolling();
+    print('✅ Notification polling service started');
+  } catch (e) {
+    print('⚠️ Failed to start notification polling service: $e');
+  }
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -42,10 +79,25 @@ class MyApp extends ConsumerWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeMode,
-          home: _getInitialScreen(authState),
+          home: FlashMessageOverlay(
+            position: FlashMessagePosition.center,
+            child: _getInitialScreen(authState),
+          ),
+          routes: {
+            '/view-profile': (context) => const ViewProfileScreen(),
+            '/about-app': (context) => const AboutAppScreen(),
+            '/privacy-policy': (context) => const PrivacyPolicyScreen(),
+            '/terms-conditions': (context) => const TermsConditionsScreen(),
+            '/delete-account': (context) => const DeleteAccountScreen(),
+            '/notifications': (context) => const NotificationsScreen(),
+            '/study-reminders': (context) => const StudyRemindersScreen(),
+            '/help-support': (context) => const HelpSupportScreen(),
+          },
           builder: (context, widget) {
             return MediaQuery(
-              data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: const TextScaler.linear(1.0)),
               child: widget!,
             );
           },

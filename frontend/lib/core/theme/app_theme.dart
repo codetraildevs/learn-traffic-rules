@@ -408,6 +408,12 @@ class AppTextStyles {
     color: AppColors.grey700,
   );
 
+  static const TextStyle bodySmall = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.normal,
+    color: AppColors.grey600,
+  );
+
   static const TextStyle caption = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.normal,

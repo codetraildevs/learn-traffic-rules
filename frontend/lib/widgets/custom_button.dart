@@ -12,6 +12,7 @@ class CustomButton extends StatelessWidget {
   final IconData? icon;
   final double? width;
   final double? height;
+  final double? fontSize;
   final EdgeInsetsGeometry? padding;
 
   const CustomButton({
@@ -25,15 +26,16 @@ class CustomButton extends StatelessWidget {
     this.icon,
     this.width,
     this.height,
+    this.fontSize,
     this.padding,
   });
 
   @override
   Widget build(BuildContext context) {
-    final buttonWidth = width ?? double.infinity;
+    final buttonWidth = width ?? 100.w;
     final buttonHeight = height ?? 48.h;
     final buttonPadding =
-        padding ?? EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h);
+        padding ?? EdgeInsets.symmetric(horizontal: 4.w, vertical: 4.h);
 
     if (isOutlined) {
       return SizedBox(
@@ -51,7 +53,10 @@ class CustomButton extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.r),
             ),
-            textStyle: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600),
+            textStyle: TextStyle(
+              fontSize: fontSize ?? 12.sp,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           child: _buildButtonContent(),
         ),
@@ -72,8 +77,8 @@ class CustomButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(12.r),
           ),
           textStyle: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w600,
+            fontSize: 14.sp,
+            fontWeight: FontWeight.bold,
             fontFamily: 'Poppins',
           ),
         ),
@@ -100,7 +105,7 @@ class CustomButton extends StatelessWidget {
         children: [
           Icon(icon, size: 20.sp),
           SizedBox(width: 8.w),
-          Text(text),
+          Expanded(child: Text(text)),
         ],
       );
     }
@@ -130,7 +135,7 @@ class CustomIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final buttonSize = size ?? 48.w;
-    final iconSize = (buttonSize * 0.5).clamp(16.0, 24.0);
+    final iconSize = (buttonSize * 0.5).clamp(12.0, 16.0);
 
     Widget button = Container(
       width: buttonSize,

@@ -9,11 +9,11 @@ class User {
   final String phoneNumber;
   final String role;
   final String deviceId;
-  final bool isActive;
+  final bool? isActive;
   final DateTime? lastLogin;
   final DateTime? lastSyncAt;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   User({
     required this.id,
@@ -21,11 +21,11 @@ class User {
     required this.phoneNumber,
     required this.role,
     required this.deviceId,
-    required this.isActive,
+    this.isActive,
     this.lastLogin,
     this.lastSyncAt,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
@@ -64,13 +64,10 @@ class User {
 
 @JsonSerializable()
 class LoginRequest {
-  final String password;
+  final String phoneNumber;
   final String deviceId;
 
-  LoginRequest({
-    required this.password,
-    required this.deviceId,
-  });
+  LoginRequest({required this.phoneNumber, required this.deviceId});
 
   factory LoginRequest.fromJson(Map<String, dynamic> json) =>
       _$LoginRequestFromJson(json);
@@ -79,14 +76,12 @@ class LoginRequest {
 
 @JsonSerializable()
 class RegisterRequest {
-  final String password;
   final String fullName;
   final String phoneNumber;
   final String deviceId;
   final String role;
 
   RegisterRequest({
-    required this.password,
     required this.fullName,
     required this.phoneNumber,
     required this.deviceId,
@@ -100,15 +95,11 @@ class RegisterRequest {
 
 @JsonSerializable()
 class AuthResponse {
-  final bool success;
-  final String message;
+  final bool? success;
+  final String? message;
   final AuthData? data;
 
-  AuthResponse({
-    required this.success,
-    required this.message,
-    this.data,
-  });
+  AuthResponse({this.success, this.message, this.data});
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) =>
       _$AuthResponseFromJson(json);
@@ -120,11 +111,13 @@ class AuthData {
   final User user;
   final String token;
   final String refreshToken;
+  final AccessPeriod? accessPeriod;
 
   AuthData({
     required this.user,
     required this.token,
     required this.refreshToken,
+    this.accessPeriod,
   });
 
   factory AuthData.fromJson(Map<String, dynamic> json) =>
@@ -133,12 +126,31 @@ class AuthData {
 }
 
 @JsonSerializable()
+class AccessPeriod {
+  final bool hasAccess;
+  final int remainingDays;
+  final String? expiresAt;
+  final String? paymentTier;
+  final int? durationDays;
+
+  AccessPeriod({
+    required this.hasAccess,
+    required this.remainingDays,
+    this.expiresAt,
+    this.paymentTier,
+    this.durationDays,
+  });
+
+  factory AccessPeriod.fromJson(Map<String, dynamic> json) =>
+      _$AccessPeriodFromJson(json);
+  Map<String, dynamic> toJson() => _$AccessPeriodToJson(this);
+}
+
+@JsonSerializable()
 class ForgotPasswordRequest {
   final String phoneNumber;
 
-  ForgotPasswordRequest({
-    required this.phoneNumber,
-  });
+  ForgotPasswordRequest({required this.phoneNumber});
 
   factory ForgotPasswordRequest.fromJson(Map<String, dynamic> json) =>
       _$ForgotPasswordRequestFromJson(json);
@@ -166,9 +178,7 @@ class ResetPasswordRequest {
 class DeleteAccountRequest {
   final String password;
 
-  DeleteAccountRequest({
-    required this.password,
-  });
+  DeleteAccountRequest({required this.password});
 
   factory DeleteAccountRequest.fromJson(Map<String, dynamic> json) =>
       _$DeleteAccountRequestFromJson(json);

@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_button.dart';
 import '../../services/device_service.dart';
+import '../../services/debug_service.dart';
+import '../../services/flash_message_service.dart';
+import 'package:flash_message/flash_message.dart';
 import 'register_screen.dart';
-import 'forgot_password_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -21,9 +24,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen>
     with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _passwordController = TextEditingController();
+  final _phoneController = TextEditingController();
 
-  bool _obscurePassword = true;
   bool _isLoading = false;
   String? _deviceId;
   String? _deviceModel;
@@ -40,8 +42,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     super.initState();
     _initializeAnimations();
     _initializeDeviceInfo();
-    // Pre-fill password for testing
-    _passwordController.text = 'password123';
   }
 
   void _initializeAnimations() {
@@ -76,63 +76,333 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Future<void> _initializeDeviceInfo() async {
-    final deviceService = DeviceService();
-    _deviceId = await deviceService.getDeviceId();
-    _deviceModel = await deviceService.getDeviceModel();
-    _platformName = deviceService.getPlatformName();
+    try {
+      DebugService.logUserAction('Initializing device info', null);
 
-    if (mounted) {
-      setState(() {});
+      final deviceService = DeviceService();
+      _deviceId = await deviceService.getDeviceId();
+      _deviceModel = await deviceService.getDeviceModel();
+      _platformName = deviceService.getPlatformName();
+
+      DebugService.logDeviceInfo({
+        'deviceId': _deviceId,
+        'deviceModel': _deviceModel,
+        'platformName': _platformName,
+      });
+
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      DebugService.logError(
+        'Device info initialization failed',
+        e,
+        StackTrace.current,
+      );
+
+      // Set fallback values
+      _deviceId = 'unknown_device_${DateTime.now().millisecondsSinceEpoch}';
+      _deviceModel = 'Unknown Device';
+      _platformName = 'Unknown Platform';
+
+      DebugService.logDeviceInfo({
+        'deviceId': _deviceId,
+        'deviceModel': _deviceModel,
+        'platformName': _platformName,
+        'fallback': true,
+      });
+
+      if (mounted) {
+        setState(() {});
+      }
     }
   }
 
   @override
   void dispose() {
-    _passwordController.dispose();
+    _phoneController.dispose();
     _logoController.dispose();
     _formController.dispose();
     super.dispose();
   }
 
+  void _showPhoneNumberDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.phone, color: AppColors.primary, size: 24.sp),
+              SizedBox(width: 8.w),
+              Text(
+                'Need Help?',
+                style: AppTextStyles.heading3.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Contact our support team:',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.grey700,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.phone, color: AppColors.primary, size: 20.sp),
+                    SizedBox(width: 8.w),
+                    Text(
+                      '+250 780 494 000',
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16.sp,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'Available 24/7 for your support',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.grey600,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Close',
+                style: AppTextStyles.link.copyWith(color: AppColors.grey600),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                try {
+                  const phoneNumber = '+250780494000';
+                  debugPrint('📞 Attempting to call: $phoneNumber');
+
+                  // Try multiple URL schemes for better Android compatibility
+                  debugPrint('📞 Trying multiple phone call methods');
+                  // Try tel: scheme first
+                  final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+
+                  if (await canLaunchUrl(phoneUri)) {
+                    await launchUrl(
+                      phoneUri,
+                      mode: LaunchMode.externalApplication,
+                    );
+                    debugPrint(
+                      '📞 Phone call launched successfully with tel: scheme',
+                    );
+                  } else {
+                    // Try alternative approach with different mode
+                    debugPrint(
+                      '📞 tel: scheme failed, trying alternative approach',
+                    );
+                    try {
+                      await launchUrl(
+                        phoneUri,
+                        mode: LaunchMode.platformDefault,
+                      );
+                      debugPrint(
+                        '📞 Phone call launched with platform default mode',
+                      );
+                    } catch (e) {
+                      debugPrint('📞 Platform default failed: $e');
+                      // Try with different URI format
+                      final Uri altUri = Uri.parse('tel:$phoneNumber');
+                      try {
+                        await launchUrl(altUri);
+                        debugPrint(
+                          '📞 Phone call launched with alternative URI format',
+                        );
+                      } catch (e2) {
+                        debugPrint(
+                          '📞 All methods failed, showing snackbar: $e2',
+                        );
+                        // If all methods fail, show a snackbar
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Phone number: +250 780 494 000'),
+                              backgroundColor: AppColors.primary,
+                              action: SnackBarAction(
+                                label: 'Copy',
+                                onPressed: () {
+                                  // Copy to clipboard functionality could be added here
+                                },
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    }
+                  }
+                } catch (e) {
+                  debugPrint('📞 Error calling phone: $e');
+                  // If still fails, show a snackbar
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Phone number: +250 780 494 000'),
+                        backgroundColor: AppColors.primary,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+              child: Text('Call Now'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (_deviceId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Device ID not ready. Please try again.'),
-          backgroundColor: AppColors.error,
-        ),
+    DebugService.logUserAction('Login button clicked', {
+      'hasPhone': _phoneController.text.isNotEmpty,
+      'phoneLength': _phoneController.text.length,
+      'deviceId': _deviceId,
+    });
+
+    // Validate form
+    if (!_formKey.currentState!.validate()) {
+      DebugService.logFormValidation('Login Form', {
+        'phoneNumber': {
+          'valid': false,
+          'message': 'Phone number validation failed',
+        },
+      });
+
+      AppFlashMessage.show(
+        context: context,
+        message: 'Please check your phone number',
+        description: 'Please enter a valid phone number',
+        type: FlashMessageType.warning,
       );
       return;
     }
 
+    // Use fallback device ID if not available
+    final deviceId =
+        _deviceId ?? 'unknown_device_${DateTime.now().millisecondsSinceEpoch}';
+
+    DebugService.logAuthEvent('Login attempt started', {
+      'deviceId': deviceId,
+      'hasPhone': true,
+      'timestamp': DateTime.now().toIso8601String(),
+    });
+
     setState(() => _isLoading = true);
 
-    final request = LoginRequest(
-      password: _passwordController.text.trim(),
-      deviceId: _deviceId!,
-    );
+    try {
+      final request = LoginRequest(
+        phoneNumber: _phoneController.text.trim(),
+        deviceId: deviceId,
+      );
 
-    final success = await ref.read(authProvider.notifier).login(request);
+      DebugService.logApiCall(
+        'POST',
+        '/api/auth/login',
+        requestData: {
+          'deviceId': deviceId,
+          'hasPhone': true,
+          'phoneLength': _phoneController.text.length,
+        },
+      );
 
-    if (mounted) {
-      setState(() => _isLoading = false);
+      final success = await ref.read(authProvider.notifier).login(request);
 
-      if (success) {
-        // Navigation will be handled by the main app
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful!'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      } else {
-        final error = ref.read(authProvider).error;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error ?? 'Login failed'),
-            backgroundColor: AppColors.error,
-          ),
+      if (mounted) {
+        setState(() => _isLoading = false);
+
+        if (success) {
+          DebugService.logAuthEvent('Login successful', {
+            'deviceId': deviceId,
+            'timestamp': DateTime.now().toIso8601String(),
+          });
+
+          AppFlashMessage.show(
+            context: context,
+            message: 'Login Successful!',
+            description: 'Welcome back to Traffic Rules Master',
+            type: FlashMessageType.success,
+            duration: const Duration(seconds: 2),
+          );
+          // Navigation will be handled by the main app
+        } else {
+          final error = ref.read(authProvider).error;
+
+          DebugService.logAuthEvent('Login failed', {
+            'deviceId': deviceId,
+            'error': error,
+            'timestamp': DateTime.now().toIso8601String(),
+          });
+
+          // Show enhanced error message
+          final errorIcon = error?.contains('🌐') == true
+              ? '🌐'
+              : error?.contains('⚠️') == true
+              ? '⚠️'
+              : error?.contains('🔐') == true
+              ? '🔐'
+              : error?.contains('📱') == true
+              ? '📱'
+              : error?.contains('⏱️') == true
+              ? '⏱️'
+              : '❌';
+
+          AppFlashMessage.show(
+            context: context,
+            message: 'Login Failed $errorIcon',
+            description: error ?? 'Please check your credentials and try again',
+            type: FlashMessageType.error,
+            duration: const Duration(seconds: 6),
+          );
+        }
+      }
+    } catch (e, stackTrace) {
+      DebugService.logError('Login network error', e, stackTrace);
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+
+        AppFlashMessage.show(
+          context: context,
+          message: 'Network Error',
+          description: 'Please check your internet connection and try again',
+          type: FlashMessageType.error,
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -144,19 +414,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppColors.primary, AppColors.secondary, Color(0xFF4A148C)],
-            stops: [0.0, 0.6, 1.0],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFF8F9FF), // Light purple background
+              Color(0xFFE8E3FF), // Slightly darker purple
+              Color(0xFFD1C7FF), // Medium purple
+            ],
+            stops: [0.0, 0.5, 1.0],
           ),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
             child: Column(
               children: [
-                SizedBox(height: 40.h),
+                SizedBox(height: 20.h),
 
-                // Animated Logo Section
+                // Creative Header with Traffic Rules SVG Illustration
                 AnimatedBuilder(
                   animation: _logoAnimation,
                   builder: (context, child) {
@@ -164,63 +438,120 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       scale: _logoAnimation.value,
                       child: Column(
                         children: [
-                          // Floating Logo with Glow Effect
+                          // Traffic Rules SVG Illustration Container
                           Container(
-                            width: 120.w,
-                            height: 120.w,
+                            width: 350.w,
+                            height: 180.h,
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                colors: [AppColors.white, Color(0xFFF5F5F5)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24.r),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.white.withOpacity(0.3),
-                                  blurRadius: 30,
-                                  spreadRadius: 5,
-                                ),
-                                BoxShadow(
-                                  color: AppColors.black.withOpacity(0.1),
+                                  color: AppColors.primary.withOpacity(0.1),
                                   blurRadius: 20,
                                   offset: const Offset(0, 10),
                                 ),
                               ],
                             ),
-                            child: Icon(
-                              Icons.traffic,
-                              size: 60.sp,
-                              color: AppColors.primary,
+                            child: Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(8.w),
+                                child: SvgPicture.string(
+                                  '''
+<svg width="220" height="150" viewBox="0 0 220 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Road -->
+  <rect x="90" y="60" width="40" height="80" rx="20" fill="#E0E0E0"/>
+  <rect x="108" y="60" width="4" height="80" fill="#FFF"/>
+  <rect x="108" y="70" width="4" height="10" fill="#FFD600"/>
+  <rect x="108" y="90" width="4" height="10" fill="#FFD600"/>
+  <rect x="108" y="110" width="4" height="10" fill="#FFD600"/>
+  <rect x="108" y="130" width="4" height="10" fill="#FFD600"/>
+  <!-- Stop Sign -->
+  <g>
+    <polygon points="50,40 58,32 70,32 78,40 78,52 70,60 58,60 50,52" fill="#E53935" stroke="#B71C1C" stroke-width="2"/>
+    <text x="64" y="48" text-anchor="middle" font-size="10" font-family="Arial" fill="#FFF" font-weight="bold">STOP</text>
+  </g>
+  <!-- Traffic Light -->
+  <g>
+    <rect x="160" y="30" width="18" height="48" rx="6" fill="#333"/>
+    <circle cx="169" cy="40" r="5" fill="#E53935"/>
+    <circle cx="169" cy="54" r="5" fill="#FFD600"/>
+    <circle cx="169" cy="68" r="5" fill="#43A047"/>
+  </g>
+  <!-- Pedestrian Crossing -->
+  <g>
+    <rect x="90" y="120" width="40" height="6" fill="#FFF"/>
+    <rect x="90" y="122" width="40" height="2" fill="#BDBDBD"/>
+    <rect x="92" y="120" width="4" height="6" fill="#BDBDBD"/>
+    <rect x="100" y="120" width="4" height="6" fill="#BDBDBD"/>
+    <rect x="108" y="120" width="4" height="6" fill="#BDBDBD"/>
+    <rect x="116" y="120" width="4" height="6" fill="#BDBDBD"/>
+    <rect x="124" y="120" width="4" height="6" fill="#BDBDBD"/>
+  </g>
+  <!-- Car -->
+  <g>
+    <rect x="120" y="100" width="28" height="14" rx="4" fill="#1976D2"/>
+    <rect x="124" y="104" width="8" height="6" rx="2" fill="#90CAF9"/>
+    <rect x="134" y="104" width="8" height="6" rx="2" fill="#90CAF9"/>
+    <circle cx="126" cy="116" r="3" fill="#424242"/>
+    <circle cx="142" cy="116" r="3" fill="#424242"/>
+  </g>
+</svg>
+                                  ''',
+                                  width: 220.w,
+                                  height: 150.h,
+                                ),
+                              ),
                             ),
                           ),
 
-                          SizedBox(height: 24.h),
+                          SizedBox(height: 20.h),
 
-                          // App Title with Animation
-                          Text(
-                            'Traffic Rules',
-                            style: AppTextStyles.heading1.copyWith(
-                              color: AppColors.white,
-                              fontSize: 32.sp,
-                              fontWeight: FontWeight.bold,
-                              shadows: [
-                                Shadow(
-                                  color: AppColors.black.withOpacity(0.3),
-                                  offset: const Offset(0, 2),
-                                  blurRadius: 4,
+                          // App Title with Creative Styling
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20.w,
+                              vertical: 12.h,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  AppColors.primary,
+                                  AppColors.secondary,
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(25.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
                                 ),
                               ],
                             ),
+                            child: Text(
+                              'TRAFFIC RULES MASTER',
+                              style: AppTextStyles.heading1.copyWith(
+                                color: Colors.white,
+                                fontSize: 18.sp,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
                           ),
 
-                          SizedBox(height: 8.h),
+                          SizedBox(height: 10.h),
 
                           Text(
-                            'Master the Rules, Master the Road',
+                            'Learn • Practice • Master',
                             style: AppTextStyles.bodyLarge.copyWith(
-                              color: AppColors.white.withOpacity(0.9),
+                              color: AppColors.grey700,
                               fontSize: 16.sp,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
@@ -229,7 +560,158 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   },
                 ),
 
-                SizedBox(height: 60.h),
+                SizedBox(height: 10.h),
+
+                // Information Section
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 24.w),
+                  padding: EdgeInsets.all(20.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16.r),
+                    border: Border.all(
+                      color: const Color(0xFFE91E63).withValues(alpha: 0.3),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 8.w,
+                            height: 8.w,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFE91E63),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          SizedBox(width: 12.w),
+                          Text(
+                            'IMPORTANT INFORMATION',
+                            style: AppTextStyles.bodyLarge.copyWith(
+                              color: const Color(0xFFE91E63),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12.h),
+                      Text(
+                        'If you are new to this application, click the "Register" button below. If you already have an account, click "Login" to continue your learning journey.',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.grey700,
+                          fontSize: 14.sp,
+                          height: 1.5,
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.phone,
+                            color: AppColors.primary,
+                            size: 18.sp,
+                          ),
+                          SizedBox(width: 8.w),
+                          Text(
+                            'Need help? Call ',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.grey700,
+                              fontSize: 14.sp,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () async {
+                              try {
+                                const phoneNumber = '+250780494000';
+                                debugPrint(
+                                  '📞 Attempting to call: $phoneNumber',
+                                );
+
+                                // Try multiple URL schemes for better Android compatibility
+                                debugPrint(
+                                  '📞 Trying multiple phone call methods',
+                                );
+                                // Try tel: scheme first
+                                final Uri phoneUri = Uri(
+                                  scheme: 'tel',
+                                  path: phoneNumber,
+                                );
+
+                                if (await canLaunchUrl(phoneUri)) {
+                                  await launchUrl(
+                                    phoneUri,
+                                    mode: LaunchMode.externalApplication,
+                                  );
+                                  debugPrint(
+                                    '📞 Phone call launched successfully with tel: scheme',
+                                  );
+                                } else {
+                                  // Try alternative approach with different mode
+                                  debugPrint(
+                                    '📞 tel: scheme failed, trying alternative approach',
+                                  );
+                                  try {
+                                    await launchUrl(
+                                      phoneUri,
+                                      mode: LaunchMode.platformDefault,
+                                    );
+                                    debugPrint(
+                                      '📞 Phone call launched with platform default mode',
+                                    );
+                                  } catch (e) {
+                                    debugPrint(
+                                      '📞 Platform default failed: $e',
+                                    );
+                                    // Try with different URI format
+                                    final Uri altUri = Uri.parse(
+                                      'tel:$phoneNumber',
+                                    );
+                                    try {
+                                      await launchUrl(altUri);
+                                      debugPrint(
+                                        '📞 Phone call launched with alternative URI format',
+                                      );
+                                    } catch (e2) {
+                                      debugPrint(
+                                        '📞 All methods failed, showing dialog: $e2',
+                                      );
+                                      _showPhoneNumberDialog();
+                                    }
+                                  }
+                                }
+                              } catch (e) {
+                                debugPrint('📞 Call error: $e');
+                                _showPhoneNumberDialog();
+                              }
+                            },
+                            child: Text(
+                              '+250 780 494 000',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: AppColors.primary,
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 20.h),
 
                 // Animated Login Form
                 SlideTransition(
@@ -237,16 +719,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   child: FadeTransition(
                     opacity: _formAnimation,
                     child: Container(
-                      margin: EdgeInsets.symmetric(horizontal: 24.w),
-                      padding: EdgeInsets.all(32.w),
+                      margin: EdgeInsets.symmetric(horizontal: 20.w),
+                      padding: EdgeInsets.all(28.w),
                       decoration: BoxDecoration(
-                        color: AppColors.white,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(24.r),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.black.withOpacity(0.1),
-                            blurRadius: 30,
-                            offset: const Offset(0, 15),
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
                           ),
                         ],
                       ),
@@ -255,141 +737,91 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Welcome Text
-                            Text(
-                              'Welcome Back!',
-                              style: AppTextStyles.heading2.copyWith(
-                                fontSize: 28.sp,
-                                color: AppColors.grey800,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-
                             SizedBox(height: 8.h),
 
                             Text(
-                              'Enter your password to continue',
+                              'Enter your phone number to continue',
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: AppColors.grey600,
-                                fontSize: 16.sp,
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.bold,
                               ),
                               textAlign: TextAlign.center,
                             ),
 
-                            SizedBox(height: 40.h),
+                            SizedBox(height: 20.h),
 
-                            // Device Info Display
-                            if (_deviceId != null) ...[
-                              Container(
-                                padding: EdgeInsets.all(16.w),
-                                decoration: BoxDecoration(
-                                  color: AppColors.grey50,
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  border: Border.all(
-                                    color: AppColors.grey200,
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.phone_android,
-                                          color: AppColors.primary,
-                                          size: 20.sp,
-                                        ),
-                                        SizedBox(width: 8.w),
-                                        Text(
-                                          'Device: $_platformName',
-                                          style: AppTextStyles.bodyMedium
-                                              .copyWith(
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                        ),
-                                      ],
+                            // Device Info Display with Creative Design
+
+                            // Phone Number Field with Enhanced Design
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16.r),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.1,
                                     ),
-                                    if (_deviceModel != null) ...[
-                                      SizedBox(height: 4.h),
-                                      Text(
-                                        _deviceModel!,
-                                        style: AppTextStyles.caption.copyWith(
-                                          color: AppColors.grey600,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
                               ),
-
-                              SizedBox(height: 24.h),
-                            ],
-
-                            // Password Field
-                            CustomTextField(
-                              controller: _passwordController,
-                              label: 'Password',
-                              hint: 'Enter your password',
-                              prefixIcon: Icons.lock_outline,
-                              obscureText: _obscurePassword,
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                  color: AppColors.grey500,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
+                              child: CustomTextField(
+                                controller: _phoneController,
+                                label: 'Phone Number',
+                                hint: 'Enter your phone number',
+                                prefixIcon: Icons.phone_outlined,
+                                keyboardType: TextInputType.phone,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Phone number is required';
+                                  }
+                                  if (value.length < 10) {
+                                    return 'Please enter a valid phone number';
+                                  }
+                                  return null;
                                 },
                               ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Password is required';
-                                }
-                                if (value.length <
-                                    AppConstants.minPasswordLength) {
-                                  return 'Password must be at least ${AppConstants.minPasswordLength} characters';
-                                }
-                                return null;
-                              },
                             ),
 
-                            SizedBox(height: 32.h),
+                            SizedBox(height: 20.h),
 
-                            // Login Button
-                            CustomButton(
-                              text: 'Sign In',
-                              onPressed: _isLoading ? null : _handleLogin,
-                              isLoading: _isLoading,
+                            // Login Button with Enhanced Design
+                            Container(
                               height: 56.h,
-                            ),
-
-                            SizedBox(height: 24.h),
-
-                            // Forgot Password Link
-                            Center(
-                              child: TextButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ForgotPasswordScreen(),
-                                    ),
-                                  );
-                                },
-                                child: Text(
-                                  'Forgot Password?',
-                                  style: AppTextStyles.link.copyWith(
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    AppColors.primary,
+                                    AppColors.secondary,
+                                  ],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
                                 ),
+                                borderRadius: BorderRadius.circular(16.r),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: CustomButton(
+                                text: 'Sign In',
+                                icon: Icons.login,
+                                onPressed: _isLoading ? null : _handleLogin,
+                                isLoading: _isLoading,
+                                height: 56.h,
+                                backgroundColor: Colors.transparent,
+                                textColor: Colors.white,
                               ),
                             ),
+
+                            SizedBox(height: 10.h),
                           ],
                         ),
                       ),
@@ -397,88 +829,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   ),
                 ),
 
-                SizedBox(height: 40.h),
+                SizedBox(height: 10.h),
 
-                // Register Link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Don't have an account? ",
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.white.withOpacity(0.9),
-                        fontSize: 16.sp,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const RegisterScreen(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'Create Account',
-                        style: AppTextStyles.link.copyWith(
-                          color: AppColors.white,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: 40.h),
-
-                // Test Credentials Info
+                // Register Link with Creative Design
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 24.w),
                   padding: EdgeInsets.all(20.w),
                   decoration: BoxDecoration(
-                    color: AppColors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(16.r),
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.1),
+                        AppColors.secondary.withValues(alpha: 0.1),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20.r),
                     border: Border.all(
-                      color: AppColors.white.withOpacity(0.2),
+                      color: AppColors.primary.withOpacity(0.2),
                       width: 1,
                     ),
                   ),
-                  child: Column(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: AppColors.white,
-                            size: 20.sp,
-                          ),
-                          SizedBox(width: 8.w),
-                          Text(
-                            'Test Credentials',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16.sp,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 12.h),
                       Text(
-                        'Password: password123',
+                        "Don't have an account?",
                         style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.white.withOpacity(0.9),
+                          color: AppColors.grey700,
                           fontSize: 14.sp,
                         ),
                       ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        'Device ID will be auto-detected',
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.white.withOpacity(0.8),
-                          fontSize: 12.sp,
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RegisterScreen(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          'Create Account',
+                          style: AppTextStyles.link.copyWith(
+                            color: AppColors.primary,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],

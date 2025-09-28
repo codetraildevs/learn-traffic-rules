@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../core/constants/app_constants.dart';
 
 // Theme Mode Provider
 class ThemeModeNotifier extends StateNotifier<ThemeMode> {
@@ -22,8 +21,9 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   }
 }
 
-final themeModeProvider =
-    StateNotifierProvider<ThemeModeNotifier, ThemeMode>((ref) {
+final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((
+  ref,
+) {
   return ThemeModeNotifier();
 });
 
@@ -44,8 +44,9 @@ class ConnectivityNotifier extends StateNotifier<bool> {
   }
 }
 
-final connectivityProvider =
-    StateNotifierProvider<ConnectivityNotifier, bool>((ref) {
+final connectivityProvider = StateNotifierProvider<ConnectivityNotifier, bool>((
+  ref,
+) {
   return ConnectivityNotifier();
 });
 
@@ -90,10 +91,7 @@ class AppStateNotifier extends StateNotifier<AppState> {
 
       state = state.copyWith(isInitialized: true);
     } catch (e) {
-      state = state.copyWith(
-        error: e.toString(),
-        isInitialized: true,
-      );
+      state = state.copyWith(error: e.toString(), isInitialized: true);
     }
   }
 
@@ -125,13 +123,21 @@ class AppStateNotifier extends StateNotifier<AppState> {
       final notifications =
           preferences['notifications'] as Map<String, dynamic>;
       await prefs.setBool(
-          'exam_reminders', notifications['examReminders'] ?? true);
+        'exam_reminders',
+        notifications['examReminders'] ?? true,
+      );
       await prefs.setBool(
-          'payment_updates', notifications['paymentUpdates'] ?? true);
+        'payment_updates',
+        notifications['paymentUpdates'] ?? true,
+      );
       await prefs.setBool(
-          'study_reminders', notifications['studyReminders'] ?? true);
-      await prefs.setBool('achievement_notifications',
-          notifications['achievementNotifications'] ?? true);
+        'study_reminders',
+        notifications['studyReminders'] ?? true,
+      );
+      await prefs.setBool(
+        'achievement_notifications',
+        notifications['achievementNotifications'] ?? true,
+      );
     }
 
     // Save other preferences
@@ -154,8 +160,9 @@ class AppStateNotifier extends StateNotifier<AppState> {
   }
 }
 
-final appStateProvider =
-    StateNotifierProvider<AppStateNotifier, AppState>((ref) {
+final appStateProvider = StateNotifierProvider<AppStateNotifier, AppState>((
+  ref,
+) {
   return AppStateNotifier();
 });
 

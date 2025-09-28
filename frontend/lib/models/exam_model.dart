@@ -1,5 +1,4 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'question_model.dart';
 
 part 'exam_model.g.dart';
 
@@ -7,35 +6,55 @@ part 'exam_model.g.dart';
 class Exam {
   final String id;
   final String title;
-  final String description;
-  final String category;
+  final String? description;
+  final String? category;
   final String difficulty;
   final int duration;
-  final int questionCount;
   final int passingScore;
-  final String? examImgUrl;
   final bool isActive;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final List<Question>? questions;
+  final String? examImgUrl;
+  final int? questionCount;
+  final bool? isFirstTwo;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
-  Exam({
+  const Exam({
     required this.id,
     required this.title,
-    required this.description,
-    required this.category,
+    this.description,
+    this.category,
     required this.difficulty,
     required this.duration,
-    required this.questionCount,
     required this.passingScore,
-    this.examImgUrl,
     required this.isActive,
-    required this.createdAt,
-    required this.updatedAt,
-    this.questions,
+    this.examImgUrl,
+    this.questionCount,
+    this.isFirstTwo,
+    this.createdAt,
+    this.updatedAt,
   });
 
-  factory Exam.fromJson(Map<String, dynamic> json) => _$ExamFromJson(json);
+  factory Exam.fromJson(Map<String, dynamic> json) {
+    return Exam(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String?,
+      category: json['category'] as String?,
+      difficulty: json['difficulty'] as String? ?? 'medium',
+      duration: (json['duration'] as num?)?.toInt() ?? 30,
+      passingScore: (json['passingScore'] as num?)?.toInt() ?? 70,
+      isActive: json['isActive'] as bool? ?? true,
+      examImgUrl: json['examImgUrl'] as String?,
+      questionCount: (json['questionCount'] as num?)?.toInt(),
+      isFirstTwo: json['isFirstTwo'] as bool?,
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString())
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'].toString())
+          : null,
+    );
+  }
   Map<String, dynamic> toJson() => _$ExamToJson(this);
 
   Exam copyWith({
@@ -45,13 +64,13 @@ class Exam {
     String? category,
     String? difficulty,
     int? duration,
-    int? questionCount,
     int? passingScore,
-    String? examImgUrl,
     bool? isActive,
+    String? examImgUrl,
+    int? questionCount,
+    bool? isFirstTwo,
     DateTime? createdAt,
     DateTime? updatedAt,
-    List<Question>? questions,
   }) {
     return Exam(
       id: id ?? this.id,
@@ -60,93 +79,129 @@ class Exam {
       category: category ?? this.category,
       difficulty: difficulty ?? this.difficulty,
       duration: duration ?? this.duration,
-      questionCount: questionCount ?? this.questionCount,
       passingScore: passingScore ?? this.passingScore,
-      examImgUrl: examImgUrl ?? this.examImgUrl,
       isActive: isActive ?? this.isActive,
+      examImgUrl: examImgUrl ?? this.examImgUrl,
+      questionCount: questionCount ?? this.questionCount,
+      isFirstTwo: isFirstTwo ?? this.isFirstTwo,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      questions: questions ?? this.questions,
     );
   }
 
-  bool get isEasy => difficulty == 'EASY';
-  bool get isMedium => difficulty == 'MEDIUM';
-  bool get isHard => difficulty == 'HARD';
+  String get difficultyDisplay {
+    switch (difficulty.toUpperCase()) {
+      case 'EASY':
+        return 'Easy';
+      case 'MEDIUM':
+        return 'Medium';
+      case 'HARD':
+        return 'Hard';
+      default:
+        return difficulty;
+    }
+  }
+
+  String get durationDisplay {
+    if (duration < 60) {
+      return '${duration}m';
+    } else {
+      final hours = duration ~/ 60;
+      final minutes = duration % 60;
+      return minutes > 0 ? '${hours}h ${minutes}m' : '${hours}h';
+    }
+  }
+
+  String get statusDisplay => isActive ? 'Active' : 'Inactive';
 }
 
 @JsonSerializable()
-class ExamResult {
-  final String id;
-  final String userId;
-  final String examId;
-  final double score;
-  final int totalQuestions;
-  final int correctAnswers;
-  final int timeSpent;
-  final Map<String, String> answers;
-  final bool passed;
-  final DateTime completedAt;
-  final Exam? exam;
+class CreateExamRequest {
+  final String title;
+  final String? description;
+  final String? category;
+  final String difficulty;
+  final int duration;
+  final int passingScore;
+  final bool isActive;
+  final String? examImgUrl;
 
-  ExamResult({
-    required this.id,
-    required this.userId,
-    required this.examId,
-    required this.score,
-    required this.totalQuestions,
-    required this.correctAnswers,
-    required this.timeSpent,
-    required this.answers,
-    required this.passed,
-    required this.completedAt,
-    this.exam,
+  const CreateExamRequest({
+    required this.title,
+    this.description,
+    this.category,
+    required this.difficulty,
+    required this.duration,
+    required this.passingScore,
+    required this.isActive,
+    this.examImgUrl,
   });
 
-  factory ExamResult.fromJson(Map<String, dynamic> json) =>
-      _$ExamResultFromJson(json);
-  Map<String, dynamic> toJson() => _$ExamResultToJson(this);
+  factory CreateExamRequest.fromJson(Map<String, dynamic> json) =>
+      _$CreateExamRequestFromJson(json);
+  Map<String, dynamic> toJson() => _$CreateExamRequestToJson(this);
+}
 
-  ExamResult copyWith({
-    String? id,
-    String? userId,
-    String? examId,
-    double? score,
-    int? totalQuestions,
-    int? correctAnswers,
-    int? timeSpent,
-    Map<String, String>? answers,
-    bool? passed,
-    DateTime? completedAt,
-    Exam? exam,
-  }) {
-    return ExamResult(
-      id: id ?? this.id,
-      userId: userId ?? this.userId,
-      examId: examId ?? this.examId,
-      score: score ?? this.score,
-      totalQuestions: totalQuestions ?? this.totalQuestions,
-      correctAnswers: correctAnswers ?? this.correctAnswers,
-      timeSpent: timeSpent ?? this.timeSpent,
-      answers: answers ?? this.answers,
-      passed: passed ?? this.passed,
-      completedAt: completedAt ?? this.completedAt,
-      exam: exam ?? this.exam,
-    );
-  }
+@JsonSerializable()
+class UpdateExamRequest {
+  final String? title;
+  final String? description;
+  final String? category;
+  final String? difficulty;
+  final int? duration;
+  final int? passingScore;
+  final bool? isActive;
+  final String? examImgUrl;
 
-  double get percentage => (score / 100) * 100;
-  int get incorrectAnswers => totalQuestions - correctAnswers;
-  Duration get duration => Duration(seconds: timeSpent);
+  const UpdateExamRequest({
+    this.title,
+    this.description,
+    this.category,
+    this.difficulty,
+    this.duration,
+    this.passingScore,
+    this.isActive,
+    this.examImgUrl,
+  });
+
+  factory UpdateExamRequest.fromJson(Map<String, dynamic> json) =>
+      _$UpdateExamRequestFromJson(json);
+  Map<String, dynamic> toJson() => _$UpdateExamRequestToJson(this);
+}
+
+@JsonSerializable()
+class ExamResponse {
+  final bool success;
+  final String? message;
+  final Exam? data;
+
+  const ExamResponse({required this.success, this.message, this.data});
+
+  factory ExamResponse.fromJson(Map<String, dynamic> json) =>
+      _$ExamResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$ExamResponseToJson(this);
+}
+
+@JsonSerializable()
+class ExamListResponse {
+  final bool success;
+  final String? message;
+  final List<Exam>? data;
+
+  const ExamListResponse({required this.success, this.message, this.data});
+
+  factory ExamListResponse.fromJson(Map<String, dynamic> json) =>
+      _$ExamListResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$ExamListResponseToJson(this);
 }
 
 @JsonSerializable()
 class ExamSubmission {
   final String examId;
-  final Map<String, String> answers;
-  final int timeSpent;
+  final List<QuestionAnswer> answers;
+  final int timeSpent; // in seconds
 
-  ExamSubmission({
+  const ExamSubmission({
     required this.examId,
     required this.answers,
     required this.timeSpent,
@@ -158,73 +213,108 @@ class ExamSubmission {
 }
 
 @JsonSerializable()
-class OfflineExamData {
-  final Exam exam;
-  final List<Question> questions;
-  final DateTime downloadedAt;
-  final int version;
+class Question {
+  final String id;
+  final String examId;
+  final String question;
+  final String option1;
+  final String option2;
+  final String option3;
+  final String option4;
+  final String correctAnswer;
+  final int points;
+  final String? questionImgUrl;
 
-  OfflineExamData({
-    required this.exam,
-    required this.questions,
-    required this.downloadedAt,
-    required this.version,
+  const Question({
+    required this.id,
+    required this.examId,
+    required this.question,
+    required this.option1,
+    required this.option2,
+    required this.option3,
+    required this.option4,
+    required this.correctAnswer,
+    required this.points,
+    this.questionImgUrl,
   });
 
-  factory OfflineExamData.fromJson(Map<String, dynamic> json) =>
-      _$OfflineExamDataFromJson(json);
-  Map<String, dynamic> toJson() => _$OfflineExamDataToJson(this);
+  factory Question.fromJson(Map<String, dynamic> json) =>
+      _$QuestionFromJson(json);
+  Map<String, dynamic> toJson() => _$QuestionToJson(this);
+
+  // Helper method to get all options as a list
+  List<String> get options => [option1, option2, option3, option4];
 }
 
 @JsonSerializable()
-class OfflineExamResult {
+class CreateQuestionRequest {
+  final String question;
+  final String option1;
+  final String option2;
+  final String option3;
+  final String option4;
+  final String correctAnswer;
+  final String? questionImgUrl;
+  final int points;
+
+  const CreateQuestionRequest({
+    required this.question,
+    required this.option1,
+    required this.option2,
+    required this.option3,
+    required this.option4,
+    required this.correctAnswer,
+    this.questionImgUrl,
+    this.points = 1,
+  });
+
+  factory CreateQuestionRequest.fromJson(Map<String, dynamic> json) =>
+      _$CreateQuestionRequestFromJson(json);
+  Map<String, dynamic> toJson() => _$CreateQuestionRequestToJson(this);
+}
+
+@JsonSerializable()
+class QuestionAnswer {
+  final String questionId;
+  final String selectedAnswer;
+  final bool isCorrect;
+
+  const QuestionAnswer({
+    required this.questionId,
+    required this.selectedAnswer,
+    required this.isCorrect,
+  });
+
+  factory QuestionAnswer.fromJson(Map<String, dynamic> json) =>
+      _$QuestionAnswerFromJson(json);
+  Map<String, dynamic> toJson() => _$QuestionAnswerToJson(this);
+}
+
+@JsonSerializable()
+class ExamResult {
+  final String id;
   final String examId;
-  final double score;
+  final String userId;
+  final int score;
   final int totalQuestions;
   final int correctAnswers;
   final int timeSpent;
-  final Map<String, String> answers;
   final bool passed;
   final DateTime completedAt;
-  final bool synced;
 
-  OfflineExamResult({
+  const ExamResult({
+    required this.id,
     required this.examId,
+    required this.userId,
     required this.score,
     required this.totalQuestions,
     required this.correctAnswers,
     required this.timeSpent,
-    required this.answers,
     required this.passed,
     required this.completedAt,
-    this.synced = false,
   });
 
-  factory OfflineExamResult.fromJson(Map<String, dynamic> json) =>
-      _$OfflineExamResultFromJson(json);
-  Map<String, dynamic> toJson() => _$OfflineExamResultToJson(this);
-
-  OfflineExamResult copyWith({
-    String? examId,
-    double? score,
-    int? totalQuestions,
-    int? correctAnswers,
-    int? timeSpent,
-    Map<String, String>? answers,
-    bool? passed,
-    DateTime? completedAt,
-    bool? synced,
-  }) {
-    return OfflineExamResult(
-      examId: examId ?? this.examId,
-      score: score ?? this.score,
-      totalQuestions: totalQuestions ?? this.totalQuestions,
-      correctAnswers: correctAnswers ?? this.correctAnswers,
-      timeSpent: timeSpent ?? this.timeSpent,
-      answers: answers ?? this.answers,
-      passed: passed ?? this.passed,
-      completedAt: completedAt ?? this.completedAt,
-      synced: synced ?? this.synced,
-    );
-  }
+  factory ExamResult.fromJson(Map<String, dynamic> json) =>
+      _$ExamResultFromJson(json);
+  Map<String, dynamic> toJson() => _$ExamResultToJson(this);
 }

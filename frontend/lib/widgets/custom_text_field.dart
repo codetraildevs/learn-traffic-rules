@@ -46,18 +46,12 @@ class CustomTextField extends StatelessWidget {
       readOnly: readOnly,
       maxLines: maxLines,
       maxLength: maxLength,
-      style: AppTextStyles.bodyLarge.copyWith(
-        fontSize: 16.sp,
-      ),
+      style: AppTextStyles.bodyLarge.copyWith(fontSize: 16.sp),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
         prefixIcon: prefixIcon != null
-            ? Icon(
-                prefixIcon,
-                color: AppColors.grey500,
-                size: 20.sp,
-              )
+            ? Icon(prefixIcon, color: AppColors.grey500, size: 20.sp)
             : null,
         suffixIcon: suffixIcon,
         filled: true,
@@ -72,7 +66,7 @@ class CustomTextField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
@@ -82,26 +76,11 @@ class CustomTextField extends StatelessWidget {
           borderRadius: BorderRadius.circular(12.r),
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: 16.w,
-          vertical: 16.h,
-        ),
-        labelStyle: TextStyle(
-          color: AppColors.grey600,
-          fontSize: 14.sp,
-        ),
-        hintStyle: TextStyle(
-          color: AppColors.grey400,
-          fontSize: 14.sp,
-        ),
-        errorStyle: TextStyle(
-          color: AppColors.error,
-          fontSize: 12.sp,
-        ),
-        counterStyle: TextStyle(
-          color: AppColors.grey500,
-          fontSize: 12.sp,
-        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+        labelStyle: TextStyle(color: AppColors.grey600, fontSize: 14.sp),
+        hintStyle: TextStyle(color: AppColors.grey400, fontSize: 14.sp),
+        errorStyle: TextStyle(color: AppColors.error, fontSize: 12.sp),
+        counterStyle: TextStyle(color: AppColors.grey500, fontSize: 12.sp),
       ),
     );
   }

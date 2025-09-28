@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
-import '../../providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -90,7 +89,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         borderRadius: BorderRadius.circular(24.r),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.black.withOpacity(0.2),
+                            color: AppColors.black.withValues(alpha: 0.2),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -128,7 +127,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         Text(
                           'Master Traffic Rules',
                           style: AppTextStyles.bodyLarge.copyWith(
-                            color: AppColors.white.withOpacity(0.9),
+                            color: AppColors.white.withValues(alpha: 0.9),
                             fontSize: 16.sp,
                           ),
                         ),

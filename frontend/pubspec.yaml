@@ -39,6 +39,7 @@ dependencies:
   
   # File Operations
   path_provider: ^2.1.1
+  file_picker: ^8.0.0+1
   
   # UI Components
   cached_network_image: ^3.3.0
@@ -46,13 +47,19 @@ dependencies:
   lottie: ^2.7.0
   flutter_svg: ^2.0.9
   
+  # Phone & Communication
+  # flutter_phone_direct_caller: ^2.2.1  # Removed due to build issues
+  
   # Charts & Analytics
   fl_chart: ^0.66.0
   
-  # Notifications (commented out due to Android build issues)
-  # flutter_local_notifications: ^16.3.0
+  # Notifications
+  flutter_local_notifications: ^17.2.3
+  # firebase_core: ^2.32.0  # Temporarily disabled
+  # firebase_messaging: ^14.7.10  # Temporarily disabled
+  permission_handler: ^11.2.0
   
-  # Device Info
+  # Device Info (for high security device binding)
   device_info_plus: ^9.1.1
   package_info_plus: ^4.2.0
   
@@ -60,12 +67,13 @@ dependencies:
   intl: ^0.19.0
   uuid: ^4.2.1
   url_launcher: ^6.2.2
+  flash_message: ^0.0.2
   
   # Security
   crypto: ^3.0.3
   
   # Image Handling
-  image_picker: ^1.0.4
+  image_picker: ^1.2.0
   
   # Animations
   animations: ^2.0.8

@@ -1,6 +1,9 @@
 class AppConstants {
   // API Configuration
-  static const String baseUrl = 'http://localhost:3000/api';
+  // static const String baseUrl = 'https://learn-traffic-rules.onrender.com/api';
+  static const String baseUrl = 'http://10.102.183.116:3000/api';
+  static const String baseUrlImage = 'http://10.102.183.116:3000';
+
   static const String apiVersion = 'v1';
   static const int connectionTimeout = 30000;
   static const int receiveTimeout = 30000;
@@ -95,18 +98,10 @@ class AppConstants {
   ];
 
   // Difficulty Levels
-  static const List<String> difficultyLevels = [
-    'EASY',
-    'MEDIUM',
-    'HARD',
-  ];
+  static const List<String> difficultyLevels = ['EASY', 'MEDIUM', 'HARD'];
 
   // User Roles
-  static const List<String> userRoles = [
-    'USER',
-    'MANAGER',
-    'ADMIN',
-  ];
+  static const List<String> userRoles = ['USER', 'MANAGER', 'ADMIN'];
 
   // Payment Status
   static const List<String> paymentStatuses = [
@@ -144,18 +139,17 @@ class AppConstants {
     'webp',
   ];
 
-  static const List<String> supportedDocumentFormats = [
-    'pdf',
-    'doc',
-    'docx',
-  ];
+  static const List<String> supportedDocumentFormats = ['pdf', 'doc', 'docx'];
 
   // API Endpoints
   static const String authEndpoint = '/auth';
   static const String usersEndpoint = '/users';
+  static const String userEndpoint = '/user-management';
+  static const String userManagementEndpoint = '/user-management';
   static const String examsEndpoint = '/exams';
   static const String questionsEndpoint = '/questions';
   static const String paymentsEndpoint = '/payments';
+  static const String accessCodesEndpoint = '/access-codes';
   static const String offlineEndpoint = '/offline';
   static const String analyticsEndpoint = '/analytics';
   static const String notificationsEndpoint = '/notifications';
