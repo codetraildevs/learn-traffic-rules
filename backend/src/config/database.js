@@ -18,9 +18,16 @@ const getDatabaseConfig = () => {
     console.log('🐘 Using PostgreSQL configuration for production');
     console.log('🔍 DATABASE_URL:', databaseUrl.replace(/:[^:@]+@/, ':***@')); // Hide password in logs
     
-    // Fix missing port in DATABASE_URL for Render internal URLs
+    // Fix DATABASE_URL for Render internal URLs
     let fixedDatabaseUrl = databaseUrl;
-    if (databaseUrl.includes('@dpg-') && !databaseUrl.includes(':5432')) {
+    
+    // If it's an external URL (.ohio-postgres.render.com), convert to internal
+    if (databaseUrl.includes('.ohio-postgres.render.com')) {
+      fixedDatabaseUrl = databaseUrl.replace('.ohio-postgres.render.com:5432', '');
+      console.log('🔧 Converted external URL to internal URL:', fixedDatabaseUrl.replace(/:[^:@]+@/, ':***@'));
+    }
+    // If it's an internal URL without port, add port
+    else if (databaseUrl.includes('@dpg-') && !databaseUrl.includes(':5432')) {
       fixedDatabaseUrl = databaseUrl.replace('@dpg-', ':5432@dpg-');
       console.log('🔧 Fixed DATABASE_URL to include port:', fixedDatabaseUrl.replace(/:[^:@]+@/, ':***@'));
     }
