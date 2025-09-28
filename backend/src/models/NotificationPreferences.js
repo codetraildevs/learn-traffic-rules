@@ -12,7 +12,7 @@ const NotificationPreferences = sequelize.define('NotificationPreferences', {
     allowNull: false,
     unique: true,
     references: {
-      model: 'Users',
+      model: 'users',
       key: 'id',
     },
   },
@@ -69,7 +69,7 @@ const NotificationPreferences = sequelize.define('NotificationPreferences', {
     defaultValue: true,
   },
 }, {
-  tableName: 'NotificationPreferences',
+  tableName: 'notificationpreferences',
   timestamps: true,
   indexes: [
     {

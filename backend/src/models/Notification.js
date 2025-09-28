@@ -11,7 +11,7 @@ const Notification = sequelize.define('Notification', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'users',
       key: 'id',
     },
   },
@@ -76,7 +76,7 @@ const Notification = sequelize.define('Notification', {
     allowNull: false,
   },
 }, {
-  tableName: 'Notifications',
+  tableName: 'notifications',
   timestamps: true,
   indexes: [
     {

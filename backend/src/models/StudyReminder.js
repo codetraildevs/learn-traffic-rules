@@ -11,7 +11,7 @@ const StudyReminder = sequelize.define('StudyReminder', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: 'Users',
+      model: 'users',
       key: 'id',
     },
   },
@@ -67,7 +67,7 @@ const StudyReminder = sequelize.define('StudyReminder', {
     defaultValue: true,
   },
 }, {
-  tableName: 'StudyReminders',
+  tableName: 'studyreminders',
   timestamps: true,
   indexes: [
     {
