@@ -1,4 +1,6 @@
 const { Sequelize } = require('sequelize');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 // Determine database dialect based on environment
@@ -216,6 +218,77 @@ const testConnection = async () => {
   return false;
 };
 
+// Create tables from SQL file
+const createTablesFromSQL = async (sequelize) => {
+  try {
+    // Read SQL file
+    const sqlFilePath = path.join(__dirname, '../../traffic_rules_db.sql');
+    if (!fs.existsSync(sqlFilePath)) {
+      throw new Error(`SQL file not found: ${sqlFilePath}`);
+    }
+    
+    const sqlContent = fs.readFileSync(sqlFilePath, 'utf8');
+    console.log('📄 SQL file loaded successfully');
+    
+    // Split SQL into individual statements
+    const statements = sqlContent
+      .split(';')
+      .map(stmt => stmt.trim())
+      .filter(stmt => stmt.length > 0 && !stmt.startsWith('--'));
+    
+    console.log(`📋 Found ${statements.length} SQL statements to execute`);
+    
+    // Execute statements one by one
+    for (let i = 0; i < statements.length; i++) {
+      const statement = statements[i];
+      if (statement.trim()) {
+        try {
+          console.log(`🔄 Executing statement ${i + 1}/${statements.length}...`);
+          await sequelize.query(statement);
+          console.log(`✅ Statement ${i + 1} executed successfully`);
+        } catch (error) {
+          // Skip errors for tables that already exist
+          if (error.message.includes('already exists') || 
+              (error.message.includes('relation') && error.message.includes('already exists'))) {
+            console.log(`⚠️  Statement ${i + 1} skipped (table already exists)`);
+            continue;
+          }
+          console.error(`❌ Statement ${i + 1} failed:`, error.message);
+          throw error;
+        }
+      }
+    }
+    
+    // Create default admin user
+    console.log('👤 Creating default admin user...');
+    try {
+      await sequelize.query(`
+        INSERT INTO users (id, fullName, phoneNumber, password, role, isActive, createdAt, updatedAt)
+        VALUES (
+          gen_random_uuid(),
+          'Admin User',
+          'admin123',
+          '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+          'ADMIN',
+          true,
+          NOW(),
+          NOW()
+        )
+        ON CONFLICT (phoneNumber) DO NOTHING
+      `);
+      console.log('✅ Default admin user created');
+    } catch (adminError) {
+      console.log('⚠️  Admin user may already exist:', adminError.message);
+    }
+    
+    console.log('🎉 SQL tables created successfully!');
+    
+  } catch (error) {
+    console.error('❌ SQL table creation failed:', error.message);
+    throw error;
+  }
+};
+
 // Initialize database tables
 const initializeTables = async () => {
   try {
@@ -239,69 +312,21 @@ const initializeTables = async () => {
     setupAssociations();
     console.log('✅ Model associations set up');
 
-    // Sync all models - create tables if they don't exist
+    // Check if tables exist, if not, create them using direct SQL
     try {
-      if (process.env.FORCE_SYNC === 'true') {
-        console.log('🔄 Force syncing database to apply new structure...');
-        await sequelize.sync({ force: true });
-        console.log('✅ Database tables recreated with new structure');
-      } else {
-        // For production, use alter: true to create missing tables
-        console.log('🔄 Syncing database tables (alter: true)...');
-        await sequelize.sync({ force: false, alter: true });
-        console.log('✅ Database tables synchronized successfully');
-      }
-
-      // Verify tables were created
       const tables = await sequelize.getQueryInterface().showAllTables();
-      console.log('📋 Created tables:', tables);
+      console.log('📋 Existing tables:', tables);
       
       if (tables.length === 0) {
-        throw new Error('No tables were created during sync');
+        console.log('🔄 No tables found, creating from SQL...');
+        await createTablesFromSQL(sequelize);
+      } else {
+        console.log('✅ Database tables already exist, skipping creation');
       }
       
-    } catch (syncError) {
-      console.error('❌ Database sync failed:', syncError.message);
-      console.error('🔍 Sync error details:', {
-        name: syncError.name,
-        code: syncError.code,
-        parent: syncError.parent?.code,
-        original: syncError.original?.code,
-        sql: syncError.sql
-      });
-      
-      // Try alternative sync methods
-      console.log('🔄 Trying alternative sync methods...');
-      
-      try {
-        // Try with just alter: false
-        console.log('🔄 Attempting sync with alter: false...');
-        await sequelize.sync({ force: false, alter: false });
-        console.log('✅ Database tables created with alter: false');
-      } catch (altError) {
-        console.error('❌ Alternative sync also failed:', altError.message);
-        
-        // Try creating tables manually
-        console.log('🔄 Attempting manual table creation...');
-        try {
-          await sequelize.authenticate();
-          console.log('✅ Database connection verified');
-          
-          // Create tables one by one
-          const models = [User, Exam, PaymentRequest, AccessCode, Question, ExamResult, Notification, StudyReminder, NotificationPreferences];
-          for (const model of models) {
-            try {
-              await model.sync({ force: false });
-              console.log(`✅ Created table: ${model.name}`);
-            } catch (modelError) {
-              console.error(`❌ Failed to create table ${model.name}:`, modelError.message);
-            }
-          }
-        } catch (manualError) {
-          console.error('❌ Manual table creation failed:', manualError.message);
-          throw manualError;
-        }
-      }
+    } catch (error) {
+      console.error('❌ Error checking tables:', error.message);
+      throw error;
     }
     
   } catch (error) {
