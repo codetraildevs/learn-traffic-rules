@@ -68,17 +68,21 @@ const initializeTables = async () => {
     const AccessCode = require('../models/AccessCode');
     const Question = require('../models/Question');
     const ExamResult = require('../models/ExamResult');
+    const Notification = require('../models/Notification');
+    const StudyReminder = require('../models/StudyReminder');
+    const NotificationPreferences = require('../models/NotificationPreferences');
 
     // Setup associations
     const setupAssociations = require('./associations');
     setupAssociations();
 
-    // Sync all models - use alter: true for development, force: false for production
-    if (process.env.NODE_ENV === 'development') {
-      await sequelize.sync({ alter: true });
-      console.log('✅ Database tables synchronized successfully');
+    // Sync all models - only force sync when explicitly requested
+    if (process.env.FORCE_SYNC === 'true') {
+      console.log('🔄 Force syncing database to apply new structure...');
+      await sequelize.sync({ force: true });
+      console.log('✅ Database tables recreated with new structure');
     } else {
-      await sequelize.sync({ force: false });
+      await sequelize.sync({ force: false, alter: false });
       console.log('✅ Database tables synchronized successfully');
     }
   } catch (error) {

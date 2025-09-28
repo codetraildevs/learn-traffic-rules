@@ -12,10 +12,9 @@ class AuthService {
    * Create new user
    */
   async createUser(userData) {
-    const { password, fullName, phoneNumber, deviceId, role } = userData;
+    const { fullName, phoneNumber, deviceId, role } = userData;
     
     return await User.create({
-      password,
       fullName,
       phoneNumber,
       deviceId,

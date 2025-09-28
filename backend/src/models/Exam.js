@@ -39,15 +39,6 @@ const Exam = sequelize.define('Exam', {
       max: 180
     }
   },
-  questionCount: {
-    type: DataTypes.INTEGER,
-    defaultValue: 20,
-    allowNull: false,
-    validate: {
-      min: 5,
-      max: 100
-    }
-  },
   passingScore: {
     type: DataTypes.INTEGER,
     defaultValue: 70,
@@ -85,7 +76,6 @@ Exam.prototype.toJSON = function() {
     category: this.category,
     difficulty: this.difficulty,
     duration: this.duration,
-    questionCount: this.questionCount,
     passingScore: this.passingScore,
     isActive: this.isActive,
     examImgUrl: this.examImgUrl,

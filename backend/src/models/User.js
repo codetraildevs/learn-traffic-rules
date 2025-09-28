@@ -7,10 +7,6 @@ const User = sequelize.define('User', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true
   },
-  password: {
-    type: DataTypes.STRING(255),
-    allowNull: false
-  },
   fullName: {
     type: DataTypes.STRING(200),
     allowNull: false,
@@ -20,7 +16,8 @@ const User = sequelize.define('User', {
   },
   phoneNumber: {
     type: DataTypes.STRING(20),
-    allowNull: true,
+    allowNull: false,
+    unique: true,
     validate: {
       is: /^[\+]?[1-9][\d]{0,15}$/
     }
@@ -56,6 +53,19 @@ const User = sequelize.define('User', {
     allowNull: true
   },
   lastSyncAt: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  isBlocked: {
+    type: DataTypes.INTEGER,
+    defaultValue: 1,
+    allowNull: false
+  },
+  blockReason: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  blockedAt: {
     type: DataTypes.DATE,
     allowNull: true
   }

@@ -3,6 +3,10 @@ const PaymentRequest = require('../models/PaymentRequest');
 const AccessCode = require('../models/AccessCode');
 const Exam = require('../models/Exam');
 const ExamResult = require('../models/ExamResult');
+const Notification = require('../models/Notification');
+const StudyReminder = require('../models/StudyReminder');
+const NotificationPreferences = require('../models/NotificationPreferences');
+const notificationService = require('../services/notificationService');
 
 class NotificationController {
   /**
@@ -11,26 +15,19 @@ class NotificationController {
   async getUserNotifications(req, res) {
     try {
       const userId = req.user.userId;
-      const { page = 1, limit = 20, unreadOnly = false } = req.query;
+      const { page = 1, limit = 20, unreadOnly = false, type = null, category = null } = req.query;
 
-      // In a real implementation, you'd have a Notifications table
-      // For now, we'll generate notifications based on user activity
-      const notifications = await this.generateUserNotifications(userId, {
+      const result = await notificationService.getUserNotifications(userId, {
         page: parseInt(page),
         limit: parseInt(limit),
-        unreadOnly: unreadOnly === 'true'
+        unreadOnly: unreadOnly === 'true',
+        type,
+        category,
       });
 
       res.json({
         success: true,
-        data: {
-          notifications,
-          pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
-            total: notifications.length
-          }
-        }
+        data: result
       });
 
     } catch (error) {
@@ -51,20 +48,19 @@ class NotificationController {
       const { notificationId } = req.params;
       const userId = req.user.userId;
 
-      // In a real implementation, you'd update the notification in the database
-      // For now, we'll just return success
-      console.log(`Notification ${notificationId} marked as read for user ${userId}`);
+      const notification = await notificationService.markAsRead(notificationId, userId);
 
       res.json({
         success: true,
-        message: 'Notification marked as read'
+        message: 'Notification marked as read',
+        data: notification
       });
 
     } catch (error) {
       console.error('Mark notification as read error:', error);
       res.status(500).json({
         success: false,
-        message: 'Internal server error',
+        message: error.message || 'Internal server error',
         error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
@@ -77,8 +73,7 @@ class NotificationController {
     try {
       const userId = req.user.userId;
 
-      // In a real implementation, you'd update all notifications for the user
-      console.log(`All notifications marked as read for user ${userId}`);
+      await notificationService.markAllAsRead(userId);
 
       res.json({
         success: true,
@@ -100,7 +95,7 @@ class NotificationController {
    */
   async sendNotification(req, res) {
     try {
-      const { userId, type, title, message, data } = req.body;
+      const { userId, type, title, message, data, category, priority } = req.body;
       const senderId = req.user.userId;
 
       // Validate required fields
@@ -120,24 +115,16 @@ class NotificationController {
         });
       }
 
-      // Create notification
-      const notification = {
-        id: require('uuid').v4(),
+      // Create notification using notification service
+      const notification = await notificationService.createNotification({
         userId,
         type,
         title,
         message,
+        category: category || 'GENERAL',
+        priority: priority || 'MEDIUM',
         data: data || {},
-        senderId,
-        isRead: false,
-        createdAt: new Date()
-      };
-
-      // In a real implementation, you'd save this to the database
-      console.log('Notification created:', notification);
-
-      // Send push notification (if implemented)
-      await this.sendPushNotification(userId, notification);
+      });
 
       res.json({
         success: true,
@@ -162,17 +149,7 @@ class NotificationController {
     try {
       const userId = req.user.userId;
 
-      // In a real implementation, you'd get preferences from the database
-      const preferences = {
-        emailNotifications: true,
-        pushNotifications: true,
-        smsNotifications: false,
-        examReminders: true,
-        paymentUpdates: true,
-        systemAnnouncements: true,
-        studyReminders: true,
-        achievementNotifications: true
-      };
+      const preferences = await notificationService.getNotificationPreferences(userId);
 
       res.json({
         success: true,
@@ -199,14 +176,19 @@ class NotificationController {
 
       // Validate preferences
       const validKeys = [
-        'emailNotifications',
         'pushNotifications',
         'smsNotifications',
         'examReminders',
         'paymentUpdates',
         'systemAnnouncements',
         'studyReminders',
-        'achievementNotifications'
+        'achievementNotifications',
+        'weeklyReports',
+        'quietHoursEnabled',
+        'quietHoursStart',
+        'quietHoursEnd',
+        'vibrationEnabled',
+        'soundEnabled'
       ];
 
       const invalidKeys = Object.keys(preferences).filter(key => !validKeys.includes(key));
@@ -217,17 +199,163 @@ class NotificationController {
         });
       }
 
-      // In a real implementation, you'd save preferences to the database
-      console.log(`Notification preferences updated for user ${userId}:`, preferences);
+      const updatedPreferences = await notificationService.updateNotificationPreferences(userId, preferences);
 
       res.json({
         success: true,
         message: 'Notification preferences updated successfully',
-        data: preferences
+        data: updatedPreferences
       });
 
     } catch (error) {
       console.error('Update notification preferences error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  /**
+   * Create study reminder
+   */
+  async createStudyReminder(req, res) {
+    try {
+      const userId = req.user.userId;
+      const { reminderTime, daysOfWeek, studyGoalMinutes, timezone } = req.body;
+
+      // Validate required fields
+      if (!reminderTime || !daysOfWeek || !Array.isArray(daysOfWeek)) {
+        return res.status(400).json({
+          success: false,
+          message: 'reminderTime and daysOfWeek are required'
+        });
+      }
+
+      // Check if user already has a study reminder
+      const existingReminder = await StudyReminder.findOne({
+        where: { userId, isActive: true }
+      });
+
+      if (existingReminder) {
+        return res.status(400).json({
+          success: false,
+          message: 'User already has an active study reminder'
+        });
+      }
+
+      const reminder = await notificationService.createStudyReminder(userId, {
+        reminderTime,
+        daysOfWeek,
+        studyGoalMinutes: studyGoalMinutes || 30,
+        timezone: timezone || 'UTC'
+      });
+
+      res.json({
+        success: true,
+        message: 'Study reminder created successfully',
+        data: reminder
+      });
+
+    } catch (error) {
+      console.error('Create study reminder error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  /**
+   * Get study reminder
+   */
+  async getStudyReminder(req, res) {
+    try {
+      const userId = req.user.userId;
+
+      const reminder = await StudyReminder.findOne({
+        where: { userId, isActive: true }
+      });
+
+      res.json({
+        success: true,
+        data: reminder
+      });
+
+    } catch (error) {
+      console.error('Get study reminder error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  /**
+   * Update study reminder
+   */
+  async updateStudyReminder(req, res) {
+    try {
+      const userId = req.user.userId;
+      const { reminderId } = req.params;
+      const updateData = req.body;
+
+      const reminder = await notificationService.updateStudyReminder(reminderId, userId, updateData);
+
+      res.json({
+        success: true,
+        message: 'Study reminder updated successfully',
+        data: reminder
+      });
+
+    } catch (error) {
+      console.error('Update study reminder error:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  /**
+   * Delete study reminder
+   */
+  async deleteStudyReminder(req, res) {
+    try {
+      const userId = req.user.userId;
+      const { reminderId } = req.params;
+
+      const reminder = await StudyReminder.findOne({
+        where: { id: reminderId, userId }
+      });
+
+      if (!reminder) {
+        return res.status(404).json({
+          success: false,
+          message: 'Study reminder not found'
+        });
+      }
+
+      // Cancel scheduled job
+      if (notificationService.scheduledJobs.has(reminderId)) {
+        notificationService.scheduledJobs.get(reminderId).destroy();
+        notificationService.scheduledJobs.delete(reminderId);
+      }
+
+      reminder.isActive = false;
+      await reminder.save();
+
+      res.json({
+        success: true,
+        message: 'Study reminder deleted successfully'
+      });
+
+    } catch (error) {
+      console.error('Delete study reminder error:', error);
       res.status(500).json({
         success: false,
         message: 'Internal server error',

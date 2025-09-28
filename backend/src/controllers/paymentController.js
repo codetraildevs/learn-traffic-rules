@@ -3,6 +3,7 @@ const AccessCode = require('../models/AccessCode');
 const Exam = require('../models/Exam');
 const User = require('../models/User');
 const { validationResult } = require('express-validator');
+const notificationService = require('../services/notificationService');
 
 class PaymentController {
   /**
@@ -180,6 +181,19 @@ class PaymentController {
         isUsed: false
       });
 
+      // Send notification to user about payment approval
+      try {
+        await notificationService.notifyPaymentStatus(
+          paymentRequest.userId, 
+          'APPROVED', 
+          paymentRequest.id
+        );
+        console.log(`📧 Payment approval notification sent to user ${paymentRequest.userId}`);
+      } catch (notificationError) {
+        console.error('Failed to send payment approval notification:', notificationError);
+        // Don't fail the request if notification fails
+      }
+
       res.json({
         success: true,
         message: 'Payment request approved and access code generated',
@@ -238,6 +252,20 @@ class PaymentController {
         rejectionReason: rejectionReason,
         managerNotes: `Payment rejected by manager: ${rejectionReason}`
       });
+
+      // Send notification to user about payment rejection
+      try {
+        await notificationService.notifyPaymentStatus(
+          paymentRequest.userId, 
+          'REJECTED', 
+          paymentRequest.id,
+          rejectionReason
+        );
+        console.log(`📧 Payment rejection notification sent to user ${paymentRequest.userId}`);
+      } catch (notificationError) {
+        console.error('Failed to send payment rejection notification:', notificationError);
+        // Don't fail the request if notification fails
+      }
 
       res.json({
         success: true,

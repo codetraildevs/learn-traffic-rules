@@ -1,14 +1,39 @@
+// Load environment variables first
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
+const http = require('http');
+const { Server } = require('socket.io');
 const { testConnection, initializeTables } = require('./src/config/database');
-require('dotenv').config();
+const notificationService = require('./src/services/notificationService');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    methods: ['GET', 'POST']
+  }
+});
+
 const PORT = process.env.PORT || 3000;
+
+// Debug: Check if JWT secret is loaded
+console.log('🔑 JWT Secret loaded:', process.env.JWT_SECRET ? 'YES' : 'NO');
+console.log('🔑 All env vars:', Object.keys(process.env).filter(key => key.includes('JWT')));
+if (process.env.JWT_SECRET) {
+  console.log('🔑 JWT Secret length:', process.env.JWT_SECRET.length);
+} else {
+  console.log('❌ JWT_SECRET not found in environment variables');
+  console.log('🔍 Current working directory:', process.cwd());
+  console.log('🔍 .env file exists:', require('fs').existsSync('.env'));
+}
 
 // Security middleware
 app.use(helmet());
@@ -29,6 +54,9 @@ app.use('/api/', limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static('uploads'));
+
 // Swagger configuration
 const swaggerOptions = {
   definition: {
@@ -39,7 +67,6 @@ const swaggerOptions = {
       description: 'API documentation for Traffic Rules Practice App with manual payment processing and device ID validation',
       contact: {
         name: 'API Support',
-        email: 'support@trafficrules.com'
       },
       license: {
         name: 'MIT',
@@ -77,11 +104,6 @@ const swaggerOptions = {
             id: {
               type: 'string',
               description: 'Unique user identifier'
-            },
-            email: {
-              type: 'string',
-              format: 'email',
-              description: 'User email address'
             },
             deviceId: {
               type: 'string',
@@ -294,16 +316,24 @@ app.get('/health', (req, res) => {
 });
 
 // API routes (will be added)
+console.log('🔄 Loading API routes...');
 app.use('/api/auth', require('./src/routes/auth'));
-app.use('/api/users', require('./src/routes/users'));
+console.log('✅ Auth routes loaded');
+
+const userManagementRoutes = require('./src/routes/userManagement');
+console.log('✅ User management routes loaded:', userManagementRoutes.stack ? userManagementRoutes.stack.length : 'No stack');
+app.use('/api/user-management', userManagementRoutes);
+
 app.use('/api/exams', require('./src/routes/exams'));
 app.use('/api/payments', require('./src/routes/payments'));
 app.use('/api/questions', require('./src/routes/questions'));
+app.use('/api/access-codes', require('./src/routes/accessCodes'));
 app.use('/api/bulk-upload', require('./src/routes/bulkUpload'));
 app.use('/api/offline', require('./src/routes/offline'));
 app.use('/api/analytics', require('./src/routes/analytics'));
 app.use('/api/notifications', require('./src/routes/notifications'));
 app.use('/api/achievements', require('./src/routes/achievements'));
+console.log('✅ All API routes loaded');
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -318,21 +348,26 @@ app.get('/', (req, res) => {
 
 // 404 handler
 app.use('*', (req, res) => {
+  // Get all registered routes dynamically
+  const routes = [];
+  app._router.stack.forEach((middleware) => {
+    if (middleware.route) {
+      const methods = Object.keys(middleware.route.methods).join(',').toUpperCase();
+      routes.push(`${methods} ${middleware.route.path}`);
+    } else if (middleware.name === 'router') {
+      middleware.handle.stack.forEach((handler) => {
+        if (handler.route) {
+          const methods = Object.keys(handler.route.methods).join(',').toUpperCase();
+          routes.push(`${methods} ${middleware.regexp.source.replace(/\\\//g, '/').replace(/\^|\$|\?/g, '')}${handler.route.path}`);
+        }
+      });
+    }
+  });
+
   res.status(404).json({
     success: false,
     message: 'Route not found',
-    availableRoutes: [
-      'GET /',
-      'GET /health',
-      'GET /api-docs',
-      'POST /api/auth/register',
-      'POST /api/auth/login',
-      'GET /api/users/profile',
-      'GET /api/exams',
-      'POST /api/payments/request',
-      'GET /api/questions/exam/:examId',
-      'POST /api/questions'
-    ]
+    availableRoutes: routes.slice(0, 20) // Limit to first 20 routes
   });
 });
 
@@ -356,16 +391,81 @@ const startServer = async () => {
     // Initialize database tables
     await initializeTables();
     
+    // Create default admin user
+    await createDefaultAdmin();
+    
+    // Initialize notification service with Socket.IO
+    notificationService.setSocketIO(io);
+    
+    // Socket.IO connection handling
+    io.on('connection', (socket) => {
+      console.log(`🔌 User connected: ${socket.id}`);
+      
+      // Join user to their personal room
+      socket.on('join-user-room', (userId) => {
+        socket.join(`user_${userId}`);
+        console.log(`👤 User ${userId} joined their room`);
+      });
+      
+      // Handle disconnection
+      socket.on('disconnect', () => {
+        console.log(`🔌 User disconnected: ${socket.id}`);
+      });
+    });
+    
     // Start server
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
       console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
       console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🔑 Admin credentials: admin123 / admin123`);
+      console.log(`🔌 Socket.IO enabled for real-time notifications`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);
     process.exit(1);
+  }
+};
+
+// Create default admin user
+const createDefaultAdmin = async () => {
+  try {
+    const User = require('./src/models/User');
+    const bcrypt = require('bcryptjs');
+    const { v4: uuidv4 } = require('uuid');
+
+    // Check if admin already exists
+    const existingAdmin = await User.findOne({
+      where: { role: 'ADMIN' }
+    });
+
+    if (existingAdmin) {
+      console.log('✅ Admin user already exists');
+      return;
+    }
+
+    // Create admin user
+    const saltRounds = parseInt(process.env.BCRYPT_ROUNDS) || 12;
+    const hashedPassword = await bcrypt.hash('admin123', saltRounds);
+
+    await User.create({
+      id: uuidv4(),
+      fullName: 'System Administrator',
+      phoneNumber: '+1234567890',
+      password: hashedPassword,
+      role: 'ADMIN',
+      deviceId: 'admin-device-bypass',
+      isActive: true
+    });
+
+    console.log('🔑 DEFAULT ADMIN CREATED:');
+    console.log('   Username: admin123');
+    console.log('   Password: admin123');
+    console.log('   Role: ADMIN');
+    console.log('   Note: Admin can login from any device');
+  } catch (error) {
+    console.error('❌ Error creating default admin:', error.message);
   }
 };
 

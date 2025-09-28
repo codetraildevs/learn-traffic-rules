@@ -30,8 +30,6 @@ const { body, param, query } = require('express-validator');
  *     NotificationPreferences:
  *       type: object
  *       properties:
- *         emailNotifications:
- *           type: boolean
  *         pushNotifications:
  *           type: boolean
  *         smsNotifications:
@@ -298,7 +296,6 @@ router.get('/preferences',
 router.put('/preferences',
   authMiddleware.authenticate,
   [
-    body('emailNotifications').optional().isBoolean().withMessage('emailNotifications must be a boolean'),
     body('pushNotifications').optional().isBoolean().withMessage('pushNotifications must be a boolean'),
     body('smsNotifications').optional().isBoolean().withMessage('smsNotifications must be a boolean'),
     body('examReminders').optional().isBoolean().withMessage('examReminders must be a boolean'),
@@ -308,6 +305,173 @@ router.put('/preferences',
     body('achievementNotifications').optional().isBoolean().withMessage('achievementNotifications must be a boolean')
   ],
   notificationController.updateNotificationPreferences
+);
+
+/**
+ * @swagger
+ * /api/notifications/study-reminder:
+ *   post:
+ *     summary: Create study reminder
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reminderTime
+ *               - daysOfWeek
+ *             properties:
+ *               reminderTime:
+ *                 type: string
+ *                 format: time
+ *                 example: "19:00"
+ *               daysOfWeek:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   enum: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+ *                 example: ["Monday", "Wednesday", "Friday"]
+ *               studyGoalMinutes:
+ *                 type: integer
+ *                 minimum: 5
+ *                 maximum: 480
+ *                 default: 30
+ *               timezone:
+ *                 type: string
+ *                 default: "UTC"
+ *     responses:
+ *       200:
+ *         description: Study reminder created successfully
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/study-reminder',
+  authMiddleware.authenticate,
+  [
+    body('reminderTime').isString().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+    body('daysOfWeek').isArray().notEmpty(),
+    body('studyGoalMinutes').optional().isInt({ min: 5, max: 480 }),
+    body('timezone').optional().isString(),
+  ],
+  notificationController.createStudyReminder
+);
+
+/**
+ * @swagger
+ * /api/notifications/study-reminder:
+ *   get:
+ *     summary: Get user study reminder
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Study reminder retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/study-reminder',
+  authMiddleware.authenticate,
+  notificationController.getStudyReminder
+);
+
+/**
+ * @swagger
+ * /api/notifications/study-reminder/{reminderId}:
+ *   put:
+ *     summary: Update study reminder
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reminderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reminderTime:
+ *                 type: string
+ *                 format: time
+ *               daysOfWeek:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               studyGoalMinutes:
+ *                 type: integer
+ *               timezone:
+ *                 type: string
+ *               isEnabled:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Study reminder updated successfully
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Study reminder not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/study-reminder/:reminderId',
+  authMiddleware.authenticate,
+  [
+    param('reminderId').isUUID(),
+    body('reminderTime').optional().isString().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+    body('daysOfWeek').optional().isArray(),
+    body('studyGoalMinutes').optional().isInt({ min: 5, max: 480 }),
+    body('timezone').optional().isString(),
+    body('isEnabled').optional().isBoolean(),
+  ],
+  notificationController.updateStudyReminder
+);
+
+/**
+ * @swagger
+ * /api/notifications/study-reminder/{reminderId}:
+ *   delete:
+ *     summary: Delete study reminder
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: reminderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Study reminder deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Study reminder not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/study-reminder/:reminderId',
+  authMiddleware.authenticate,
+  [param('reminderId').isUUID()],
+  notificationController.deleteStudyReminder
 );
 
 module.exports = router;
