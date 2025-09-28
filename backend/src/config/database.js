@@ -313,28 +313,43 @@ const createPostgreSQLTables = async (sequelize) => {
       }
     }
     
-    // Insert sample notification data
-    console.log('📊 Inserting sample notification data...');
-    try {
-      // Get a user ID to use for sample data
-      const users = await sequelize.query('SELECT id FROM users LIMIT 1', { type: Sequelize.QueryTypes.SELECT });
-      if (users.length > 0) {
-        const userId = users[0].id;
+    // Check if we need to import data from SQL file
+    const userCount = await sequelize.query('SELECT COUNT(*) as count FROM users', { type: Sequelize.QueryTypes.SELECT });
+    const examCount = await sequelize.query('SELECT COUNT(*) as count FROM exams', { type: Sequelize.QueryTypes.SELECT });
+    const questionCount = await sequelize.query('SELECT COUNT(*) as count FROM questions', { type: Sequelize.QueryTypes.SELECT });
+    
+    if (userCount[0].count <= 1 || examCount[0].count === 0 || questionCount[0].count === 0) {
+      console.log('📊 Importing data from SQL file...');
+      try {
+        const { spawn } = require('child_process');
+        const path = require('path');
         
-        // Insert sample notifications
-        await sequelize.query(`
-          INSERT INTO notifications (id, "userId", type, title, message, data, "isRead", "isPushSent", priority, category, "createdAt", "updatedAt")
-          VALUES 
-            (gen_random_uuid(), $1, 'STUDY_REMINDER', 'Time to Study! 📖', 'Haven''t studied today? Take a practice exam to keep your skills sharp!', '{"studyGoalMinutes":30}', false, false, 'MEDIUM', 'STUDY', NOW(), NOW()),
-            (gen_random_uuid(), $1, 'SYSTEM_UPDATE', 'Welcome to Traffic Rules App! 🚗', 'Welcome! Start your learning journey with our comprehensive traffic rules course.', '{}', false, false, 'HIGH', 'SYSTEM', NOW(), NOW())
-          ON CONFLICT (id) DO NOTHING
-        `, {
-          replacements: [userId]
+        await new Promise((resolve, reject) => {
+          const importer = spawn('node', [path.join(__dirname, '../../import-data-from-sql.js')], {
+            stdio: 'inherit',
+            env: process.env
+          });
+          
+          importer.on('close', (code) => {
+            if (code === 0) {
+              console.log('✅ Data imported successfully from SQL file');
+              resolve();
+            } else {
+              console.log('⚠️  Data import failed, continuing without data');
+              resolve(); // Don't fail the server startup
+            }
+          });
+          
+          importer.on('error', (error) => {
+            console.log('⚠️  Data importer error:', error.message);
+            resolve(); // Don't fail the server startup
+          });
         });
-        console.log('✅ Sample notification data inserted');
+      } catch (error) {
+        console.log('⚠️  Data import failed:', error.message);
       }
-    } catch (error) {
-      console.log('⚠️  Sample data insertion failed:', error.message);
+    } else {
+      console.log('✅ Data already exists, skipping import');
     }
     
     console.log('🎉 PostgreSQL tables created successfully!');
