@@ -19,7 +19,7 @@ const User = sequelize.define('User', {
     allowNull: false,
     unique: true,
     validate: {
-      is: /^[\+]?[1-9][\d]{0,15}$/
+      is: /^(\+250|250|0)?[7][0-9]{8}$/
     }
   },
   deviceId: {
