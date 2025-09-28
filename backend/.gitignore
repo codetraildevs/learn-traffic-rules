@@ -1,0 +1,178 @@
+# Node.js Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.test
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+.nyc_output
+
+# Build outputs
+build/
+dist/
+tmp/
+temp/
+
+# Database files
+*.sqlite
+*.db
+*.sql
+
+# Uploads directory (exam images, user uploads)
+!uploads/question-images/
+
+
+# Exam question CSV files (large data files)
+
+*.csv
+!sample-questions.csv
+!sample-questions.xlsx
+
+# Test files and scripts
+test-*.js
+*-test.js
+test/
+tests/
+__tests__/
+test-data/
+test-files/
+
+# Debug and development files
+debug-*.js
+debug/
+dev-*.js
+development/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Sequelize CLI
+config/config.json
+
+# PM2 logs
+.pm2/
+
+# Documentation that's not needed in production
+docs/
+documentation/
+*.md
+!README.md
+
+# Backup files
+backup/
+backups/
+*.backup
+
+# Cache directories
+.cache/
+.parcel-cache/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Lock files (keep package-lock.json but ignore others)
+yarn.lock
+pnpm-lock.yaml
+
+# Local configuration files
+config/local.js
+config/local.json
+local-config.js
+
+# Migration backup files
+migrations/backup/
+migrations/*.backup
+
+# Seed data backup
+seeds/backup/
+seeds/*.backup
+
+# API documentation generated files
+docs/api/
+api-docs/
+
+# Performance monitoring
+clinic/
+0x/
+
+# Security files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Docker files (if using Docker)
+.dockerignore
+Dockerfile.dev
+docker-compose.override.yml
+
+# Monitoring and logging
+logs/
+monitoring/
+metrics/
+
+# Development tools
+nodemon.json
+.eslintrc.local.js
+.prettierrc.local.js
