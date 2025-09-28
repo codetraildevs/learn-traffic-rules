@@ -18,8 +18,15 @@ const getDatabaseConfig = () => {
     console.log('🐘 Using PostgreSQL configuration for production');
     console.log('🔍 DATABASE_URL:', databaseUrl.replace(/:[^:@]+@/, ':***@')); // Hide password in logs
     
+    // Fix missing port in DATABASE_URL for Render internal URLs
+    let fixedDatabaseUrl = databaseUrl;
+    if (databaseUrl.includes('@dpg-') && !databaseUrl.includes(':5432')) {
+      fixedDatabaseUrl = databaseUrl.replace('@dpg-', ':5432@dpg-');
+      console.log('🔧 Fixed DATABASE_URL to include port:', fixedDatabaseUrl.replace(/:[^:@]+@/, ':***@'));
+    }
+    
     return {
-      url: databaseUrl,
+      url: fixedDatabaseUrl,
       dialect: 'postgres',
       dialectOptions: {
         ssl: {
