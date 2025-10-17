@@ -16,38 +16,13 @@ const getDatabaseConfig = () => {
   });
   
   if (databaseUrl) {
-    // Production PostgreSQL configuration (Render)
-    console.log('🐘 Using PostgreSQL configuration for production');
+    // Production MySQL configuration (VPS)
+    console.log('🐬 Using MySQL configuration for production');
     console.log('🔍 DATABASE_URL:', databaseUrl.replace(/:[^:@]+@/, ':***@')); // Hide password in logs
     
-    // Fix DATABASE_URL for Render internal URLs
-    let fixedDatabaseUrl = databaseUrl;
-    
-    // If it's an external URL (.ohio-postgres.render.com), convert to internal
-    if (databaseUrl.includes('.ohio-postgres.render.com')) {
-      fixedDatabaseUrl = databaseUrl.replace('.ohio-postgres.render.com:5432', '');
-      console.log('🔧 Converted external URL to internal URL:', fixedDatabaseUrl.replace(/:[^:@]+@/, ':***@'));
-    }
-    // If it's an internal URL without port, add port
-    else if (databaseUrl.includes('@dpg-') && !databaseUrl.includes(':5432')) {
-      // Check if there's already a port after the @ symbol
-      const atIndex = databaseUrl.indexOf('@');
-      const afterAt = databaseUrl.substring(atIndex);
-      if (!afterAt.includes(':')) {
-        fixedDatabaseUrl = databaseUrl.replace('@dpg-', ':5432@dpg-');
-        console.log('🔧 Fixed DATABASE_URL to include port:', fixedDatabaseUrl.replace(/:[^:@]+@/, ':***@'));
-      }
-    }
-    
     return {
-      url: fixedDatabaseUrl,
-      dialect: 'postgres',
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false
-        }
-      },
+      url: databaseUrl,
+      dialect: 'mysql',
       logging: false,
       pool: {
         max: 5,
@@ -78,28 +53,22 @@ const getDatabaseConfig = () => {
     };
   } else if (isProduction) {
     // Production without DATABASE_URL - use individual env vars
-    console.log('🐘 Using PostgreSQL configuration with individual env vars');
+    console.log('🐬 Using MySQL configuration with individual env vars');
     console.log('🔍 Database config:', {
       database: process.env.DB_NAME || 'traffic_rules_db',
-      username: process.env.DB_USER || process.env.POSTGRES_USER,
-      host: process.env.DB_HOST || process.env.POSTGRES_HOST || 'localhost',
-      port: process.env.DB_PORT || process.env.POSTGRES_PORT || 5432,
-      hasPassword: !!(process.env.DB_PASSWORD || process.env.POSTGRES_PASSWORD)
+      username: process.env.DB_USER || 'root',
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      hasPassword: !!process.env.DB_PASSWORD
     });
     
     return {
       database: process.env.DB_NAME || 'traffic_rules_db',
-      username: process.env.DB_USER || process.env.POSTGRES_USER,
-      password: process.env.DB_PASSWORD || process.env.POSTGRES_PASSWORD,
-      host: process.env.DB_HOST || process.env.POSTGRES_HOST || 'localhost',
-      port: process.env.DB_PORT || process.env.POSTGRES_PORT || 5432,
-      dialect: 'postgres',
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false
-        }
-      },
+      username: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 3306,
+      dialect: 'mysql',
       logging: false,
       pool: {
         max: 5,
@@ -187,7 +156,7 @@ const testConnection = async () => {
         const databaseUrl = process.env.DATABASE_URL;
         if (databaseUrl) {
           console.error('🔍 Current DATABASE_URL format:', databaseUrl.replace(/:[^:@]+@/, ':***@'));
-          console.error('🔍 Expected format: postgresql://username:password@hostname:port/database_name');
+          console.error('🔍 Expected format: mysql://username:password@hostname:port/database_name');
         }
         
         // Show individual environment variables
@@ -201,8 +170,8 @@ const testConnection = async () => {
         // If hostname not found, suggest using external hostname
         if (error.name === 'SequelizeHostNotFoundError') {
           console.error('💡 Hostname resolution failed. Try using external hostname:');
-          console.error('   For Render PostgreSQL, use: dpg-xxxxx.ohio-postgres.render.com');
-          console.error('   Instead of: dpg-xxxxx');
+          console.error('   For VPS MySQL, use: your-vps-domain.com or IP address');
+          console.error('   Ensure MySQL is running and accessible from your deployment');
         }
       }
       
@@ -218,62 +187,62 @@ const testConnection = async () => {
   return false;
 };
 
-// Create PostgreSQL-compatible tables
-const createPostgreSQLTables = async (sequelize) => {
+// Create MySQL-compatible tables
+const createMySQLTables = async (sequelize) => {
   try {
-    console.log('🔄 Creating PostgreSQL-compatible tables...');
+    console.log('🔄 Creating MySQL-compatible tables...');
     
-    // Create tables with PostgreSQL-compatible syntax
+    // Create tables with MySQL-compatible syntax
     const tables = [
       // Notifications table
       `CREATE TABLE IF NOT EXISTS notifications (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        "userId" UUID NOT NULL,
-        type VARCHAR(50) NOT NULL CHECK (type IN ('EXAM_REMINDER','ACHIEVEMENT_ALERT','STUDY_REMINDER','SYSTEM_UPDATE','PAYMENT_NOTIFICATION','WEEKLY_REPORT','PAYMENT_APPROVED','PAYMENT_REJECTED','EXAM_PASSED','EXAM_FAILED','NEW_EXAM','ACCESS_GRANTED','ACCESS_REVOKED','GENERAL')),
+        id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+        userId CHAR(36) NOT NULL,
+        type VARCHAR(50) NOT NULL,
         title VARCHAR(255) NOT NULL,
         message TEXT NOT NULL,
-        data JSONB DEFAULT '{}',
-        "isRead" BOOLEAN DEFAULT false,
-        "isPushSent" BOOLEAN DEFAULT false,
-        "scheduledFor" TIMESTAMP WITH TIME ZONE,
-        priority VARCHAR(20) DEFAULT 'MEDIUM' CHECK (priority IN ('LOW','MEDIUM','HIGH','URGENT')),
-        category VARCHAR(20) NOT NULL CHECK (category IN ('EXAM','PAYMENT','ACHIEVEMENT','SYSTEM','STUDY','ACCESS','GENERAL')),
-        "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        FOREIGN KEY ("userId") REFERENCES users(id) ON DELETE CASCADE
+        data JSON DEFAULT ('{}'),
+        isRead BOOLEAN DEFAULT false,
+        isPushSent BOOLEAN DEFAULT false,
+        scheduledFor TIMESTAMP NULL,
+        priority VARCHAR(20) DEFAULT 'MEDIUM',
+        category VARCHAR(20) NOT NULL,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
       )`,
       
       // Study reminders table
       `CREATE TABLE IF NOT EXISTS studyreminders (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        "userId" UUID NOT NULL,
-        "isEnabled" BOOLEAN DEFAULT true,
-        "reminderTime" TIME NOT NULL,
-        "daysOfWeek" JSONB NOT NULL DEFAULT '[]',
-        "studyGoalMinutes" INTEGER DEFAULT 30,
+        id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+        userId CHAR(36) NOT NULL,
+        isEnabled BOOLEAN DEFAULT true,
+        reminderTime TIME NOT NULL,
+        daysOfWeek JSON DEFAULT ('[]'),
+        studyGoalMinutes INTEGER DEFAULT 30,
         timezone VARCHAR(50) DEFAULT 'UTC',
-        "lastSentAt" TIMESTAMP WITH TIME ZONE,
-        "nextScheduledAt" TIMESTAMP WITH TIME ZONE,
-        "isActive" BOOLEAN DEFAULT true,
-        "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        FOREIGN KEY ("userId") REFERENCES users(id) ON DELETE CASCADE
+        lastSentAt TIMESTAMP NULL,
+        nextScheduledAt TIMESTAMP NULL,
+        isActive BOOLEAN DEFAULT true,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
       )`,
       
       // Notification preferences table
       `CREATE TABLE IF NOT EXISTS notificationpreferences (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        "userId" UUID NOT NULL UNIQUE,
-        "pushNotifications" BOOLEAN DEFAULT true,
-        "studyReminders" BOOLEAN DEFAULT true,
-        "examReminders" BOOLEAN DEFAULT true,
-        "achievementAlerts" BOOLEAN DEFAULT true,
-        "paymentNotifications" BOOLEAN DEFAULT true,
-        "systemUpdates" BOOLEAN DEFAULT true,
-        "weeklyReports" BOOLEAN DEFAULT true,
-        "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-        FOREIGN KEY ("userId") REFERENCES users(id) ON DELETE CASCADE
+        id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+        userId CHAR(36) NOT NULL UNIQUE,
+        pushNotifications BOOLEAN DEFAULT true,
+        studyReminders BOOLEAN DEFAULT true,
+        examReminders BOOLEAN DEFAULT true,
+        achievementAlerts BOOLEAN DEFAULT true,
+        paymentNotifications BOOLEAN DEFAULT true,
+        systemUpdates BOOLEAN DEFAULT true,
+        weeklyReports BOOLEAN DEFAULT true,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
       )`
     ];
     
@@ -296,12 +265,12 @@ const createPostgreSQLTables = async (sequelize) => {
     // Create indexes
     console.log('🔄 Creating indexes...');
     const indexes = [
-      'CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications("userId")',
+      'CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(userId)',
       'CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type)',
-      'CREATE INDEX IF NOT EXISTS idx_notifications_scheduled_for ON notifications("scheduledFor")',
-      'CREATE INDEX IF NOT EXISTS idx_studyreminders_user_id ON studyreminders("userId")',
-      'CREATE INDEX IF NOT EXISTS idx_studyreminders_is_enabled ON studyreminders("isEnabled")',
-      'CREATE INDEX IF NOT EXISTS idx_notificationpreferences_user_id ON notificationpreferences("userId")'
+      'CREATE INDEX IF NOT EXISTS idx_notifications_scheduled_for ON notifications(scheduledFor)',
+      'CREATE INDEX IF NOT EXISTS idx_studyreminders_user_id ON studyreminders(userId)',
+      'CREATE INDEX IF NOT EXISTS idx_studyreminders_is_enabled ON studyreminders(isEnabled)',
+      'CREATE INDEX IF NOT EXISTS idx_notificationpreferences_user_id ON notificationpreferences(userId)'
     ];
     
     for (const index of indexes) {
@@ -356,7 +325,7 @@ const createPostgreSQLTables = async (sequelize) => {
     console.log('👤 Ensuring admin user exists...');
     try {
       const adminExists = await sequelize.query(
-        'SELECT id FROM users WHERE "phoneNumber" = $1',
+        'SELECT id FROM users WHERE phoneNumber = ?',
         { 
           replacements: ['0780494000'],
           type: Sequelize.QueryTypes.SELECT 
@@ -365,9 +334,9 @@ const createPostgreSQLTables = async (sequelize) => {
       
       if (adminExists.length === 0) {
         await sequelize.query(`
-          INSERT INTO users (id, "fullName", "phoneNumber", "deviceId", role, "isActive", "createdAt", "updatedAt")
+          INSERT INTO users (id, fullName, phoneNumber, deviceId, role, isActive, createdAt, updatedAt)
           VALUES (
-            gen_random_uuid(),
+            UUID(),
             'Admin User',
             '0780494000',
             'admin-device-bypass',
@@ -396,7 +365,7 @@ const createPostgreSQLTables = async (sequelize) => {
       if (examCount[0].count === 0) {
         // Create sample exam
         await sequelize.query(`
-          INSERT INTO exams (id, title, description, category, difficulty, duration, "passingScore", "isActive", "createdAt", "updatedAt")
+          INSERT INTO exams (id, title, description, category, difficulty, duration, passingScore, isActive, createdAt, updatedAt)
           VALUES (
             '1',
             'Free Exam',
@@ -409,7 +378,7 @@ const createPostgreSQLTables = async (sequelize) => {
             NOW(),
             NOW()
           )
-          ON CONFLICT (id) DO NOTHING
+          ON DUPLICATE KEY UPDATE id=id
         `);
         
         // Create sample questions
@@ -442,9 +411,9 @@ const createPostgreSQLTables = async (sequelize) => {
         
         for (const question of questions) {
           await sequelize.query(`
-            INSERT INTO questions (id, "examId", question, option1, option2, option3, option4, "correctAnswer", points, "createdAt", "updatedAt", "questionOrder")
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW(), $10)
-            ON CONFLICT (id) DO NOTHING
+            INSERT INTO questions (id, examId, question, option1, option2, option3, option4, correctAnswer, points, createdAt, updatedAt, questionOrder)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?)
+            ON DUPLICATE KEY UPDATE id=id
           `, {
             replacements: [
               question.id,
@@ -469,10 +438,10 @@ const createPostgreSQLTables = async (sequelize) => {
       console.log('⚠️  Sample data creation failed:', dataError.message);
     }
     
-    console.log('🎉 PostgreSQL tables created successfully!');
+    console.log('🎉 MySQL tables created successfully!');
     
   } catch (error) {
-    console.error('❌ PostgreSQL table creation failed:', error.message);
+    console.error('❌ MySQL table creation failed:', error.message);
     throw error;
   }
 };
@@ -518,7 +487,7 @@ const initializeTables = async () => {
         if (missingTables.length > 0) {
           console.log('🔄 Missing tables found:', missingTables);
           console.log('🔄 Creating missing tables...');
-          await createPostgreSQLTables(sequelize);
+          await createMySQLTables(sequelize);
         } else {
           console.log('✅ All required tables exist');
         }
@@ -545,7 +514,7 @@ const initializeTables = async () => {
       // Create a new connection to avoid transaction issues
       const newSequelize = new Sequelize(sequelize.config);
       await newSequelize.authenticate();
-      await createPostgreSQLTables(newSequelize);
+      await createMySQLTables(newSequelize);
       await newSequelize.close();
       console.log('✅ Database tables created successfully');
     } catch (individualError) {
