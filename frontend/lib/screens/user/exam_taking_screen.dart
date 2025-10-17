@@ -36,8 +36,8 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
   // State variables
   List<question_model.Question> _questions = [];
   int _currentQuestionIndex = 0;
-  Map<String, String> _userAnswers = {};
-  Map<String, bool> _showAnswerFeedback =
+  final Map<String, String> _userAnswers = {};
+  final Map<String, bool> _showAnswerFeedback =
       {}; // Track if answer feedback should be shown
   bool _isLoading = true;
   bool _isSubmitting = false;
@@ -117,25 +117,25 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
   Future<void> _disableScreenshots() async {
     try {
       await _securityChannel.invokeMethod('disableScreenshots');
-      print('🔒 Security: Screenshots disabled for exam taking');
+      debugPrint('🔒 Security: Screenshots disabled for exam taking');
     } catch (e) {
-      print('🔒 Security: Failed to disable screenshots: $e');
+      debugPrint('🔒 Security: Failed to disable screenshots: $e');
     }
   }
 
   Future<void> _enableScreenshots() async {
     try {
       await _securityChannel.invokeMethod('enableScreenshots');
-      print('🔒 Security: Screenshots enabled after exam');
+      debugPrint('🔒 Security: Screenshots enabled after exam');
     } catch (e) {
-      print('🔒 Security: Failed to enable screenshots: $e');
+      debugPrint('🔒 Security: Failed to enable screenshots: $e');
     }
   }
 
   void _handleAppResumed() {
     if (_isAppInBackground && !_isExamCompleted) {
       _backgroundTime++;
-      print(
+      debugPrint(
         '🔒 Security: App resumed after background, background time: $_backgroundTime seconds',
       );
 
@@ -158,7 +158,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
           _autoSubmitExam();
         }
       });
-      print('🔒 Security: App paused, starting background timer');
+      debugPrint('🔒 Security: App paused, starting background timer');
     }
   }
 
@@ -181,7 +181,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'The exam was paused due to app switching or background activity.',
               style: AppTextStyles.bodyMedium,
             ),
@@ -193,20 +193,23 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
               ),
             ),
             SizedBox(height: 8.h),
-            Text(
+            const Text(
               '• Stay in the exam app during the test',
               style: AppTextStyles.bodySmall,
             ),
-            Text(
+            const Text(
               '• Do not switch to other apps',
               style: AppTextStyles.bodySmall,
             ),
-            Text('• Do not take screenshots', style: AppTextStyles.bodySmall),
+            const Text(
+              '• Do not take screenshots',
+              style: AppTextStyles.bodySmall,
+            ),
             SizedBox(height: 12.h),
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: AppColors.warning.withOpacity(0.1),
+                color: AppColors.warning.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(
@@ -235,7 +238,9 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
   void _autoSubmitExam() {
     if (_isExamCompleted) return;
 
-    print('🔒 Security: Auto-submitting exam due to extended background time');
+    debugPrint(
+      '🔒 Security: Auto-submitting exam due to extended background time',
+    );
     _isExamCompleted = true;
     _backgroundTimer?.cancel();
 
@@ -250,7 +255,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
             const Text('Exam Terminated'),
           ],
         ),
-        content: Text(
+        content: const Text(
           'Your exam has been automatically submitted due to extended background activity. This is to maintain exam integrity.',
           style: AppTextStyles.bodyMedium,
         ),
@@ -283,7 +288,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Are you sure you want to exit the exam?',
               style: AppTextStyles.bodyMedium,
             ),
@@ -291,7 +296,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(
@@ -327,22 +332,22 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
 
   Future<void> _loadQuestions() async {
     try {
-      print('🔍 EXAM TAKING SCREEN DEBUG - Loading questions:');
-      print('   Exam ID: ${widget.exam.id}');
-      print('   Exam Title: ${widget.exam.title}');
-      print('   Is Free Exam: ${widget.isFreeExam}');
+      debugPrint('🔍 EXAM TAKING SCREEN DEBUG - Loading questions:');
+      debugPrint('   Exam ID: ${widget.exam.id}');
+      debugPrint('   Exam Title: ${widget.exam.title}');
+      debugPrint('   Is Free Exam: ${widget.exam.isFirstTwo}');
 
       setState(() {
         _isLoading = true;
         _error = null;
       });
 
-      print('   Calling _examService.getQuestionsByExamId...');
+      debugPrint('   Calling _examService.getQuestionsByExamId...');
       final questions = await _examService.getQuestionsByExamId(widget.exam.id);
-      print('   Questions received: ${questions.length}');
+      debugPrint('   Questions received: ${questions.length}');
 
       if (questions.isEmpty) {
-        print('❌ No questions received');
+        debugPrint('❌ No questions received');
         setState(() {
           _error = 'No questions available for this exam';
           _isLoading = false;
@@ -358,15 +363,15 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
         _isLoading = false;
       });
 
-      print('✅ Successfully loaded questions');
-      print('   Timer set to: ${_timeRemaining} seconds');
+      debugPrint('✅ Successfully loaded questions');
+      debugPrint('   Timer set to: ${widget.exam.duration * 60} seconds');
 
       _startTimer();
       _progressController.forward();
       _questionController.forward();
       _timerController.forward();
     } catch (e) {
-      print('❌ EXAM TAKING SCREEN ERROR: $e');
+      debugPrint('❌ EXAM TAKING SCREEN ERROR: $e');
       setState(() {
         _error = 'Failed to load questions: $e';
         _isLoading = false;
@@ -419,6 +424,18 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
     return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
+  int _calculateScore() {
+    if (_questions.isEmpty) return 0;
+    int correctAnswers = 0;
+    for (final question in _questions) {
+      final userAnswer = _userAnswers[question.id];
+      if (userAnswer == question.correctAnswer) {
+        correctAnswers++;
+      }
+    }
+    return ((correctAnswers / _questions.length) * 100).round();
+  }
+
   Color _getTimerColor() {
     final percentage = _timeRemaining / (widget.exam.duration * 60);
     if (percentage > 0.5) return AppColors.success;
@@ -427,10 +444,10 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
   }
 
   void _selectAnswer(String questionId, String answer) {
-    print('🔍 FRONTEND DEBUG - Answer selected:');
-    print('   Question ID: $questionId');
-    print('   Selected Answer: $answer');
-    print('   Current answers: $_userAnswers');
+    debugPrint('🔍 FRONTEND DEBUG - Answer selected:');
+    debugPrint('   Question ID: $questionId');
+    debugPrint('   Selected Answer: $answer');
+    debugPrint('   Current answers: $_userAnswers');
 
     setState(() {
       _userAnswers[questionId] = answer;
@@ -483,10 +500,11 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
       );
 
       if (result.success && result.data != null) {
+        if (!mounted) return;
         AppFlashMessage.showSuccess(
           context,
           'Exam Submitted Successfully!',
-          description: 'Your score: ${result.data!.score}%',
+          description: 'Your score: ${_calculateScore()}%',
         );
 
         // Use callback if provided, otherwise navigate to progress screen
@@ -506,6 +524,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
           );
         }
       } else {
+        if (!mounted) return;
         AppFlashMessage.showError(
           context,
           'Failed to submit exam',
@@ -513,6 +532,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
         );
       }
     } catch (e) {
+      if (!mounted) return;
       AppFlashMessage.showError(
         context,
         'Error submitting exam',
@@ -544,14 +564,13 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: _isExamCompleted,
+      onPopInvokedWithResult: (didPop, result) {
         // Prevent back button during exam
-        if (!_isExamCompleted) {
+        if (!didPop && !_isExamCompleted) {
           _showExitWarning();
-          return false;
         }
-        return true;
       },
       child: Scaffold(
         backgroundColor: AppColors.grey50,
@@ -690,7 +709,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
         color: AppColors.white,
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.1),
+            color: AppColors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -736,7 +755,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
                       vertical: 8.h,
                     ),
                     decoration: BoxDecoration(
-                      color: _getTimerColor().withOpacity(0.1),
+                      color: _getTimerColor().withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20.r),
                       border: Border.all(color: _getTimerColor(), width: 2),
                     ),
@@ -780,7 +799,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
                         ),
                       ),
                       Text(
-                        '${(progress * 100).toInt()}%',
+                        '${((_currentQuestionIndex + 1) / _questions.length * 100).round()}%',
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.bold,
@@ -808,7 +827,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
   }
 
   Widget _buildQuestionContent(question_model.Question question) {
-    print("question.questionImgUrl: ${question.questionImgUrl.toString()}");
+    debugPrint("question.questionImgUrl: ${question.questionImgUrl}");
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.w),
       child: Column(
@@ -842,11 +861,11 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
                 //         vertical: 6.h,
                 //       ),
                 //       decoration: BoxDecoration(
-                //         color: AppColors.primary.withOpacity(0.1),
+                //         color: AppColors.primary.withValues(alpha: 0.1),
                 //         borderRadius: BorderRadius.circular(12.r),
                 //       ),
                 //       child: Text(
-                //         'Q${_currentQuestionIndex + 1}',
+                //         'Q$\1',
                 //         style: AppTextStyles.caption.copyWith(
                 //           color: AppColors.primary,
                 //           fontWeight: FontWeight.bold,
@@ -860,11 +879,11 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
                 //         vertical: 6.h,
                 //       ),
                 //       decoration: BoxDecoration(
-                //         color: AppColors.success.withOpacity(0.1),
+                //         color: AppColors.success.withValues(alpha: 0.1),
                 //         borderRadius: BorderRadius.circular(12.r),
                 //       ),
                 //       child: Text(
-                //         '${question.points} point${question.points != 1 ? 's' : ''}',
+                //         '$\1 point$\1',
                 //         style: AppTextStyles.caption.copyWith(
                 //           color: AppColors.success,
                 //           fontWeight: FontWeight.bold,
@@ -895,7 +914,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
                         borderRadius: BorderRadius.circular(12.r),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withOpacity(0.08),
+                            color: AppColors.primary.withValues(alpha: 0.08),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -933,7 +952,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12.r),
                     child: Image.network(
-                      "${AppConstants.baseUrlImage}${question.questionImgUrl!}",
+                      "${AppConstants.baseUrlImage}${question.questionImgUrl}",
                       width: double.infinity,
                       height: 100.h,
                       fit: BoxFit.contain,
@@ -991,11 +1010,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
       children: [
         SizedBox(height: 4.h),
         ...options.asMap().entries.map((entry) {
-          final index = entry.key;
           final option = entry.value;
-          final optionKey = String.fromCharCode(
-            97 + index.toInt(),
-          ); // a, b, c, d (lowercase)
           final isSelected =
               userAnswer == option; // Compare with full option text
           final isCorrect = option == question.correctAnswer;
@@ -1012,7 +1027,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
           if (showFeedback) {
             if (isCorrect) {
               // Correct answer - always green
-              backgroundColor = AppColors.success.withOpacity(0.1);
+              backgroundColor = AppColors.success.withValues(alpha: 0.1);
               borderColor = AppColors.success;
               circleColor = AppColors.success;
               textColor = AppColors.success;
@@ -1020,7 +1035,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
               iconColor = AppColors.success;
             } else if (isUserAnswer && !isCorrect) {
               // User's wrong answer - red
-              backgroundColor = AppColors.error.withOpacity(0.1);
+              backgroundColor = AppColors.error.withValues(alpha: 0.1);
               borderColor = AppColors.error;
               circleColor = AppColors.error;
               textColor = AppColors.error;
@@ -1036,7 +1051,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
           } else {
             // No feedback yet - normal selection state
             if (isSelected) {
-              backgroundColor = AppColors.primary.withOpacity(0.1);
+              backgroundColor = AppColors.primary.withValues(alpha: 0.1);
               borderColor = AppColors.primary;
               circleColor = AppColors.primary;
               textColor = AppColors.primary;
@@ -1147,7 +1162,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
         color: AppColors.white,
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.1),
+            color: AppColors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -1290,10 +1305,10 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withOpacity(0.1),
+                  color: AppColors.warning.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
                   border: Border.all(
-                    color: AppColors.warning.withOpacity(0.3),
+                    color: AppColors.warning.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),

@@ -22,7 +22,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   bool _isLoading = false;
   bool _codeSent = false;
-  String? _resetCode;
 
   @override
   void initState() {
@@ -46,8 +45,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       phoneNumber: _phoneController.text.trim(),
     );
 
-    final success =
-        await ref.read(authProvider.notifier).forgotPassword(request);
+    final success = await ref
+        .read(authProvider.notifier)
+        .forgotPassword(request);
 
     if (mounted) {
       setState(() => _isLoading = false);
@@ -81,9 +81,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         foregroundColor: AppColors.white,
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.primaryGradient,
-        ),
+        decoration: const BoxDecoration(gradient: AppColors.primaryGradient),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.all(24.w),
@@ -104,7 +102,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           borderRadius: BorderRadius.circular(16.r),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.black.withOpacity(0.1),
+                              color: AppColors.black.withValues(alpha: 0.1),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -128,7 +126,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       Text(
                         'Enter your phone number to receive a reset code',
                         style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.white.withOpacity(0.9),
+                          color: AppColors.white.withValues(alpha: 0.9),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -146,7 +144,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     borderRadius: BorderRadius.circular(16.r),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.black.withOpacity(0.1),
+                        color: AppColors.black.withValues(alpha: 0.1),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -179,7 +177,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             }
                             if (value.length !=
                                 AppConstants.phoneNumberLength) {
-                              return 'Phone number must be ${AppConstants.phoneNumberLength} digits';
+                              return 'Phone number must be $AppConstants.phoneNumberLength digits';
                             }
                             return null;
                           },
@@ -199,10 +197,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                           Container(
                             padding: EdgeInsets.all(16.w),
                             decoration: BoxDecoration(
-                              color: AppColors.success.withOpacity(0.1),
+                              color: AppColors.success.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12.r),
                               border: Border.all(
-                                color: AppColors.success.withOpacity(0.3),
+                                color: AppColors.success.withValues(alpha: 0.3),
                               ),
                             ),
                             child: Column(
@@ -246,7 +244,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     Text(
                       'Remember your password? ',
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.white.withOpacity(0.9),
+                        color: AppColors.white.withValues(alpha: 0.9),
                       ),
                     ),
                     TextButton(

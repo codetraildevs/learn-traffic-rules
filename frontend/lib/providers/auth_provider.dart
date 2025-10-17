@@ -57,7 +57,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> _checkAuthStatus() async {
     try {
       state = state.copyWith(status: AuthStatus.loading);
-      print('🔄 AUTH RESTORE: Starting session restoration...');
+      debugPrint('🔄 AUTH RESTORE: Starting session restoration...');
 
       // Check if user has valid token
       final prefs = await SharedPreferences.getInstance();
@@ -65,10 +65,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final userJson = prefs.getString(AppConstants.userKey);
       final accessPeriodJson = prefs.getString('access_period');
 
-      print('🔄 AUTH RESTORE: Stored data check:');
-      print('   Token exists: ${token != null}');
-      print('   User data exists: ${userJson != null}');
-      print('   Access period exists: ${accessPeriodJson != null}');
+      debugPrint('🔄 AUTH RESTORE: Stored data check:');
+      debugPrint('   Token exists: $token');
+      debugPrint('   User data exists: $userJson');
+      debugPrint('   Access period exists: $accessPeriodJson');
 
       if (token != null && userJson != null) {
         try {
@@ -83,24 +83,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
             try {
               final accessPeriodData = json.decode(accessPeriodJson);
               accessPeriod = AccessPeriod.fromJson(accessPeriodData);
-              print(
-                '🔄 AUTH RESTORE: Access period loaded - ${accessPeriod.remainingDays} days left',
+              debugPrint(
+                '🔄 AUTH RESTORE: Access period loaded - $accessPeriod days left',
               );
             } catch (e) {
-              print('❌ AUTH RESTORE: Failed to parse access period: $e');
+              debugPrint('❌ AUTH RESTORE: Failed to parse access period: $e');
             }
           }
 
-          print('🔄 AUTH RESTORE: Restoring user session');
-          print('   User: ${user.fullName} (${user.role})');
-          print('   Token exists: ${token.isNotEmpty}');
-          print(
-            '   Access period: ${accessPeriod?.hasAccess} (${accessPeriod?.remainingDays} days)',
+          debugPrint('🔄 AUTH RESTORE: Restoring user session');
+          debugPrint('   User: $user ($user.role)');
+          debugPrint('   Token exists: $token');
+          debugPrint(
+            '   Access period: $accessPeriod ($accessPeriod.remainingDays days)',
           );
 
           // For users, always fetch fresh access period data during session restoration
           if (user.role == 'USER') {
-            print('🔄 AUTH RESTORE: Fetching fresh access period for user...');
+            debugPrint(
+              '🔄 AUTH RESTORE: Fetching fresh access period for user...',
+            );
             try {
               // Make a fresh login call to get the latest access period
               final loginRequest = LoginRequest(
@@ -111,8 +113,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
               if (freshResponse.success == true && freshResponse.data != null) {
                 final freshAccessPeriod = freshResponse.data!.accessPeriod;
-                print(
-                  '🔄 AUTH RESTORE: Fresh access period loaded - ${freshAccessPeriod?.remainingDays} days left',
+                debugPrint(
+                  '🔄 AUTH RESTORE: Fresh access period loaded - $freshAccessPeriod days left',
                 );
 
                 // Store the fresh access period
@@ -127,7 +129,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
                 return;
               }
             } catch (e) {
-              print('❌ AUTH RESTORE: Failed to fetch fresh access period: $e');
+              debugPrint(
+                '❌ AUTH RESTORE: Failed to fetch fresh access period: $e',
+              );
               // Fall back to stored data
             }
           }
@@ -139,17 +143,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
             accessPeriod: accessPeriod,
           );
         } catch (e) {
-          print('❌ AUTH RESTORE: Failed to parse user data: $e');
+          debugPrint('❌ AUTH RESTORE: Failed to parse user data: $e');
           // Clear invalid data
           await _clearStoredAuth();
           state = state.copyWith(status: AuthStatus.unauthenticated);
         }
       } else {
-        print('🔄 AUTH RESTORE: No stored auth data found');
+        debugPrint('🔄 AUTH RESTORE: No stored auth data found');
         state = state.copyWith(status: AuthStatus.unauthenticated);
       }
     } catch (e) {
-      print('❌ AUTH RESTORE: Error checking auth status: $e');
+      debugPrint('❌ AUTH RESTORE: Error checking auth status: $e');
       state = state.copyWith(
         status: AuthStatus.unauthenticated,
         error: e.toString(),
@@ -167,7 +171,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // We'll use the getExams call as it requires authentication
       await _apiService.getExams();
 
-      print('✅ AUTH RESTORE: Token validated successfully');
+      debugPrint('✅ AUTH RESTORE: Token validated successfully');
       state = state.copyWith(
         status: AuthStatus.authenticated,
         user: user,
@@ -175,7 +179,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isLoading: false,
       );
     } catch (e) {
-      print('❌ AUTH RESTORE: Token validation failed: $e');
+      debugPrint('❌ AUTH RESTORE: Token validation failed: $e');
       // Token is invalid, clear stored data
       await _clearStoredAuth();
       state = state.copyWith(status: AuthStatus.unauthenticated);
@@ -200,17 +204,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (accessPeriod != null) {
         final accessPeriodJson = json.encode(accessPeriod.toJson());
         await prefs.setString('access_period', accessPeriodJson);
-        print('💾 AUTH STORE: User data and access period stored successfully');
-        print(
-          '💾 AUTH STORE: Access period - hasAccess: ${accessPeriod.hasAccess}, remainingDays: ${accessPeriod.remainingDays}',
+        debugPrint(
+          '💾 AUTH STORE: User data and access period stored successfully',
+        );
+        debugPrint(
+          '💾 AUTH STORE: Access period - hasAccess: $accessPeriod.hasAccess, remainingDays: $accessPeriod.remainingDays',
         );
       } else {
-        print(
+        debugPrint(
           '💾 AUTH STORE: User data stored successfully (no access period)',
         );
       }
     } catch (e) {
-      print('❌ AUTH STORE: Failed to store user data: $e');
+      debugPrint('❌ AUTH STORE: Failed to store user data: $e');
     }
   }
 
@@ -222,18 +228,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       // Debug logging to see the actual response
       debugPrint('🔍 LOGIN RESPONSE DEBUG:');
-      debugPrint(
-        '   success: ${response.success} (type: ${response.success.runtimeType})',
-      );
-      debugPrint('   message: ${response.message}');
-      debugPrint('   data: ${response.data}');
-      debugPrint('   accessPeriod: ${response.data?.accessPeriod}');
-      debugPrint(
-        '   accessPeriod hasAccess: ${response.data?.accessPeriod?.hasAccess}',
-      );
-      debugPrint(
-        '   accessPeriod remainingDays: ${response.data?.accessPeriod?.remainingDays}',
-      );
+      debugPrint('   success: $response.success (type: $response.data)');
+      // debugPrint('   message: $\1');
+      // debugPrint('   data: $\1');
+      // debugPrint('   accessPeriod: $\1');
+      // debugPrint(
+      //   '   accessPeriod hasAccess: $\1',
+      // );
+      // debugPrint(
+      //   '   accessPeriod remainingDays: $\1',
+      // );
 
       // More robust null checking
       final isSuccess = response.success == true;
@@ -298,12 +302,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final response = await _apiService.register(request);
 
       // Debug logging to see the actual response
-      debugPrint('🔍 REGISTER RESPONSE DEBUG:');
-      debugPrint(
-        '   success: ${response.success} (type: ${response.success.runtimeType})',
-      );
-      debugPrint('   message: ${response.message}');
-      debugPrint('   data: ${response.data}');
+      // debugPrint('🔍 REGISTER RESPONSE DEBUG:');
+      // debugPrint(
+      //   '   success: $\1 (type: $\1)',
+      // );
+      // debugPrint('   message: $\1');
+      // debugPrint('   data: $\1');
 
       // More robust null checking
       final isSuccess = response.success == true;

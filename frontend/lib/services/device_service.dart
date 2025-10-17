@@ -60,8 +60,8 @@ class DeviceService {
       if (kDebugMode) {
         debugPrint('🔧 DEVICE ID GENERATED:');
         debugPrint('   Device ID: $deviceId');
-        debugPrint('   Fingerprint: ${fingerprint.substring(0, 20)}...');
-        debugPrint('   Platform: ${getPlatformName()}');
+        debugPrint('   Fingerprint: ${fingerprint.substring(0, 8)}...');
+        // debugPrint('   Platform: $platformName');
       }
 
       _cachedDeviceId = deviceId;
@@ -84,7 +84,7 @@ class DeviceService {
         final webInfo = await _deviceInfo.webBrowserInfo;
         final packageInfo = await PackageInfo.fromPlatform();
         fingerprintData =
-            '${webInfo.browserName.name}-${webInfo.userAgent}-${packageInfo.packageName}-${packageInfo.version}';
+            '${webInfo.browserName.name}-${webInfo.platform ?? 'unknown'}-${webInfo.vendor ?? 'unknown'}-${packageInfo.packageName}';
       } else if (Platform.isAndroid) {
         final androidInfo = await _deviceInfo.androidInfo;
         final packageInfo = await PackageInfo.fromPlatform();
@@ -106,7 +106,7 @@ class DeviceService {
         final iosInfo = await _deviceInfo.iosInfo;
         final packageInfo = await PackageInfo.fromPlatform();
         fingerprintData =
-            '${iosInfo.model}-${iosInfo.identifierForVendor}-${packageInfo.packageName}-${packageInfo.version}';
+            '${iosInfo.name}-${iosInfo.model}-${iosInfo.systemName}-${packageInfo.packageName}';
       } else {
         final packageInfo = await PackageInfo.fromPlatform();
         fingerprintData =
@@ -136,8 +136,8 @@ class DeviceService {
     final appVersion = packageInfo.version;
 
     // Generate a hash-like ID from browser characteristics
-    final combined = '$browserName-$appVersion-${userAgent.length}';
-    return 'web-${combined.hashCode.abs()}';
+    final combined = '$browserName-$appVersion-${userAgent.hashCode}';
+    return 'web-${combined.hashCode}';
   }
 
   Future<String> _getAndroidDeviceId() async {
@@ -171,7 +171,7 @@ class DeviceService {
   Future<String> _getIOSDeviceId() async {
     final iosInfo = await _deviceInfo.iosInfo;
     // Use identifierForVendor for high security
-    return 'ios-${iosInfo.identifierForVendor ?? 'unknown'}';
+    return 'ios-${iosInfo.identifierForVendor ?? DateTime.now().millisecondsSinceEpoch.toString()}';
   }
 
   Future<String> _getFallbackDeviceId() async {
@@ -198,7 +198,7 @@ class DeviceService {
         return '${androidInfo.brand} ${androidInfo.model}';
       } else if (Platform.isIOS) {
         final iosInfo = await _deviceInfo.iosInfo;
-        return '${iosInfo.model} ${iosInfo.systemVersion}';
+        return '${iosInfo.name} ${iosInfo.model}';
       }
       return 'Unknown Device';
     } catch (e) {
@@ -278,7 +278,7 @@ class DeviceService {
           iosInfo.model,
           iosInfo.systemName,
           iosInfo.systemVersion,
-          iosInfo.localizedModel ?? 'unknown',
+          iosInfo.localizedModel,
           iosInfo.identifierForVendor ?? 'unknown',
         ]);
       }

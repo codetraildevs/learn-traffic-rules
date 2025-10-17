@@ -59,16 +59,16 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     });
 
     try {
-      print('🔄 Loading users...');
+      debugPrint('🔄 Loading users...');
       final response = await _userManagementService.getAllUsers();
-      print('🔄 Users response: ${response.success}');
+      debugPrint('🔄 Users response: ${response.data.users.length} users');
 
       if (response.success) {
-        print('🔄 Users data: ${response.data.users.length} users');
+        debugPrint('🔄 Users data: ${response.data.users.length} users');
         // Debug: Print user blocking status
         for (var user in response.data.users) {
-          print(
-            '👤 User: ${user.fullName}, isBlocked: ${user.isBlocked}, blockReason: ${user.blockReason}',
+          debugPrint(
+            '👤 User: ${user.fullName}, isBlocked: ${user.isBlocked}, blockReason: ${user.blockReason ?? 'None'}',
           );
         }
         setState(() {
@@ -77,10 +77,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         });
         _applyFiltersAndSort();
       } else {
-        print('❌ Failed to load users: ${response.message}');
+        debugPrint('❌ Failed to load users: ${response.message}');
       }
     } catch (e) {
-      print('❌ Error loading users: $e');
+      debugPrint('❌ Error loading users: $e');
       _showErrorSnackBar('Failed to load users: $e');
     } finally {
       setState(() {
@@ -176,7 +176,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
 
   Future<void> _generateAccessCode(UserWithStats user) async {
     try {
-      print(
+      debugPrint(
         '🔍 Generating access code for user: ${user.fullName} (ID: ${user.id})',
       );
 
@@ -184,8 +184,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       final selectedTier = await _showPaymentTierDialog();
       if (selectedTier == null) return;
 
-      print(
-        '🔍 Selected tier: ${selectedTier['tier']} - ${selectedTier['amount']} RWF',
+      debugPrint(
+        '🔍 Selected tier: ${selectedTier['name']} - ${selectedTier['amount']} RWF',
       );
 
       final response = await _userManagementService.createAccessCodeForUser(
@@ -281,9 +281,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             Container(
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                border: Border.all(
+                  color: AppColors.error.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
@@ -306,9 +308,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withOpacity(0.1),
+                  color: AppColors.warning.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+                  border: Border.all(
+                    color: AppColors.warning.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -355,7 +359,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           _showSuccessSnackBar('User ${user.fullName} deleted successfully');
           _loadUsers(); // Refresh the list
         } else {
-          _showErrorSnackBar('Failed to delete user: ${response['message']}');
+          _showErrorSnackBar(
+            'Failed to delete user: ${response['message'] ?? 'Unknown error'}',
+          );
         }
       } catch (e) {
         _showErrorSnackBar('Error deleting user: $e');
@@ -455,7 +461,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             children: [
                               Expanded(
                                 child: DropdownButtonFormField<String>(
-                                  value: _selectedFilter,
+                                  initialValue: _selectedFilter,
                                   onChanged: (value) =>
                                       _onFilterChanged(value!),
                                   decoration: InputDecoration(
@@ -523,7 +529,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             children: [
                               Expanded(
                                 child: DropdownButtonFormField<String>(
-                                  value: _selectedSort,
+                                  initialValue: _selectedSort,
                                   onChanged: (value) => _onSortChanged(value!),
                                   decoration: InputDecoration(
                                     labelText: 'Sort',
@@ -600,7 +606,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           Expanded(
                             flex: 2,
                             child: DropdownButtonFormField<String>(
-                              value: _selectedFilter,
+                              initialValue: _selectedFilter,
                               onChanged: (value) => _onFilterChanged(value!),
                               decoration: InputDecoration(
                                 labelText: 'Filter',
@@ -665,7 +671,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           Expanded(
                             flex: 2,
                             child: DropdownButtonFormField<String>(
-                              value: _selectedSort,
+                              initialValue: _selectedSort,
                               onChanged: (value) => _onSortChanged(value!),
                               decoration: InputDecoration(
                                 labelText: 'Sort',
@@ -823,7 +829,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
+                              color: AppColors.primary.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -909,12 +915,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             //   decoration: BoxDecoration(
                             //     color: _getRoleColor(
                             //       user.role,
-                            //     ).withOpacity(0.1),
+                            //     ).withValues(alpha: 0.1),
                             //     borderRadius: BorderRadius.circular(20.r),
                             //     border: Border.all(
                             //       color: _getRoleColor(
                             //         user.role,
-                            //       ).withOpacity(0.3),
+                            //       ).withValues(alpha: 0.3),
                             //       width: 1,
                             //     ),
                             //   ),
@@ -1013,12 +1019,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     children: [
                       _buildStatChip(
                         Icons.calendar_today,
-                        'Created: ${_formatDate(user.createdAt)}',
+                        'Created: ${DateFormat('MMM dd, yyyy').format(user.createdAt)}',
                         AppColors.info,
                       ),
                       _buildStatChip(
                         Icons.login,
-                        'Last Login: ${_formatDate(user.lastLogin)}',
+                        'Last Login: ${user.lastLogin != null ? DateFormat('MMM dd, yyyy').format(user.lastLogin!) : 'Never'}',
                         AppColors.success,
                       ),
 
@@ -1031,7 +1037,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       if (user.expiresAt != null)
                         _buildStatChip(
                           Icons.calendar_today,
-                          'Expires at: ${_formatExpirationDate(user.expiresAt!)}',
+                          'Expires at: ${DateFormat('MMM dd, yyyy').format(user.expiresAt!)}',
                           AppColors.grey600,
                         ),
                       // if (user.isBlocked == true)
@@ -1080,9 +1086,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1098,54 +1104,6 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Color _getRoleColor(String role) {
-    switch (role.toLowerCase()) {
-      case 'admin':
-        return AppColors.error;
-      case 'manager':
-        return AppColors.warning;
-      case 'user':
-        return AppColors.primary;
-      default:
-        return AppColors.grey500;
-    }
-  }
-
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'Never';
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
-    } else {
-      return 'Just now';
-    }
-  }
-
-  String _formatExpirationDate(DateTime date) {
-    final formatter = DateFormat('MMM dd, yyyy');
-    return formatter.format(date);
-  }
-
-  void _showGiveAccessCodeDialog(UserWithStats user) {
-    showDialog(
-      context: context,
-      builder: (context) => _PaymentTierDialog(
-        user: user,
-        onGenerate: (paymentAmount) {
-          Navigator.pop(context);
-          // TODO: Implement access code generation
-          _showSuccessSnackBar('Access code generated for ${user.fullName}');
-        },
       ),
     );
   }
@@ -1168,9 +1126,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     final bool isCurrentlyBlocked = user.isBlocked ?? false;
 
     // Debug: Print user blocking status
-    print('🔒 Block dialog for user: ${user.fullName}');
-    print('🔒 isBlocked: ${user.isBlocked}');
-    print('🔒 isCurrentlyBlocked: $isCurrentlyBlocked');
+    debugPrint('🔒 Block dialog for user: ${user.fullName}');
+    debugPrint('🔒 isBlocked: ${user.isBlocked}');
+    debugPrint('🔒 isCurrentlyBlocked: $isCurrentlyBlocked');
 
     showDialog(
       context: context,
@@ -1201,12 +1159,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               decoration: BoxDecoration(
                 color:
                     (isCurrentlyBlocked ? AppColors.success : AppColors.error)
-                        .withOpacity(0.1),
+                        .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
                 border: Border.all(
                   color:
                       (isCurrentlyBlocked ? AppColors.success : AppColors.error)
-                          .withOpacity(0.3),
+                          .withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -1282,6 +1240,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     bool isBlocked,
     String blockReason,
   ) async {
+    final bool isCurrentlyBlocked = user.isBlocked ?? false;
     try {
       final response = await _userManagementService.blockUser(
         user.id,
@@ -1291,17 +1250,17 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
 
       if (response['success'] == true) {
         _showSuccessSnackBar(
-          'User ${isBlocked ? 'blocked' : 'unblocked'} successfully',
+          'User ${isCurrentlyBlocked ? 'unblocked' : 'blocked'} successfully',
         );
         _loadUsers(); // Refresh the list
       } else {
         _showErrorSnackBar(
-          'Failed to ${isBlocked ? 'block' : 'unblock'} user: ${response['message']}',
+          'Failed to ${isCurrentlyBlocked ? 'unblock' : 'block'} user: ${response['message'] ?? 'Unknown error'}',
         );
       }
     } catch (e) {
       _showErrorSnackBar(
-        'Error ${isBlocked ? 'blocking' : 'unblocking'} user: $e',
+        'Error ${isCurrentlyBlocked ? 'unblocking' : 'blocking'} user: $e',
       );
     }
   }
@@ -1366,9 +1325,11 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
           Container(
             padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               children: [
@@ -1376,7 +1337,7 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
                 SizedBox(width: 8.w),
                 Expanded(
                   child: Text(
-                    'Access code will be valid for ${_paymentTiers.firstWhere((t) => t['amount'] == _selectedAmount)['days']} days',
+                    'Access code will be valid for ${_paymentTiers.firstWhere((tier) => tier['amount'] == _selectedAmount)['days']} days',
                     style: AppTextStyles.caption.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
@@ -1417,7 +1378,7 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
         child: Container(
           padding: EdgeInsets.all(12.w),
           decoration: BoxDecoration(
-            color: isSelected ? color.withOpacity(0.1) : AppColors.grey50,
+            color: isSelected ? color.withValues(alpha: 0.1) : AppColors.grey50,
             borderRadius: BorderRadius.circular(12.r),
             border: Border.all(
               color: isSelected ? color : AppColors.grey300,
@@ -1450,7 +1411,7 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
                       ),
                     ),
                     Text(
-                      '${tier['amount'].toStringAsFixed(0)} RWF',
+                      '${tier['amount']} RWF',
                       style: AppTextStyles.caption.copyWith(
                         color: isSelected ? color : AppColors.grey600,
                         fontWeight: FontWeight.w600,
@@ -1462,11 +1423,11 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Text(
-                  '${tier['days']} days',
+                  '${tier['duration']} days',
                   style: AppTextStyles.caption.copyWith(
                     color: color,
                     fontWeight: FontWeight.w600,

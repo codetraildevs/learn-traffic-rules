@@ -39,7 +39,7 @@ class ExamResultData {
   final bool isFreeExam;
   final DateTime submittedAt;
   final List<QuestionResult>? questionResults;
-  final ExamInfo? Exam;
+  final ExamInfo? exam;
 
   const ExamResultData({
     required this.id,
@@ -53,7 +53,7 @@ class ExamResultData {
     required this.isFreeExam,
     required this.submittedAt,
     this.questionResults,
-    this.Exam,
+    this.exam,
   });
 
   factory ExamResultData.fromJson(Map<String, dynamic> json) {
@@ -75,7 +75,7 @@ class ExamResultData {
                 .map((e) => QuestionResult.fromJson(e as Map<String, dynamic>))
                 .toList()
           : null,
-      Exam: json['Exam'] != null
+      exam: json['Exam'] != null
           ? ExamInfo.fromJson(json['Exam'] as Map<String, dynamic>)
           : null,
     );

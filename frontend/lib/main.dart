@@ -45,16 +45,18 @@ void main() async {
   try {
     await NotificationService().initialize();
   } catch (e) {
-    print('⚠️ Main notification service failed, using simple fallback: $e');
+    debugPrint(
+      '⚠️ Main notification service failed, using simple fallback: $e',
+    );
     await SimpleNotificationService().initialize();
   }
 
   // Start notification polling service
   try {
     await NotificationPollingService().startPolling();
-    print('✅ Notification polling service started');
+    debugPrint('✅ Notification polling service started');
   } catch (e) {
-    print('⚠️ Failed to start notification polling service: $e');
+    debugPrint('⚠️ Failed to start notification polling service: $e');
   }
 
   runApp(const ProviderScope(child: MyApp()));

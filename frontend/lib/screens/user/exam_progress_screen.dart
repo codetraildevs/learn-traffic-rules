@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'dart:io';
+import 'package:flutter/services.dart';
 import '../../models/exam_result_model.dart';
 import '../../models/exam_model.dart';
 import 'exam_taking_screen.dart';
@@ -11,11 +13,11 @@ class ExamProgressScreen extends StatefulWidget {
   final bool isFreeExam;
 
   const ExamProgressScreen({
-    Key? key,
+    super.key,
     required this.exam,
     required this.examResult,
     required this.isFreeExam,
-  }) : super(key: key);
+  });
 
   @override
   State<ExamProgressScreen> createState() => _ExamProgressScreenState();
@@ -23,6 +25,31 @@ class ExamProgressScreen extends StatefulWidget {
 
 class _ExamProgressScreenState extends State<ExamProgressScreen> {
   bool _isRetaking = false;
+  static const MethodChannel _securityChannel = MethodChannel(
+    'com.example.learn_traffic_rules/security',
+  );
+
+  Future<void> _disableScreenshots() async {
+    if (Platform.isAndroid) {
+      try {
+        await _securityChannel.invokeMethod('disableScreenshots');
+        debugPrint('🔒 Security: Screenshots disabled for detailed answers');
+      } catch (e) {
+        debugPrint('🔒 Security: Failed to disable screenshots: $e');
+      }
+    }
+  }
+
+  Future<void> _enableScreenshots() async {
+    if (Platform.isAndroid) {
+      try {
+        await _securityChannel.invokeMethod('enableScreenshots');
+        debugPrint('🔒 Security: Screenshots enabled after detailed answers');
+      } catch (e) {
+        debugPrint('🔒 Security: Failed to enable screenshots: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +57,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: Text(
-          'Exam Results',
+          'Result of ${widget.exam.title}',
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
@@ -56,8 +83,8 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Card
-          _buildHeaderCard(),
-          SizedBox(height: 24.h),
+          // _buildHeaderCard(),
+          // SizedBox(height: 24.h),
 
           // Score Overview
           _buildScoreOverview(),
@@ -74,147 +101,6 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
     );
   }
 
-  Widget _buildHeaderCard() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(24.w),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.green.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.quiz, color: Colors.white, size: 32.w),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Text(
-                  widget.exam.title,
-                  style: TextStyle(
-                    fontSize: 22.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            widget.exam.description ?? '',
-            style: TextStyle(fontSize: 14.sp, color: Colors.white70),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          SizedBox(height: 16.h),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              // Use Wrap for smaller screens, Row for larger screens
-              if (constraints.maxWidth < 300) {
-                return Wrap(
-                  spacing: 8.w,
-                  runSpacing: 8.h,
-                  children: [
-                    _buildInfoChip(
-                      icon: Icons.schedule,
-                      label: 'Duration',
-                      value: '${widget.exam.duration} min',
-                    ),
-                    _buildInfoChip(
-                      icon: Icons.quiz,
-                      label: 'Questions',
-                      value: '${widget.examResult.totalQuestions}',
-                    ),
-                    _buildInfoChip(
-                      icon: Icons.timer,
-                      label: 'Time Spent',
-                      value: '${_formatTime(widget.examResult.timeSpent)}',
-                    ),
-                  ],
-                );
-              } else {
-                return Row(
-                  children: [
-                    Expanded(
-                      child: _buildInfoChip(
-                        icon: Icons.schedule,
-                        label: 'Duration',
-                        value: '${widget.exam.duration} min',
-                      ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: _buildInfoChip(
-                        icon: Icons.quiz,
-                        label: 'Questions',
-                        value: '${widget.examResult.totalQuestions}',
-                      ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: _buildInfoChip(
-                        icon: Icons.timer,
-                        label: 'Time Spent',
-                        value: '${_formatTime(widget.examResult.timeSpent)}',
-                      ),
-                    ),
-                  ],
-                );
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoChip({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: Colors.white, size: 14.w),
-          SizedBox(width: 4.w),
-          Flexible(
-            child: Text(
-              '$label: $value',
-              style: TextStyle(
-                fontSize: 11.sp,
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildScoreOverview() {
     final score = widget.examResult.score;
     final isPassed = widget.examResult.passed;
@@ -222,13 +108,13 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(24.w),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -251,8 +137,8 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: (isPassed ? Colors.green : Colors.red).withOpacity(
-                    0.3,
+                  color: (isPassed ? Colors.green : Colors.red).withValues(
+                    alpha: 0.3,
                   ),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
@@ -282,7 +168,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
               ],
             ),
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 16.h),
 
           // Score Details
           Row(
@@ -348,7 +234,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -365,7 +251,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
               color: const Color(0xFF2E7D32),
             ),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 8.h),
 
           _buildResultRow(
             icon: Icons.quiz,
@@ -559,128 +445,302 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
   }
 
   String _formatDateTime(DateTime dateTime) {
-    return '${dateTime.day}/${dateTime.month}/${dateTime.year} at ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+    return '${dateTime.month}/${dateTime.day}/${dateTime.year} at ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
-  void _showDetailedAnswers() {
+  void _showDetailedAnswers() async {
+    // Disable screenshots before showing detailed answers
+    await _disableScreenshots();
+
     // Debug: Print the exam result data
-    print('=== DEBUG: Exam Result Data ===');
-    print('Total Questions: ${widget.examResult.totalQuestions}');
-    print('Correct Answers: ${widget.examResult.correctAnswers}');
-    print('Question Results: ${widget.examResult.questionResults}');
-    print(
+    debugPrint('=== DEBUG: Exam Result Data ===');
+    debugPrint('Total Questions: ${widget.examResult.totalQuestions}');
+    debugPrint('Correct Answers: ${widget.examResult.correctAnswers}');
+    debugPrint(
+      'Incorrect Answers: ${widget.examResult.totalQuestions - widget.examResult.correctAnswers}',
+    );
+    debugPrint('Score: ${widget.examResult.score}%');
+    debugPrint('Passed: ${widget.examResult.passed}');
+    debugPrint(
       'Question Results Length: ${widget.examResult.questionResults?.length ?? 0}',
     );
-    print('Exam Result ID: ${widget.examResult.id}');
-    print('Exam ID: ${widget.examResult.examId}');
-    print('User ID: ${widget.examResult.userId}');
-    print('Score: ${widget.examResult.score}');
-    print('Passed: ${widget.examResult.passed}');
-    print('Is Free Exam: ${widget.examResult.isFreeExam}');
-    print('Submitted At: ${widget.examResult.submittedAt}');
+    debugPrint('Exam Result ID: ${widget.examResult.id}');
+    debugPrint('Exam ID: ${widget.examResult.examId}');
+    debugPrint('User ID: ${widget.examResult.userId}');
+    debugPrint('Score: ${widget.examResult.score}');
+    debugPrint('Passed: ${widget.examResult.passed}');
+    debugPrint('Is Free Exam: ${widget.examResult.isFreeExam}');
+    debugPrint('Submitted At: ${widget.examResult.submittedAt}');
 
     if (widget.examResult.questionResults != null) {
-      print('Question Results Details:');
+      debugPrint('Question Results Details:');
       for (int i = 0; i < widget.examResult.questionResults!.length; i++) {
-        final qr = widget.examResult.questionResults![i];
-        print('  Question ${i + 1}:');
-        print('    ID: ${qr.questionId}');
-        print('    User Answer: ${qr.userAnswer}');
-        print('    Correct Answer: ${qr.correctAnswer}');
-        print('    Is Correct: ${qr.isCorrect}');
-        print('    Points: ${qr.points}');
+        debugPrint(
+          '  Question ${widget.examResult.questionResults![i].questionId}:',
+        );
+        debugPrint(
+          '    ID: ${widget.examResult.questionResults![i].questionId}',
+        );
+        debugPrint(
+          '    User Answer: ${widget.examResult.questionResults![i].userAnswer}',
+        );
+        debugPrint(
+          '    Correct Answer: ${widget.examResult.questionResults![i].correctAnswer}',
+        );
+        debugPrint(
+          '    Is Correct: ${widget.examResult.questionResults![i].isCorrect}',
+        );
+        debugPrint(
+          '    Points: ${widget.examResult.questionResults![i].points}',
+        );
       }
     } else {
-      print('❌ Question Results is NULL!');
+      debugPrint('❌ Question Results is NULL!');
     }
-    print('=== END DEBUG ===');
-
+    debugPrint('=== END DEBUG ===');
+    if (!mounted) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20.r),
-              topRight: Radius.circular(20.r),
-            ),
-          ),
-          child: Column(
-            children: [
-              // Handle bar
-              Container(
-                margin: EdgeInsets.only(top: 8.h),
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
+      builder: (context) => _SecureDetailedAnswersModal(
+        examResult: widget.examResult,
+        onClose: () async {
+          // Re-enable screenshots when closing
+          await _enableScreenshots();
+        },
+      ),
+    );
+  }
+}
 
-              // Header
-              Padding(
-                padding: EdgeInsets.all(20.w),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.quiz,
-                      color: const Color(0xFF1976D2),
-                      size: 24.w,
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Text(
-                        'Detailed Answers',
+// Secure modal widget that prevents screenshots
+class _SecureDetailedAnswersModal extends StatefulWidget {
+  final ExamResultData examResult;
+  final VoidCallback onClose;
+
+  const _SecureDetailedAnswersModal({
+    required this.examResult,
+    required this.onClose,
+  });
+
+  @override
+  State<_SecureDetailedAnswersModal> createState() =>
+      _SecureDetailedAnswersModalState();
+}
+
+class _SecureDetailedAnswersModalState
+    extends State<_SecureDetailedAnswersModal> {
+  static const MethodChannel _securityChannel = MethodChannel(
+    'com.example.learn_traffic_rules/security',
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _disableScreenshots();
+  }
+
+  @override
+  void dispose() {
+    _enableScreenshots();
+    widget.onClose();
+    super.dispose();
+  }
+
+  Future<void> _disableScreenshots() async {
+    if (Platform.isAndroid) {
+      try {
+        await _securityChannel.invokeMethod('disableScreenshots');
+        debugPrint(
+          '🔒 Security: Screenshots disabled for detailed answers modal',
+        );
+      } catch (e) {
+        debugPrint('🔒 Security: Failed to disable screenshots: $e');
+      }
+    }
+  }
+
+  Future<void> _enableScreenshots() async {
+    if (Platform.isAndroid) {
+      try {
+        await _securityChannel.invokeMethod('enableScreenshots');
+        debugPrint(
+          '🔒 Security: Screenshots enabled after detailed answers modal',
+        );
+      } catch (e) {
+        debugPrint('🔒 Security: Failed to enable screenshots: $e');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20.r),
+            topRight: Radius.circular(20.r),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Handle bar
+            Container(
+              margin: EdgeInsets.only(top: 8.h),
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+
+            // Header with security warning
+            Padding(
+              padding: EdgeInsets.all(20.w),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.security, color: Colors.red[600], size: 20.w),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'SECURE VIEW',
                         style: TextStyle(
-                          fontSize: 20.sp,
+                          fontSize: 12.sp,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey[800],
+                          color: Colors.red[600],
+                          letterSpacing: 1.0,
                         ),
                       ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(Icons.close, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Content
-              Expanded(
-                child:
-                    widget.examResult.questionResults == null ||
-                        widget.examResult.questionResults!.isEmpty
-                    ? _buildNoResultsView()
-                    : ListView.builder(
-                        controller: scrollController,
-                        padding: EdgeInsets.symmetric(horizontal: 20.w),
-                        itemCount: widget.examResult.questionResults!.length,
-                        itemBuilder: (context, index) {
-                          final questionResult =
-                              widget.examResult.questionResults![index];
-                          return _buildQuestionResultCard(
-                            questionResult,
-                            index + 1,
-                          );
-                        },
+                      const Spacer(),
+                      Icon(
+                        Icons.quiz,
+                        color: const Color(0xFF1976D2),
+                        size: 24.w,
                       ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: Text(
+                          'Detailed Answers',
+                          style: TextStyle(
+                            fontSize: 20.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(Icons.close, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: Colors.red[50],
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(color: Colors.red[200]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.warning, color: Colors.red[600], size: 16.w),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            'Screenshots are disabled to protect answer integrity',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.red[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+
+            // Content
+            Expanded(
+              child:
+                  widget.examResult.questionResults == null ||
+                      widget.examResult.questionResults!.isEmpty
+                  ? _buildSecureNoResultsView()
+                  : ListView.builder(
+                      controller: scrollController,
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      itemCount: widget.examResult.questionResults!.length,
+                      itemBuilder: (context, index) {
+                        final questionResult =
+                            widget.examResult.questionResults![index];
+                        return _buildSecureQuestionResultCard(
+                          questionResult,
+                          index + 1,
+                        );
+                      },
+                    ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildQuestionResultCard(
+  Widget _buildSecureNoResultsView() {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(40.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.quiz_outlined, size: 64.w, color: Colors.grey[400]),
+            SizedBox(height: 16.h),
+            Text(
+              'No Detailed Results Available',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Question-by-question results are not available for this exam.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
+            ),
+            SizedBox(height: 24.h),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: Icon(Icons.close, size: 20.w),
+              label: const Text('Close'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[600],
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSecureQuestionResultCard(
     QuestionResult questionResult,
     int questionNumber,
   ) {
@@ -691,8 +751,8 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: isCorrect
-            ? Colors.green.withOpacity(0.1)
-            : Colors.red.withOpacity(0.1),
+            ? Colors.green.withValues(alpha: 0.1)
+            : Colors.red.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
           color: isCorrect ? Colors.green : Colors.red,
@@ -737,7 +797,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
               ),
               const Spacer(),
               Text(
-                '${questionResult.points} point${questionResult.points != 1 ? 's' : ''}',
+                '${questionResult.points} point${questionResult.points > 1 ? 's' : ''}',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12.sp,
@@ -756,9 +816,9 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
               width: double.infinity,
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.05),
+                color: Colors.blue.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: Colors.blue.withOpacity(0.2)),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -797,7 +857,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
               decoration: BoxDecoration(
                 color: Colors.grey[50],
                 borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -824,17 +884,17 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
                       padding: EdgeInsets.all(8.w),
                       decoration: BoxDecoration(
                         color: isCorrectAnswer
-                            ? Colors.green.withOpacity(0.1)
+                            ? Colors.green.withValues(alpha: 0.1)
                             : isUserAnswer && !isCorrectAnswer
-                            ? Colors.red.withOpacity(0.1)
-                            : Colors.grey.withOpacity(0.05),
+                            ? Colors.red.withValues(alpha: 0.1)
+                            : Colors.grey.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(6.r),
                         border: Border.all(
                           color: isCorrectAnswer
                               ? Colors.green
                               : isUserAnswer && !isCorrectAnswer
                               ? Colors.red
-                              : Colors.grey.withOpacity(0.3),
+                              : Colors.grey.withValues(alpha: 0.3),
                           width:
                               isCorrectAnswer ||
                                   (isUserAnswer && !isCorrectAnswer)
@@ -900,92 +960,11 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
                         ],
                       ),
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             ),
-
-          if (questionResult.options != null &&
-              questionResult.options!.isNotEmpty)
-            SizedBox(height: 12.h),
-
-          // Correct answer
-          // questionResult.correctAnswer != questionResult.userAnswer
-          //     ? Container(
-          //         padding: EdgeInsets.all(8.w),
-          //         decoration: BoxDecoration(
-          //           color: Colors.green.withOpacity(0.1),
-          //           borderRadius: BorderRadius.circular(8.r),
-          //           border: Border.all(color: Colors.green.withOpacity(0.3)),
-          //         ),
-          //         child: Column(
-          //           crossAxisAlignment: CrossAxisAlignment.start,
-          //           children: [
-          //             Text(
-          //               'Correct Answer:',
-          //               style: TextStyle(
-          //                 fontSize: 12.sp,
-          //                 fontWeight: FontWeight.bold,
-          //                 color: Colors.green[700],
-          //               ),
-          //             ),
-          //             SizedBox(height: 4.h),
-          //             Text(
-          //               questionResult.correctAnswer,
-          //               style: TextStyle(
-          //                 fontSize: 14.sp,
-          //                 color: Colors.green[800],
-          //                 fontWeight: FontWeight.w600,
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //       )
-          //     : const SizedBox.shrink(),
         ],
-      ),
-    );
-  }
-
-  Widget _buildNoResultsView() {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(40.w),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.quiz_outlined, size: 64.w, color: Colors.grey[400]),
-            SizedBox(height: 16.h),
-            Text(
-              'No Detailed Results Available',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[600],
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              'Question-by-question results are not available for this exam.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
-            ),
-            SizedBox(height: 24.h),
-            ElevatedButton.icon(
-              onPressed: () => Navigator.pop(context),
-              icon: Icon(Icons.close, size: 20.w),
-              label: Text('Close'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[600],
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

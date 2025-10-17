@@ -1,10 +1,8 @@
 import 'dart:io';
-import 'package:flash_message/flash_message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:learn_traffic_rules/core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/exam_model.dart';
@@ -130,7 +128,7 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.05),
+            color: AppColors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -204,7 +202,7 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
                     SizedBox(width: 8.w),
                     _buildInfoChip(
                       Icons.trending_up,
-                      '${widget.exam.passingScore}%',
+                      '${widget.exam.passingScore}% pass',
                     ),
                     SizedBox(width: 8.w),
                     _buildInfoChip(
@@ -225,7 +223,7 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
+        color: AppColors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Row(
@@ -253,7 +251,7 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.05),
+            color: AppColors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -307,9 +305,9 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -326,7 +324,7 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
           Text(
             subtitle,
             style: AppTextStyles.caption.copyWith(
-              color: color.withOpacity(0.8),
+              color: color.withValues(alpha: 0.8),
             ),
             textAlign: TextAlign.center,
           ),
@@ -343,7 +341,7 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.05),
+            color: AppColors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -459,7 +457,7 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.05),
+            color: AppColors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -495,7 +493,7 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
               height: 120.h,
               decoration: BoxDecoration(
                 color: _selectedFile != null
-                    ? AppColors.success.withOpacity(0.1)
+                    ? AppColors.success.withValues(alpha: 0.1)
                     : AppColors.grey100,
                 borderRadius: BorderRadius.circular(12.r),
                 border: Border.all(
@@ -616,10 +614,8 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
         });
       }
     } catch (e) {
-      AppFlashMessage.showError(
-        context,
-        'Failed to select file: ${e.toString()}',
-      );
+      if (!mounted) return;
+      AppFlashMessage.showError(context, 'Failed to select file: $e');
     }
   }
 
@@ -660,19 +656,19 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
       );
 
       if (response['success'] == true) {
+        if (!mounted) return;
         AppFlashMessage.showSuccess(context, 'Question added successfully!');
         _clearForm();
       } else {
+        if (!mounted) return;
         AppFlashMessage.showError(
           context,
           response['message'] ?? 'Failed to add question',
         );
       }
     } catch (e) {
-      AppFlashMessage.showError(
-        context,
-        'Failed to add question: ${e.toString()}',
-      );
+      if (!mounted) return;
+      AppFlashMessage.showError(context, 'Failed to add question: $e');
     } finally {
       setState(() {
         _isUploadingSingle = false;
@@ -688,36 +684,161 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
     });
 
     try {
-      final apiService = ApiService();
-      final response = await apiService.uploadFile(
-        '${AppConstants.examsEndpoint}/${widget.exam.id}/upload-questions',
-        _selectedFile!,
+      final fileExtension = _selectedFile!.path.split('.').last.toLowerCase();
+
+      if (fileExtension != 'csv') {
+        throw Exception('Only CSV files are supported for bulk upload.');
+      }
+
+      // Parse CSV file and upload questions individually
+      final csvContent = await _selectedFile!.readAsString();
+      final lines = csvContent.split('\n');
+
+      if (lines.length < 2) {
+        throw Exception(
+          'CSV file must contain at least a header row and one data row.',
+        );
+      }
+
+      // Skip header row (first line)
+      final dataLines = lines
+          .skip(1)
+          .where((line) => line.trim().isNotEmpty)
+          .toList();
+
+      if (dataLines.isEmpty) {
+        throw Exception('No data rows found in CSV file.');
+      }
+
+      int successCount = 0;
+      int errorCount = 0;
+      final List<String> errors = [];
+
+      if (!mounted) return;
+      // Show progress dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('Uploading Questions'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text('Processing ${dataLines.length} questions...'),
+            ],
+          ),
+        ),
       );
 
-      if (response['success'] == true) {
+      final apiService = ApiService();
+
+      for (int i = 0; i < dataLines.length; i++) {
+        try {
+          final line = dataLines[i].trim();
+          if (line.isEmpty) continue;
+
+          // Parse CSV line (handle quoted fields)
+          final fields = _parseCsvLine(line);
+
+          if (fields.length < 6) {
+            errors.add(
+              'Row ${i + 2}: Insufficient columns (expected 6, got ${fields.length})',
+            );
+            errorCount++;
+            continue;
+          }
+
+          // Create question data
+          final questionData = {
+            'question': fields[0].trim(),
+            'option1': fields[1].trim(),
+            'option2': fields[2].trim(),
+            'option3': fields[3].trim(),
+            'option4': fields[4].trim(),
+            'correctAnswer': fields[5].trim(),
+            'points': fields.length > 7
+                ? int.tryParse(fields[7].trim()) ?? 1
+                : 1,
+            if (fields.length > 6 && fields[6].trim().isNotEmpty)
+              'questionImgUrl': fields[6].trim(),
+          };
+
+          // Upload individual question
+          final response = await apiService.makeRequest(
+            'POST',
+            '${AppConstants.examsEndpoint}/${widget.exam.id}/upload-single-question',
+            body: questionData,
+          );
+
+          if (response['success'] == true) {
+            successCount++;
+          } else {
+            errors.add(
+              'Row ${i + 2}: ${response['message'] ?? 'Unknown error'}',
+            );
+            errorCount++;
+          }
+        } catch (e) {
+          errors.add('Row ${i + 2}: $e');
+          errorCount++;
+        }
+      }
+
+      // Close progress dialog
+      if (mounted) Navigator.of(context).pop();
+
+      // Show results
+      if (successCount > 0) {
+        if (!mounted) return;
         AppFlashMessage.showSuccess(
           context,
-          'Questions uploaded successfully! ${response['data']['count']} questions added.',
+          'Successfully uploaded $successCount questions!',
         );
         setState(() {
           _selectedFile = null;
         });
-      } else {
+      }
+
+      if (errorCount > 0) {
+        if (!mounted) return;
         AppFlashMessage.showError(
           context,
-          response['message'] ?? 'Failed to upload questions',
+          'Failed to upload $errorCount questions. Check console for details.',
         );
+        debugPrint('Upload errors: ${errors.join('\n')}');
       }
     } catch (e) {
-      AppFlashMessage.showError(
-        context,
-        'Failed to upload questions: ${e.toString()}',
-      );
+      if (!mounted) return;
+      AppFlashMessage.showError(context, 'Failed to upload questions: $e');
     } finally {
       setState(() {
         _isUploadingBulk = false;
       });
     }
+  }
+
+  List<String> _parseCsvLine(String line) {
+    final List<String> fields = [];
+    bool inQuotes = false;
+    String currentField = '';
+
+    for (int i = 0; i < line.length; i++) {
+      final char = line[i];
+
+      if (char == '"') {
+        inQuotes = !inQuotes;
+      } else if (char == ',' && !inQuotes) {
+        fields.add(currentField);
+        currentField = '';
+      } else {
+        currentField += char;
+      }
+    }
+
+    fields.add(currentField);
+    return fields;
   }
 
   void _clearForm() {
@@ -819,20 +940,18 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
 
   Future<void> _pickQuestionImage() async {
     try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 800,
-        maxHeight: 600,
-        imageQuality: 80,
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
       );
 
-      if (image != null) {
+      if (result != null && result.files.isNotEmpty) {
         setState(() {
-          _selectedQuestionImage = File(image.path);
+          _selectedQuestionImage = File(result.files.first.path!);
         });
       }
     } catch (e) {
+      if (!mounted) return;
       AppFlashMessage.showError(context, 'Error picking image: $e');
     }
   }

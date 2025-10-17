@@ -31,7 +31,7 @@ class ViewProfileScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.05),
+                    color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -60,7 +60,7 @@ class ViewProfileScreen extends ConsumerWidget {
                       vertical: 6.h,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16.r),
                     ),
                     child: Text(
@@ -86,7 +86,7 @@ class ViewProfileScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.05),
+                    color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -157,6 +157,6 @@ class ViewProfileScreen extends ConsumerWidget {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year} at ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+    return '${date.month}/${date.day}/${date.year} at ${date.hour}:${date.minute}';
   }
 }

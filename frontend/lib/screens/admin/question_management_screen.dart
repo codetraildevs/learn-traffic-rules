@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:learn_traffic_rules/services/flash_message_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/exam_model.dart';
@@ -25,7 +25,7 @@ class _QuestionManagementScreenState
     extends ConsumerState<QuestionManagementScreen> {
   List<Question> _questions = [];
   bool _isLoading = true;
-  final ImageUploadService _imageUploadService = ImageUploadService();
+  // final ImageUploadService _imageUploadService = ImageUploadService(); // Removed - not used
 
   @override
   void initState() {
@@ -51,12 +51,14 @@ class _QuestionManagementScreenState
               .toList();
         });
       } else {
+        if (!mounted) return;
         AppFlashMessage.showError(
           context,
           response['message'] ?? 'Failed to load questions',
         );
       }
     } catch (e) {
+      if (!mounted) return;
       AppFlashMessage.showError(context, 'Error loading questions: $e');
     } finally {
       setState(() {
@@ -69,16 +71,16 @@ class _QuestionManagementScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Question'),
-        content: Text('Are you sure you want to delete this question?'),
+        title: const Text('Delete Question'),
+        content: const Text('Are you sure you want to delete this question?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -92,18 +94,21 @@ class _QuestionManagementScreenState
         );
 
         if (response['success'] == true) {
+          if (!mounted) return;
           AppFlashMessage.showSuccess(
             context,
             'Question deleted successfully!',
           );
           _loadQuestions();
         } else {
+          if (!mounted) return;
           AppFlashMessage.showError(
             context,
             response['message'] ?? 'Failed to delete question',
           );
         }
       } catch (e) {
+        if (!mounted) return;
         AppFlashMessage.showError(context, 'Error deleting question: $e');
       }
     }
@@ -140,13 +145,13 @@ class _QuestionManagementScreenState
         actions: [
           IconButton(
             onPressed: _showAddQuestionDialog,
-            icon: Icon(Icons.add),
+            icon: const Icon(Icons.add),
             tooltip: 'Add Question',
           ),
         ],
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : _questions.isEmpty
           ? _buildEmptyState()
           : _buildQuestionsList(),
@@ -269,7 +274,7 @@ class _QuestionManagementScreenState
                 TextButton.icon(
                   onPressed: () => _showEditQuestionDialog(question),
                   icon: Icon(Icons.edit, size: 18.sp),
-                  label: Text('Edit'),
+                  label: const Text('Edit'),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.primary,
                   ),
@@ -278,7 +283,7 @@ class _QuestionManagementScreenState
                 TextButton.icon(
                   onPressed: () => _deleteQuestion(question),
                   icon: Icon(Icons.delete, size: 18.sp),
-                  label: Text('Delete'),
+                  label: const Text('Delete'),
                   style: TextButton.styleFrom(foregroundColor: Colors.red),
                 ),
               ],
@@ -293,10 +298,8 @@ class _QuestionManagementScreenState
     final options = [
       'A) ${question.option1}',
       'B) ${question.option2}',
-      if (question.option3 != null && question.option3!.isNotEmpty)
-        'C) ${question.option3}',
-      if (question.option4 != null && question.option4!.isNotEmpty)
-        'D) ${question.option4}',
+      if (question.option3.isNotEmpty) 'C) ${question.option3}',
+      if (question.option4.isNotEmpty) 'D) ${question.option4}',
     ];
 
     return Column(
@@ -308,7 +311,7 @@ class _QuestionManagementScreenState
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
           decoration: BoxDecoration(
             color: isCorrect
-                ? AppColors.success.withOpacity(0.1)
+                ? AppColors.success.withValues(alpha: 0.1)
                 : AppColors.grey50,
             borderRadius: BorderRadius.circular(4.r),
             border: Border.all(
@@ -397,10 +400,12 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
       );
 
       if (response['success'] == true) {
+        if (!mounted) return;
         AppFlashMessage.showSuccess(context, 'Question added successfully!');
         widget.onQuestionAdded();
         Navigator.of(context).pop();
       } else {
+        if (!mounted) return;
         AppFlashMessage.showError(
           context,
           response['message'] ?? 'Failed to add question',
@@ -418,7 +423,7 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Add Question'),
+      title: const Text('Add Question'),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -470,7 +475,7 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
       actions: [
         TextButton(
           onPressed: _isUploading ? null : () => Navigator.of(context).pop(),
-          child: Text('Cancel'),
+          child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed: _isUploading ? null : _addQuestion,
@@ -478,9 +483,9 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
               ? SizedBox(
                   width: 16.w,
                   height: 16.h,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: const CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text('Add Question'),
+              : const Text('Add Question'),
         ),
       ],
     );
@@ -572,20 +577,18 @@ class _AddQuestionDialogState extends State<_AddQuestionDialog> {
 
   Future<void> _pickQuestionImage() async {
     try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 800,
-        maxHeight: 600,
-        imageQuality: 80,
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
       );
 
-      if (image != null) {
+      if (result != null && result.files.isNotEmpty) {
         setState(() {
-          _selectedQuestionImage = File(image.path);
+          _selectedQuestionImage = File(result.files.first.path!);
         });
       }
     } catch (e) {
+      if (!mounted) return;
       AppFlashMessage.showError(context, 'Error picking image: $e');
     }
   }
@@ -625,12 +628,8 @@ class _EditQuestionDialogState extends State<_EditQuestionDialog> {
     _questionController = TextEditingController(text: widget.question.question);
     _optionAController = TextEditingController(text: widget.question.option1);
     _optionBController = TextEditingController(text: widget.question.option2);
-    _optionCController = TextEditingController(
-      text: widget.question.option3 ?? '',
-    );
-    _optionDController = TextEditingController(
-      text: widget.question.option4 ?? '',
-    );
+    _optionCController = TextEditingController(text: widget.question.option3);
+    _optionDController = TextEditingController(text: widget.question.option4);
     _correctAnswerController = TextEditingController(
       text: widget.question.correctAnswer,
     );
@@ -681,16 +680,19 @@ class _EditQuestionDialogState extends State<_EditQuestionDialog> {
       );
 
       if (response['success'] == true) {
+        if (!mounted) return;
         AppFlashMessage.showSuccess(context, 'Question updated successfully!');
         widget.onQuestionUpdated();
         Navigator.of(context).pop();
       } else {
+        if (!mounted) return;
         AppFlashMessage.showError(
           context,
           response['message'] ?? 'Failed to update question',
         );
       }
     } catch (e) {
+      if (!mounted) return;
       AppFlashMessage.showError(context, 'Error updating question: $e');
     } finally {
       setState(() {
@@ -702,7 +704,7 @@ class _EditQuestionDialogState extends State<_EditQuestionDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Edit Question'),
+      title: const Text('Edit Question'),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -754,7 +756,7 @@ class _EditQuestionDialogState extends State<_EditQuestionDialog> {
       actions: [
         TextButton(
           onPressed: _isUploading ? null : () => Navigator.of(context).pop(),
-          child: Text('Cancel'),
+          child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed: _isUploading ? null : _updateQuestion,
@@ -762,9 +764,9 @@ class _EditQuestionDialogState extends State<_EditQuestionDialog> {
               ? SizedBox(
                   width: 16.w,
                   height: 16.h,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: const CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text('Update Question'),
+              : const Text('Update Question'),
         ),
       ],
     );
@@ -902,20 +904,18 @@ class _EditQuestionDialogState extends State<_EditQuestionDialog> {
 
   Future<void> _pickQuestionImage() async {
     try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 800,
-        maxHeight: 600,
-        imageQuality: 80,
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
       );
 
-      if (image != null) {
+      if (result != null && result.files.isNotEmpty) {
         setState(() {
-          _selectedQuestionImage = File(image.path);
+          _selectedQuestionImage = File(result.files.first.path!);
         });
       }
     } catch (e) {
+      if (!mounted) return;
       AppFlashMessage.showError(context, 'Error picking image: $e');
     }
   }

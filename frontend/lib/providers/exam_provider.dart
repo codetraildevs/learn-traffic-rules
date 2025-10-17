@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/exam_model.dart';
 import '../services/exam_api_service.dart';
@@ -39,22 +40,22 @@ class ExamNotifier extends StateNotifier<ExamState> {
 
   /// Load all exams
   Future<void> loadExams() async {
-    print('🔄 EXAM PROVIDER: Starting to load exams...');
+    debugPrint('🔄 EXAM PROVIDER: Starting to load exams...');
     state = state.copyWith(status: ExamStatus.loading, isLoading: true);
 
     try {
-      print('🔄 EXAM PROVIDER: Calling API service...');
+      debugPrint('🔄 EXAM PROVIDER: Calling API service...');
       final exams = await _examApiService.getExams();
-      print('🔄 EXAM PROVIDER: Received ${exams.length} exams from API');
+      debugPrint('🔄 EXAM PROVIDER: Received $exams exams from API');
       state = state.copyWith(
         status: ExamStatus.success,
         exams: exams,
         isLoading: false,
         error: null,
       );
-      print('🔄 EXAM PROVIDER: State updated successfully');
+      debugPrint('🔄 EXAM PROVIDER: State updated successfully');
     } catch (e) {
-      print('❌ EXAM PROVIDER: Error loading exams: $e');
+      debugPrint('❌ EXAM PROVIDER: Error loading exams: $e');
       state = state.copyWith(
         status: ExamStatus.error,
         error: e.toString(),

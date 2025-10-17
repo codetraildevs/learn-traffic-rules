@@ -45,7 +45,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _totalUsers = 0;
   int _totalExams = 0;
   int _totalExamResults = 0;
-  double _systemAverageScore = 0.0;
 
   final ExamService _examService = ExamService();
   final UserManagementService _userManagementService = UserManagementService();
@@ -59,7 +58,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _clearShownNotifications() {
     // Clear shown notifications when user opens exams
     NotificationPollingService().clearShownNotifications();
-    print('🧹 Cleared shown notifications - user opened exams');
+    debugPrint('🧹 Cleared shown notifications - user opened exams');
   }
 
   Future<void> _loadDashboardData() async {
@@ -94,7 +93,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _examResults = await _examService.getUserExamResults();
       _calculateUserStats();
     } catch (e) {
-      print('Error loading user dashboard data: $e');
+      debugPrint('Error loading user dashboard data: $e');
     }
   }
 
@@ -109,7 +108,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       // Load user statistics to get total users
       try {
         final userStats = await _userManagementService.getUserStatistics();
-        _totalUsers = userStats.data.users.total ?? 0;
+        _totalUsers = userStats.data.users.total;
       } catch (e) {
         debugPrint('Error loading user statistics: $e');
         // Fallback to calculating from exam results
@@ -155,12 +154,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void _calculateAdminStats() {
     _totalExams = _exams.length;
     _totalExamResults = _examResults.length;
-
-    if (_examResults.isNotEmpty) {
-      _systemAverageScore =
-          _examResults.map((r) => r.score).reduce((a, b) => a + b) /
-          _examResults.length;
-    }
 
     // _totalUsers is already set from getUserStatistics() in _loadAdminDashboardData()
     // Only calculate from exam results if getUserStatistics() failed
@@ -397,15 +390,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final accessPeriod = authState.accessPeriod;
 
     // Debug logging
-    print('🔍 DEBUG - User role: ${user?.role}');
-    print('🔍 DEBUG - Is admin: $isAdmin');
-    print('🔍 DEBUG - Access period: $accessPeriod');
-    print('🔍 DEBUG - Has access: ${accessPeriod?.hasAccess}');
-    print('🔍 DEBUG - Remaining days: ${accessPeriod?.remainingDays}');
+    debugPrint('🔍 DEBUG - User role: ${user?.role}');
+    debugPrint('🔍 DEBUG - Is admin: $isAdmin');
+    debugPrint('🔍 DEBUG - Access period: $accessPeriod');
+    debugPrint('🔍 DEBUG - Has access: ${accessPeriod?.hasAccess}');
+    debugPrint('🔍 DEBUG - Remaining days: ${accessPeriod?.remainingDays}');
 
     // Force logout and re-login for testing
     if (accessPeriod == null && user?.role == 'USER') {
-      print('🔍 DEBUG - Access period is null, forcing re-login...');
+      debugPrint('🔍 DEBUG - Access period is null, forcing re-login...');
       // This will trigger a re-login which should load the access period
     }
 
@@ -422,7 +415,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -444,7 +437,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ? 'Manage your traffic rules learning platform'
                 : 'Ready to master traffic rules?',
             style: AppTextStyles.bodyLarge.copyWith(
-              color: AppColors.white.withOpacity(0.9),
+              color: AppColors.white.withValues(alpha: 0.9),
             ),
           ),
 
@@ -454,10 +447,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               decoration: BoxDecoration(
-                color: AppColors.white.withOpacity(0.25),
+                color: AppColors.white.withValues(alpha: 0.25),
                 borderRadius: BorderRadius.circular(12.r),
                 border: Border.all(
-                  color: AppColors.white.withOpacity(0.3),
+                  color: AppColors.white.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -469,8 +462,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       color:
                           accessPeriod?.hasAccess == true &&
                               (accessPeriod?.remainingDays ?? 0) > 0
-                          ? AppColors.success.withOpacity(0.2)
-                          : AppColors.error.withOpacity(0.2),
+                          ? AppColors.success.withValues(alpha: 0.2)
+                          : AppColors.error.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Icon(
@@ -493,7 +486,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Text(
                           accessPeriod?.hasAccess == true &&
                                   (accessPeriod?.remainingDays ?? 0) > 0
-                              ? 'Access Active - ${accessPeriod!.remainingDays} days left'
+                              ? 'Access Active - ${accessPeriod?.remainingDays} days left'
                               : accessPeriod?.hasAccess == true &&
                                     (accessPeriod?.remainingDays ?? 0) == 0
                               ? 'Access Expired'
@@ -508,9 +501,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             (accessPeriod?.remainingDays ?? 0) > 0) ...[
                           SizedBox(height: 2.h),
                           Text(
-                            'Payment Tier: ${accessPeriod!.paymentTier?.replaceAll('_', ' ')}',
+                            'Payment Tier: ${accessPeriod?.paymentTier ?? 'None'}',
                             style: AppTextStyles.caption.copyWith(
-                              color: AppColors.white.withOpacity(0.8),
+                              color: AppColors.white.withValues(alpha: 0.8),
                               fontSize: 11.sp,
                             ),
                           ),
@@ -559,26 +552,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _debugStoredData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
-      final userJson = prefs.getString('user');
       final accessPeriodJson = prefs.getString('access_period');
 
-      print('🔍 DEBUG STORED DATA:');
-      print('   Token exists: ${token != null}');
-      print('   User data exists: ${userJson != null}');
-      print('   Access period exists: ${accessPeriodJson != null}');
-
       if (accessPeriodJson != null) {
-        print('   Access period JSON: $accessPeriodJson');
+        debugPrint('   Access period JSON: $accessPeriodJson');
         try {
           final accessPeriodData = json.decode(accessPeriodJson);
-          print('   Parsed access period: $accessPeriodData');
+          debugPrint('   Parsed access period: $accessPeriodData');
         } catch (e) {
-          print('   Error parsing access period: $e');
+          debugPrint('   Error parsing access period: $e');
         }
       }
     } catch (e) {
-      print('❌ DEBUG STORED DATA ERROR: $e');
+      debugPrint('❌ DEBUG STORED DATA ERROR: $e');
     }
   }
 
@@ -703,7 +689,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Expanded(
                 child: _buildStatCard(
                   'Avg Score',
-                  '${_systemAverageScore.toStringAsFixed(1)}%',
+                  '${_averageScore.toStringAsFixed(1)}%',
                   Icons.trending_up,
                   AppColors.secondary,
                 ),
@@ -782,7 +768,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               borderRadius: BorderRadius.circular(16.r),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.black.withOpacity(0.05),
+                  color: AppColors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 ),
@@ -820,14 +806,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               borderRadius: BorderRadius.circular(16.r),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.black.withOpacity(0.05),
+                  color: AppColors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 ),
               ],
             ),
             child: Column(
-              children: recentResults.map((result) {
+              children: recentResults.asMap().entries.map((entry) {
+                final index = entry.key;
+                final result = entry.value;
                 return Container(
                   margin: EdgeInsets.only(bottom: 12.h),
                   padding: EdgeInsets.all(12.w),
@@ -855,7 +843,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              result.Exam?.title ?? 'Exam ${result.examId}',
+                              result.exam?.title ?? 'Exam ${index + 1}',
                               style: AppTextStyles.bodyLarge.copyWith(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14.sp,
@@ -863,7 +851,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             SizedBox(height: 4.h),
                             Text(
-                              'Score: ${result.score}% • ${_formatDate(result.submittedAt)}',
+                              'Score: ${result.score}% • ${_formatTimeAgo(result.submittedAt)}',
                               style: AppTextStyles.caption.copyWith(
                                 color: AppColors.grey600,
                                 fontSize: 12.sp,
@@ -882,7 +870,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatTimeAgo(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
 
@@ -893,7 +881,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } else if (difference.inDays < 7) {
       return '${difference.inDays} days ago';
     } else {
-      return '${date.day}/${date.month}/${date.year}';
+      return '${date.month}/${date.day}/${date.year}';
     }
   }
 
@@ -910,7 +898,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.05),
+            color: AppColors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -954,7 +942,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           borderRadius: BorderRadius.circular(12.r),
           boxShadow: [
             BoxShadow(
-              color: AppColors.black.withOpacity(0.05),
+              color: AppColors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -1032,7 +1020,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.05),
+                    color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -1068,7 +1056,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       vertical: 4.h,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Text(

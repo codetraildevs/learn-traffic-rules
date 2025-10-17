@@ -46,10 +46,10 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
               width: double.infinity,
               padding: EdgeInsets.all(20.w),
               decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16.r),
                 border: Border.all(
-                  color: AppColors.error.withOpacity(0.3),
+                  color: AppColors.error.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -91,7 +91,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.05),
+                    color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -124,7 +124,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.05),
+                    color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -147,10 +147,10 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   Container(
                     padding: EdgeInsets.all(12.w),
                     decoration: BoxDecoration(
-                      color: AppColors.warning.withOpacity(0.1),
+                      color: AppColors.warning.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8.r),
                       border: Border.all(
-                        color: AppColors.warning.withOpacity(0.3),
+                        color: AppColors.warning.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -189,7 +189,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.05),
+                    color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -219,7 +219,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.r),
-                        borderSide: BorderSide(color: AppColors.error),
+                        borderSide: const BorderSide(color: AppColors.error),
                       ),
                     ),
                     onChanged: (value) {
@@ -396,7 +396,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to delete account: ${e.toString()}'),
+            content: Text('Failed to delete account: $e'),
             backgroundColor: AppColors.error,
           ),
         );

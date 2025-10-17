@@ -57,13 +57,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           controller: _tabController,
           indicatorColor: AppColors.white,
           labelColor: AppColors.white,
-          unselectedLabelColor: AppColors.white.withOpacity(0.7),
+          unselectedLabelColor: AppColors.white.withValues(alpha: 0.7),
           tabs: const [
             Tab(text: 'Notifications'),
             Tab(text: 'Settings'),
           ],
         ),
-        actions: [],
+        actions: const [],
       ),
       body: TabBarView(
         controller: _tabController,
@@ -84,7 +84,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                     borderRadius: BorderRadius.circular(16.r),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.black.withOpacity(0.05),
+                        color: AppColors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -124,7 +124,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                     borderRadius: BorderRadius.circular(16.r),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.black.withOpacity(0.05),
+                        color: AppColors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -202,7 +202,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                     borderRadius: BorderRadius.circular(16.r),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.black.withOpacity(0.05),
+                        color: AppColors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -240,7 +240,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                                 _quietHoursEnabled = value;
                               });
                             },
-                            activeColor: AppColors.primary,
+                            activeThumbColor: AppColors.primary,
                           ),
                         ],
                       ),
@@ -270,7 +270,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                                 _vibrationEnabled = value;
                               });
                             },
-                            activeColor: AppColors.primary,
+                            activeThumbColor: AppColors.primary,
                           ),
                         ],
                       ),
@@ -293,7 +293,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                 // CustomButton(
                 //   text: 'Test Study Reminder',
                 //   onPressed: _testStudyReminder,
-                //   backgroundColor: AppColors.primary.withOpacity(0.8),
+                //   backgroundColor: AppColors.primary.withValues(alpha: 0.8),
                 //   width: double.infinity,
                 // ),
 
@@ -337,7 +337,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           Container(
             padding: EdgeInsets.all(8.w),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(icon, color: AppColors.primary, size: 20.sp),
@@ -366,7 +366,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
           ),
         ],
       ),
@@ -390,7 +390,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
         });
       }
     } catch (e) {
-      print('Error loading preferences: $e');
+      debugPrint('Error loading preferences: $e');
     }
   }
 
@@ -431,7 +431,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save preferences: ${e.toString()}'),
+            content: Text('Failed to save preferences: $e'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -468,7 +468,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
   //   try {
   //     NotificationPollingService().testStudyReminder();
   //   } catch (e) {
-  //     print('Error testing study reminder: $e');
+  //     debugPrint('Error testing study reminder: $e');
   //   }
   // }
 
@@ -476,7 +476,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
   //   try {
   //     NotificationPollingService().testNotification();
   //   } catch (e) {
-  //     print('Error testing simple notification: $e');
+  //     debugPrint('Error testing simple notification: $e');
   //   }
   // }
 }

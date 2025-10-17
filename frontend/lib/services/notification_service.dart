@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
@@ -21,9 +22,9 @@ class NotificationService {
       await _initializeLocalNotifications();
 
       _isInitialized = true;
-      print('✅ Notification service initialized successfully');
+      debugPrint('✅ Notification service initialized successfully');
     } catch (e) {
-      print('❌ Error initializing notification service: $e');
+      debugPrint('❌ Error initializing notification service: $e');
     }
   }
 
@@ -58,7 +59,7 @@ class NotificationService {
   }
 
   void _onNotificationTapped(NotificationResponse response) {
-    print('🔔 Local notification tapped: ${response.payload}');
+    debugPrint('🔔 Local notification tapped: $response');
     // Handle local notification tap
   }
 
@@ -169,10 +170,14 @@ class NotificationService {
   }
 
   Future<void> subscribeToTopic(String topic) async {
-    print('📡 Topic subscription disabled (Firebase not available): $topic');
+    debugPrint(
+      '📡 Topic subscription disabled (Firebase not available): $topic',
+    );
   }
 
   Future<void> unsubscribeFromTopic(String topic) async {
-    print('📡 Topic unsubscription disabled (Firebase not available): $topic');
+    debugPrint(
+      '📡 Topic unsubscription disabled (Firebase not available): $topic',
+    );
   }
 }

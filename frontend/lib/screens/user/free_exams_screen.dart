@@ -159,7 +159,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.3),
+            color: Colors.green.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -223,7 +223,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -481,7 +481,9 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   void _showPaymentInstructions() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => PaymentInstructionsScreen()),
+      MaterialPageRoute(
+        builder: (context) => const PaymentInstructionsScreen(),
+      ),
     );
   }
 
@@ -492,6 +494,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
     if (await canLaunchUrl(phoneUri)) {
       await launchUrl(phoneUri);
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Could not launch phone app'),

@@ -33,7 +33,7 @@ class PhoneCallTest extends StatelessWidget {
               onPressed: () async {
                 try {
                   const phoneNumber = '+250780494000';
-                  print('📞 TEST: Attempting to call $phoneNumber');
+                  debugPrint('📞 TEST: Attempting to call $phoneNumber');
 
                   // Try to launch phone dialer
                   final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
@@ -43,7 +43,7 @@ class PhoneCallTest extends StatelessWidget {
                       phoneUri,
                       mode: LaunchMode.externalApplication,
                     );
-                    print('📞 TEST: Phone dialer launched successfully');
+                    debugPrint('📞 TEST: Phone dialer launched successfully');
 
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -54,7 +54,7 @@ class PhoneCallTest extends StatelessWidget {
                       );
                     }
                   } else {
-                    print('📞 TEST: Cannot launch phone dialer');
+                    debugPrint('📞 TEST: Cannot launch phone dialer');
 
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -66,7 +66,7 @@ class PhoneCallTest extends StatelessWidget {
                     }
                   }
                 } catch (e) {
-                  print('📞 TEST: Call error: $e');
+                  debugPrint('📞 TEST: Call error: $e');
 
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(

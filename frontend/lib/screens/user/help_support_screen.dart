@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
-import '../../widgets/custom_button.dart';
 
 class HelpSupportScreen extends ConsumerStatefulWidget {
   const HelpSupportScreen({super.key});
@@ -44,7 +43,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.05),
+                    color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -84,7 +83,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.05),
+                    color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -153,7 +152,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.05),
+                    color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -210,7 +209,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
             //     borderRadius: BorderRadius.circular(16.r),
             //     boxShadow: [
             //       BoxShadow(
-            //         color: AppColors.black.withOpacity(0.05),
+            //         color: AppColors.black.withValues(alpha: 0.05),
             //         blurRadius: 10,
             //         offset: const Offset(0, 5),
             //       ),
@@ -273,7 +272,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.05),
+                    color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -331,7 +330,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Icon(icon, color: AppColors.primary, size: 20.sp),
@@ -383,7 +382,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Icon(icon, color: AppColors.primary, size: 20.sp),
@@ -500,29 +499,6 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
     if (await canLaunchUrl(whatsappUri)) {
       await launchUrl(whatsappUri);
     }
-  }
-
-  void _sendMessage() {
-    if (_subjectController.text.isEmpty || _messageController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in both subject and message'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-
-    // TODO: Implement send message to backend
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Message sent successfully'),
-        backgroundColor: AppColors.success,
-      ),
-    );
-
-    _subjectController.clear();
-    _messageController.clear();
   }
 
   String _getExamHelpText() {

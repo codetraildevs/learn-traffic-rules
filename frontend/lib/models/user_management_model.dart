@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'access_code_model.dart';
 
@@ -71,7 +72,7 @@ class UserWithStats {
           // Database: 0 = blocked (true), 1 = unblocked (false)
           // Frontend: true = blocked, false = unblocked
           final boolValue = rawValue == 0;
-          print(
+          debugPrint(
             '🔍 Parsing isBlocked: raw=$rawValue, parsed=$boolValue (0=blocked, 1=unblocked)',
           );
           return boolValue;
@@ -82,8 +83,8 @@ class UserWithStats {
             : null,
       );
     } catch (e) {
-      print('❌ Error parsing UserWithStats: $e');
-      print('❌ JSON data: $json');
+      debugPrint('❌ Error parsing UserWithStats: $e');
+      debugPrint('❌ JSON data: $json');
       rethrow;
     }
   }
@@ -133,8 +134,8 @@ class AccessCodeStats {
             : null,
       );
     } catch (e) {
-      print('❌ Error parsing AccessCodeStats: $e');
-      print('❌ JSON data: $json');
+      debugPrint('❌ Error parsing AccessCodeStats: $e');
+      debugPrint('❌ JSON data: $json');
       return const AccessCodeStats();
     }
   }
@@ -170,8 +171,8 @@ class UserListResponse {
             : const UserListData(users: [], pagination: UserPagination()),
       );
     } catch (e) {
-      print('❌ Error parsing UserListResponse: $e');
-      print('❌ JSON data: $json');
+      debugPrint('❌ Error parsing UserListResponse: $e');
+      debugPrint('❌ JSON data: $json');
       rethrow;
     }
   }
@@ -193,8 +194,8 @@ class UserListData {
             try {
               return UserWithStats.fromJson(e as Map<String, dynamic>);
             } catch (e) {
-              print('❌ Error parsing user: $e');
-              print('❌ User data: $e');
+              debugPrint('❌ Error parsing user: $e');
+              debugPrint('❌ User data: $e');
               return null;
             }
           })
@@ -211,8 +212,8 @@ class UserListData {
             : const UserPagination(),
       );
     } catch (e) {
-      print('❌ Error parsing UserListData: $e');
-      print('❌ JSON data: $json');
+      debugPrint('❌ Error parsing UserListData: $e');
+      debugPrint('❌ JSON data: $json');
       rethrow;
     }
   }
@@ -242,8 +243,8 @@ class UserPagination {
         totalPages: (json['totalPages'] as num?)?.toInt() ?? 1,
       );
     } catch (e) {
-      print('❌ Error parsing UserPagination: $e');
-      print('❌ JSON data: $json');
+      debugPrint('❌ Error parsing UserPagination: $e');
+      debugPrint('❌ JSON data: $json');
       return const UserPagination();
     }
   }
@@ -481,8 +482,8 @@ class RemainingDaysResponse {
               ),
       );
     } catch (e) {
-      print('❌ Error parsing RemainingDaysResponse: $e');
-      print('❌ JSON data: $json');
+      debugPrint('❌ Error parsing RemainingDaysResponse: $e');
+      debugPrint('❌ JSON data: $json');
       rethrow;
     }
   }
@@ -509,8 +510,8 @@ class RemainingDaysData {
         activeCodesCount: (json['activeCodesCount'] as num?)?.toInt() ?? 0,
       );
     } catch (e) {
-      print('❌ Error parsing RemainingDaysData: $e');
-      print('❌ JSON data: $json');
+      debugPrint('❌ Error parsing RemainingDaysData: $e');
+      debugPrint('❌ JSON data: $json');
       return const RemainingDaysData(
         remainingDays: 0,
         hasActiveAccess: false,

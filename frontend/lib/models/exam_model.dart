@@ -104,11 +104,11 @@ class Exam {
 
   String get durationDisplay {
     if (duration < 60) {
-      return '${duration}m';
+      return '$duration m';
     } else {
       final hours = duration ~/ 60;
       final minutes = duration % 60;
-      return minutes > 0 ? '${hours}h ${minutes}m' : '${hours}h';
+      return minutes > 0 ? '$hours h $minutes m' : '$hours h';
     }
   }
 

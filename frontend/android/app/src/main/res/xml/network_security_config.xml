@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Allow HTTP traffic for development and testing -->
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">10.102.183.116</domain>
+    </domain-config>
+    
+    <!-- Configuration for your production backend -->
+    <domain-config>
+        <domain includeSubdomains="true">learn-traffic-rules.onrender.com</domain>
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </domain-config>
+    
+    <!-- Base configuration for all other domains -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <!-- Trust system CAs -->
+            <certificates src="system"/>
+            <!-- Trust user-added CAs -->
+            <certificates src="user"/>
+        </trust-anchors>
+    </base-config>
+</network-security-config>

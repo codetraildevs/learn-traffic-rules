@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:learn_traffic_rules/screens/user/payment_instructions_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
@@ -65,24 +66,24 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         _isLoadingFreeExams = true;
       });
 
-      print('🔄 Loading free exams...');
+      debugPrint('🔄 Loading free exams...');
       final response = await _userManagementService.getFreeExams();
-      print('🔄 Free exams response: ${response.success}');
+      debugPrint('🔄 Free exams response: $response');
 
       if (response.success) {
-        print('🔄 Free exams data: ${response.data?.exams.length} exams');
+        debugPrint('🔄 Free exams data: ${response.data.exams.length} exams');
         setState(() {
           _freeExamData = response.data;
           _isLoadingFreeExams = false;
         });
       } else {
-        print('❌ Failed to load free exams: ${response.message}');
+        debugPrint('❌ Failed to load free exams: ${response.message}');
         setState(() {
           _isLoadingFreeExams = false;
         });
       }
     } catch (e) {
-      print('❌ Error loading free exams: $e');
+      debugPrint('❌ Error loading free exams: $e');
       setState(() {
         _isLoadingFreeExams = false;
       });
@@ -165,7 +166,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                       height: 200.h,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.white.withOpacity(0.1),
+                        color: AppColors.white.withValues(alpha: 0.1),
                       ),
                     ),
                   ),
@@ -177,7 +178,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                       height: 150.h,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.white.withOpacity(0.05),
+                        color: AppColors.white.withValues(alpha: 0.05),
                       ),
                     ),
                   ),
@@ -191,7 +192,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                         Text(
                           'Test Your Traffic Rules Knowledge',
                           style: AppTextStyles.bodyLarge.copyWith(
-                            color: AppColors.white.withOpacity(0.9),
+                            color: AppColors.white.withValues(alpha: 0.9),
                           ),
                         ),
                       ],
@@ -234,7 +235,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                     Expanded(
                       child: _buildStatCard(
                         'Easy',
-                        '${_freeExamData!.exams.where((e) => e.difficulty == 'EASY').length}',
+                        '${_freeExamData!.exams.where((e) => e.difficulty == 'Easy').length}',
                         Icons.check_circle,
                         AppColors.success,
                       ),
@@ -299,7 +300,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           sliver: SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 1,
-              childAspectRatio: 1.1,
+              childAspectRatio: 1.9,
               crossAxisSpacing: 16.w,
               mainAxisSpacing: 16.h,
             ),
@@ -335,7 +336,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.05),
+            color: AppColors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -452,27 +453,27 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
 
             // Content
             Padding(
-              padding: EdgeInsets.fromLTRB(12.w, 8.h, 12.w, 8.h),
+              padding: EdgeInsets.fromLTRB(12.w, 8.h, 12.w, 4.h),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (exam.description != null) ...[
-                    Text(
-                      exam.description!,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.grey600,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 8.h),
-                  ],
+                  // if (exam.description != null) ...[
+                  //   Text(
+                  //     exam.description!,
+                  //     style: AppTextStyles.bodySmall.copyWith(
+                  //       color: AppColors.grey600,
+                  //     ),
+                  //     maxLines: 2,
+                  //     overflow: TextOverflow.ellipsis,
+                  //   ),
+                  //   SizedBox(height: 8.h),
+                  // ],
 
                   // Creation date (for debugging)
                   if (exam.createdAt != null) ...[
                     Text(
-                      'Created: ${_formatDate(exam.createdAt!)}',
+                      'Created: ${DateFormat('MMM dd, yyyy').format(exam.createdAt!)}',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.grey500,
                         fontSize: 10.sp,
@@ -483,8 +484,8 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
 
                   // Stats row
                   Wrap(
-                    spacing: 8.w,
-                    runSpacing: 8.h,
+                    spacing: 6.w,
+                    runSpacing: 6.h,
                     children: [
                       _buildModernStatChip(
                         Icons.timer_outlined,
@@ -498,15 +499,15 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                       ),
                       _buildModernStatChip(
                         Icons.quiz_outlined,
-                        '${exam.questionCount ?? 0} Q',
+                        '${exam.questionCount} Q',
                         AppColors.warning,
                       ),
-                      if (exam.category != null)
-                        _buildModernStatChip(
-                          Icons.category_outlined,
-                          exam.category!,
-                          AppColors.info,
-                        ),
+                      // if (exam.category != null)
+                      //   _buildModernStatChip(
+                      //     Icons.category_outlined,
+                      //     exam.category!,
+                      //     AppColors.info,
+                      //   ),
                     ],
                   ),
 
@@ -518,18 +519,18 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.white,
-                      padding: EdgeInsets.symmetric(vertical: 10.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
+                      padding: EdgeInsets.symmetric(vertical: 4.h),
+                      // shape: RoundedRectangleBorder(
+                      //   borderRadius: BorderRadius.circular(12.r),
+                      // ),
                       elevation: 0,
-                      minimumSize: Size(double.infinity, 0),
+                      minimumSize: const Size(double.infinity, 0),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.play_arrow, size: 20.sp),
-                        SizedBox(width: 8.w),
+                        Icon(Icons.play_arrow, size: 18.sp),
+                        SizedBox(width: 6.w),
                         Text(
                           'Start Exam',
                           style: AppTextStyles.bodyMedium.copyWith(
@@ -548,39 +549,13 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     );
   }
 
-  Widget _buildStatItem(IconData icon, String text) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-      decoration: BoxDecoration(
-        color: AppColors.grey50,
-        borderRadius: BorderRadius.circular(6.r),
-        border: Border.all(color: AppColors.grey200, width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10.sp, color: AppColors.primary),
-          SizedBox(width: 3.w),
-          Text(
-            text,
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.grey700,
-              fontSize: 9.sp,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildModernStatChip(IconData icon, String text, Color color) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -603,11 +578,11 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   List<Color> _getDifficultyColors(String difficulty) {
     switch (difficulty.toUpperCase()) {
       case 'EASY':
-        return [AppColors.success, AppColors.success.withOpacity(0.8)];
+        return [AppColors.success, AppColors.success.withValues(alpha: 0.8)];
       case 'MEDIUM':
-        return [AppColors.warning, AppColors.warning.withOpacity(0.8)];
+        return [AppColors.warning, AppColors.warning.withValues(alpha: 0.8)];
       case 'HARD':
-        return [AppColors.error, AppColors.error.withOpacity(0.8)];
+        return [AppColors.error, AppColors.error.withValues(alpha: 0.8)];
       default:
         return [AppColors.primary, AppColors.secondary];
     }
@@ -625,7 +600,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.3),
+            color: Colors.green.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -735,17 +710,14 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   void _contactAdmin() async {
-    const phoneNumber = '+250788123456';
+    const phoneNumber = '+250780494000';
     final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
 
     if (await canLaunchUrl(phoneUri)) {
       await launchUrl(phoneUri);
     } else {
+      if (!mounted) return;
       AppFlashMessage.showError(context, 'Could not launch phone app');
     }
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
   }
 }

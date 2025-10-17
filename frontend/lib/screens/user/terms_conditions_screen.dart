@@ -27,7 +27,7 @@ class TermsConditionsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.05),
+                    color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -62,7 +62,7 @@ class TermsConditionsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.05),
+                    color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),

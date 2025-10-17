@@ -28,7 +28,7 @@ class UserManagementService {
     };
 
     final queryString = queryParams.entries
-        .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+        .map((e) => '${e.key}=${e.value}')
         .join('&');
 
     final response = await _apiService.makeRequest(
@@ -63,7 +63,7 @@ class UserManagementService {
     };
 
     final queryString = queryParams.entries
-        .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+        .map((e) => '${e.key}=${e.value}')
         .join('&');
 
     final response = await _apiService.makeRequest(
@@ -129,7 +129,7 @@ class UserManagementService {
   Future<PaymentTiersResponse> getPaymentTiers() async {
     final response = await _apiService.makeRequest(
       'GET',
-      '${AppConstants.accessCodesEndpoint}/payment-tiers',
+      '${AppConstants.userManagementEndpoint}/payment-tiers',
     );
 
     return PaymentTiersResponse.fromJson(response);
@@ -231,7 +231,7 @@ class UserManagementService {
   Future<AccessCodeListResponse> getAllAccessCodes() async {
     final response = await _apiService.makeRequest(
       'GET',
-      '${AppConstants.accessCodesEndpoint}',
+      AppConstants.accessCodesEndpoint,
     );
     return AccessCodeListResponse.fromJson(response);
   }

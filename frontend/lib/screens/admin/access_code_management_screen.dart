@@ -173,13 +173,11 @@ class _AccessCodeManagementScreenState
         !code.isBlocked, // Toggle the current status
       );
       if (response['success'] == true) {
-        _showSuccessSnackBar(
-          'Access code ${code.isBlocked ? 'unblocked' : 'blocked'} successfully',
-        );
+        _showSuccessSnackBar('Access code ${code.code} successfully');
         _loadAccessCodes(); // Refresh the list
       } else {
         _showErrorSnackBar(
-          'Failed to toggle block status: ${response['message']}',
+          'Failed to toggle block status: ${response['message'] ?? 'Unknown error'}',
         );
       }
     } catch (e) {
@@ -191,7 +189,7 @@ class _AccessCodeManagementScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Access Code', style: AppTextStyles.heading3),
+        title: const Text('Delete Access Code', style: AppTextStyles.heading3),
         content: Text(
           'Are you sure you want to delete access code ${code.code}? This action cannot be undone.',
           style: AppTextStyles.bodyMedium,
@@ -199,12 +197,12 @@ class _AccessCodeManagementScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: AppTextStyles.bodyMedium),
+            child: const Text('Cancel', style: AppTextStyles.bodyMedium),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: Text('Delete', style: AppTextStyles.bodyMedium),
+            child: const Text('Delete', style: AppTextStyles.bodyMedium),
           ),
         ],
       ),
@@ -218,7 +216,7 @@ class _AccessCodeManagementScreenState
           _loadAccessCodes(); // Refresh the list
         } else {
           _showErrorSnackBar(
-            'Failed to delete access code: ${response['message']}',
+            'Failed to delete access code: ${response['message'] ?? 'Unknown error'}',
           );
         }
       } catch (e) {
@@ -258,7 +256,10 @@ class _AccessCodeManagementScreenState
     return Scaffold(
       backgroundColor: AppColors.grey50,
       appBar: AppBar(
-        title: Text('Access Code Management', style: AppTextStyles.heading2),
+        title: const Text(
+          'Access Code Management',
+          style: AppTextStyles.heading2,
+        ),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         elevation: 0,
@@ -296,11 +297,11 @@ class _AccessCodeManagementScreenState
                         : null,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12.r),
-                      borderSide: BorderSide(color: AppColors.grey300),
+                      borderSide: const BorderSide(color: AppColors.grey300),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12.r),
-                      borderSide: BorderSide(color: AppColors.primary),
+                      borderSide: const BorderSide(color: AppColors.primary),
                     ),
                   ),
                 ),
@@ -313,7 +314,7 @@ class _AccessCodeManagementScreenState
                     Expanded(
                       flex: 3,
                       child: DropdownButtonFormField<String>(
-                        value: _selectedFilter,
+                        initialValue: _selectedFilter,
                         onChanged: (value) => _onFilterChanged(value!),
                         decoration: InputDecoration(
                           labelText: 'Filter by Status',
@@ -370,7 +371,7 @@ class _AccessCodeManagementScreenState
                     Expanded(
                       flex: 3,
                       child: DropdownButtonFormField<String>(
-                        value: _selectedSort,
+                        initialValue: _selectedSort,
                         onChanged: (value) => _onSortChanged(value!),
                         decoration: InputDecoration(
                           labelText: 'Sort by',
@@ -512,9 +513,7 @@ class _AccessCodeManagementScreenState
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        code.user?.fullName?.isNotEmpty == true
-                            ? code.user!.fullName!
-                            : 'User ID: ${code.userId.substring(0, 8)}...',
+                        _getUserDisplayName(code),
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.grey600,
                           fontWeight: FontWeight.w600,
@@ -592,7 +591,7 @@ class _AccessCodeManagementScreenState
               children: [
                 _buildDetailChip(
                   Icons.payment,
-                  '${code.paymentAmount.toStringAsFixed(0)} RWF',
+                  '${code.paymentAmount} RWF',
                   AppColors.primary,
                 ),
                 _buildDetailChip(
@@ -602,7 +601,7 @@ class _AccessCodeManagementScreenState
                 ),
                 _buildDetailChip(
                   Icons.calendar_today,
-                  'Expires at: ${_formatExpirationDate(code.expiresAt)}',
+                  'Expires at: ${DateFormat('MMM dd, yyyy').format(code.expiresAt)}',
                   AppColors.grey600,
                 ),
                 _buildDetailChip(
@@ -624,9 +623,9 @@ class _AccessCodeManagementScreenState
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -652,31 +651,19 @@ class _AccessCodeManagementScreenState
     return AppColors.success;
   }
 
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = date.difference(now);
-
-    if (difference.inDays > 0) {
-      return '${difference.inDays}d';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m';
-    } else {
-      return 'Expired';
-    }
-  }
-
-  String _formatExpirationDate(DateTime date) {
-    final formatter = DateFormat('MMM dd, yyyy');
-    return formatter.format(date);
-  }
-
   int _getRemainingDays(AccessCode code) {
     if (code.isUsed || code.isExpired) return 0;
 
     final now = DateTime.now();
     final difference = code.expiresAt.difference(now);
     return difference.inDays > 0 ? difference.inDays : 0;
+  }
+
+  String _getUserDisplayName(AccessCode code) {
+    final fullName = code.user?.fullName;
+    if (fullName != null && fullName.isNotEmpty) {
+      return fullName;
+    }
+    return 'User ID: ${code.userId.substring(0, 8)}...';
   }
 }

@@ -60,7 +60,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.05),
+                    color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -96,7 +96,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                 borderRadius: BorderRadius.circular(16.r),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.05),
+                    color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -137,7 +137,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                         _enableReminders = value;
                       });
                     },
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                   ),
                 ],
               ),
@@ -155,7 +155,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                   borderRadius: BorderRadius.circular(16.r),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.black.withOpacity(0.05),
+                      color: AppColors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -193,7 +193,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                               ),
                             ),
                             const Spacer(),
-                            Icon(
+                            const Icon(
                               Icons.arrow_drop_down,
                               color: AppColors.grey600,
                             ),
@@ -216,7 +216,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                   borderRadius: BorderRadius.circular(16.r),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.black.withOpacity(0.05),
+                      color: AppColors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -248,7 +248,9 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                               }
                             });
                           },
-                          selectedColor: AppColors.primary.withOpacity(0.2),
+                          selectedColor: AppColors.primary.withValues(
+                            alpha: 0.2,
+                          ),
                           checkmarkColor: AppColors.primary,
                           labelStyle: TextStyle(
                             color: isSelected
@@ -276,7 +278,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                   borderRadius: BorderRadius.circular(16.r),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.black.withOpacity(0.05),
+                      color: AppColors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -330,7 +332,9 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                           },
                           icon: const Icon(Icons.add),
                           style: IconButton.styleFrom(
-                            backgroundColor: AppColors.primary.withOpacity(0.1),
+                            backgroundColor: AppColors.primary.withValues(
+                              alpha: 0.1,
+                            ),
                           ),
                         ),
                       ],
@@ -383,11 +387,11 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
             // Parse JSON string
             try {
               final List<dynamic> parsedDays = List<dynamic>.from(
-                jsonDecode(daysData) ?? ['Monday', 'Wednesday', 'Friday']
+                jsonDecode(daysData) ?? ['Monday', 'Wednesday', 'Friday'],
               );
               _selectedDays = parsedDays.cast<String>();
             } catch (e) {
-              print('Error parsing daysOfWeek JSON: $e');
+              debugPrint('Error parsing daysOfWeek JSON: $e');
               _selectedDays = ['Monday', 'Wednesday', 'Friday'];
             }
           } else if (daysData is List) {
@@ -412,7 +416,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
         });
       }
     } catch (e) {
-      print('Error loading study reminder: $e');
+      debugPrint('Error loading study reminder: $e');
     }
   }
 
@@ -429,8 +433,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
     });
 
     try {
-      final reminderTime =
-          '${_reminderTime.hour.toString().padLeft(2, '0')}:${_reminderTime.minute.toString().padLeft(2, '0')}';
+      final reminderTime = '${_reminderTime.hour}:${_reminderTime.minute}';
 
       if (_reminderId == null) {
         // Create new reminder
@@ -479,7 +482,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save reminder: ${e.toString()}'),
+            content: Text('Failed to save reminder: $e'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -512,7 +515,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
         }
       }
     } catch (e) {
-      print('Error deleting reminder: $e');
+      debugPrint('Error deleting reminder: $e');
     }
   }
 }

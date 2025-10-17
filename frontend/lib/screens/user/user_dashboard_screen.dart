@@ -49,22 +49,22 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
     });
 
     try {
-      print('🔄 Loading remaining days...');
+      debugPrint('🔄 Loading remaining days...');
       final response = await _userManagementService.getMyRemainingDays();
-      print('🔄 Remaining days response: ${response.success}');
+      debugPrint('🔄 Remaining days response: $response');
 
       if (response.success) {
         setState(() {
           _remainingDaysData = response.data;
         });
       } else {
-        print('❌ Failed to load remaining days: ${response.message}');
+        debugPrint('❌ Failed to load remaining days: $_remainingDaysData');
         _showErrorSnackBar(
-          'Failed to load remaining days: ${response.message}',
+          'Failed to load remaining days: $_remainingDaysData',
         );
       }
     } catch (e) {
-      print('❌ Error loading remaining days: $e');
+      debugPrint('❌ Error loading remaining days: $e');
       _showErrorSnackBar('Error loading remaining days: $e');
     } finally {
       setState(() {
@@ -179,8 +179,9 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                                         'Track your access and progress',
                                         style: AppTextStyles.bodyMedium
                                             .copyWith(
-                                              color: AppColors.white
-                                                  .withOpacity(0.9),
+                                              color: AppColors.white.withValues(
+                                                alpha: 0.9,
+                                              ),
                                             ),
                                       ),
                                     ],
@@ -230,10 +231,12 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                             Container(
                               padding: EdgeInsets.all(16.w),
                               decoration: BoxDecoration(
-                                color: AppColors.success.withOpacity(0.1),
+                                color: AppColors.success.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12.r),
                                 border: Border.all(
-                                  color: AppColors.success.withOpacity(0.3),
+                                  color: AppColors.success.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   width: 1,
                                 ),
                               ),
@@ -258,7 +261,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                                   ),
                                   SizedBox(height: 8.h),
                                   Text(
-                                    'You have ${_remainingDaysData!.remainingDays} days remaining',
+                                    'You have $_remainingDaysData days remaining',
                                     style: AppTextStyles.bodyMedium.copyWith(
                                       color: AppColors.grey700,
                                     ),
@@ -278,10 +281,12 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                             Container(
                               padding: EdgeInsets.all(16.w),
                               decoration: BoxDecoration(
-                                color: AppColors.warning.withOpacity(0.1),
+                                color: AppColors.warning.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12.r),
                                 border: Border.all(
-                                  color: AppColors.warning.withOpacity(0.3),
+                                  color: AppColors.warning.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   width: 1,
                                 ),
                               ),
@@ -314,7 +319,6 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                                   SizedBox(height: 12.h),
                                   ElevatedButton.icon(
                                     onPressed: () {
-                                      // TODO: Navigate to payment screen
                                       _showErrorSnackBar(
                                         'Payment screen coming soon!',
                                       );
@@ -373,7 +377,6 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                                   label: 'Take Exam',
                                   color: AppColors.primary,
                                   onPressed: () {
-                                    // TODO: Navigate to exams
                                     _showErrorSnackBar('Exams coming soon!');
                                   },
                                 ),
@@ -385,7 +388,6 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                                   label: 'My Results',
                                   color: AppColors.success,
                                   onPressed: () {
-                                    // TODO: Navigate to results
                                     _showErrorSnackBar('Results coming soon!');
                                   },
                                 ),
@@ -401,7 +403,6 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                                   label: 'Get Access',
                                   color: AppColors.warning,
                                   onPressed: () {
-                                    // TODO: Navigate to payment
                                     _showErrorSnackBar('Payment coming soon!');
                                   },
                                 ),
@@ -413,7 +414,6 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                                   label: 'Help & Support',
                                   color: AppColors.info,
                                   onPressed: () {
-                                    // TODO: Navigate to help
                                     _showErrorSnackBar('Help coming soon!');
                                   },
                                 ),
@@ -444,13 +444,13 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
         style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: color.withOpacity(0.1),
+        backgroundColor: color.withValues(alpha: 0.1),
         foregroundColor: color,
         elevation: 0,
         padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.r),
-          side: BorderSide(color: color.withOpacity(0.3)),
+          side: BorderSide(color: color.withValues(alpha: 0.3)),
         ),
       ),
     );

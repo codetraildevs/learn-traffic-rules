@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'access_code_model.g.dart';
@@ -25,8 +26,8 @@ class AccessCodeUser {
         role: json['role']?.toString() ?? 'USER',
       );
     } catch (e) {
-      print('❌ Error parsing AccessCodeUser: $e');
-      print('❌ JSON data: $json');
+      debugPrint('❌ Error parsing AccessCodeUser: $e');
+      debugPrint('❌ JSON data: $json');
       return const AccessCodeUser(
         id: '',
         fullName: 'Unknown User',
@@ -118,8 +119,8 @@ class AccessCode {
             : null,
       );
     } catch (e) {
-      print('❌ Error parsing AccessCode: $e');
-      print('❌ JSON data: $json');
+      debugPrint('❌ Error parsing AccessCode: $e');
+      debugPrint('❌ JSON data: $json');
       // Return a default AccessCode with minimal required fields
       return AccessCode(
         id: json['id']?.toString() ?? '',
@@ -213,15 +214,15 @@ class PaymentTier {
       _$PaymentTierFromJson(json);
   Map<String, dynamic> toJson() => _$PaymentTierToJson(this);
 
-  String get displayName {
-    if (days == 1) return '1 Day - ${amount.toInt()} RWF';
-    if (days < 7) return '$days Days - ${amount.toInt()} RWF';
-    if (days == 7) return '1 Week - ${amount.toInt()} RWF';
-    if (days == 14) return '2 Weeks - ${amount.toInt()} RWF';
-    if (days == 30) return '1 Month - ${amount.toInt()} RWF';
-    if (days == 60) return '2 Months - ${amount.toInt()} RWF';
-    return '$days Days - ${amount.toInt()} RWF';
-  }
+  // String get displayName {
+  //   if (days == 1) return '1 Day - $\1 RWF';
+  //   if (days < 7) return '$days Days - $\1 RWF';
+  //   if (days == 7) return '1 Week - $\1 RWF';
+  //   if (days == 14) return '2 Weeks - $\1 RWF';
+  //   if (days == 30) return '1 Month - $\1 RWF';
+  //   if (days == 60) return '2 Months - $\1 RWF';
+  //   return '$days Days - $\1 RWF';
+  // }
 }
 
 @JsonSerializable()
@@ -276,7 +277,7 @@ class AccessCodeListData {
             try {
               return AccessCode.fromJson(e as Map<String, dynamic>);
             } catch (e) {
-              print('❌ Error parsing access code: $e');
+              debugPrint('❌ Error parsing access code: $e');
               return null;
             }
           })
@@ -298,8 +299,8 @@ class AccessCodeListData {
               ),
       );
     } catch (e) {
-      print('❌ Error parsing AccessCodeListData: $e');
-      print('❌ JSON data: $json');
+      debugPrint('❌ Error parsing AccessCodeListData: $e');
+      debugPrint('❌ JSON data: $json');
       rethrow;
     }
   }
@@ -329,8 +330,8 @@ class AccessCodePagination {
         totalPages: (json['totalPages'] as num?)?.toInt() ?? 1,
       );
     } catch (e) {
-      print('❌ Error parsing AccessCodePagination: $e');
-      print('❌ JSON data: $json');
+      debugPrint('❌ Error parsing AccessCodePagination: $e');
+      debugPrint('❌ JSON data: $json');
       return const AccessCodePagination(
         total: 0,
         page: 1,

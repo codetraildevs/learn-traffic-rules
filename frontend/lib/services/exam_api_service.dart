@@ -13,20 +13,22 @@ class ExamApiService {
   /// Get all exams
   Future<List<Exam>> getExams() async {
     try {
-      print('🔄 EXAM API: Making request to ${AppConstants.examsEndpoint}');
+      debugPrint(
+        '🔄 EXAM API: Making request to ${AppConstants.examsEndpoint}',
+      );
       final response = await _apiService.makeRequest(
         'GET',
         AppConstants.examsEndpoint,
       );
-      print('🔄 EXAM API: Received response: $response');
+      debugPrint('🔄 EXAM API: Received response: $response');
       final examsData = response['data'] as List;
-      print('🔄 EXAM API: Found ${examsData.length} exams in response');
+      debugPrint('🔄 EXAM API: Found ${examsData.length} exams in response');
       debugPrint('Exams data: $examsData');
       final exams = examsData.map((exam) => Exam.fromJson(exam)).toList();
-      print('🔄 EXAM API: Successfully parsed ${exams.length} exams');
+      debugPrint('🔄 EXAM API: Successfully parsed ${exams.length} exams');
       return exams;
     } catch (e) {
-      print('❌ EXAM API: Error fetching exams: $e');
+      debugPrint('❌ EXAM API: Error fetching exams: $e');
       debugPrint('Error fetching exams: $e');
       rethrow;
     }

@@ -8,7 +8,6 @@ import '../../services/flash_message_service.dart';
 import '../../widgets/custom_button.dart';
 import 'create_exam_screen.dart';
 import 'edit_exam_screen.dart';
-import 'question_upload_screen.dart';
 import 'question_management_screen.dart';
 
 class ExamManagementScreen extends ConsumerStatefulWidget {
@@ -102,7 +101,7 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
                         height: 200.h,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.white.withOpacity(0.1),
+                          color: AppColors.white.withValues(alpha: 0.1),
                         ),
                       ),
                     ),
@@ -114,7 +113,7 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
                         height: 150.h,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.white.withOpacity(0.05),
+                          color: AppColors.white.withValues(alpha: 0.05),
                         ),
                       ),
                     ),
@@ -128,7 +127,7 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
                           Text(
                             'Manage Traffic Rules Exams',
                             style: AppTextStyles.bodyLarge.copyWith(
-                              color: AppColors.white.withOpacity(0.9),
+                              color: AppColors.white.withValues(alpha: 0.9),
                             ),
                           ),
                         ],
@@ -206,9 +205,11 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
                 child: Container(
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
+                    color: AppColors.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                    border: Border.all(
+                      color: AppColors.error.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -330,7 +331,7 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.05),
+            color: AppColors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -365,7 +366,7 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
         borderRadius: BorderRadius.circular(20.r),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.08),
+            color: AppColors.black.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -397,7 +398,7 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
                       height: 80.h,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppColors.white.withOpacity(0.1),
+                        color: AppColors.white.withValues(alpha: 0.1),
                       ),
                     ),
                   ),
@@ -428,7 +429,9 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
                                     vertical: 2.h,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.white.withOpacity(0.2),
+                                    color: AppColors.white.withValues(
+                                      alpha: 0.2,
+                                    ),
                                     borderRadius: BorderRadius.circular(12.r),
                                   ),
                                   child: Text(
@@ -510,7 +513,7 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
                       ),
                       // Overlay with upload icon
                       Container(
-                        color: AppColors.black.withOpacity(0.3),
+                        color: AppColors.black.withValues(alpha: 0.3),
                         child: Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -732,16 +735,18 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
     final success = await ref
         .read(examProvider.notifier)
         .toggleExamStatus(exam.id);
-    if (success) {
-      AppFlashMessage.showSuccess(
-        context,
-        'Exam ${exam.isActive ? 'deactivated' : 'activated'} successfully',
-      );
-    } else {
-      AppFlashMessage.showError(
-        context,
-        'Failed to ${exam.isActive ? 'deactivate' : 'activate'} exam',
-      );
+    if (mounted) {
+      if (success) {
+        AppFlashMessage.showSuccess(
+          context,
+          'Exam ${exam.isActive ? 'deactivated' : 'activated'} successfully',
+        );
+      } else {
+        AppFlashMessage.showError(
+          context,
+          'Failed to ${exam.isActive ? 'deactivate' : 'activate'} exam',
+        );
+      }
     }
   }
 
@@ -764,13 +769,20 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
               final success = await ref
                   .read(examProvider.notifier)
                   .deleteExam(exam.id);
-              if (success) {
-                AppFlashMessage.showSuccess(
-                  context,
-                  'Exam deleted successfully',
-                );
-              } else {
-                AppFlashMessage.showError(context, 'Failed to delete exam');
+              if (mounted) {
+                if (success) {
+                  if (!mounted) return;
+                  AppFlashMessage.showSuccess(
+                    this.context,
+                    'Exam deleted successfully',
+                  );
+                } else {
+                  if (!mounted) return;
+                  AppFlashMessage.showError(
+                    this.context,
+                    'Failed to delete exam',
+                  );
+                }
               }
             },
             child: const Text(

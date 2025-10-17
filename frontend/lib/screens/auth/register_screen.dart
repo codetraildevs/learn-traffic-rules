@@ -27,7 +27,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   final _phoneController = TextEditingController();
 
   bool _isLoading = false;
-  String _selectedRole = 'USER';
+  final String _selectedRole = 'USER';
   String? _deviceId;
   String? _deviceModel;
   String? _platformName;
@@ -44,8 +44,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     _initializeAnimations();
     _initializeDeviceInfo();
     // Pre-fill for testing
-    _fullNameController.text = 'Test User';
-    _phoneController.text = '1234567890';
+    _fullNameController.text = '';
+    _phoneController.text = '';
   }
 
   void _initializeAnimations() {
@@ -254,7 +254,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                         );
                         // If all methods fail, show a snackbar
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          ScaffoldMessenger.of(this.context).showSnackBar(
                             SnackBar(
                               content: const Text(
                                 'Phone number: +250 780 494 000',
@@ -274,14 +274,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                 } catch (e) {
                   debugPrint('📞 Error calling phone: $e');
                   // If still fails, show a snackbar
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Phone number: +250 780 494 000'),
-                        backgroundColor: AppColors.secondary,
-                      ),
-                    );
-                  }
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Phone number: +250 780 494 000'),
+                      backgroundColor: AppColors.secondary,
+                    ),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -404,25 +403,47 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             'timestamp': DateTime.now().toIso8601String(),
           });
 
-          // Show enhanced error message
-          final errorIcon = error?.contains('🌐') == true
-              ? '🌐'
-              : error?.contains('⚠️') == true
-              ? '⚠️'
-              : error?.contains('🔐') == true
-              ? '🔐'
-              : error?.contains('📱') == true
-              ? '📱'
-              : error?.contains('⏱️') == true
-              ? '⏱️'
-              : '❌';
+          // Show enhanced error message with specific handling for common errors
+          String errorMessage = 'Registration Failed';
+          String errorDescription =
+              error ?? 'Please check your information and try again';
+          String errorIcon = '❌';
+
+          // Handle specific error cases
+          if (error?.toLowerCase().contains('already registered') == true ||
+              error?.toLowerCase().contains('phone number is already') ==
+                  true) {
+            errorMessage = 'Phone Number Already Registered';
+            errorDescription =
+                'This phone number is already registered. Please login instead.';
+            errorIcon = '📱';
+          } else if (error?.contains('🌐') == true) {
+            errorIcon = '🌐';
+          } else if (error?.contains('⚠️') == true) {
+            errorIcon = '⚠️';
+          } else if (error?.contains('🔐') == true) {
+            errorIcon = '🔐';
+          } else if (error?.contains('📱') == true) {
+            errorIcon = '📱';
+          } else if (error?.contains('⏱️') == true) {
+            errorIcon = '⏱️';
+          }
 
           AppFlashMessage.show(
             context: context,
-            message: 'Registration Failed $errorIcon',
-            description: error ?? 'Please check your information and try again',
+            message: '$errorMessage $errorIcon',
+            description: errorDescription,
             type: FlashMessageType.error,
-            duration: const Duration(seconds: 6),
+            duration: const Duration(seconds: 8),
+            onTap:
+                (error?.toLowerCase().contains('already registered') == true ||
+                    error?.toLowerCase().contains('phone number is already') ==
+                        true)
+                ? () {
+                    // Navigate to login screen when user taps on "already registered" message
+                    Navigator.pop(context);
+                  }
+                : null,
           );
         }
       }
@@ -786,11 +807,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
                             SizedBox(height: 16.h),
 
-                            SizedBox(height: 20.h),
+                            //SizedBox(height: 20.h),
 
                             // Register Button with Enhanced Design
                             Container(
                               height: 56.h,
+                              // width: 100.w,
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   colors: [
@@ -811,14 +833,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                   ),
                                 ],
                               ),
-                              child: CustomButton(
-                                text: 'Create Account',
-                                icon: Icons.person_add,
-                                onPressed: _isLoading ? null : _handleRegister,
-                                isLoading: _isLoading,
-                                height: 56.h,
-                                backgroundColor: Colors.transparent,
-                                textColor: Colors.white,
+                              child: Center(
+                                child: CustomButton(
+                                  text: 'Create Account',
+                                  icon: Icons.person_add,
+                                  onPressed: _isLoading
+                                      ? null
+                                      : _handleRegister,
+                                  isLoading: _isLoading,
+                                  height: 56.h,
+                                  backgroundColor: Colors.transparent,
+                                  textColor: Colors.white,
+                                ),
                               ),
                             ),
                           ],
@@ -845,7 +871,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     ),
                     borderRadius: BorderRadius.circular(20.r),
                     border: Border.all(
-                      color: AppColors.secondary.withOpacity(0.2),
+                      color: AppColors.secondary.withValues(alpha: 0.2),
                       width: 1,
                     ),
                   ),
@@ -876,11 +902,312 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   ),
                 ),
 
+                SizedBox(height: 20.h),
+
+                // Privacy Policy and Terms & Conditions Links
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 24.w),
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.grey50,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(color: AppColors.grey200, width: 1),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'By creating an account, you agree to our',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.grey600,
+                          fontSize: 12.sp,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 8.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          TextButton(
+                            onPressed: () => _launchPrivacyPolicy(),
+                            child: Text(
+                              'Privacy Policy',
+                              style: AppTextStyles.link.copyWith(
+                                color: AppColors.primary,
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            ' and ',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.grey600,
+                              fontSize: 12.sp,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => _launchTermsConditions(),
+                            child: Text(
+                              'Terms & Conditions',
+                              style: AppTextStyles.link.copyWith(
+                                color: AppColors.primary,
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
                 SizedBox(height: 40.h),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Launch Privacy Policy
+  void _launchPrivacyPolicy() async {
+    try {
+      // You can replace this with your actual privacy policy URL
+      const privacyPolicyUrl = 'https://your-website.com/privacy-policy';
+
+      if (await canLaunchUrl(Uri.parse(privacyPolicyUrl))) {
+        await launchUrl(
+          Uri.parse(privacyPolicyUrl),
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        // Fallback: Show privacy policy in a dialog
+        _showPrivacyPolicyDialog();
+      }
+    } catch (e) {
+      // Fallback: Show privacy policy in a dialog
+      _showPrivacyPolicyDialog();
+    }
+  }
+
+  // Launch Terms & Conditions
+  void _launchTermsConditions() async {
+    try {
+      // You can replace this with your actual terms & conditions URL
+      const termsUrl = 'https://your-website.com/terms-conditions';
+
+      if (await canLaunchUrl(Uri.parse(termsUrl))) {
+        await launchUrl(
+          Uri.parse(termsUrl),
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        // Fallback: Show terms & conditions in a dialog
+        _showTermsConditionsDialog();
+      }
+    } catch (e) {
+      // Fallback: Show terms & conditions in a dialog
+      _showTermsConditionsDialog();
+    }
+  }
+
+  // Show Privacy Policy Dialog
+  void _showPrivacyPolicyDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.privacy_tip_outlined, color: AppColors.primary),
+            SizedBox(width: 8.w),
+            Text(
+              'Privacy Policy',
+              style: AppTextStyles.heading3.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Learn Traffic Rules - Privacy Policy',
+                style: AppTextStyles.bodyLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              const Text(
+                'This educational app is designed to help you learn traffic rules and prepare for driving tests.',
+                style: AppTextStyles.bodyMedium,
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'Data Collection:',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              const Text(
+                '• We collect minimal information necessary for educational purposes\n'
+                '• Your learning progress and quiz scores\n'
+                '• Device information for app functionality\n'
+                '• No personal identification or sensitive data',
+                style: AppTextStyles.bodySmall,
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'Data Use:',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              const Text(
+                '• Educational progress tracking\n'
+                '• App improvement and features\n'
+                '• Technical support\n'
+                '• We do not share your data with third parties',
+                style: AppTextStyles.bodySmall,
+              ),
+              SizedBox(height: 12.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Text(
+                  'This is a private educational tool and is not affiliated with any government agency.',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Close',
+              style: AppTextStyles.button.copyWith(color: AppColors.grey600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Show Terms & Conditions Dialog
+  void _showTermsConditionsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.description_outlined, color: AppColors.primary),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Text(
+                'Terms & Conditions',
+                style: AppTextStyles.heading3.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Learn Traffic Rules - Terms & Conditions',
+                style: AppTextStyles.bodyLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'Educational Purpose:',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              const Text(
+                'This app is designed solely for educational purposes to help you learn traffic rules and practice for driving examinations.',
+                style: AppTextStyles.bodySmall,
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'Important Disclaimers:',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              const Text(
+                '• This app is NOT affiliated with any government agency\n'
+                '• This app does NOT provide official driving licenses\n'
+                '• This app does NOT guarantee passing any examination\n'
+                '• You must complete official government procedures',
+                style: AppTextStyles.bodySmall,
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'User Responsibilities:',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              const Text(
+                '• Use for educational purposes only\n'
+                '• Complete official procedures for licenses\n'
+                '• Verify information with official sources\n'
+                '• Follow local traffic laws and regulations',
+                style: AppTextStyles.bodySmall,
+              ),
+              SizedBox(height: 12.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Text(
+                  'This is a private educational tool. Always verify information with official government sources.',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Close',
+              style: AppTextStyles.button.copyWith(color: AppColors.grey600),
+            ),
+          ),
+        ],
       ),
     );
   }

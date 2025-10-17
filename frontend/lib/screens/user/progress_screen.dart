@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:learn_traffic_rules/core/constants/app_constants.dart';
 import 'package:learn_traffic_rules/screens/user/available_exams_screen.dart';
 import 'package:learn_traffic_rules/screens/user/exam_progress_screen.dart';
 import '../../models/exam_result_model.dart';
@@ -19,6 +22,31 @@ class _ProgressScreenState extends State<ProgressScreen> {
   List<ExamResultData> _examResults = [];
   bool _isLoading = true;
   String? _error;
+  static const MethodChannel _securityChannel = MethodChannel(
+    'com.example.learn_traffic_rules/security',
+  );
+
+  Future<void> _disableScreenshots() async {
+    if (Platform.isAndroid) {
+      try {
+        await _securityChannel.invokeMethod('disableScreenshots');
+        debugPrint('🔒 Security: Screenshots disabled for detailed answers');
+      } catch (e) {
+        debugPrint('🔒 Security: Failed to disable screenshots: $e');
+      }
+    }
+  }
+
+  Future<void> _enableScreenshots() async {
+    if (Platform.isAndroid) {
+      try {
+        await _securityChannel.invokeMethod('enableScreenshots');
+        debugPrint('🔒 Security: Screenshots enabled after detailed answers');
+      } catch (e) {
+        debugPrint('🔒 Security: Failed to enable screenshots: $e');
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -28,15 +56,15 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
   Future<void> _loadExamResults() async {
     try {
-      print('🔄 Loading exam results...');
+      debugPrint('🔄 Loading exam results...');
       setState(() {
         _isLoading = true;
         _error = null;
       });
 
       final results = await _examService.getUserExamResults();
-      print('📊 Exam results loaded: ${results.length} results');
-      print(
+      debugPrint('📊 Exam results loaded: ${results.length} results');
+      debugPrint(
         '   Results: ${results.map((r) => '${r.examId}: ${r.score}%').join(', ')}',
       );
 
@@ -45,7 +73,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('❌ Error loading exam results: $e');
+      debugPrint('❌ Error loading exam results: $e');
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -94,7 +122,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
       color: const Color(0xFF2E7D32),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        child: Container(
+        child: SizedBox(
           height: MediaQuery.of(context).size.height - 200.h,
           child: Center(
             child: Padding(
@@ -194,7 +222,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       width: 120.w,
                       height: 120.w,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2E7D32).withOpacity(0.1),
+                        color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(60.r),
                       ),
                       child: Icon(
@@ -416,10 +444,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
         .toSet();
     final passedExams = passedExamIds.length;
 
-    final averageScore = _examResults.isNotEmpty
-        ? _examResults.map((result) => result.score).reduce((a, b) => a + b) /
-              _examResults.length
-        : 0.0;
+    // final averageScore = _examResults.isNotEmpty
+    //     ? _examResults.map((result) => result.score).reduce((a, b) => a + b) /
+    //           _examResults.length
+    //     : 0.0;
     final totalTimeSpent = _examResults.isNotEmpty
         ? _examResults.map((result) => result.timeSpent).reduce((a, b) => a + b)
         : 0;
@@ -432,7 +460,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -480,7 +508,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 child: _buildStatCard(
                   icon: Icons.trending_up,
                   label: 'Average Score',
-                  value: '${averageScore.toStringAsFixed(1)}%',
+                  value: '${_calculateAverageScore().toStringAsFixed(1)}%',
                   color: const Color(0xFFFF9800),
                 ),
               ),
@@ -509,9 +537,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -567,7 +595,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -587,8 +615,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: result.passed
-                      ? const Color(0xFF4CAF50).withOpacity(0.1)
-                      : const Color(0xFFFF5722).withOpacity(0.1),
+                      ? const Color(0xFF4CAF50).withValues(alpha: 0.1)
+                      : const Color(0xFFFF5722).withValues(alpha: 0.1),
                   border: Border.all(
                     color: result.passed
                         ? const Color(0xFF4CAF50)
@@ -617,7 +645,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      result.Exam?.title ?? 'Exam Result',
+                      result.exam?.title ?? 'Exam Result',
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.bold,
@@ -626,7 +654,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      '${result.correctAnswers}/${result.totalQuestions} correct',
+                      '${result.correctAnswers}/${result.questionResults?.length ?? 0} correct',
                       style: TextStyle(
                         fontSize: 12.sp,
                         color: Colors.grey[600],
@@ -682,91 +710,22 @@ class _ProgressScreenState extends State<ProgressScreen> {
     );
   }
 
-  void _viewExamResult(ExamResultData result) {
+  void _viewExamResult(ExamResultData result) async {
+    // Disable screenshots before showing detailed answers
+    await _disableScreenshots();
+
     // Show detailed exam result with question-by-question answers
+    if (!mounted) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.9,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20.r),
-            topRight: Radius.circular(20.r),
-          ),
-        ),
-        child: Column(
-          children: [
-            // Header
-            Container(
-              padding: EdgeInsets.all(20.w),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2E7D32),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20.r),
-                  topRight: Radius.circular(20.r),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    result.passed ? Icons.check_circle : Icons.cancel,
-                    color: Colors.white,
-                    size: 24.sp,
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          result.Exam?.title ?? 'Exam Result',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'Score: ${result.score}% • ${result.correctAnswers}/${result.totalQuestions} correct',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14.sp,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-
-            // Content
-            Expanded(
-              child:
-                  result.questionResults == null ||
-                      result.questionResults!.isEmpty
-                  ? _buildNoResultsView()
-                  : ListView.builder(
-                      padding: EdgeInsets.all(16.w),
-                      itemCount: result.questionResults!.length,
-                      itemBuilder: (context, index) {
-                        final questionResult = result.questionResults![index];
-                        return _buildQuestionResultCard(
-                          questionResult,
-                          index + 1,
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
+      builder: (context) => _SecureDetailedAnswersModal(
+        examResult: result,
+        onClose: () async {
+          // Re-enable screenshots when closing
+          await _enableScreenshots();
+        },
       ),
     );
   }
@@ -777,377 +736,14 @@ class _ProgressScreenState extends State<ProgressScreen> {
     return '${minutes}m ${remainingSeconds}s';
   }
 
-  Widget _buildNoResultsView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.quiz_outlined, size: 64.sp, color: Colors.grey[400]),
-          SizedBox(height: 16.h),
-          Text(
-            'No detailed results available',
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Question-by-question breakdown is not available for this exam.',
-            style: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuestionResultCard(
-    QuestionResult questionResult,
-    int questionNumber,
-  ) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 16.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: questionResult.isCorrect
-              ? const Color(0xFF4CAF50).withOpacity(0.3)
-              : const Color(0xFFFF5722).withOpacity(0.3),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Question header
-          Row(
-            children: [
-              Container(
-                width: 32.w,
-                height: 32.w,
-                decoration: BoxDecoration(
-                  color: questionResult.isCorrect
-                      ? const Color(0xFF4CAF50).withOpacity(0.1)
-                      : const Color(0xFFFF5722).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-                child: Center(
-                  child: Text(
-                    '$questionNumber',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.bold,
-                      color: questionResult.isCorrect
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFFFF5722),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Text(
-                  'Question $questionNumber',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
-                  ),
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: questionResult.isCorrect
-                      ? const Color(0xFF4CAF50)
-                      : const Color(0xFFFF5722),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      questionResult.isCorrect ? Icons.check : Icons.close,
-                      color: Colors.white,
-                      size: 16.sp,
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      questionResult.isCorrect ? 'Correct' : 'Wrong',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          SizedBox(height: 16.h),
-
-          // Question text
-          if (questionResult.questionText != null) ...[
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: Colors.blue[200]!),
-              ),
-              child: Text(
-                questionResult.questionText!,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.blue[800],
-                ),
-              ),
-            ),
-            SizedBox(height: 12.h),
-          ],
-
-          // Question image
-          if (questionResult.questionImgUrl != null &&
-              questionResult.questionImgUrl!.isNotEmpty) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8.r),
-              child: Image.network(
-                questionResult.questionImgUrl!,
-                width: double.infinity,
-                height: 150.h,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: 150.h,
-                    color: Colors.grey[200],
-                    child: Center(
-                      child: Icon(
-                        Icons.image_not_supported,
-                        color: Colors.grey[400],
-                        size: 40.sp,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: 12.h),
-          ],
-
-          // Options
-          if (questionResult.options != null) ...[
-            Text(
-              'Options:',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[700],
-              ),
-            ),
-            SizedBox(height: 8.h),
-            ...questionResult.options!.entries.map((entry) {
-              final letter = entry.key;
-              final optionText = entry.value;
-              final isUserAnswer = questionResult.userAnswerLetter == letter;
-              final isCorrectAnswer =
-                  questionResult.correctAnswerLetter == letter;
-
-              return Container(
-                margin: EdgeInsets.only(bottom: 8.h),
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: isCorrectAnswer
-                      ? const Color(0xFF4CAF50).withOpacity(0.1)
-                      : isUserAnswer && !questionResult.isCorrect
-                      ? const Color(0xFFFF5722).withOpacity(0.1)
-                      : Colors.grey[50],
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(
-                    color: isCorrectAnswer
-                        ? const Color(0xFF4CAF50)
-                        : isUserAnswer && !questionResult.isCorrect
-                        ? const Color(0xFFFF5722)
-                        : Colors.grey[300]!,
-                    width:
-                        isCorrectAnswer ||
-                            (isUserAnswer && !questionResult.isCorrect)
-                        ? 2
-                        : 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 24.w,
-                      height: 24.w,
-                      decoration: BoxDecoration(
-                        color: isCorrectAnswer
-                            ? const Color(0xFF4CAF50)
-                            : isUserAnswer && !questionResult.isCorrect
-                            ? const Color(0xFFFF5722)
-                            : Colors.grey[400],
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Center(
-                        child: Text(
-                          letter,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Text(
-                        optionText,
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          color: isCorrectAnswer
-                              ? const Color(0xFF4CAF50)
-                              : isUserAnswer && !questionResult.isCorrect
-                              ? const Color(0xFFFF5722)
-                              : Colors.grey[700],
-                          fontWeight:
-                              isCorrectAnswer ||
-                                  (isUserAnswer && !questionResult.isCorrect)
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                    if (isCorrectAnswer) ...[
-                      Icon(
-                        Icons.check_circle,
-                        color: const Color(0xFF4CAF50),
-                        size: 20.sp,
-                      ),
-                    ] else if (isUserAnswer && !questionResult.isCorrect) ...[
-                      Icon(
-                        Icons.cancel,
-                        color: const Color(0xFFFF5722),
-                        size: 20.sp,
-                      ),
-                    ],
-                  ],
-                ),
-              );
-            }).toList(),
-            SizedBox(height: 16.h),
-          ],
-
-          // Answer summary
-          Container(
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Your answer
-                Row(
-                  children: [
-                    Icon(Icons.person, size: 16.sp, color: Colors.grey[600]),
-                    SizedBox(width: 8.w),
-                    Text(
-                      'Your Answer:',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  '${questionResult.userAnswerLetter ?? 'N/A'}. ${questionResult.userAnswer}',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: questionResult.isCorrect
-                        ? const Color(0xFF4CAF50)
-                        : const Color(0xFFFF5722),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-
-                SizedBox(height: 12.h),
-
-                // Correct answer
-                Row(
-                  children: [
-                    Icon(
-                      Icons.check_circle,
-                      size: 16.sp,
-                      color: const Color(0xFF4CAF50),
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      'Correct Answer:',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  '${questionResult.correctAnswerLetter ?? 'N/A'}. ${questionResult.correctAnswer}',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: const Color(0xFF4CAF50),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-
-                if (questionResult.points > 0) ...[
-                  SizedBox(height: 12.h),
-                  Row(
-                    children: [
-                      Icon(Icons.star, size: 16.sp, color: Colors.amber[600]),
-                      SizedBox(width: 8.w),
-                      Text(
-                        'Points: ${questionResult.points}',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   String _formatDateTime(DateTime dateTime) {
-    return '${dateTime.day}/${dateTime.month}/${dateTime.year} at ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
+    return '${dateTime.month}/${dateTime.day}/${dateTime.year} at ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+  }
+
+  double _calculateAverageScore() {
+    if (_examResults.isEmpty) return 0.0;
+    return _examResults.map((result) => result.score).reduce((a, b) => a + b) /
+        _examResults.length;
   }
 
   // ==================== NEW COMPREHENSIVE ANALYTICS METHODS ====================
@@ -1187,7 +783,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1263,9 +859,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -1329,7 +925,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1359,7 +955,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
           SizedBox(height: 16.h),
 
           // Trend visualization
-          Container(
+          SizedBox(
             height: 100.h,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1382,7 +978,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      '${score}%',
+                      '$score%',
                       style: TextStyle(
                         fontSize: 10.sp,
                         fontWeight: FontWeight.bold,
@@ -1432,11 +1028,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
     for (final result in uniqueResults.values) {
       // Use exam category from the result, or determine from exam title
-      String category = result.Exam?.category ?? 'Traffic Rules';
+      String category = result.exam?.category ?? 'Traffic Rules';
 
       // If no category in exam data, try to determine from title
       if (category == 'Traffic Rules' || category.isEmpty) {
-        final title = result.Exam?.title ?? '';
+        final title = result.exam?.title ?? '';
         if (title.toLowerCase().contains('sign') ||
             title.toLowerCase().contains('signal')) {
           category = 'Road Signs';
@@ -1465,7 +1061,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1522,7 +1118,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          '${results.length} exam${results.length == 1 ? '' : 's'} • ${passedCount} passed',
+                          '${results.length} exam${results.length == 1 ? '' : 's'} • $passedCount passed',
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: Colors.grey[600],
@@ -1541,7 +1137,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Text(
-                      '${avgScore.toStringAsFixed(0)}%',
+                      '${avgScore.toStringAsFixed(1)}%',
                       style: TextStyle(
                         fontSize: 12.sp,
                         fontWeight: FontWeight.bold,
@@ -1552,7 +1148,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 ],
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -1602,7 +1198,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1627,38 +1223,36 @@ class _ProgressScreenState extends State<ProgressScreen> {
           ),
           SizedBox(height: 16.h),
 
-          ...recommendations
-              .map(
-                (recommendation) => Container(
-                  margin: EdgeInsets.only(bottom: 8.h),
-                  padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(
-                    color: Colors.amber[50],
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(color: Colors.amber[200]!),
+          ...recommendations.map(
+            (recommendation) => Container(
+              margin: EdgeInsets.only(bottom: 8.h),
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.amber[50],
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.amber[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.amber[600],
+                    size: 16.w,
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.check_circle,
-                        color: Colors.amber[600],
-                        size: 16.w,
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      recommendation,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: Colors.grey[700],
                       ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: Text(
-                          recommendation,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              )
-              .toList(),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1676,7 +1270,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
             children: failedResults
                 .map(
                   (result) => ListTile(
-                    title: Text(result.Exam?.title ?? 'Exam ${result.examId}'),
+                    title: Text(
+                      result.exam?.title ??
+                          'Exam ${failedResults.indexOf(result) + 1}',
+                    ),
                     subtitle: Text('Latest Score: ${result.score}%'),
                     trailing: TextButton(
                       onPressed: () {
@@ -1711,7 +1308,10 @@ class _ProgressScreenState extends State<ProgressScreen> {
             children: lowScoreResults
                 .map(
                   (result) => ListTile(
-                    title: Text(result.Exam?.title ?? 'Exam ${result.examId}'),
+                    title: Text(
+                      result.exam?.title ??
+                          'Exam ${lowScoreResults.indexOf(result) + 1}',
+                    ),
                     subtitle: Text('Latest Score: ${result.score}%'),
                     trailing: TextButton(
                       onPressed: () {
@@ -1781,12 +1381,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
       // Create a proper Exam object from the exam result
       final exam = Exam(
         id: examResult.examId,
-        title: examResult.Exam?.title ?? 'Exam',
+        title: examResult.exam?.title ?? 'Exam',
         description: 'Retake this exam',
-        category: examResult.Exam?.category ?? 'General',
-        difficulty: examResult.Exam?.difficulty ?? 'Medium',
-        duration: 30,
-        passingScore: 70,
+        category: examResult.exam?.category ?? 'General',
+        difficulty: examResult.exam?.difficulty ?? 'Medium',
+        duration: 20,
+        passingScore: 60,
         isActive: true,
       );
 
@@ -1814,7 +1414,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
         ),
       );
     } catch (e) {
-      print('Error navigating to retake exam: $e');
+      debugPrint('Error navigating to retake exam: $e');
       // Show error message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1823,5 +1423,447 @@ class _ProgressScreenState extends State<ProgressScreen> {
         ),
       );
     }
+  }
+}
+
+// Secure modal widget that prevents screenshots
+class _SecureDetailedAnswersModal extends StatefulWidget {
+  final ExamResultData examResult;
+  final VoidCallback onClose;
+
+  const _SecureDetailedAnswersModal({
+    required this.examResult,
+    required this.onClose,
+  });
+
+  @override
+  State<_SecureDetailedAnswersModal> createState() =>
+      _SecureDetailedAnswersModalState();
+}
+
+class _SecureDetailedAnswersModalState
+    extends State<_SecureDetailedAnswersModal> {
+  static const MethodChannel _securityChannel = MethodChannel(
+    'com.example.learn_traffic_rules/security',
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _disableScreenshots();
+  }
+
+  @override
+  void dispose() {
+    _enableScreenshots();
+    widget.onClose();
+    super.dispose();
+  }
+
+  Future<void> _disableScreenshots() async {
+    if (Platform.isAndroid) {
+      try {
+        await _securityChannel.invokeMethod('disableScreenshots');
+        debugPrint(
+          '🔒 Security: Screenshots disabled for detailed answers modal',
+        );
+      } catch (e) {
+        debugPrint('🔒 Security: Failed to disable screenshots: $e');
+      }
+    }
+  }
+
+  Future<void> _enableScreenshots() async {
+    if (Platform.isAndroid) {
+      try {
+        await _securityChannel.invokeMethod('enableScreenshots');
+        debugPrint(
+          '🔒 Security: Screenshots enabled after detailed answers modal',
+        );
+      } catch (e) {
+        debugPrint('🔒 Security: Failed to enable screenshots: $e');
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.9,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20.r),
+          topRight: Radius.circular(20.r),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Header with security warning
+          Container(
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2E7D32),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20.r),
+                topRight: Radius.circular(20.r),
+              ),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      widget.examResult.passed
+                          ? Icons.check_circle
+                          : Icons.cancel,
+                      color: Colors.white,
+                      size: 24.sp,
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.examResult.exam?.title ?? 'Exam Result',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Score: ${widget.examResult.score}% • ${widget.examResult.correctAnswers}/${widget.examResult.questionResults?.length ?? 0} correct',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close, color: Colors.white),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                Container(
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(color: Colors.red[200]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.security, color: Colors.red[600], size: 16.w),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          'Screenshots are disabled to protect answer integrity',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Colors.red[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Content
+          Expanded(
+            child:
+                widget.examResult.questionResults == null ||
+                    widget.examResult.questionResults!.isEmpty
+                ? _buildSecureNoResultsView()
+                : ListView.builder(
+                    padding: EdgeInsets.all(16.w),
+                    itemCount: widget.examResult.questionResults!.length,
+                    itemBuilder: (context, index) {
+                      final questionResult =
+                          widget.examResult.questionResults![index];
+                      return _buildSecureQuestionResultCard(
+                        questionResult,
+                        index + 1,
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSecureNoResultsView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.quiz_outlined, size: 64.sp, color: Colors.grey[400]),
+          SizedBox(height: 16.h),
+          Text(
+            'No detailed results available',
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Question-by-question breakdown is not available for this exam.',
+            style: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSecureQuestionResultCard(
+    QuestionResult questionResult,
+    int questionNumber,
+  ) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 16.h),
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: questionResult.isCorrect
+              ? const Color(0xFF4CAF50).withValues(alpha: 0.3)
+              : const Color(0xFFFF5722).withValues(alpha: 0.3),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Question header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 32.w,
+                height: 32.w,
+                decoration: BoxDecoration(
+                  color: questionResult.isCorrect
+                      ? const Color(0xFF4CAF50).withValues(alpha: 0.1)
+                      : const Color(0xFFFF5722).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16.r),
+                ),
+                child: Center(
+                  child: Text(
+                    '$questionNumber',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.bold,
+                      color: questionResult.isCorrect
+                          ? const Color(0xFF4CAF50)
+                          : const Color(0xFFFF5722),
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: questionResult.isCorrect
+                      ? const Color(0xFF4CAF50)
+                      : const Color(0xFFFF5722),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      questionResult.isCorrect ? Icons.check : Icons.close,
+                      color: Colors.white,
+                      size: 16.sp,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      questionResult.isCorrect ? 'Correct' : 'Wrong',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 8.h),
+
+          // Question text
+          if (questionResult.questionText != null) ...[
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Text(
+                questionResult.questionText!,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.blue[800],
+                ),
+              ),
+            ),
+            SizedBox(height: 12.h),
+          ],
+
+          // Question image
+          if (questionResult.questionImgUrl != null &&
+              questionResult.questionImgUrl!.isNotEmpty) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8.r),
+              child: Image.network(
+                '${AppConstants.baseUrlImage}${questionResult.questionImgUrl!}',
+                width: double.infinity,
+                height: 120.h,
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return const Center(child: CircularProgressIndicator());
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 120.h,
+                    color: Colors.grey[200],
+                    child: Center(
+                      child: Icon(
+                        Icons.image_not_supported,
+                        color: Colors.grey[400],
+                        size: 40.sp,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: 12.h),
+          ],
+
+          // Options
+          if (questionResult.options != null) ...[
+            ...questionResult.options!.entries.map((entry) {
+              final letter = entry.key;
+              final optionText = entry.value;
+              final isUserAnswer = questionResult.userAnswerLetter == letter;
+              final isCorrectAnswer =
+                  questionResult.correctAnswerLetter == letter;
+
+              return Container(
+                margin: EdgeInsets.only(bottom: 8.h),
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: isCorrectAnswer
+                      ? const Color(0xFF4CAF50).withValues(alpha: 0.1)
+                      : isUserAnswer && !questionResult.isCorrect
+                      ? const Color(0xFFFF5722).withValues(alpha: 0.1)
+                      : Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(
+                    color: isCorrectAnswer
+                        ? const Color(0xFF4CAF50)
+                        : isUserAnswer && !questionResult.isCorrect
+                        ? const Color(0xFFFF5722)
+                        : Colors.grey[300]!,
+                    width:
+                        isCorrectAnswer ||
+                            (isUserAnswer && !questionResult.isCorrect)
+                        ? 2
+                        : 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 24.w,
+                      height: 24.w,
+                      decoration: BoxDecoration(
+                        color: isCorrectAnswer
+                            ? const Color(0xFF4CAF50)
+                            : isUserAnswer && !questionResult.isCorrect
+                            ? const Color(0xFFFF5722)
+                            : Colors.grey[400],
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Center(
+                        child: Text(
+                          letter,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Text(
+                        optionText,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: isCorrectAnswer
+                              ? const Color(0xFF4CAF50)
+                              : isUserAnswer && !questionResult.isCorrect
+                              ? const Color(0xFFFF5722)
+                              : Colors.grey[700],
+                          fontWeight:
+                              isCorrectAnswer ||
+                                  (isUserAnswer && !questionResult.isCorrect)
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                    if (isCorrectAnswer) ...[
+                      Icon(
+                        Icons.check_circle,
+                        color: const Color(0xFF4CAF50),
+                        size: 20.sp,
+                      ),
+                    ] else if (isUserAnswer && !questionResult.isCorrect) ...[
+                      Icon(
+                        Icons.cancel,
+                        color: const Color(0xFFFF5722),
+                        size: 20.sp,
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            }),
+            SizedBox(height: 16.h),
+          ],
+        ],
+      ),
+    );
   }
 }

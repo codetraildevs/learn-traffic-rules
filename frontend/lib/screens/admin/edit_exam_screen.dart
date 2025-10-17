@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/exam_model.dart';
 import '../../providers/exam_provider.dart';
@@ -126,7 +126,7 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen>
                       borderRadius: BorderRadius.circular(20.r),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.secondary.withOpacity(0.3),
+                          color: AppColors.secondary.withValues(alpha: 0.3),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -147,7 +147,7 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen>
                         Text(
                           'Update exam settings and information',
                           style: AppTextStyles.bodyLarge.copyWith(
-                            color: AppColors.white.withOpacity(0.9),
+                            color: AppColors.white.withValues(alpha: 0.9),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -310,7 +310,7 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen>
                               _isActive = value;
                             });
                           },
-                          activeColor: AppColors.success,
+                          activeThumbColor: AppColors.success,
                         ),
                       ],
                     ),
@@ -462,9 +462,11 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen>
         .updateExam(widget.exam.id, request);
 
     if (success) {
+      if (!mounted) return;
       AppFlashMessage.showSuccess(context, 'Exam updated successfully!');
       Navigator.pop(context);
     } else {
+      if (!mounted) return;
       AppFlashMessage.showError(
         context,
         'Failed to update exam. Please try again.',
@@ -530,7 +532,7 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen>
               SizedBox(
                 width: 16.w,
                 height: 16.h,
-                child: CircularProgressIndicator(
+                child: const CircularProgressIndicator(
                   strokeWidth: 2,
                   valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
@@ -584,7 +586,9 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen>
                             loadingProgress.expectedTotalBytes!
                       : null,
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppColors.primary,
+                  ),
                 ),
               ),
             );
@@ -621,25 +625,21 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen>
   /// Pick image from gallery or camera
   Future<void> _pickImage() async {
     try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 85,
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
       );
 
-      if (image != null) {
+      if (result != null && result.files.isNotEmpty) {
         setState(() {
-          _selectedImage = File(image.path);
+          _selectedImage = File(result.files.first.path!);
         });
         await _uploadImage(_selectedImage!);
       }
     } catch (e) {
-      AppFlashMessage.showError(
-        context,
-        'Failed to pick image: ${e.toString()}',
-      );
+      if (mounted) {
+        AppFlashMessage.showError(context, 'Failed to pick image: $e');
+      }
     }
   }
 
@@ -658,16 +658,17 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen>
         _isUploadingImage = false;
       });
 
-      AppFlashMessage.showSuccess(context, 'Image uploaded successfully!');
+      if (mounted) {
+        AppFlashMessage.showSuccess(context, 'Image uploaded successfully!');
+      }
     } catch (e) {
       setState(() {
         _isUploadingImage = false;
       });
 
-      AppFlashMessage.showError(
-        context,
-        'Failed to upload image: ${e.toString()}',
-      );
+      if (mounted) {
+        AppFlashMessage.showError(context, 'Failed to upload image: $e');
+      }
     }
   }
 

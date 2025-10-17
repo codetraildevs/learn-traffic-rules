@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:learn_traffic_rules/models/question_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/app_constants.dart';
 import '../models/user_model.dart';
 import '../models/exam_model.dart' hide Question;
+import 'network_service.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -15,6 +17,7 @@ class ApiService {
 
   String? _authToken;
   String? _refreshToken;
+  final NetworkService _networkService = NetworkService();
 
   Map<String, String> get _headers => {
     'Content-Type': 'application/json',
@@ -57,69 +60,140 @@ class ApiService {
     String endpoint, {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
+    int maxRetries = 3,
   }) async {
-    try {
-      final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
-      final requestHeaders = {..._headers, ...?headers};
-
-      print('🔍 API SERVICE DEBUG - Making request:');
-      print('   Method: $method');
-      print('   URL: ${uri.toString()}');
-      print('   Headers: $requestHeaders');
-      print(
-        '   Auth token present: ${requestHeaders.containsKey('Authorization')}',
-      );
-
-      http.Response response;
-      switch (method.toUpperCase()) {
-        case 'GET':
-          response = await http.get(uri, headers: requestHeaders);
-          break;
-        case 'POST':
-          response = await http.post(
-            uri,
-            headers: requestHeaders,
-            body: body != null ? jsonEncode(body) : null,
-          );
-          break;
-        case 'PUT':
-          response = await http.put(
-            uri,
-            headers: requestHeaders,
-            body: body != null ? jsonEncode(body) : null,
-          );
-          break;
-        case 'DELETE':
-          response = await http.delete(uri, headers: requestHeaders);
-          break;
-        default:
-          throw Exception('Unsupported HTTP method: $method');
-      }
-
-      final responseData = jsonDecode(response.body) as Map<String, dynamic>;
-
-      print('🔍 API SERVICE DEBUG - Response received:');
-      print('   Status Code: ${response.statusCode}');
-      print('   Response Body: ${response.body}');
-      print('   Success: ${responseData['success']}');
-      print('   Message: ${responseData['message']}');
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return responseData;
-      } else {
-        print('❌ API SERVICE ERROR - Request failed');
-        throw ApiException(
-          message: responseData['message'] ?? 'Request failed',
-          statusCode: response.statusCode,
-        );
-      }
-    } catch (e) {
-      if (e is ApiException) rethrow;
+    // Check network connectivity first
+    if (!await _networkService.hasInternetConnection()) {
       throw ApiException(
-        message: 'Network error: ${e.toString()}',
+        message:
+            'No internet connection. Please check your network and try again.',
         statusCode: 0,
       );
     }
+
+    int retryCount = 0;
+
+    while (retryCount < maxRetries) {
+      try {
+        final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
+        final requestHeaders = {..._headers, ...?headers};
+
+        debugPrint(
+          '🔍 API SERVICE DEBUG - Making request (attempt ${retryCount + 1}):',
+        );
+        debugPrint('   Method: $method');
+        debugPrint('   URL: $uri');
+        debugPrint('   Headers: $requestHeaders');
+        debugPrint(
+          '   Auth token present: ${requestHeaders.containsKey('Authorization')}',
+        );
+
+        http.Response response;
+        switch (method.toUpperCase()) {
+          case 'GET':
+            response = await http
+                .get(uri, headers: requestHeaders)
+                .timeout(
+                  const Duration(seconds: 30),
+                  onTimeout: () {
+                    throw Exception('Request timeout');
+                  },
+                );
+            break;
+          case 'POST':
+            response = await http
+                .post(
+                  uri,
+                  headers: requestHeaders,
+                  body: body != null ? jsonEncode(body) : null,
+                )
+                .timeout(
+                  const Duration(seconds: 30),
+                  onTimeout: () {
+                    throw Exception('Request timeout');
+                  },
+                );
+            break;
+          case 'PUT':
+            response = await http
+                .put(
+                  uri,
+                  headers: requestHeaders,
+                  body: body != null ? jsonEncode(body) : null,
+                )
+                .timeout(
+                  const Duration(seconds: 30),
+                  onTimeout: () {
+                    throw Exception('Request timeout');
+                  },
+                );
+            break;
+          case 'DELETE':
+            response = await http
+                .delete(uri, headers: requestHeaders)
+                .timeout(
+                  const Duration(seconds: 30),
+                  onTimeout: () {
+                    throw Exception('Request timeout');
+                  },
+                );
+            break;
+          default:
+            throw Exception('Unsupported HTTP method: $method');
+        }
+
+        // Check if response body is not empty before parsing
+        if (response.body.isEmpty) {
+          throw ApiException(
+            message: 'Empty response from server',
+            statusCode: response.statusCode,
+          );
+        }
+
+        Map<String, dynamic> responseData;
+        try {
+          responseData = jsonDecode(response.body) as Map<String, dynamic>;
+        } catch (e) {
+          throw ApiException(
+            message: 'Invalid JSON response: $e',
+            statusCode: response.statusCode,
+          );
+        }
+
+        debugPrint('🔍 API SERVICE DEBUG - Response received:');
+        debugPrint('   Status Code: $response.statusCode');
+        debugPrint('   Response Body: $responseData');
+
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          return responseData;
+        } else {
+          debugPrint('❌ API SERVICE ERROR - Request failed');
+          throw ApiException(
+            message: responseData['message'] ?? 'Request failed',
+            statusCode: response.statusCode,
+          );
+        }
+      } catch (e) {
+        retryCount++;
+        debugPrint('❌ API SERVICE ERROR - Attempt $retryCount failed: $e');
+
+        if (retryCount >= maxRetries) {
+          if (e is ApiException) rethrow;
+          throw ApiException(
+            message: 'Network error after $maxRetries attempts: $e',
+            statusCode: 0,
+          );
+        }
+
+        // Wait before retrying (exponential backoff)
+        await Future.delayed(Duration(seconds: retryCount * 2));
+        debugPrint(
+          '🔄 API SERVICE - Retrying request (attempt ${retryCount + 1})',
+        );
+      }
+    }
+
+    throw ApiException(message: 'Max retries exceeded', statusCode: 0);
   }
 
   // Authentication API calls
@@ -133,12 +207,12 @@ class ApiService {
     // Debug logging to see raw API response
     debugPrint('🔍 RAW LOGIN API RESPONSE:');
     debugPrint('   response: $response');
-    debugPrint('   response type: ${response.runtimeType}');
+    debugPrint('   response type: $response.runtimeType');
 
     try {
       final authResponse = AuthResponse.fromJson(response);
       debugPrint(
-        '   parsed AuthResponse: success=${authResponse.success}, message=${authResponse.message}',
+        '   parsed AuthResponse: success=$response.success, message=$response.message',
       );
       return authResponse;
     } catch (e, stackTrace) {
@@ -158,12 +232,12 @@ class ApiService {
     // Debug logging to see raw API response
     debugPrint('🔍 RAW API RESPONSE:');
     debugPrint('   response: $response');
-    debugPrint('   response type: ${response.runtimeType}');
+    debugPrint('   response type: $response.runtimeType');
 
     try {
       final authResponse = AuthResponse.fromJson(response);
       debugPrint(
-        '   parsed AuthResponse: success=${authResponse.success}, message=${authResponse.message}',
+        '   parsed AuthResponse: success=$response.success, message=$response.message',
       );
       return authResponse;
     } catch (e, stackTrace) {
@@ -220,7 +294,7 @@ class ApiService {
   Future<Map<String, dynamic>> deleteAccount() async {
     return await makeRequest(
       'DELETE',
-      '${AppConstants.userEndpoint}/delete-account',
+      '${AppConstants.authEndpoint}/delete-account',
     );
   }
 
@@ -242,7 +316,7 @@ class ApiService {
     if (category != null) queryParams['category'] = category;
 
     final queryString = queryParams.entries
-        .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+        .map((e) => '${e.key}=${e.value}')
         .join('&');
 
     return await makeRequest('GET', '/notifications?$queryString');
@@ -341,7 +415,7 @@ class ApiService {
   Future<ExamResult> submitExam(ExamSubmission submission) async {
     final response = await makeRequest(
       'POST',
-      '${AppConstants.examsEndpoint}/${submission.examId}/submit',
+      '${AppConstants.examsEndpoint}/submit',
       body: submission.toJson(),
     );
     return ExamResult.fromJson(response['data']);
@@ -392,7 +466,7 @@ class ApiService {
   Future<List<Map<String, dynamic>>> getUserAccessCodes() async {
     final response = await makeRequest(
       'GET',
-      '${AppConstants.paymentsEndpoint}/access-codes',
+      '${AppConstants.accessCodesEndpoint}/access-codes',
     );
     return List<Map<String, dynamic>>.from(response['data']);
   }
@@ -462,8 +536,12 @@ class ApiService {
     );
   }
 
-  /// Upload file to server
-  Future<Map<String, dynamic>> uploadFile(String endpoint, File file) async {
+  /// Upload file to server (multipart form)
+  Future<Map<String, dynamic>> uploadFile(
+    String endpoint,
+    File file, {
+    String? examId,
+  }) async {
     try {
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
 
@@ -474,35 +552,254 @@ class ApiService {
         if (_authToken != null) 'Authorization': 'Bearer $_authToken',
       });
 
-      // Add file
+      // Get file extension to determine content type
+      final fileExtension = file.path.split('.').last.toLowerCase();
+      String? contentType;
+
+      switch (fileExtension) {
+        case 'csv':
+          contentType = 'text/csv';
+          break;
+        case 'xlsx':
+          contentType =
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          break;
+        case 'xls':
+          contentType = 'application/vnd.ms-excel';
+          break;
+        default:
+          contentType = 'application/octet-stream';
+      }
+
+      // For bulk upload endpoints, try different field names
+      String fieldName;
+      if (endpoint.contains('/bulk-upload/')) {
+        if (endpoint.contains('/csv')) {
+          fieldName = 'file'; // CSV endpoint expects 'file'
+        } else {
+          fieldName = 'questions'; // JSON endpoint expects 'questions'
+        }
+      } else {
+        fieldName = 'questions'; // Default for other endpoints
+      }
+
       request.files.add(
         await http.MultipartFile.fromPath(
-          'file',
+          fieldName,
           file.path,
           filename: file.path.split('/').last,
+          contentType: MediaType.parse(contentType),
         ),
       );
 
+      // Add exam ID for bulk uploads if provided
+      if (endpoint.contains('/bulk-upload/') && examId != null) {
+        request.fields['examId'] = examId;
+      }
+
       debugPrint('📤 FILE UPLOAD: Uploading to $endpoint');
-      debugPrint('   File: ${file.path.split('/').last}');
+      debugPrint('   File: $file.path');
+      debugPrint('   Content Type: $contentType');
+      debugPrint('   Field Name: $fieldName');
+      debugPrint('   Additional Fields: ${request.fields}');
+      debugPrint('   Headers: ${request.headers}');
+      debugPrint('   Files count: ${request.files.length}');
+      debugPrint('   Request URL: $uri');
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
-      debugPrint('📤 FILE UPLOAD: Response status: ${response.statusCode}');
-      debugPrint('📤 FILE UPLOAD: Response body: ${response.body}');
+      debugPrint('📤 FILE UPLOAD: Response status: $response.statusCode');
+      debugPrint('📤 FILE UPLOAD: Response body: $response.body');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return json.decode(response.body);
       } else {
-        final errorBody = json.decode(response.body);
-        throw ApiException(
-          message: errorBody['message'] ?? 'Upload failed',
-          statusCode: response.statusCode,
-        );
+        try {
+          final errorBody = json.decode(response.body);
+          debugPrint('📤 FILE UPLOAD ERROR: $errorBody');
+          throw ApiException(
+            message: errorBody['message'] ?? 'Upload failed',
+            statusCode: response.statusCode,
+          );
+        } catch (e) {
+          debugPrint(
+            '📤 FILE UPLOAD ERROR: Failed to parse error response: $e',
+          );
+          throw ApiException(
+            message:
+                'Upload failed with status ${response.statusCode}: ${response.body}',
+            statusCode: response.statusCode,
+          );
+        }
       }
     } catch (e) {
       debugPrint('❌ FILE UPLOAD ERROR: $e');
+      if (e is ApiException) rethrow;
+      throw ApiException(message: 'Network error: $e', statusCode: 0);
+    }
+  }
+
+  /// Upload file as raw data (alternative method)
+  Future<Map<String, dynamic>> uploadFileRaw(
+    String endpoint,
+    File file, {
+    String? examId,
+  }) async {
+    try {
+      final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
+
+      // Read file content
+      final fileBytes = await file.readAsBytes();
+      final fileName = file.path.split('/').last;
+
+      // Determine content type
+      final fileExtension = file.path.split('.').last.toLowerCase();
+      String contentType;
+
+      switch (fileExtension) {
+        case 'csv':
+          contentType = 'text/csv';
+          break;
+        case 'xlsx':
+          contentType =
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          break;
+        case 'xls':
+          contentType = 'application/vnd.ms-excel';
+          break;
+        default:
+          contentType = 'application/octet-stream';
+      }
+
+      debugPrint('📤 FILE UPLOAD RAW: Uploading to $endpoint');
+      debugPrint('   File: $file.path');
+      debugPrint('   Content Type: $contentType');
+      debugPrint('   File Size: ${fileBytes.length} bytes');
+
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': contentType,
+          'Content-Disposition': 'attachment; filename="$fileName"',
+          if (_authToken != null) 'Authorization': 'Bearer $_authToken',
+        },
+        body: fileBytes,
+      );
+
+      debugPrint('📤 FILE UPLOAD RAW: Response status: $response.statusCode');
+      debugPrint('📤 FILE UPLOAD RAW: Response body: $response.body');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return json.decode(response.body);
+      } else {
+        try {
+          final errorBody = json.decode(response.body);
+          debugPrint('📤 FILE UPLOAD RAW ERROR: $errorBody');
+          throw ApiException(
+            message: errorBody['message'] ?? 'Upload failed',
+            statusCode: response.statusCode,
+          );
+        } catch (e) {
+          debugPrint(
+            '📤 FILE UPLOAD RAW ERROR: Failed to parse error response: $e',
+          );
+          throw ApiException(
+            message:
+                'Upload failed with status ${response.statusCode}: ${response.body}',
+            statusCode: response.statusCode,
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ FILE UPLOAD RAW ERROR: $e');
+      if (e is ApiException) rethrow;
+      throw ApiException(message: 'Network error: $e', statusCode: 0);
+    }
+  }
+
+  /// Upload file as JSON payload with base64 encoding
+  Future<Map<String, dynamic>> uploadFileJson(
+    String endpoint,
+    File file, {
+    String? examId,
+  }) async {
+    try {
+      final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
+
+      // Read file content and encode as base64
+      final fileBytes = await file.readAsBytes();
+      final base64Content = base64Encode(fileBytes);
+      final fileName = file.path.split('/').last;
+
+      // Determine content type
+      final fileExtension = file.path.split('.').last.toLowerCase();
+      String contentType;
+
+      switch (fileExtension) {
+        case 'csv':
+          contentType = 'text/csv';
+          break;
+        case 'xlsx':
+          contentType =
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          break;
+        case 'xls':
+          contentType = 'application/vnd.ms-excel';
+          break;
+        default:
+          contentType = 'application/octet-stream';
+      }
+
+      final requestBody = {
+        'filename': fileName,
+        'content': base64Content,
+        'contentType': contentType,
+        'size': fileBytes.length,
+        if (examId != null) 'examId': examId,
+      };
+
+      debugPrint('📤 FILE UPLOAD JSON: Uploading to $endpoint');
+      debugPrint('   File: $file.path');
+      debugPrint('   Content Type: $contentType');
+      debugPrint('   File Size: ${fileBytes.length} bytes');
+      debugPrint('   Base64 Length: ${base64Content.length}');
+
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          if (_authToken != null) 'Authorization': 'Bearer $_authToken',
+        },
+        body: json.encode(requestBody),
+      );
+
+      debugPrint('📤 FILE UPLOAD JSON: Response status: $response.statusCode');
+      debugPrint('📤 FILE UPLOAD JSON: Response body: $response.body');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return json.decode(response.body);
+      } else {
+        try {
+          final errorBody = json.decode(response.body);
+          debugPrint('📤 FILE UPLOAD JSON ERROR: $errorBody');
+          throw ApiException(
+            message: errorBody['message'] ?? 'Upload failed',
+            statusCode: response.statusCode,
+          );
+        } catch (e) {
+          debugPrint(
+            '📤 FILE UPLOAD JSON ERROR: Failed to parse error response: $e',
+          );
+          throw ApiException(
+            message:
+                'Upload failed with status ${response.statusCode}: ${response.body}',
+            statusCode: response.statusCode,
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ FILE UPLOAD JSON ERROR: $e');
       if (e is ApiException) rethrow;
       throw ApiException(message: 'Network error: $e', statusCode: 0);
     }

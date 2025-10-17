@@ -20,13 +20,13 @@ class NotificationPollingService {
   bool _isPolling = false;
   String? _lastNotificationId;
   int _pollingIntervalSeconds = 30; // Check every 30 seconds
-  Set<String> _shownNotificationIds = {}; // Track shown notifications
+  final Set<String> _shownNotificationIds = {}; // Track shown notifications
 
   Future<void> startPolling() async {
     if (_isPolling) return;
 
     _isPolling = true;
-    print('🔄 Starting notification polling service...');
+    debugPrint('🔄 Starting notification polling service...');
 
     // Initial check
     await _checkForNewNotifications();
@@ -42,7 +42,7 @@ class NotificationPollingService {
     _pollingTimer?.cancel();
     _pollingTimer = null;
     _isPolling = false;
-    print('⏹️ Notification polling service stopped');
+    debugPrint('⏹️ Notification polling service stopped');
   }
 
   Future<void> _checkForNewNotifications() async {
@@ -71,7 +71,7 @@ class NotificationPollingService {
         }
       }
     } catch (e) {
-      print('❌ Error checking for new notifications: $e');
+      debugPrint('❌ Error checking for new notifications: $e');
     }
   }
 
@@ -85,7 +85,7 @@ class NotificationPollingService {
     // Only show push notification for unread notifications that haven't been shown
     if (isRead || _shownNotificationIds.contains(notificationId)) return;
 
-    print('🔔 Showing push notification: $title');
+    debugPrint('🔔 Showing push notification: $title');
     _shownNotificationIds.add(notificationId);
 
     try {
@@ -103,7 +103,7 @@ class NotificationPollingService {
                   notification['data']?['studyGoalMinutes'] ?? 30;
             }
           } catch (e) {
-            print('Error parsing study goal minutes: $e');
+            debugPrint('Error parsing study goal minutes: $e');
           }
 
           await _notificationService.showStudyReminderNotification(
@@ -125,7 +125,7 @@ class NotificationPollingService {
               score = notification['data']?['score'] ?? 0;
             }
           } catch (e) {
-            print('Error parsing exam score: $e');
+            debugPrint('Error parsing exam score: $e');
           }
 
           await _notificationService.showExamResultNotification(
@@ -155,7 +155,7 @@ class NotificationPollingService {
               accessCode = notification['data']?['accessCodeId'] ?? '';
             }
           } catch (e) {
-            print('Error parsing access code: $e');
+            debugPrint('Error parsing access code: $e');
           }
 
           await _notificationService.showAccessNotification(
@@ -173,7 +173,7 @@ class NotificationPollingService {
           break;
       }
     } catch (e) {
-      print('❌ Error showing push notification: $e');
+      debugPrint('❌ Error showing push notification: $e');
       // Fallback to simple notification service
       try {
         await _simpleNotificationService.showLocalNotification(
@@ -181,7 +181,7 @@ class NotificationPollingService {
           body: message,
         );
       } catch (fallbackError) {
-        print('❌ Fallback notification also failed: $fallbackError');
+        debugPrint('❌ Fallback notification also failed: $fallbackError');
       }
     }
   }
@@ -215,7 +215,7 @@ class NotificationPollingService {
   // Clear shown notifications (call when user opens exams)
   void clearShownNotifications() {
     _shownNotificationIds.clear();
-    print('🧹 Cleared shown notification tracking');
+    debugPrint('🧹 Cleared shown notification tracking');
   }
 
   // Mark notification as shown without showing it

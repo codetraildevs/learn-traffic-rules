@@ -7,7 +7,6 @@ import '../../core/theme/app_theme.dart';
 import '../../services/api_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/simple_notification_service.dart';
-import '../../services/notification_polling_service.dart';
 
 class NotificationsListScreen extends ConsumerStatefulWidget {
   const NotificationsListScreen({super.key});
@@ -28,7 +27,7 @@ class _NotificationsListScreenState
   int _currentPage = 1;
   bool _hasMore = true;
   Timer? _refreshTimer;
-  Set<String> _shownNotificationIds = {}; // Track shown notifications
+  final Set<String> _shownNotificationIds = {}; // Track shown notifications
 
   @override
   void initState() {
@@ -120,31 +119,9 @@ class _NotificationsListScreenState
     }
   }
 
-  Future<void> _markAllAsRead() async {
-    try {
-      final response = await _apiService.markAllNotificationsAsRead();
-      if (response['success']) {
-        setState(() {
-          for (var notification in _notifications) {
-            notification['isRead'] = true;
-          }
-        });
-        _showSuccessSnackBar('All notifications marked as read');
-      }
-    } catch (e) {
-      _showErrorSnackBar('Error marking all notifications as read: $e');
-    }
-  }
-
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: AppColors.error),
-    );
-  }
-
-  void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppColors.success),
     );
   }
 
@@ -157,7 +134,7 @@ class _NotificationsListScreenState
       final notificationId = notification['id']?.toString() ?? '';
 
       if (!isRead && !_shownNotificationIds.contains(notificationId)) {
-        print('🔔 Showing push notification for: ${notification['title']}');
+        debugPrint('🔔 Showing push notification for: $notificationId');
         _showPushNotification(notification);
         _shownNotificationIds.add(notificationId);
       }
@@ -169,7 +146,7 @@ class _NotificationsListScreenState
     final title = notification['title'] ?? 'New Notification';
     final message = notification['message'] ?? '';
 
-    print('🔔 Attempting to show push notification: $title ($type)');
+    debugPrint('🔔 Attempting to show push notification: $title ($type)');
 
     try {
       switch (type) {
@@ -186,7 +163,7 @@ class _NotificationsListScreenState
                   notification['data']?['studyGoalMinutes'] ?? 30;
             }
           } catch (e) {
-            print('Error parsing study goal minutes: $e');
+            debugPrint('Error parsing study goal minutes: $e');
           }
 
           _notificationService.showStudyReminderNotification(
@@ -208,7 +185,7 @@ class _NotificationsListScreenState
               score = notification['data']?['score'] ?? 0;
             }
           } catch (e) {
-            print('Error parsing exam score: $e');
+            debugPrint('Error parsing exam score: $e');
           }
 
           _notificationService.showExamResultNotification(
@@ -238,7 +215,7 @@ class _NotificationsListScreenState
               accessCode = notification['data']?['accessCodeId'] ?? '';
             }
           } catch (e) {
-            print('Error parsing access code: $e');
+            debugPrint('Error parsing access code: $e');
           }
 
           _notificationService.showAccessNotification(
@@ -255,7 +232,7 @@ class _NotificationsListScreenState
           );
           break;
       }
-      print('✅ Push notification sent successfully: $title');
+      debugPrint('✅ Push notification sent successfully: $title');
     } catch (e) {
       // Fallback to simple notification service
       _simpleNotificationService.showLocalNotification(
@@ -373,12 +350,12 @@ class _NotificationsListScreenState
                     decoration: BoxDecoration(
                       color: isRead
                           ? AppColors.white
-                          : AppColors.primary.withOpacity(0.05),
+                          : AppColors.primary.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12.r),
                       border: Border.all(
                         color: isRead
-                            ? Colors.grey.withOpacity(0.3)
-                            : AppColors.primary.withOpacity(0.3),
+                            ? Colors.grey.withValues(alpha: 0.3)
+                            : AppColors.primary.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -390,7 +367,7 @@ class _NotificationsListScreenState
                         decoration: BoxDecoration(
                           color: _getNotificationColor(
                             notification['type'] ?? '',
-                          ).withOpacity(0.1),
+                          ).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(24.r),
                         ),
                         child: Center(
@@ -460,7 +437,7 @@ class _NotificationsListScreenState
   // Method to clear shown notifications (call this when user opens exams)
   void clearShownNotifications() {
     _shownNotificationIds.clear();
-    print('🧹 Cleared shown notification tracking');
+    debugPrint('🧹 Cleared shown notification tracking');
   }
 
   // Method to mark notification as shown without showing it again
@@ -479,13 +456,13 @@ class _NotificationsListScreenState
       if (difference.inMinutes < 1) {
         return 'Just now';
       } else if (difference.inHours < 1) {
-        return '${difference.inMinutes}m ago';
+        return '$difference.inMinutes m ago';
       } else if (difference.inDays < 1) {
-        return '${difference.inHours}h ago';
+        return '$difference.inHours h ago';
       } else if (difference.inDays < 7) {
-        return '${difference.inDays}d ago';
+        return '$difference.inDays d ago';
       } else {
-        return '${date.day}/${date.month}/${date.year}';
+        return '${date.month}/${date.day}/${date.year}';
       }
     } catch (e) {
       return '';

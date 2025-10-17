@@ -16,9 +16,9 @@ class SimpleNotificationService {
       // Request notification permissions
       await _requestPermissions();
       _isInitialized = true;
-      print('✅ Simple notification service initialized successfully');
+      debugPrint('✅ Simple notification service initialized successfully');
     } catch (e) {
-      print('❌ Error initializing simple notification service: $e');
+      debugPrint('❌ Error initializing simple notification service: $e');
     }
   }
 
@@ -35,7 +35,7 @@ class SimpleNotificationService {
   }) async {
     // For now, just show a simple dialog or snackbar
     // This is a fallback when the main notification service fails
-    print('📱 Simple Notification: $title - $body');
+    debugPrint('📱 Simple Notification: $title - $body');
   }
 
   Future<void> showStudyReminderNotification({
@@ -105,10 +105,10 @@ class SimpleNotificationService {
   }
 
   Future<void> subscribeToTopic(String topic) async {
-    print('📡 Subscribed to topic: $topic');
+    debugPrint('📡 Subscribed to topic: $topic');
   }
 
   Future<void> unsubscribeFromTopic(String topic) async {
-    print('📡 Unsubscribed from topic: $topic');
+    debugPrint('📡 Unsubscribed from topic: $topic');
   }
 }

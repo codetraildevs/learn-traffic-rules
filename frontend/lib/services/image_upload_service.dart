@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:http_parser/http_parser.dart';
@@ -13,29 +13,31 @@ class ImageUploadService {
   factory ImageUploadService() => _instance;
   ImageUploadService._internal();
 
-  final ImagePicker _picker = ImagePicker();
   final ApiService _apiService = ApiService();
 
   /// Pick image from gallery or camera
-  Future<File?> pickImage({ImageSource source = ImageSource.gallery}) async {
+  Future<File?> pickImage({bool fromCamera = false}) async {
     try {
-      print('📸 IMAGE PICKER: Picking image from ${source.name}');
-      final XFile? image = await _picker.pickImage(
-        source: source,
-        maxWidth: 1920,
-        maxHeight: 1080,
-        imageQuality: 85,
+      debugPrint(
+        '📸 IMAGE PICKER: Picking image from ${fromCamera ? 'camera' : 'gallery'}',
       );
 
-      if (image != null) {
-        print('📸 IMAGE PICKER: Image selected: ${image.path}');
-        return File(image.path);
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        debugPrint(
+          '📸 IMAGE PICKER: Image selected: ${result.files.first.path}',
+        );
+        return File(result.files.first.path!);
       } else {
-        print('📸 IMAGE PICKER: No image selected');
+        debugPrint('📸 IMAGE PICKER: No image selected');
         return null;
       }
     } catch (e) {
-      print('❌ IMAGE PICKER: Error picking image: $e');
+      debugPrint('❌ IMAGE PICKER: Error picking image: $e');
       debugPrint('Error picking image: $e');
       return null;
     }
@@ -44,7 +46,7 @@ class ImageUploadService {
   /// Upload image to server
   Future<String?> uploadImage(File imageFile) async {
     try {
-      print('📤 IMAGE UPLOAD: Starting upload for ${imageFile.path}');
+      debugPrint('📤 IMAGE UPLOAD: Starting upload for ${imageFile.path}');
 
       // Create multipart request
       var request = http.MultipartRequest(
@@ -86,26 +88,26 @@ class ImageUploadService {
       );
       request.files.add(multipartFile);
 
-      print('📤 IMAGE UPLOAD: Sending request to server...');
+      debugPrint('📤 IMAGE UPLOAD: Sending request to server...');
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
-      print('📤 IMAGE UPLOAD: Response status: ${response.statusCode}');
-      print('📤 IMAGE UPLOAD: Response body: ${response.body}');
+      debugPrint('📤 IMAGE UPLOAD: Response status: ${response.statusCode}');
+      debugPrint('📤 IMAGE UPLOAD: Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         final imageUrl = responseData['imageUrl'] as String?;
-        print('📤 IMAGE UPLOAD: Upload successful, image URL: $imageUrl');
+        debugPrint('📤 IMAGE UPLOAD: Upload successful, image URL: $imageUrl');
         return imageUrl;
       } else {
-        print(
+        debugPrint(
           '❌ IMAGE UPLOAD: Upload failed with status ${response.statusCode}',
         );
         throw Exception('Failed to upload image: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ IMAGE UPLOAD: Error uploading image: $e');
+      debugPrint('❌ IMAGE UPLOAD: Error uploading image: $e');
       debugPrint('Error uploading image: $e');
       return null;
     }
@@ -120,9 +122,9 @@ class ImageUploadService {
   /// Upload question image and return URL
   Future<String?> uploadQuestionImage(File imageFile) async {
     try {
-      print('📸 QUESTION IMAGE UPLOAD: Starting upload');
-      print('   File path: ${imageFile.path}');
-      print('   File size: ${await imageFile.length()} bytes');
+      debugPrint('📸 QUESTION IMAGE UPLOAD: Starting upload');
+      debugPrint('   File path: ${imageFile.path}');
+      debugPrint('   File size: ${await imageFile.length()} bytes');
 
       final uri = Uri.parse(
         '${AppConstants.baseUrl}/exams/upload-question-image',
@@ -157,7 +159,7 @@ class ImageUploadService {
           contentType = 'image/jpeg'; // Default fallback
       }
 
-      print('📸 QUESTION IMAGE UPLOAD: Content type set to $contentType');
+      debugPrint('📸 QUESTION IMAGE UPLOAD: Content type set to $contentType');
 
       var multipartFile = await http.MultipartFile.fromPath(
         'questionImage',
@@ -167,24 +169,24 @@ class ImageUploadService {
       );
       request.files.add(multipartFile);
 
-      print('📤 QUESTION IMAGE UPLOAD: Sending request to server...');
+      debugPrint('📤 QUESTION IMAGE UPLOAD: Sending request to server...');
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
-      print(
+      debugPrint(
         '📤 QUESTION IMAGE UPLOAD: Response status: ${response.statusCode}',
       );
-      print('📤 QUESTION IMAGE UPLOAD: Response body: ${response.body}');
+      debugPrint('📤 QUESTION IMAGE UPLOAD: Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         final imageUrl = responseData['imageUrl'] as String?;
-        print(
+        debugPrint(
           '📤 QUESTION IMAGE UPLOAD: Upload successful, image URL: $imageUrl',
         );
         return imageUrl;
       } else {
-        print(
+        debugPrint(
           '❌ QUESTION IMAGE UPLOAD: Upload failed with status ${response.statusCode}',
         );
         throw Exception(
@@ -192,7 +194,7 @@ class ImageUploadService {
         );
       }
     } catch (e) {
-      print('❌ QUESTION IMAGE UPLOAD: Error uploading image: $e');
+      debugPrint('❌ QUESTION IMAGE UPLOAD: Error uploading image: $e');
       debugPrint('Error uploading question image: $e');
       return null;
     }

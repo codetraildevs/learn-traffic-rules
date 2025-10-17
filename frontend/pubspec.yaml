@@ -1,8 +1,21 @@
 name: learn_traffic_rules
-description: A comprehensive traffic rules learning application for driving license exam preparation.
+description: Educational app for learning traffic rules and preparing for driving license exams. Practice with sample questions, study road signs, and improve your knowledge. This is a private educational tool and is not affiliated with any government agency.
 
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
+# The version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
 version: 1.0.0+1
 
 environment:
@@ -14,17 +27,18 @@ dependencies:
 
   # UI & Navigation
   cupertino_icons: ^1.0.2
-  go_router: ^12.1.3
+  # go_router: ^12.1.3  # Removed - not used
   flutter_screenutil: ^5.9.0
   
   # State Management
-  provider: ^6.1.1
+  # provider: ^6.1.1  # Removed - using Riverpod only
   riverpod: ^2.4.9
   flutter_riverpod: ^2.4.9
   
   # HTTP & API
   http: ^1.1.0
-  dio: ^5.4.0
+  http_parser: ^4.0.2
+  # dio: ^5.4.0  # Removed - not used
   
   # Local Storage
   sqflite: ^2.3.0
@@ -38,20 +52,20 @@ dependencies:
   connectivity_plus: ^5.0.2
   
   # File Operations
-  path_provider: ^2.1.1
+  # path_provider: ^2.1.1  # Removed - not used
   file_picker: ^8.0.0+1
   
   # UI Components
-  cached_network_image: ^3.3.0
-  shimmer: ^3.0.0
-  lottie: ^2.7.0
-  flutter_svg: ^2.0.9
+  # cached_network_image: ^3.3.0  # Removed - not used
+  # shimmer: ^3.0.0  # Removed - not used
+  # lottie: ^2.7.0  # Removed - heavy animations
+  flutter_svg: ^2.0.9  # Required for SVG icons
   
   # Phone & Communication
   # flutter_phone_direct_caller: ^2.2.1  # Removed due to build issues
   
   # Charts & Analytics
-  fl_chart: ^0.66.0
+  # fl_chart: ^0.66.0  # Removed - heavy charts library
   
   # Notifications
   flutter_local_notifications: ^17.2.3
@@ -65,18 +79,18 @@ dependencies:
   
   # Utils
   intl: ^0.19.0
-  uuid: ^4.2.1
+  # uuid: ^4.2.1  # Removed - not used
   url_launcher: ^6.2.2
-  flash_message: ^0.0.2
+  flash_message: ^0.0.2  # Required for flash messages
   
   # Security
   crypto: ^3.0.3
   
   # Image Handling
-  image_picker: ^1.2.0
+  # image_picker: ^1.2.0  # Removed - using file_picker instead
   
   # Animations
-  animations: ^2.0.8
+  # animations: ^2.0.8  # Removed - heavy animations
 
 dev_dependencies:
   flutter_test:
@@ -84,6 +98,7 @@ dev_dependencies:
   flutter_lints: ^3.0.0
   json_serializable: ^6.7.1
   build_runner: ^2.4.7
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -91,6 +106,33 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
-    - assets/animations/
-    - assets/sounds/
+  
+  # Image optimization settings
+  # Use WebP format for better compression
+  # Place optimized images in assets/images/
+  # Recommended sizes:
+  # - Icons: 24x24, 48x48, 96x96 (WebP)
+  # - Images: Max 1024x1024 (WebP)
+  # - App icon: 512x512 (PNG for Play Store)
+
+# Flutter Launcher Icons Configuration
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/app_logo.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#4F46E5"  # Purple gradient start
+  adaptive_icon_foreground: "assets/icons/app_logo.png"
+  web:
+    generate: true
+    image_path: "assets/icons/app_logo.png"
+    background_color: "#4F46E5"
+    theme_color: "#7C3AED"
+  windows:
+    generate: true
+    image_path: "assets/icons/app_logo.png"
+    icon_size: 48
+  macos:
+    generate: true
+    image_path: "assets/icons/app_logo.png"
   

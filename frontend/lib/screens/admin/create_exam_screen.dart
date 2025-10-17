@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/exam_model.dart';
 import '../../providers/exam_provider.dart';
@@ -101,7 +101,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen>
                       borderRadius: BorderRadius.circular(20.r),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.3),
+                          color: AppColors.primary.withValues(alpha: 0.3),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -126,7 +126,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen>
                         Text(
                           'Set up a new traffic rules exam for your students',
                           style: AppTextStyles.bodyLarge.copyWith(
-                            color: AppColors.white.withOpacity(0.9),
+                            color: AppColors.white.withValues(alpha: 0.9),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -289,7 +289,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen>
                               _isActive = value;
                             });
                           },
-                          activeColor: AppColors.success,
+                          activeThumbColor: AppColors.success,
                         ),
                       ],
                     ),
@@ -439,13 +439,17 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen>
     final success = await ref.read(examProvider.notifier).createExam(request);
 
     if (success) {
-      AppFlashMessage.showSuccess(context, 'Exam created successfully!');
-      Navigator.pop(context);
+      if (mounted) {
+        AppFlashMessage.showSuccess(context, 'Exam created successfully!');
+        Navigator.pop(context);
+      }
     } else {
-      AppFlashMessage.showError(
-        context,
-        'Failed to create exam. Please try again.',
-      );
+      if (mounted) {
+        AppFlashMessage.showError(
+          context,
+          'Failed to create exam. Please try again.',
+        );
+      }
     }
   }
 
@@ -528,7 +532,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen>
               SizedBox(
                 width: 16.w,
                 height: 16.w,
-                child: CircularProgressIndicator(
+                child: const CircularProgressIndicator(
                   strokeWidth: 2,
                   valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
@@ -565,106 +569,30 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen>
 
   Future<void> _pickImage() async {
     try {
-      // Show image source selection dialog
-      final ImageSource? source = await showModalBottomSheet<ImageSource>(
-        context: context,
-        backgroundColor: AppColors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-        ),
-        builder: (context) => Container(
-          padding: EdgeInsets.all(20.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: AppColors.grey300,
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-              ),
-              SizedBox(height: 20.h),
-              Text('Select Image Source', style: AppTextStyles.heading3),
-              SizedBox(height: 20.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildImageSourceOption(
-                      icon: Icons.camera_alt,
-                      title: 'Camera',
-                      source: ImageSource.camera,
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Expanded(
-                    child: _buildImageSourceOption(
-                      icon: Icons.photo_library,
-                      title: 'Gallery',
-                      source: ImageSource.gallery,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 20.h),
-            ],
-          ),
-        ),
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
       );
 
-      if (source != null) {
-        final ImageUploadService imageService = ImageUploadService();
-        final File? image = await imageService.pickImage(source: source);
+      if (result != null && result.files.isNotEmpty) {
+        final File image = File(result.files.first.path!);
+        setState(() {
+          _selectedImage = image;
+          _uploadedImageUrl = null;
+        });
 
-        if (image != null) {
-          setState(() {
-            _selectedImage = image;
-            _uploadedImageUrl = null;
-          });
-
-          // Upload image
-          await _uploadImage(image);
-        }
+        // Upload image
+        await _uploadImage(image);
       }
     } catch (e) {
-      print('❌ IMAGE PICKER: Error picking image: $e');
+      debugPrint('❌ IMAGE PICKER: Error picking image: $e');
+      if (!mounted) return;
       AppFlashMessage.showError(
         context,
         'Failed to pick image',
         description: e.toString(),
       );
     }
-  }
-
-  Widget _buildImageSourceOption({
-    required IconData icon,
-    required String title,
-    required ImageSource source,
-  }) {
-    return GestureDetector(
-      onTap: () => Navigator.pop(context, source),
-      child: Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          color: AppColors.grey50,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: AppColors.grey200),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 32.sp, color: AppColors.primary),
-            SizedBox(height: 8.h),
-            Text(
-              title,
-              style: AppTextStyles.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Future<void> _uploadImage(File image) async {
@@ -681,13 +609,14 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen>
           _uploadedImageUrl = imageUrl;
           _isUploadingImage = false;
         });
+        if (!mounted) return;
 
         AppFlashMessage.showSuccess(context, 'Image uploaded successfully');
       } else {
         setState(() {
           _isUploadingImage = false;
         });
-
+        if (!mounted) return;
         AppFlashMessage.showError(context, 'Failed to upload image');
       }
     } catch (e) {

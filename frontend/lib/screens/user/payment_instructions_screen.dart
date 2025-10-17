@@ -35,27 +35,31 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         _error = null;
       });
 
-      print('🔍 DEBUG: Loading payment instructions...');
+      debugPrint('🔍 DEBUG: Loading payment instructions...');
       final response = await _userManagementService.getPaymentInstructions();
-      print('🔍 DEBUG: Payment instructions response: ${response.success}');
-      print('🔍 DEBUG: Payment instructions data: ${response.data}');
+      debugPrint(
+        '🔍 DEBUG: Payment instructions response: ${response.success}',
+      );
+      debugPrint('🔍 DEBUG: Payment instructions data: ${response.data}');
 
       if (response.success) {
         setState(() {
           _paymentData = response.data;
           _isLoading = false;
         });
-        print('🔍 DEBUG: Payment data loaded successfully');
+        debugPrint('🔍 DEBUG: Payment data loaded successfully');
       } else {
         setState(() {
           _error = response.message;
           _isLoading = false;
         });
-        print('🔍 DEBUG: Payment instructions failed: ${response.message}');
+        debugPrint(
+          '🔍 DEBUG: Payment instructions failed: ${response.message}',
+        );
       }
     } catch (e, stackTrace) {
-      print('🔍 DEBUG: Payment instructions error: $e');
-      print('🔍 DEBUG: Stack trace: $stackTrace');
+      debugPrint('🔍 DEBUG: Payment instructions error: $e');
+      debugPrint('🔍 DEBUG: Stack trace: $stackTrace');
       setState(() {
         _error = 'Failed to load payment instructions: $e';
         _isLoading = false;
@@ -166,7 +170,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         borderRadius: BorderRadius.circular(8.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.1),
+            color: Colors.green.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -229,7 +233,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         borderRadius: BorderRadius.circular(10.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.15),
+            color: Colors.blue.withValues(alpha: 0.15),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -345,7 +349,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         border: Border.all(color: Colors.grey[200]!),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 3,
             offset: const Offset(0, 1),
           ),
@@ -403,58 +407,6 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
     );
   }
 
-  Widget _buildStepItem(int stepNumber, String stepText) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32.w,
-            height: 32.w,
-            decoration: BoxDecoration(
-              color: const Color(0xFF2E7D32),
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Center(
-              child: Text(
-                stepNumber.toString(),
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14.sp,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Text(
-              stepText,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: Colors.grey[700],
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildPaymentTiers() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -492,8 +444,8 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         boxShadow: [
           BoxShadow(
             color: isPopular
-                ? const Color(0xFF2E7D32).withOpacity(0.15)
-                : Colors.grey.withOpacity(0.08),
+                ? const Color(0xFF2E7D32).withValues(alpha: 0.15)
+                : Colors.grey.withValues(alpha: 0.08),
             blurRadius: 3,
             offset: const Offset(0, 1),
           ),
@@ -603,7 +555,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () => _makeCall(_paymentData!.contactInfo.phone),
                   icon: Icon(Icons.phone, size: 16.w),
-                  label: Text('Call'),
+                  label: const Text('Call'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2E7D32),
                     foregroundColor: Colors.white,
@@ -620,7 +572,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                   onPressed: () =>
                       _openWhatsApp(_paymentData!.contactInfo.whatsapp),
                   icon: Icon(Icons.chat, size: 16.w),
-                  label: Text('WhatsApp'),
+                  label: const Text('WhatsApp'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
@@ -638,121 +590,11 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
     );
   }
 
-  Widget _buildContactItem(
-    IconData icon,
-    String label,
-    String value,
-    VoidCallback? onTap,
-  ) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8.r),
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 8.h),
-          child: Row(
-            children: [
-              Icon(icon, size: 20.w, color: Colors.blue[600]),
-              SizedBox(width: 12.w),
-              Text(
-                '$label: ',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.blue[700],
-                ),
-              ),
-              Expanded(
-                child: Text(
-                  value,
-                  style: TextStyle(fontSize: 14.sp, color: Colors.blue[600]),
-                ),
-              ),
-              if (onTap != null)
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16.w,
-                  color: Colors.blue[400],
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPaymentMethods() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Payment Methods',
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
-          ),
-        ),
-        SizedBox(height: 12.h),
-        ..._paymentData!.paymentMethods
-            .map((method) => _buildPaymentMethodCard(method))
-            .toList(),
-      ],
-    );
-  }
-
-  Widget _buildPaymentMethodCard(PaymentMethod method) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            method.name,
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            method.details,
-            style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            method.instructions,
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: Colors.grey[500],
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _selectPlan(PaymentTier tier) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Selected Plan: ${tier.description}'),
+        title: Text('Selected Plan: ${tier.formattedAmount}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -762,8 +604,8 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
             ),
             SizedBox(height: 16.h),
             Text(
-              'To pay via MoMo, dial this USSD code:',
-              style: TextStyle(fontWeight: FontWeight.w600),
+              'To pay via MoMo, dial this code *182*8*1*888085*${tier.amount}#:',
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 8.h),
             Container(
@@ -790,7 +632,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                     onPressed: () =>
                         _copyToClipboard('*182*8*1*888085*${tier.amount}#'),
                     icon: Icon(Icons.copy, color: Colors.blue[600]),
-                    tooltip: 'Copy USSD Code',
+                    tooltip: 'Copy  Code',
                   ),
                 ],
               ),
@@ -839,17 +681,10 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
 
   void _openWhatsApp(String phoneNumber) async {
     final Uri whatsappUri = Uri.parse(
-      'https://wa.me/${phoneNumber.replaceAll(RegExp(r'[^\d]'), '')}',
+      'https://wa.me/${phoneNumber.replaceAll('+', '')}',
     );
     if (await canLaunchUrl(whatsappUri)) {
       await launchUrl(whatsappUri);
-    }
-  }
-
-  void _sendEmail(String email) async {
-    final Uri emailUri = Uri(scheme: 'mailto', path: email);
-    if (await canLaunchUrl(emailUri)) {
-      await launchUrl(emailUri);
     }
   }
 
@@ -860,6 +695,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
     if (await canLaunchUrl(phoneUri)) {
       await launchUrl(phoneUri);
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Could not launch phone app'),
@@ -871,9 +707,10 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
 
   void _copyToClipboard(String text) async {
     await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('USSD code copied to clipboard'),
+      const SnackBar(
+        content: Text('Code copied to clipboard'),
         backgroundColor: Colors.green,
         duration: Duration(seconds: 2),
       ),
@@ -881,17 +718,18 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   void _dialMoMoPayment(int amount) async {
-    final ussdCode = '*182*8*1*888085*$amount#';
-    final Uri ussdUri = Uri(scheme: 'tel', path: ussdCode);
+    final usdCode = '*182*8*1*888085*$amount#';
+    final Uri usdUri = Uri(scheme: 'tel', path: usdCode);
 
-    if (await canLaunchUrl(ussdUri)) {
-      await launchUrl(ussdUri);
+    if (await canLaunchUrl(usdUri)) {
+      await launchUrl(usdUri);
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not launch phone app. Please dial: $ussdCode'),
+          content: Text('Could not launch phone app. Please dial: $usdCode'),
           backgroundColor: Colors.red,
-          duration: Duration(seconds: 5),
+          duration: const Duration(seconds: 5),
         ),
       );
     }

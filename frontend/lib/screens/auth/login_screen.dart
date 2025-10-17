@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
@@ -42,6 +41,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     super.initState();
     _initializeAnimations();
     _initializeDeviceInfo();
+    // Pre-fill for testing - using admin account
+    // Admin: 0729111458 (bypasses device ID validation)
+    _phoneController.text = '';
   }
 
   void _initializeAnimations() {
@@ -244,9 +246,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         );
                         // If all methods fail, show a snackbar
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          ScaffoldMessenger.of(this.context).showSnackBar(
                             SnackBar(
-                              content: Text('Phone number: +250 780 494 000'),
+                              content: const Text(
+                                'Phone number: +250 780 494 000',
+                              ),
                               backgroundColor: AppColors.primary,
                               action: SnackBarAction(
                                 label: 'Copy',
@@ -264,8 +268,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   debugPrint('📞 Error calling phone: $e');
                   // If still fails, show a snackbar
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
+                    ScaffoldMessenger.of(this.context).showSnackBar(
+                      const SnackBar(
                         content: Text('Phone number: +250 780 494 000'),
                         backgroundColor: AppColors.primary,
                       ),
@@ -280,7 +284,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   borderRadius: BorderRadius.circular(8.r),
                 ),
               ),
-              child: Text('Call Now'),
+              child: const Text('Call Now'),
             ),
           ],
         );
@@ -314,6 +318,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     }
 
     // Use fallback device ID if not available
+    // For admin users, we'll use the actual device ID to bypass device validation
+    // For regular users, device ID validation is still enforced
     final deviceId =
         _deviceId ?? 'unknown_device_${DateTime.now().millisecondsSinceEpoch}';
 
@@ -326,18 +332,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     setState(() => _isLoading = true);
 
     try {
+      final phoneNumber = _phoneController.text.trim();
       final request = LoginRequest(
-        phoneNumber: _phoneController.text.trim(),
+        phoneNumber: phoneNumber,
         deviceId: deviceId,
       );
+
+      // Debug the actual request data
+      debugPrint('🔍 LOGIN REQUEST DEBUG:');
+      debugPrint('   phoneNumber: "$phoneNumber"');
+      debugPrint('   deviceId: "$deviceId"');
+      debugPrint('   request.toJson(): ${request.toJson()}');
 
       DebugService.logApiCall(
         'POST',
         '/api/auth/login',
         requestData: {
           'deviceId': deviceId,
-          'hasPhone': true,
-          'phoneLength': _phoneController.text.length,
+          'phoneNumber': phoneNumber,
+          'phoneLength': phoneNumber.length,
         },
       );
 
@@ -439,72 +452,73 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       child: Column(
                         children: [
                           // Traffic Rules SVG Illustration Container
-                          Container(
-                            width: 350.w,
-                            height: 180.h,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24.r),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withOpacity(0.1),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(8.w),
-                                child: SvgPicture.string(
-                                  '''
-<svg width="220" height="150" viewBox="0 0 220 150" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Road -->
-  <rect x="90" y="60" width="40" height="80" rx="20" fill="#E0E0E0"/>
-  <rect x="108" y="60" width="4" height="80" fill="#FFF"/>
-  <rect x="108" y="70" width="4" height="10" fill="#FFD600"/>
-  <rect x="108" y="90" width="4" height="10" fill="#FFD600"/>
-  <rect x="108" y="110" width="4" height="10" fill="#FFD600"/>
-  <rect x="108" y="130" width="4" height="10" fill="#FFD600"/>
-  <!-- Stop Sign -->
-  <g>
-    <polygon points="50,40 58,32 70,32 78,40 78,52 70,60 58,60 50,52" fill="#E53935" stroke="#B71C1C" stroke-width="2"/>
-    <text x="64" y="48" text-anchor="middle" font-size="10" font-family="Arial" fill="#FFF" font-weight="bold">STOP</text>
-  </g>
-  <!-- Traffic Light -->
-  <g>
-    <rect x="160" y="30" width="18" height="48" rx="6" fill="#333"/>
-    <circle cx="169" cy="40" r="5" fill="#E53935"/>
-    <circle cx="169" cy="54" r="5" fill="#FFD600"/>
-    <circle cx="169" cy="68" r="5" fill="#43A047"/>
-  </g>
-  <!-- Pedestrian Crossing -->
-  <g>
-    <rect x="90" y="120" width="40" height="6" fill="#FFF"/>
-    <rect x="90" y="122" width="40" height="2" fill="#BDBDBD"/>
-    <rect x="92" y="120" width="4" height="6" fill="#BDBDBD"/>
-    <rect x="100" y="120" width="4" height="6" fill="#BDBDBD"/>
-    <rect x="108" y="120" width="4" height="6" fill="#BDBDBD"/>
-    <rect x="116" y="120" width="4" height="6" fill="#BDBDBD"/>
-    <rect x="124" y="120" width="4" height="6" fill="#BDBDBD"/>
-  </g>
-  <!-- Car -->
-  <g>
-    <rect x="120" y="100" width="28" height="14" rx="4" fill="#1976D2"/>
-    <rect x="124" y="104" width="8" height="6" rx="2" fill="#90CAF9"/>
-    <rect x="134" y="104" width="8" height="6" rx="2" fill="#90CAF9"/>
-    <circle cx="126" cy="116" r="3" fill="#424242"/>
-    <circle cx="142" cy="116" r="3" fill="#424242"/>
-  </g>
-</svg>
-                                  ''',
-                                  width: 220.w,
-                                  height: 150.h,
-                                ),
-                              ),
-                            ),
-                          ),
-
+                          //                           Container(
+                          //                             width: 350.w,
+                          //                             height: 180.h,
+                          //                             decoration: BoxDecoration(
+                          //                               color: Colors.white,
+                          //                               borderRadius: BorderRadius.circular(24.r),
+                          //                               boxShadow: [
+                          //                                 BoxShadow(
+                          //                                   color: AppColors.primary.withValues(
+                          //                                     alpha: 0.1,
+                          //                                   ),
+                          //                                   blurRadius: 20,
+                          //                                   offset: const Offset(0, 10),
+                          //                                 ),
+                          //                               ],
+                          //                             ),
+                          //                             child: Center(
+                          //                               child: Padding(
+                          //                                 padding: EdgeInsets.all(8.w),
+                          //                                 child: SvgPicture.string(
+                          //                                   '''
+                          // <svg width="220" height="150" viewBox="0 0 220 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          //   <!-- Road -->
+                          //   <rect x="90" y="60" width="40" height="80" rx="20" fill="#E0E0E0"/>
+                          //   <rect x="108" y="60" width="4" height="80" fill="#FFF"/>
+                          //   <rect x="108" y="70" width="4" height="10" fill="#FFD600"/>
+                          //   <rect x="108" y="90" width="4" height="10" fill="#FFD600"/>
+                          //   <rect x="108" y="110" width="4" height="10" fill="#FFD600"/>
+                          //   <rect x="108" y="130" width="4" height="10" fill="#FFD600"/>
+                          //   <!-- Stop Sign -->
+                          //   <g>
+                          //     <polygon points="50,40 58,32 70,32 78,40 78,52 70,60 58,60 50,52" fill="#E53935" stroke="#B71C1C" stroke-width="2"/>
+                          //     <text x="64" y="48" text-anchor="middle" font-size="10" font-family="Arial" fill="#FFF" font-weight="bold">STOP</text>
+                          //   </g>
+                          //   <!-- Traffic Light -->
+                          //   <g>
+                          //     <rect x="160" y="30" width="18" height="48" rx="6" fill="#333"/>
+                          //     <circle cx="169" cy="40" r="5" fill="#E53935"/>
+                          //     <circle cx="169" cy="54" r="5" fill="#FFD600"/>
+                          //     <circle cx="169" cy="68" r="5" fill="#43A047"/>
+                          //   </g>
+                          //   <!-- Pedestrian Crossing -->
+                          //   <g>
+                          //     <rect x="90" y="120" width="40" height="6" fill="#FFF"/>
+                          //     <rect x="90" y="122" width="40" height="2" fill="#BDBDBD"/>
+                          //     <rect x="92" y="120" width="4" height="6" fill="#BDBDBD"/>
+                          //     <rect x="100" y="120" width="4" height="6" fill="#BDBDBD"/>
+                          //     <rect x="108" y="120" width="4" height="6" fill="#BDBDBD"/>
+                          //     <rect x="116" y="120" width="4" height="6" fill="#BDBDBD"/>
+                          //     <rect x="124" y="120" width="4" height="6" fill="#BDBDBD"/>
+                          //   </g>
+                          //   <!-- Car -->
+                          //   <g>
+                          //     <rect x="120" y="100" width="28" height="14" rx="4" fill="#1976D2"/>
+                          //     <rect x="124" y="104" width="8" height="6" rx="2" fill="#90CAF9"/>
+                          //     <rect x="134" y="104" width="8" height="6" rx="2" fill="#90CAF9"/>
+                          //     <circle cx="126" cy="116" r="3" fill="#424242"/>
+                          //     <circle cx="142" cy="116" r="3" fill="#424242"/>
+                          //   </g>
+                          // </svg>
+                          //                                   ''',
+                          //                                   width: 220.w,
+                          //                                   height: 150.h,
+                          //                                 ),
+                          //                               ),
+                          //                             ),
+                          //                           ),
                           SizedBox(height: 20.h),
 
                           // App Title with Creative Styling
@@ -534,7 +548,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               ],
                             ),
                             child: Text(
-                              'TRAFFIC RULES MASTER',
+                              'LEARN TRAFFIC RULES',
                               style: AppTextStyles.heading1.copyWith(
                                 color: Colors.white,
                                 fontSize: 18.sp,
@@ -810,14 +824,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   ),
                                 ],
                               ),
-                              child: CustomButton(
-                                text: 'Sign In',
-                                icon: Icons.login,
-                                onPressed: _isLoading ? null : _handleLogin,
-                                isLoading: _isLoading,
-                                height: 56.h,
-                                backgroundColor: Colors.transparent,
-                                textColor: Colors.white,
+                              child: Center(
+                                child: CustomButton(
+                                  text: 'Sign In',
+                                  icon: Icons.login,
+                                  onPressed: _isLoading ? null : _handleLogin,
+                                  isLoading: _isLoading,
+                                  height: 56.h,
+                                  backgroundColor: Colors.transparent,
+                                  textColor: Colors.white,
+                                  //alignment: MainAxisAlignment.center, // If CustomButton supports alignment
+                                ),
                               ),
                             ),
 
@@ -846,7 +863,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ),
                     borderRadius: BorderRadius.circular(20.r),
                     border: Border.all(
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       width: 1,
                     ),
                   ),
@@ -882,11 +899,310 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   ),
                 ),
 
+                SizedBox(height: 20.h),
+
+                // Privacy Policy and Terms & Conditions Links
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 24.w),
+                  padding: EdgeInsets.all(16.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.grey50,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(color: AppColors.grey200, width: 1),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'By using this app, you agree to our',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.grey600,
+                          fontSize: 12.sp,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 8.h),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          TextButton(
+                            onPressed: () => _launchPrivacyPolicy(),
+                            child: Text(
+                              'Privacy Policy',
+                              style: AppTextStyles.link.copyWith(
+                                color: AppColors.primary,
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            ' and ',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.grey600,
+                              fontSize: 12.sp,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => _launchTermsConditions(),
+                            child: Text(
+                              'Terms & Conditions',
+                              style: AppTextStyles.link.copyWith(
+                                color: AppColors.primary,
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
                 SizedBox(height: 40.h),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // Launch Privacy Policy
+  void _launchPrivacyPolicy() async {
+    try {
+      // You can replace this with your actual privacy policy URL
+      const privacyPolicyUrl = 'https://your-website.com/privacy-policy';
+
+      if (await canLaunchUrl(Uri.parse(privacyPolicyUrl))) {
+        await launchUrl(
+          Uri.parse(privacyPolicyUrl),
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        // Fallback: Show privacy policy in a dialog
+        _showPrivacyPolicyDialog();
+      }
+    } catch (e) {
+      // Fallback: Show privacy policy in a dialog
+      _showPrivacyPolicyDialog();
+    }
+  }
+
+  // Launch Terms & Conditions
+  void _launchTermsConditions() async {
+    try {
+      // You can replace this with your actual terms & conditions URL
+      const termsUrl = 'https://your-website.com/terms-conditions';
+
+      if (await canLaunchUrl(Uri.parse(termsUrl))) {
+        await launchUrl(
+          Uri.parse(termsUrl),
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        // Fallback: Show terms & conditions in a dialog
+        _showTermsConditionsDialog();
+      }
+    } catch (e) {
+      // Fallback: Show terms & conditions in a dialog
+      _showTermsConditionsDialog();
+    }
+  }
+
+  // Show Privacy Policy Dialog
+  void _showPrivacyPolicyDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.privacy_tip_outlined, color: AppColors.primary),
+            SizedBox(width: 8.w),
+            Text(
+              'Privacy Policy',
+              style: AppTextStyles.heading3.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Learn Traffic Rules - Privacy Policy',
+                style: AppTextStyles.bodyLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              const Text(
+                'This educational app is designed to help you learn traffic rules and prepare for driving tests.',
+                style: AppTextStyles.bodyMedium,
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'Data Collection:',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              const Text(
+                '• We collect minimal information necessary for educational purposes\n'
+                '• Your learning progress and quiz scores\n'
+                '• Device information for app functionality\n'
+                '• No personal identification or sensitive data',
+                style: AppTextStyles.bodySmall,
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'Data Use:',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              const Text(
+                '• Educational progress tracking\n'
+                '• App improvement and features\n'
+                '• Technical support\n'
+                '• We do not share your data with third parties',
+                style: AppTextStyles.bodySmall,
+              ),
+              SizedBox(height: 12.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Text(
+                  'This is a private educational tool and is not affiliated with any government agency.',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Close',
+              style: AppTextStyles.button.copyWith(color: AppColors.grey600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Show Terms & Conditions Dialog
+  void _showTermsConditionsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.description_outlined, color: AppColors.primary),
+            SizedBox(width: 8.w),
+            Text(
+              'Terms & Conditions',
+              style: AppTextStyles.heading3.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Learn Traffic Rules - Terms & Conditions',
+                style: AppTextStyles.bodyLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'Educational Purpose:',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              const Text(
+                'This app is designed solely for educational purposes to help you learn traffic rules and practice for driving examinations.',
+                style: AppTextStyles.bodySmall,
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'Important Disclaimers:',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              const Text(
+                '• This app is NOT affiliated with any government agency\n'
+                '• This app does NOT provide official driving licenses\n'
+                '• This app does NOT guarantee passing any examination\n'
+                '• You must complete official government procedures',
+                style: AppTextStyles.bodySmall,
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'User Responsibilities:',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              const Text(
+                '• Use for educational purposes only\n'
+                '• Complete official procedures for licenses\n'
+                '• Verify information with official sources\n'
+                '• Follow local traffic laws and regulations',
+                style: AppTextStyles.bodySmall,
+              ),
+              SizedBox(height: 12.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Text(
+                  'This is a private educational tool. Always verify information with official government sources.',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Close',
+              style: AppTextStyles.button.copyWith(color: AppColors.grey600),
+            ),
+          ),
+        ],
       ),
     );
   }

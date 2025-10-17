@@ -159,7 +159,7 @@ class ErrorHandlerService {
       if (additionalData != null) {
         debugPrint('   Additional Data: $additionalData');
       }
-      debugPrint('   Stack Trace: ${StackTrace.current}');
+      //debugPrint('   Stack Trace: $stackTrace');
     }
   }
 }

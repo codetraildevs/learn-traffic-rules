@@ -21,7 +21,11 @@ class FreeExamResponse {
       message: json['message'] as String? ?? 'Unknown error',
       data: json['data'] != null
           ? FreeExamData.fromJson(json['data'] as Map<String, dynamic>)
-          : FreeExamData(exams: [], isFreeUser: true, freeExamsRemaining: 0),
+          : const FreeExamData(
+              exams: [],
+              isFreeUser: true,
+              freeExamsRemaining: 0,
+            ),
     );
   }
   Map<String, dynamic> toJson() => _$FreeExamResponseToJson(this);
@@ -132,13 +136,14 @@ class PaymentTier {
   }
   Map<String, dynamic> toJson() => _$PaymentTierToJson(this);
 
-  String get formattedAmount => '${amount.toStringAsFixed(0)} RWF';
+  String get formattedAmount => '$amount RWF';
   String get durationText {
     if (days == 1) return '1 Day';
     if (days < 7) return '$days Days';
-    if (days < 30)
-      return '${(days / 7).round()} Week${(days / 7).round() > 1 ? 's' : ''}';
-    return '${(days / 30).round()} Month${(days / 30).round() > 1 ? 's' : ''}';
+    if (days < 30) {
+      return '$days Week';
+    }
+    return '$days Month';
   }
 }
 

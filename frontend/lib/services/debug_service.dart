@@ -20,8 +20,8 @@ class DebugService {
       );
 
       // Print detailed data for debugging
-      print('🔐 AUTH DEBUG [$timestamp]: $event');
-      print('📊 Data: $data');
+      debugPrint('🔐 AUTH DEBUG [$timestamp]: $event');
+      debugPrint('📊 Data: $data');
     }
   }
 
@@ -47,11 +47,11 @@ class DebugService {
         zone: null,
       );
 
-      print('🌐 API DEBUG [$timestamp]: $method $endpoint');
-      if (requestData != null) print('📤 Request: $requestData');
-      if (statusCode != null) print('📥 Status: $statusCode');
-      if (response != null) print('📥 Response: $response');
-      if (error != null) print('❌ Error: $error');
+      debugPrint('🌐 API DEBUG [$timestamp]: $method $endpoint');
+      if (requestData != null) debugPrint('📤 Request: $requestData');
+      if (statusCode != null) debugPrint('📥 Status: $statusCode');
+      if (response != null) debugPrint('📥 Response: $response');
+      if (error != null) debugPrint('❌ Error: $error');
     }
   }
 
@@ -70,9 +70,9 @@ class DebugService {
         zone: null,
       );
 
-      print('📱 DEVICE DEBUG [$timestamp]:');
+      debugPrint('📱 DEVICE DEBUG [$timestamp]:');
       deviceInfo.forEach((key, value) {
-        print('   $key: $value');
+        debugPrint('   $key: $value');
       });
     }
   }
@@ -95,10 +95,10 @@ class DebugService {
         zone: null,
       );
 
-      print('📝 FORM DEBUG [$timestamp]: $formName');
+      debugPrint('📝 FORM DEBUG [$timestamp]: $formName');
       validationResults.forEach((field, result) {
         final status = result['valid'] == true ? '✅' : '❌';
-        print('   $status $field: ${result['message']}');
+        debugPrint('   $status $field: $result');
       });
     }
   }
@@ -118,10 +118,10 @@ class DebugService {
         zone: null,
       );
 
-      print('👤 USER DEBUG [$timestamp]: $action');
+      debugPrint('👤 USER DEBUG [$timestamp]: $action');
       if (context != null) {
         context.forEach((key, value) {
-          print('   $key: $value');
+          debugPrint('   $key: $value');
         });
       }
     }
@@ -146,10 +146,10 @@ class DebugService {
         zone: null,
       );
 
-      print('💥 ERROR DEBUG [$timestamp]: $error');
-      print('Exception: $exception');
+      debugPrint('💥 ERROR DEBUG [$timestamp]: $error');
+      debugPrint('Exception: $exception');
       if (stackTrace != null) {
-        print('Stack Trace: $stackTrace');
+        debugPrint('Stack Trace: $stackTrace');
       }
     }
   }
@@ -169,8 +169,8 @@ class DebugService {
         zone: null,
       );
 
-      print('🌐 NETWORK DEBUG [$timestamp]: $status');
-      if (details != null) print('   Details: $details');
+      debugPrint('🌐 NETWORK DEBUG [$timestamp]: $status');
+      if (details != null) debugPrint('   Details: $details');
     }
   }
 }

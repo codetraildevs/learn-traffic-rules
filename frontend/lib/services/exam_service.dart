@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../models/question_model.dart' as question_model;
 import '../models/exam_result_model.dart';
 import '../models/exam_model.dart';
@@ -10,59 +11,101 @@ class ExamService {
     String examId,
   ) async {
     try {
-      print('🔍 FRONTEND DEBUG - Getting questions for exam: $examId');
-      print('   API endpoint: /exams/$examId/take-exam');
+      debugPrint('🔍 FRONTEND DEBUG - Getting questions for exam: $examId');
+      debugPrint('   API endpoint: /exams/$examId/take-exam');
 
       // Initialize ApiService to load stored tokens
       await _apiService.initialize();
       final headers = _apiService.getHeaders();
-      print(
+      debugPrint(
         '   ApiService initialized, token available: ${headers.containsKey('Authorization')}',
       );
-      print('   Headers: $headers');
+      debugPrint('   Headers: $headers');
       if (headers.containsKey('Authorization')) {
-        print('   Auth token: ${headers['Authorization']}');
+        debugPrint(
+          '   Auth token: ${headers['Authorization']?.substring(0, 20)}...',
+        );
       }
 
       final response = await _apiService.makeRequest(
         'GET',
         '/exams/$examId/take-exam',
+        maxRetries: 2, // Reduce retries for exam questions
       );
 
-      print('🔍 FRONTEND DEBUG - API Response received:');
-      print('   Response type: ${response.runtimeType}');
-      print('   Success: ${response['success']}');
-      print('   Message: ${response['message']}');
-      print('   Data type: ${response['data']?.runtimeType}');
-      print(
-        '   Data length: ${response['data'] is List ? (response['data'] as List).length : 'Not a list'}',
+      debugPrint('🔍 FRONTEND DEBUG - API Response received:');
+      debugPrint('   Response type: ${response.runtimeType}');
+      debugPrint('   Success: ${response['success']}');
+      debugPrint('   Message: ${response['message']}');
+      debugPrint('   Data type: ${response['data'].runtimeType}');
+      debugPrint(
+        '   Data length: ${response['data'] is List ? (response['data'] as List).length : 'N/A'}',
       );
 
       if (response['success'] == true) {
-        final questionsData = response['data'] as List<dynamic>;
-        print('   Questions data length: ${questionsData.length}');
+        final data = response['data'];
 
-        if (questionsData.isNotEmpty) {
-          print('   First question sample: ${questionsData[0]}');
+        // Validate data structure
+        if (data == null) {
+          throw Exception('No questions data received from server');
         }
 
-        final questions = questionsData
-            .map(
-              (questionJson) => question_model.Question.fromJson(
-                questionJson as Map<String, dynamic>,
-              ),
-            )
-            .toList();
+        if (data is! List) {
+          throw Exception('Invalid questions data format');
+        }
 
-        print('✅ Successfully parsed ${questions.length} questions');
+        final questionsData = data;
+        debugPrint('   Questions data length: ${questionsData.length}');
+
+        if (questionsData.isEmpty) {
+          throw Exception('No questions available for this exam');
+        }
+
+        if (questionsData.isNotEmpty) {
+          debugPrint('   First question sample: ${questionsData.first}');
+        }
+
+        // Parse questions with validation
+        final List<question_model.Question> questions = [];
+        for (int i = 0; i < questionsData.length; i++) {
+          try {
+            final question = question_model.Question.fromJson(
+              questionsData[i] as Map<String, dynamic>,
+            );
+            questions.add(question);
+          } catch (e) {
+            debugPrint('❌ Failed to parse question $i: $e');
+            // Continue with other questions instead of failing completely
+          }
+        }
+
+        if (questions.isEmpty) {
+          throw Exception('No valid questions could be parsed');
+        }
+
+        debugPrint('✅ Successfully parsed ${questions.length} questions');
         return questions;
       } else {
-        print('❌ API returned error: ${response['message']}');
-        throw Exception(response['message'] ?? 'Failed to load questions');
+        final errorMessage = response['message'] ?? 'Failed to load questions';
+        debugPrint('❌ API returned error: $errorMessage');
+        throw Exception(errorMessage);
       }
     } catch (e) {
-      print('❌ FRONTEND ERROR: $e');
-      throw Exception('Error loading questions: $e');
+      debugPrint('❌ FRONTEND ERROR: $e');
+
+      // Provide more specific error messages
+      if (e.toString().contains('No internet connection')) {
+        throw Exception(
+          'No internet connection. Please check your network and try again.',
+        );
+      } else if (e.toString().contains('timeout')) {
+        throw Exception('Request timed out. Please try again.');
+      } else if (e.toString().contains('401') ||
+          e.toString().contains('unauthorized')) {
+        throw Exception('Session expired. Please login again.');
+      } else {
+        throw Exception('Error loading questions: $e');
+      }
     }
   }
 
@@ -73,11 +116,11 @@ class ExamService {
     required bool isFreeExam,
   }) async {
     try {
-      print('🔍 FRONTEND DEBUG - Submitting exam result:');
-      print('   Exam ID: $examId');
-      print('   Answers: $answers');
-      print('   Time Spent: $timeSpent');
-      print('   Is Free Exam: $isFreeExam');
+      debugPrint('🔍 FRONTEND DEBUG - Submitting exam result:');
+      debugPrint('   Exam ID: $examId');
+      debugPrint('   Answers: $answers');
+      debugPrint('   Time Spent: $timeSpent');
+      debugPrint('   Is Free Exam: $isFreeExam');
 
       final response = await _apiService.makeRequest(
         'POST',
