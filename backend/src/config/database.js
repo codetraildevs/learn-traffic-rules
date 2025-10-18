@@ -208,8 +208,7 @@ const createMySQLTables = async (sequelize) => {
         priority VARCHAR(20) DEFAULT 'MEDIUM',
         category VARCHAR(20) NOT NULL,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
       
       // Study reminders table
@@ -225,8 +224,7 @@ const createMySQLTables = async (sequelize) => {
         nextScheduledAt TIMESTAMP NULL,
         isActive BOOLEAN DEFAULT true,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
       
       // Notification preferences table
@@ -241,8 +239,7 @@ const createMySQLTables = async (sequelize) => {
         systemUpdates BOOLEAN DEFAULT true,
         weeklyReports BOOLEAN DEFAULT true,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`
     ];
     
@@ -264,6 +261,27 @@ const createMySQLTables = async (sequelize) => {
       }
     }
     
+    // Add foreign key constraints after all tables are created
+    console.log('🔄 Adding foreign key constraints...');
+    const foreignKeys = [
+      'ALTER TABLE notifications ADD CONSTRAINT fk_notifications_user_id FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE',
+      'ALTER TABLE studyreminders ADD CONSTRAINT fk_studyreminders_user_id FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE',
+      'ALTER TABLE notificationpreferences ADD CONSTRAINT fk_notificationpreferences_user_id FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE'
+    ];
+    
+    for (const fk of foreignKeys) {
+      try {
+        await sequelize.query(fk);
+        console.log('✅ Foreign key constraint added');
+      } catch (error) {
+        if (error.message.includes('Duplicate key name') || error.message.includes('already exists')) {
+          console.log('⚠️  Foreign key constraint already exists, skipping');
+        } else {
+          console.log('⚠️  Foreign key constraint failed:', error.message);
+        }
+      }
+    }
+
     // Create indexes
     console.log('🔄 Creating indexes...');
     const indexes = [
