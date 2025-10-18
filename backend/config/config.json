@@ -16,6 +16,11 @@
     "dialect": "mysql"
   },
   "production": {
+    "username": "cdims_user",
+    "password": "",
+    "database": "learn_traffic_rules",
+    "host": "localhost",
+    "port": 3306,
     "dialect": "mysql"
   }
 }

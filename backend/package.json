@@ -9,7 +9,10 @@
     "test": "jest",
     "seed": "node src/seeders/index.js",
     "seed:clear": "node src/seeders/index.js clear",
-    "seed:fresh": "node src/seeders/index.js fresh"
+    "seed:fresh": "node src/seeders/index.js fresh",
+    "migrate": "NODE_ENV=production npx sequelize-cli db:migrate",
+    "migrate:undo": "NODE_ENV=production npx sequelize-cli db:migrate:undo",
+    "migrate:status": "NODE_ENV=production npx sequelize-cli db:migrate:status"
   },
   "keywords": [
     "traffic-rules",
