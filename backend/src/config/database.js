@@ -420,26 +420,38 @@ const createAllMySQLTables = async (sequelize) => {
 // Add missing columns to existing tables
 const addMissingColumns = async (sequelize) => {
   try {
-    const alterQueries = [
-      // Add resetCode columns to users table if they don't exist
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS resetCode VARCHAR(255) NULL`,
-      `ALTER TABLE users ADD COLUMN IF NOT EXISTS resetCodeExpires TIMESTAMP NULL`
+    // Check if columns exist first (MySQL doesn't support ADD COLUMN IF NOT EXISTS)
+    const checkColumns = await sequelize.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'users' 
+      AND COLUMN_NAME IN ('resetCode', 'resetCodeExpires')
+    `);
+    
+    const existingColumns = checkColumns[0].map(row => row.COLUMN_NAME);
+    console.log('📋 Existing columns in users table:', existingColumns);
+    
+    const columnsToAdd = [
+      { name: 'resetCode', type: 'VARCHAR(255) NULL' },
+      { name: 'resetCodeExpires', type: 'TIMESTAMP NULL' }
     ];
     
-    for (const query of alterQueries) {
-      try {
-        await sequelize.query(query);
-        console.log('✅ Column added successfully');
-      } catch (error) {
-        if (error.message.includes('Duplicate column name') || error.message.includes('already exists')) {
-          console.log('⚠️  Column already exists, skipping');
-        } else {
-          console.log('⚠️  Column addition failed:', error.message);
+    for (const column of columnsToAdd) {
+      if (!existingColumns.includes(column.name)) {
+        try {
+          console.log(`🔄 Adding column: ${column.name}`);
+          await sequelize.query(`ALTER TABLE users ADD COLUMN ${column.name} ${column.type}`);
+          console.log(`✅ Column ${column.name} added successfully`);
+        } catch (error) {
+          console.log(`⚠️  Failed to add column ${column.name}:`, error.message);
         }
+      } else {
+        console.log(`✅ Column ${column.name} already exists, skipping`);
       }
     }
   } catch (error) {
-    console.log('⚠️  Error adding missing columns:', error.message);
+    console.log('⚠️  Error checking/adding missing columns:', error.message);
   }
 };
 
