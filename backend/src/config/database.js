@@ -463,6 +463,50 @@ const addMissingColumns = async (sequelize) => {
   }
 };
 
+// Create admin user if it doesn't exist
+const createAdminUser = async (sequelize) => {
+  try {
+    console.log('👤 Ensuring admin user exists...');
+    
+    const adminExists = await sequelize.query(
+      'SELECT id FROM users WHERE phoneNumber = ?',
+      { 
+        replacements: ['0780494000'],
+        type: Sequelize.QueryTypes.SELECT 
+      }
+    );
+    
+    if (adminExists.length === 0) {
+      console.log('🔄 Creating admin user...');
+      await sequelize.query(`
+        INSERT INTO users (id, fullName, phoneNumber, deviceId, role, isActive, isBlocked, blockReason, blockedAt, lastSyncAt, resetCode, resetCodeExpires, createdAt, updatedAt)
+        VALUES (
+          'admin-user-uuid-12345678901234567890123456789012',
+          'Admin User',
+          '0780494000',
+          'admin-device-bypass',
+          'ADMIN',
+          true,
+          false,
+          NULL,
+          NULL,
+          NULL,
+          NULL,
+          NULL,
+          NOW(),
+          NOW()
+        )
+      `);
+      console.log('✅ Admin user created successfully');
+    } else {
+      console.log('✅ Admin user already exists');
+    }
+  } catch (adminError) {
+    console.error('❌ Admin user creation failed:', adminError.message);
+    console.error('🔍 Full error:', adminError);
+  }
+};
+
 // Create MySQL-compatible tables
 const createMySQLTables = async (sequelize) => {
   try {
@@ -617,44 +661,6 @@ const createMySQLTables = async (sequelize) => {
       console.log('✅ Data already exists, skipping import');
     }
     
-    // Create admin user if it doesn't exist
-    console.log('👤 Ensuring admin user exists...');
-    try {
-      const adminExists = await sequelize.query(
-        'SELECT id FROM users WHERE phoneNumber = ?',
-        { 
-          replacements: ['0780494000'],
-          type: Sequelize.QueryTypes.SELECT 
-        }
-      );
-      
-      if (adminExists.length === 0) {
-        await sequelize.query(`
-          INSERT INTO users (id, fullName, phoneNumber, deviceId, role, isActive, isBlocked, blockReason, blockedAt, lastSyncAt, resetCode, resetCodeExpires, createdAt, updatedAt)
-          VALUES (
-            'admin-user-uuid-12345678901234567890123456789012',
-            'Admin User',
-            '0780494000',
-            'admin-device-bypass',
-            'ADMIN',
-            true,
-            false,
-            NULL,
-            NULL,
-            NULL,
-            NULL,
-            NULL,
-            NOW(),
-            NOW()
-          )
-        `);
-        console.log('✅ Admin user created');
-      } else {
-        console.log('✅ Admin user already exists');
-      }
-    } catch (adminError) {
-      console.log('⚠️  Admin user creation failed:', adminError.message);
-    }
     
     // Create sample exams and questions if they don't exist
     console.log('📚 Ensuring sample data exists...');
@@ -793,6 +799,9 @@ const initializeTables = async () => {
         console.log('🔄 Checking for missing columns...');
         await addMissingColumns(sequelize);
       }
+      
+      // Create admin user after ensuring all tables and columns exist
+      await createAdminUser(sequelize);
       
     } catch (error) {
       console.error('❌ Error checking tables:', error.message);
