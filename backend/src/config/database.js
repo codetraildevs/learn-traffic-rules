@@ -196,7 +196,7 @@ const createMySQLTables = async (sequelize) => {
     const tables = [
       // Notifications table
       `CREATE TABLE IF NOT EXISTS notifications (
-        id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+        id CHAR(36) PRIMARY KEY,
         userId CHAR(36) NOT NULL,
         type VARCHAR(50) NOT NULL,
         title VARCHAR(255) NOT NULL,
@@ -214,7 +214,7 @@ const createMySQLTables = async (sequelize) => {
       
       // Study reminders table
       `CREATE TABLE IF NOT EXISTS studyreminders (
-        id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+        id CHAR(36) PRIMARY KEY,
         userId CHAR(36) NOT NULL,
         isEnabled BOOLEAN DEFAULT true,
         reminderTime TIME NOT NULL,
@@ -231,7 +231,7 @@ const createMySQLTables = async (sequelize) => {
       
       // Notification preferences table
       `CREATE TABLE IF NOT EXISTS notificationpreferences (
-        id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+        id CHAR(36) PRIMARY KEY,
         userId CHAR(36) NOT NULL UNIQUE,
         pushNotifications BOOLEAN DEFAULT true,
         studyReminders BOOLEAN DEFAULT true,
@@ -250,6 +250,7 @@ const createMySQLTables = async (sequelize) => {
     for (let i = 0; i < tables.length; i++) {
       try {
         console.log(`🔄 Creating table ${i + 1}/${tables.length}...`);
+        console.log(`🔍 SQL: ${tables[i].substring(0, 100)}...`);
         await sequelize.query(tables[i]);
         console.log(`✅ Table ${i + 1} created successfully`);
       } catch (error) {
@@ -257,6 +258,7 @@ const createMySQLTables = async (sequelize) => {
           console.log(`⚠️  Table ${i + 1} already exists, skipping`);
         } else {
           console.error(`❌ Failed to create table ${i + 1}:`, error.message);
+          console.error(`🔍 Full SQL:`, tables[i]);
           throw error;
         }
       }
@@ -336,7 +338,7 @@ const createMySQLTables = async (sequelize) => {
         await sequelize.query(`
           INSERT INTO users (id, fullName, phoneNumber, deviceId, role, isActive, createdAt, updatedAt)
           VALUES (
-            UUID(),
+            'admin-user-uuid-12345678901234567890123456789012',
             'Admin User',
             '0780494000',
             'admin-device-bypass',
