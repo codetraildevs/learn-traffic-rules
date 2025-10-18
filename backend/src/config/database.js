@@ -476,7 +476,7 @@ const initializeTables = async () => {
       
       if (tables.length === 0) {
         console.log('🔄 No tables found, creating from SQL...');
-        await createTablesFromSQL(sequelize);
+        await createMySQLTables(sequelize);
       } else {
         console.log('✅ Database tables already exist, checking for missing tables...');
         
@@ -512,7 +512,7 @@ const initializeTables = async () => {
     console.log('🔄 Attempting to create tables individually...');
     try {
       // Create a new connection to avoid transaction issues
-      const newSequelize = new Sequelize(sequelize.config);
+      const newSequelize = new Sequelize(getDatabaseConfig());
       await newSequelize.authenticate();
       await createMySQLTables(newSequelize);
       await newSequelize.close();
