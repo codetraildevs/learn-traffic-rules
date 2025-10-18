@@ -10,7 +10,7 @@
     
     <!-- Configuration for your production backend -->
     <domain-config>
-        <domain includeSubdomains="true">learn-traffic-rules.onrender.com</domain>
+        <domain includeSubdomains="true">traffic.cyangugudims.com</domain>
         <trust-anchors>
             <certificates src="system"/>
         </trust-anchors>

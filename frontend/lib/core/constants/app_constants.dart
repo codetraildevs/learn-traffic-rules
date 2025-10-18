@@ -1,9 +1,9 @@
 class AppConstants {
   // API Configuration
-  static const String baseUrl = 'https://learn-traffic-rules.onrender.com/api';
+  static const String baseUrl = 'https://traffic.cyangugudims.com/api';
   //static const String baseUrl = 'http://10.102.183.116:3000/api';
   //static const String baseUrlImage = 'http://10.102.183.116:3000';
-  static const String baseUrlImage = 'https://learn-traffic-rules.onrender.com';
+  static const String baseUrlImage = 'https://traffic.cyangugudims.com';
 
   static const String apiVersion = 'v1';
   static const int connectionTimeout = 30000;
