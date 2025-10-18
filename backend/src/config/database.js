@@ -280,6 +280,7 @@ const createAllMySQLTables = async (sequelize) => {
         userId CHAR(36),
         examId CHAR(36),
         isUsed BOOLEAN DEFAULT false,
+        paymentTier VARCHAR(50) DEFAULT 'BASIC',
         expiresAt TIMESTAMP NULL,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -412,6 +413,7 @@ const createAllMySQLTables = async (sequelize) => {
     // Add missing columns to existing tables
     console.log('🔄 Checking for missing columns in existing tables...');
     await addMissingColumns(sequelize);
+    await addMissingAccessCodesColumns(sequelize);
     
     console.log('🎉 All MySQL tables created successfully!');
     
@@ -460,6 +462,38 @@ const addMissingColumns = async (sequelize) => {
     }
   } catch (error) {
     console.log('⚠️  Error checking/adding missing columns:', error.message);
+  }
+};
+
+// Add missing columns to access_codes table
+const addMissingAccessCodesColumns = async (sequelize) => {
+  try {
+    console.log('🔄 Checking for missing columns in access_codes table...');
+    
+    const checkColumns = await sequelize.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'access_codes' 
+      AND COLUMN_NAME = 'paymentTier'
+    `);
+    
+    const existingColumns = checkColumns[0].map(row => row.COLUMN_NAME);
+    console.log('📋 Existing columns in access_codes table:', existingColumns);
+    
+    if (!existingColumns.includes('paymentTier')) {
+      try {
+        console.log('🔄 Adding column: paymentTier');
+        await sequelize.query(`ALTER TABLE access_codes ADD COLUMN paymentTier VARCHAR(50) DEFAULT 'BASIC'`);
+        console.log('✅ Column paymentTier added successfully');
+      } catch (error) {
+        console.log('⚠️  Failed to add column paymentTier:', error.message);
+      }
+    } else {
+      console.log('✅ Column paymentTier already exists, skipping');
+    }
+  } catch (error) {
+    console.log('⚠️  Error checking/adding missing columns in access_codes:', error.message);
   }
 };
 
@@ -798,6 +832,7 @@ const initializeTables = async () => {
         // Still check for missing columns in existing tables
         console.log('🔄 Checking for missing columns...');
         await addMissingColumns(sequelize);
+        await addMissingAccessCodesColumns(sequelize);
       }
       
       // Create admin user after ensuring all tables and columns exist
