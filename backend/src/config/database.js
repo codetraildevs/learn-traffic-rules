@@ -223,6 +223,7 @@ const createAllMySQLTables = async (sequelize) => {
         difficulty ENUM('EASY', 'MEDIUM', 'HARD') DEFAULT 'MEDIUM',
         duration INTEGER DEFAULT 30,
         passingScore INTEGER DEFAULT 60,
+        examImgUrl VARCHAR(500) NULL,
         isActive BOOLEAN DEFAULT true,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -414,6 +415,8 @@ const createAllMySQLTables = async (sequelize) => {
     console.log('🔄 Checking for missing columns in existing tables...');
     await addMissingColumns(sequelize);
     await addMissingAccessCodesColumns(sequelize);
+    await addMissingExamsColumns(sequelize);
+    await refreshTableCache(sequelize);
     
     console.log('🎉 All MySQL tables created successfully!');
     
@@ -494,6 +497,50 @@ const addMissingAccessCodesColumns = async (sequelize) => {
     }
   } catch (error) {
     console.log('⚠️  Error checking/adding missing columns in access_codes:', error.message);
+  }
+};
+
+// Add missing columns to exams table
+const addMissingExamsColumns = async (sequelize) => {
+  try {
+    console.log('🔄 Checking for missing columns in exams table...');
+    
+    const checkColumns = await sequelize.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'exams' 
+      AND COLUMN_NAME = 'examImgUrl'
+    `);
+    
+    const existingColumns = checkColumns[0].map(row => row.COLUMN_NAME);
+    console.log('📋 Existing columns in exams table:', existingColumns);
+    
+    if (!existingColumns.includes('examImgUrl')) {
+      try {
+        console.log('🔄 Adding column: examImgUrl');
+        await sequelize.query(`ALTER TABLE exams ADD COLUMN examImgUrl VARCHAR(500) NULL`);
+        console.log('✅ Column examImgUrl added successfully');
+      } catch (error) {
+        console.log('⚠️  Failed to add column examImgUrl:', error.message);
+      }
+    } else {
+      console.log('✅ Column examImgUrl already exists, skipping');
+    }
+  } catch (error) {
+    console.log('⚠️  Error checking/adding missing columns in exams:', error.message);
+  }
+};
+
+// Refresh Sequelize table cache to ensure latest schema
+const refreshTableCache = async (sequelize) => {
+  try {
+    console.log('🔄 Refreshing Sequelize table cache...');
+    // Force Sequelize to reload table information
+    await sequelize.getQueryInterface().showAllTables();
+    console.log('✅ Table cache refreshed');
+  } catch (error) {
+    console.log('⚠️  Error refreshing table cache:', error.message);
   }
 };
 
@@ -833,6 +880,8 @@ const initializeTables = async () => {
         console.log('🔄 Checking for missing columns...');
         await addMissingColumns(sequelize);
         await addMissingAccessCodesColumns(sequelize);
+        await addMissingExamsColumns(sequelize);
+        await refreshTableCache(sequelize);
       }
       
       // Create admin user after ensuring all tables and columns exist
