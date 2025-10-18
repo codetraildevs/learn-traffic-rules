@@ -205,6 +205,7 @@ const createAllMySQLTables = async (sequelize) => {
         isActive BOOLEAN DEFAULT true,
         isBlocked BOOLEAN DEFAULT false,
         blockReason TEXT NULL,
+        blockedAt TIMESTAMP NULL,
         lastLogin TIMESTAMP NULL,
         lastSyncAt TIMESTAMP NULL,
         resetCode VARCHAR(255) NULL,
@@ -429,7 +430,7 @@ const addMissingColumns = async (sequelize) => {
       FROM INFORMATION_SCHEMA.COLUMNS 
       WHERE TABLE_SCHEMA = DATABASE() 
       AND TABLE_NAME = 'users' 
-      AND COLUMN_NAME IN ('isBlocked', 'blockReason', 'lastSyncAt', 'resetCode', 'resetCodeExpires')
+      AND COLUMN_NAME IN ('isBlocked', 'blockReason', 'blockedAt', 'lastSyncAt', 'resetCode', 'resetCodeExpires')
     `);
     
     const existingColumns = checkColumns[0].map(row => row.COLUMN_NAME);
@@ -438,6 +439,7 @@ const addMissingColumns = async (sequelize) => {
     const columnsToAdd = [
       { name: 'isBlocked', type: 'BOOLEAN DEFAULT false' },
       { name: 'blockReason', type: 'TEXT NULL' },
+      { name: 'blockedAt', type: 'TIMESTAMP NULL' },
       { name: 'lastSyncAt', type: 'TIMESTAMP NULL' },
       { name: 'resetCode', type: 'VARCHAR(255) NULL' },
       { name: 'resetCodeExpires', type: 'TIMESTAMP NULL' }
@@ -628,7 +630,7 @@ const createMySQLTables = async (sequelize) => {
       
       if (adminExists.length === 0) {
         await sequelize.query(`
-          INSERT INTO users (id, fullName, phoneNumber, deviceId, role, isActive, isBlocked, blockReason, lastSyncAt, resetCode, resetCodeExpires, createdAt, updatedAt)
+          INSERT INTO users (id, fullName, phoneNumber, deviceId, role, isActive, isBlocked, blockReason, blockedAt, lastSyncAt, resetCode, resetCodeExpires, createdAt, updatedAt)
           VALUES (
             'admin-user-uuid-12345678901234567890123456789012',
             'Admin User',
@@ -637,6 +639,7 @@ const createMySQLTables = async (sequelize) => {
             'ADMIN',
             true,
             false,
+            NULL,
             NULL,
             NULL,
             NULL,
