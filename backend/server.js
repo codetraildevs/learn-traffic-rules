@@ -35,6 +35,9 @@ if (process.env.JWT_SECRET) {
   console.log('🔍 .env file exists:', require('fs').existsSync('.env'));
 }
 
+// Trust proxy for rate limiting behind reverse proxy
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 app.use(cors({
