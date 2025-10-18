@@ -430,6 +430,15 @@ const startServer = async () => {
       if (!dbConnected) {
         console.log(`⚠️  WARNING: Database is not connected. Some features may not work.`);
       }
+    }).on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use. Please stop the existing process or use a different port.`);
+        console.error(`💡 Try running: pm2 stop learn-traffic-rules-backend && pm2 start learn-traffic-rules-backend`);
+        console.error(`💡 Or kill the process using port ${PORT}: lsof -ti:${PORT} | xargs kill -9`);
+      } else {
+        console.error(`❌ Server failed to start:`, err.message);
+      }
+      process.exit(1);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);

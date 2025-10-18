@@ -204,6 +204,8 @@ const createAllMySQLTables = async (sequelize) => {
         role ENUM('USER', 'ADMIN') DEFAULT 'USER',
         isActive BOOLEAN DEFAULT true,
         lastLogin TIMESTAMP NULL,
+        resetCode VARCHAR(255) NULL,
+        resetCodeExpires TIMESTAMP NULL,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
@@ -403,11 +405,41 @@ const createAllMySQLTables = async (sequelize) => {
       }
     }
     
+    // Add missing columns to existing tables
+    console.log('🔄 Checking for missing columns in existing tables...');
+    await addMissingColumns(sequelize);
+    
     console.log('🎉 All MySQL tables created successfully!');
     
   } catch (error) {
     console.error('❌ MySQL table creation failed:', error.message);
     throw error;
+  }
+};
+
+// Add missing columns to existing tables
+const addMissingColumns = async (sequelize) => {
+  try {
+    const alterQueries = [
+      // Add resetCode columns to users table if they don't exist
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS resetCode VARCHAR(255) NULL`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS resetCodeExpires TIMESTAMP NULL`
+    ];
+    
+    for (const query of alterQueries) {
+      try {
+        await sequelize.query(query);
+        console.log('✅ Column added successfully');
+      } catch (error) {
+        if (error.message.includes('Duplicate column name') || error.message.includes('already exists')) {
+          console.log('⚠️  Column already exists, skipping');
+        } else {
+          console.log('⚠️  Column addition failed:', error.message);
+        }
+      }
+    }
+  } catch (error) {
+    console.log('⚠️  Error adding missing columns:', error.message);
   }
 };
 
@@ -578,7 +610,7 @@ const createMySQLTables = async (sequelize) => {
       
       if (adminExists.length === 0) {
         await sequelize.query(`
-          INSERT INTO users (id, fullName, phoneNumber, deviceId, role, isActive, createdAt, updatedAt)
+          INSERT INTO users (id, fullName, phoneNumber, deviceId, role, isActive, resetCode, resetCodeExpires, createdAt, updatedAt)
           VALUES (
             'admin-user-uuid-12345678901234567890123456789012',
             'Admin User',
@@ -586,6 +618,8 @@ const createMySQLTables = async (sequelize) => {
             'admin-device-bypass',
             'ADMIN',
             true,
+            NULL,
+            NULL,
             NOW(),
             NOW()
           )
@@ -731,6 +765,9 @@ const initializeTables = async () => {
         await createAllMySQLTables(sequelize);
       } else {
         console.log('✅ All required tables exist');
+        // Still check for missing columns in existing tables
+        console.log('🔄 Checking for missing columns...');
+        await addMissingColumns(sequelize);
       }
       
     } catch (error) {
