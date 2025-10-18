@@ -204,6 +204,7 @@ const createAllMySQLTables = async (sequelize) => {
         role ENUM('USER', 'ADMIN') DEFAULT 'USER',
         isActive BOOLEAN DEFAULT true,
         lastLogin TIMESTAMP NULL,
+        lastSyncAt TIMESTAMP NULL,
         resetCode VARCHAR(255) NULL,
         resetCodeExpires TIMESTAMP NULL,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -426,13 +427,14 @@ const addMissingColumns = async (sequelize) => {
       FROM INFORMATION_SCHEMA.COLUMNS 
       WHERE TABLE_SCHEMA = DATABASE() 
       AND TABLE_NAME = 'users' 
-      AND COLUMN_NAME IN ('resetCode', 'resetCodeExpires')
+      AND COLUMN_NAME IN ('lastSyncAt', 'resetCode', 'resetCodeExpires')
     `);
     
     const existingColumns = checkColumns[0].map(row => row.COLUMN_NAME);
     console.log('📋 Existing columns in users table:', existingColumns);
     
     const columnsToAdd = [
+      { name: 'lastSyncAt', type: 'TIMESTAMP NULL' },
       { name: 'resetCode', type: 'VARCHAR(255) NULL' },
       { name: 'resetCodeExpires', type: 'TIMESTAMP NULL' }
     ];
@@ -622,7 +624,7 @@ const createMySQLTables = async (sequelize) => {
       
       if (adminExists.length === 0) {
         await sequelize.query(`
-          INSERT INTO users (id, fullName, phoneNumber, deviceId, role, isActive, resetCode, resetCodeExpires, createdAt, updatedAt)
+          INSERT INTO users (id, fullName, phoneNumber, deviceId, role, isActive, lastSyncAt, resetCode, resetCodeExpires, createdAt, updatedAt)
           VALUES (
             'admin-user-uuid-12345678901234567890123456789012',
             'Admin User',
@@ -630,6 +632,7 @@ const createMySQLTables = async (sequelize) => {
             'admin-device-bypass',
             'ADMIN',
             true,
+            NULL,
             NULL,
             NULL,
             NOW(),
