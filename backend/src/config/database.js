@@ -471,7 +471,7 @@ const createAdminUser = async (sequelize) => {
     const adminExists = await sequelize.query(
       'SELECT id FROM users WHERE phoneNumber = ?',
       { 
-        replacements: ['0721234567'],
+        replacements: ['0781234567'],
         type: Sequelize.QueryTypes.SELECT 
       }
     );
@@ -483,7 +483,7 @@ const createAdminUser = async (sequelize) => {
         VALUES (
           'admin-user-uuid-12345678901234567890123456789012',
           'Admin User',
-          '0721234567',
+          '0781234567',
           'admin-device-bypass',
           'ADMIN',
           true,
