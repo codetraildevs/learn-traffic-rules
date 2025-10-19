@@ -868,12 +868,12 @@ class ExamController {
         score: score,
         totalQuestions: totalQuestions,
         correctAnswers: correctAnswers,
-        incorrectAnswers: totalQuestions - correctAnswers,
         timeSpent: timeSpent,
         passed: passed,
         isFreeExam: isFreeExam,
         answers: userAnswers,
-        questionResults: questionResults
+        questionResults: questionResults,
+        completedAt: new Date()
       });
 
       const responseData = {
