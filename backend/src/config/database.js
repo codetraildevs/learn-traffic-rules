@@ -241,6 +241,7 @@ const createAllMySQLTables = async (sequelize) => {
         correctAnswer TEXT NOT NULL,
         points INTEGER DEFAULT 1,
         questionOrder INTEGER DEFAULT 1,
+        questionImgUrl VARCHAR(500) NULL,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
@@ -256,6 +257,7 @@ const createAllMySQLTables = async (sequelize) => {
         timeSpent INTEGER NOT NULL,
         passed BOOLEAN NOT NULL,
         isFreeExam BOOLEAN DEFAULT false,
+        questionResults JSON NULL,
         submittedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -282,6 +284,7 @@ const createAllMySQLTables = async (sequelize) => {
         examId CHAR(36),
         isUsed BOOLEAN DEFAULT false,
         paymentTier VARCHAR(50) DEFAULT 'BASIC',
+        generatedByManagerId CHAR(36) NULL,
         expiresAt TIMESTAMP NULL,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -416,6 +419,9 @@ const createAllMySQLTables = async (sequelize) => {
     await addMissingColumns(sequelize);
     await addMissingAccessCodesColumns(sequelize);
     await addMissingExamsColumns(sequelize);
+    await addMissingQuestionsColumns(sequelize);
+    await addMissingExamResultsColumns(sequelize);
+    await addMissingAccessCodesAdditionalColumns(sequelize);
     await refreshTableCache(sequelize);
     
     console.log('🎉 All MySQL tables created successfully!');
@@ -529,6 +535,102 @@ const addMissingExamsColumns = async (sequelize) => {
     }
   } catch (error) {
     console.log('⚠️  Error checking/adding missing columns in exams:', error.message);
+  }
+};
+
+// Add missing columns to questions table
+const addMissingQuestionsColumns = async (sequelize) => {
+  try {
+    console.log('🔄 Checking for missing columns in questions table...');
+    
+    const checkColumns = await sequelize.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'questions' 
+      AND COLUMN_NAME = 'questionImgUrl'
+    `);
+    
+    const existingColumns = checkColumns[0].map(row => row.COLUMN_NAME);
+    console.log('📋 Existing columns in questions table:', existingColumns);
+    
+    if (!existingColumns.includes('questionImgUrl')) {
+      try {
+        console.log('🔄 Adding column: questionImgUrl');
+        await sequelize.query(`ALTER TABLE questions ADD COLUMN questionImgUrl VARCHAR(500) NULL`);
+        console.log('✅ Column questionImgUrl added successfully');
+      } catch (error) {
+        console.log('⚠️  Failed to add column questionImgUrl:', error.message);
+      }
+    } else {
+      console.log('✅ Column questionImgUrl already exists, skipping');
+    }
+  } catch (error) {
+    console.log('⚠️  Error checking/adding missing columns in questions:', error.message);
+  }
+};
+
+// Add missing columns to exam_results table
+const addMissingExamResultsColumns = async (sequelize) => {
+  try {
+    console.log('🔄 Checking for missing columns in exam_results table...');
+    
+    const checkColumns = await sequelize.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'exam_results' 
+      AND COLUMN_NAME = 'questionResults'
+    `);
+    
+    const existingColumns = checkColumns[0].map(row => row.COLUMN_NAME);
+    console.log('📋 Existing columns in exam_results table:', existingColumns);
+    
+    if (!existingColumns.includes('questionResults')) {
+      try {
+        console.log('🔄 Adding column: questionResults');
+        await sequelize.query(`ALTER TABLE exam_results ADD COLUMN questionResults JSON NULL`);
+        console.log('✅ Column questionResults added successfully');
+      } catch (error) {
+        console.log('⚠️  Failed to add column questionResults:', error.message);
+      }
+    } else {
+      console.log('✅ Column questionResults already exists, skipping');
+    }
+  } catch (error) {
+    console.log('⚠️  Error checking/adding missing columns in exam_results:', error.message);
+  }
+};
+
+// Add missing columns to access_codes table (additional columns)
+const addMissingAccessCodesAdditionalColumns = async (sequelize) => {
+  try {
+    console.log('🔄 Checking for additional missing columns in access_codes table...');
+    
+    const checkColumns = await sequelize.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'access_codes' 
+      AND COLUMN_NAME IN ('generatedByManagerId')
+    `);
+    
+    const existingColumns = checkColumns[0].map(row => row.COLUMN_NAME);
+    console.log('📋 Existing additional columns in access_codes table:', existingColumns);
+    
+    if (!existingColumns.includes('generatedByManagerId')) {
+      try {
+        console.log('🔄 Adding column: generatedByManagerId');
+        await sequelize.query(`ALTER TABLE access_codes ADD COLUMN generatedByManagerId CHAR(36) NULL`);
+        console.log('✅ Column generatedByManagerId added successfully');
+      } catch (error) {
+        console.log('⚠️  Failed to add column generatedByManagerId:', error.message);
+      }
+    } else {
+      console.log('✅ Column generatedByManagerId already exists, skipping');
+    }
+  } catch (error) {
+    console.log('⚠️  Error checking/adding additional missing columns in access_codes:', error.message);
   }
 };
 
@@ -881,6 +983,9 @@ const initializeTables = async () => {
         await addMissingColumns(sequelize);
         await addMissingAccessCodesColumns(sequelize);
         await addMissingExamsColumns(sequelize);
+        await addMissingQuestionsColumns(sequelize);
+        await addMissingExamResultsColumns(sequelize);
+        await addMissingAccessCodesAdditionalColumns(sequelize);
         await refreshTableCache(sequelize);
       }
       
