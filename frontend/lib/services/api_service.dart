@@ -154,8 +154,33 @@ class ApiService {
         try {
           responseData = jsonDecode(response.body) as Map<String, dynamic>;
         } catch (e) {
+          // Handle non-JSON responses (like rate limit messages)
+          debugPrint('⚠️  Non-JSON response received: ${response.body}');
+
+          // Check if it's a rate limit error
+          if (response.statusCode == 429) {
+            throw ApiException(
+              message: 'Rate limit exceeded. Please wait before trying again.',
+              statusCode: response.statusCode,
+            );
+          }
+
+          // Check if it's a plain text error message
+          if (response.body.toLowerCase().contains('too many requests')) {
+            throw ApiException(
+              message: 'Too many requests. Please wait before trying again.',
+              statusCode: response.statusCode,
+            );
+          }
+
+          // For other non-JSON responses, try to extract meaningful error
+          String errorMessage = response.body;
+          if (errorMessage.length > 100) {
+            errorMessage = '${errorMessage.substring(0, 100)}...';
+          }
+
           throw ApiException(
-            message: 'Invalid JSON response: $e',
+            message: 'Server returned non-JSON response: $errorMessage',
             statusCode: response.statusCode,
           );
         }
@@ -177,6 +202,12 @@ class ApiService {
         retryCount++;
         debugPrint('❌ API SERVICE ERROR - Attempt $retryCount failed: $e');
 
+        // Don't retry rate limit errors (429) - they need user action
+        if (e is ApiException && e.statusCode == 429) {
+          debugPrint('🚫 Rate limit exceeded, not retrying');
+          rethrow;
+        }
+
         if (retryCount >= maxRetries) {
           if (e is ApiException) rethrow;
           throw ApiException(
@@ -186,7 +217,13 @@ class ApiService {
         }
 
         // Wait before retrying (exponential backoff)
-        await Future.delayed(Duration(seconds: retryCount * 2));
+        // Longer delay for server errors (5xx)
+        int delaySeconds = retryCount * 2;
+        if (e is ApiException && e.statusCode >= 500) {
+          delaySeconds = retryCount * 3; // Longer delay for server errors
+        }
+
+        await Future.delayed(Duration(seconds: delaySeconds));
         debugPrint(
           '🔄 API SERVICE - Retrying request (attempt ${retryCount + 1})',
         );

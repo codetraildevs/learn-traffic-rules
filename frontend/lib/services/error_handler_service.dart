@@ -69,6 +69,13 @@ class ErrorHandlerService {
       return '⏱️ Request Timeout\n\nThe request took too long to complete. Please check your connection and try again.';
     }
 
+    // Rate limit errors
+    if (errorString.contains('429') || 
+        errorString.contains('rate limit') ||
+        errorString.contains('too many requests')) {
+      return '🚫 Rate Limit Exceeded\n\nYou\'re making requests too quickly. Please wait a moment before trying again.';
+    }
+
     // API errors
     if (errorString.contains('apiexception')) {
       return '🔧 API Error\n\nThere was a problem with the server. Please try again.';
@@ -111,6 +118,12 @@ class ErrorHandlerService {
       return 'Request timeout';
     }
 
+    if (errorString.contains('429') || 
+        errorString.contains('rate limit') ||
+        errorString.contains('too many requests')) {
+      return 'Too many requests';
+    }
+
     return 'Something went wrong';
   }
 
@@ -142,6 +155,12 @@ class ErrorHandlerService {
 
     if (errorString.contains('timeout')) {
       return '⏱️';
+    }
+
+    if (errorString.contains('429') || 
+        errorString.contains('rate limit') ||
+        errorString.contains('too many requests')) {
+      return '🚫';
     }
 
     return '❌';
