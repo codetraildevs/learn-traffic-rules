@@ -48,25 +48,33 @@ class OfflineController {
           category: exam.category,
           difficulty: exam.difficulty,
           duration: exam.duration,
-          questionCount: exam.questionCount,
           passingScore: exam.passingScore,
           examImgUrl: exam.examImgUrl,
+          isActive: exam.isActive,
+          createdAt: exam.createdAt,
           lastUpdated: exam.updatedAt
         },
         questions: exam.questions.map(q => ({
           id: q.id,
+          examId: q.examId,
           question: q.question,
-          options: q.options,
+          option1: q.option1,
+          option2: q.option2,
+          option3: q.option3,
+          option4: q.option4,
           correctAnswer: q.correctAnswer,
-          explanation: q.explanation,
-          difficulty: q.difficulty,
           points: q.points,
-          imageUrl: q.imageUrl,
+          questionOrder: q.questionOrder,
           questionImgUrl: q.questionImgUrl,
+          createdAt: q.createdAt,
           lastUpdated: q.updatedAt
         })),
-        downloadedAt: new Date(),
-        version: 1 // Increment when data changes
+        metadata: {
+          downloadedAt: new Date(),
+          version: 1,
+          totalQuestions: exam.questions.length,
+          examId: exam.id
+        }
       };
 
       res.json({
@@ -121,25 +129,33 @@ class OfflineController {
           category: exam.category,
           difficulty: exam.difficulty,
           duration: exam.duration,
-          questionCount: exam.questionCount,
           passingScore: exam.passingScore,
           examImgUrl: exam.examImgUrl,
+          isActive: exam.isActive,
+          createdAt: exam.createdAt,
           lastUpdated: exam.updatedAt,
           questions: exam.questions.map(q => ({
             id: q.id,
+            examId: q.examId,
             question: q.question,
-            options: q.options,
+            option1: q.option1,
+            option2: q.option2,
+            option3: q.option3,
+            option4: q.option4,
             correctAnswer: q.correctAnswer,
-            explanation: q.explanation,
-            difficulty: q.difficulty,
             points: q.points,
-            imageUrl: q.imageUrl,
+            questionOrder: q.questionOrder,
             questionImgUrl: q.questionImgUrl,
+            createdAt: q.createdAt,
             lastUpdated: q.updatedAt
           }))
         })),
-        downloadedAt: new Date(),
-        version: 1
+        metadata: {
+          downloadedAt: new Date(),
+          version: 1,
+          totalExams: exams.length,
+          totalQuestions: exams.reduce((sum, exam) => sum + exam.questions.length, 0)
+        }
       };
 
       res.json({
@@ -385,6 +401,217 @@ class OfflineController {
         error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
+  }
+
+  /**
+   * Download free exams for offline use (no access required)
+   */
+  async downloadFreeExams(req, res) {
+    try {
+      const userId = req.user.userId;
+
+      // Get first 2 exams (free exams) with questions
+      const freeExams = await Exam.findAll({
+        where: { isActive: true },
+        include: [{
+          model: Question,
+          as: 'questions',
+          required: false
+        }],
+        order: [['createdAt', 'ASC'], ['id', 'ASC']],
+        limit: 2
+      });
+
+      // Prepare offline data for free exams
+      const offlineData = {
+        exams: freeExams.map(exam => ({
+          id: exam.id,
+          title: exam.title,
+          description: exam.description,
+          category: exam.category,
+          difficulty: exam.difficulty,
+          duration: exam.duration,
+          passingScore: exam.passingScore,
+          examImgUrl: exam.examImgUrl,
+          isActive: exam.isActive,
+          isFree: true,
+          createdAt: exam.createdAt,
+          lastUpdated: exam.updatedAt,
+          questions: exam.questions.map(q => ({
+            id: q.id,
+            examId: q.examId,
+            question: q.question,
+            option1: q.option1,
+            option2: q.option2,
+            option3: q.option3,
+            option4: q.option4,
+            correctAnswer: q.correctAnswer,
+            points: q.points,
+            questionOrder: q.questionOrder,
+            questionImgUrl: q.questionImgUrl,
+            createdAt: q.createdAt,
+            lastUpdated: q.updatedAt
+          }))
+        })),
+        metadata: {
+          downloadedAt: new Date(),
+          version: 1,
+          totalExams: freeExams.length,
+          totalQuestions: freeExams.reduce((sum, exam) => sum + exam.questions.length, 0),
+          isFreeContent: true
+        }
+      };
+
+      res.json({
+        success: true,
+        message: 'Free exams downloaded successfully',
+        data: offlineData
+      });
+
+    } catch (error) {
+      console.error('Download free exams error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  /**
+   * Get offline exam summary (for checking what's available offline)
+   */
+  async getOfflineSummary(req, res) {
+    try {
+      const userId = req.user.userId;
+
+      // Get user's access status
+      const hasAccess = await this.checkUserAccess(userId);
+
+      // Get exam counts
+      const totalExams = await Exam.count({ where: { isActive: true } });
+      const freeExamsCount = Math.min(2, totalExams); // First 2 exams are free
+      const premiumExamsCount = Math.max(0, totalExams - 2);
+
+      // Get user's last sync time
+      const user = await User.findByPk(userId, {
+        attributes: ['id', 'lastSyncAt']
+      });
+
+      res.json({
+        success: true,
+        data: {
+          hasAccess,
+          totalExams,
+          freeExamsCount,
+          premiumExamsCount,
+          lastSyncAt: user.lastSyncAt,
+          offlineCapabilities: {
+            canDownloadFreeExams: true,
+            canDownloadAllExams: hasAccess,
+            canSyncResults: true,
+            canCheckUpdates: true
+          }
+        }
+      });
+
+    } catch (error) {
+      console.error('Get offline summary error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  /**
+   * Validate offline exam result before syncing
+   */
+  async validateOfflineResult(req, res) {
+    try {
+      const { examId, answers, score, timeSpent } = req.body;
+
+      // Validate exam exists
+      const exam = await Exam.findByPk(examId);
+      if (!exam) {
+        return res.status(404).json({
+          success: false,
+          message: 'Exam not found'
+        });
+      }
+
+      // Get exam questions to validate answers
+      const questions = await Question.findAll({
+        where: { examId: examId },
+        order: [['questionOrder', 'ASC']]
+      });
+
+      // Validate answers structure
+      const validationResult = this.validateAnswersStructure(answers, questions);
+
+      res.json({
+        success: true,
+        data: {
+          isValid: validationResult.isValid,
+          validationErrors: validationResult.errors,
+          examInfo: {
+            id: exam.id,
+            title: exam.title,
+            totalQuestions: questions.length,
+            passingScore: exam.passingScore
+          }
+        }
+      });
+
+    } catch (error) {
+      console.error('Validate offline result error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  /**
+   * Helper method to validate answers structure
+   */
+  validateAnswersStructure(answers, questions) {
+    const errors = [];
+
+    if (!Array.isArray(answers)) {
+      errors.push('Answers must be an array');
+      return { isValid: false, errors };
+    }
+
+    if (answers.length !== questions.length) {
+      errors.push(`Expected ${questions.length} answers, got ${answers.length}`);
+    }
+
+    answers.forEach((answer, index) => {
+      const question = questions[index];
+      if (!question) return;
+
+      if (!answer.questionId || answer.questionId !== question.id) {
+        errors.push(`Answer ${index + 1}: Invalid question ID`);
+      }
+
+      if (!answer.selectedAnswer) {
+        errors.push(`Answer ${index + 1}: No answer selected`);
+      }
+
+      // Validate selected answer is one of the options
+      const validOptions = [question.option1, question.option2, question.option3, question.option4];
+      if (answer.selectedAnswer && !validOptions.includes(answer.selectedAnswer)) {
+        errors.push(`Answer ${index + 1}: Invalid answer option`);
+      }
+    });
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 
   /**

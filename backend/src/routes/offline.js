@@ -352,4 +352,174 @@ router.post('/update-sync',
   offlineController.updateLastSync
 );
 
+/**
+ * @swagger
+ * /api/offline/download/free:
+ *   get:
+ *     summary: Download free exams for offline use (no access required)
+ *     tags: [Offline]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Free exams downloaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     exams:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/OfflineExamData'
+ *                     metadata:
+ *                       type: object
+ *                       properties:
+ *                         downloadedAt:
+ *                           type: string
+ *                           format: date-time
+ *                         version:
+ *                           type: integer
+ *                         totalExams:
+ *                           type: integer
+ *                         totalQuestions:
+ *                           type: integer
+ *                         isFreeContent:
+ *                           type: boolean
+ */
+router.get('/download/free',
+  authMiddleware.authenticate,
+  offlineController.downloadFreeExams
+);
+
+/**
+ * @swagger
+ * /api/offline/summary:
+ *   get:
+ *     summary: Get offline capabilities summary
+ *     tags: [Offline]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Offline summary retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     hasAccess:
+ *                       type: boolean
+ *                     totalExams:
+ *                       type: integer
+ *                     freeExamsCount:
+ *                       type: integer
+ *                     premiumExamsCount:
+ *                       type: integer
+ *                     lastSyncAt:
+ *                       type: string
+ *                       format: date-time
+ *                     offlineCapabilities:
+ *                       type: object
+ *                       properties:
+ *                         canDownloadFreeExams:
+ *                           type: boolean
+ *                         canDownloadAllExams:
+ *                           type: boolean
+ *                         canSyncResults:
+ *                           type: boolean
+ *                         canCheckUpdates:
+ *                           type: boolean
+ */
+router.get('/summary',
+  authMiddleware.authenticate,
+  offlineController.getOfflineSummary
+);
+
+/**
+ * @swagger
+ * /api/offline/validate-result:
+ *   post:
+ *     summary: Validate offline exam result before syncing
+ *     tags: [Offline]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               examId:
+ *                 type: string
+ *               answers:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     questionId:
+ *                       type: string
+ *                     selectedAnswer:
+ *                       type: string
+ *               score:
+ *                 type: number
+ *               timeSpent:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Validation completed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     isValid:
+ *                       type: boolean
+ *                     validationErrors:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     examInfo:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         title:
+ *                           type: string
+ *                         totalQuestions:
+ *                           type: integer
+ *                         passingScore:
+ *                           type: integer
+ *       404:
+ *         description: Exam not found
+ */
+router.post('/validate-result',
+  authMiddleware.authenticate,
+  [
+    body('examId').isUUID().withMessage('Invalid exam ID'),
+    body('answers').isArray().withMessage('Answers must be an array'),
+    body('score').isNumeric().withMessage('Score must be numeric'),
+    body('timeSpent').isInt().withMessage('Time spent must be an integer')
+  ],
+  offlineController.validateOfflineResult
+);
+
 module.exports = router;
