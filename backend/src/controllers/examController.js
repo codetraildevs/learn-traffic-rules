@@ -218,15 +218,21 @@ class ExamController {
       const allExams = await Exam.findAll({
         where: { isActive: true },
         order: [['createdAt', 'ASC']],
-        attributes: ['id', 'title']
+        attributes: ['id', 'title', 'createdAt']
       });
 
-      console.log('   All active exams:', allExams.map(exam => ({ id: exam.id, title: exam.title })));
+      console.log('   All active exams:', allExams.map(exam => ({ id: exam.id, title: exam.title, createdAt: exam.createdAt })));
       console.log('   First 2 exam IDs:', allExams.slice(0, 2).map(exam => exam.id));
       console.log('   Current exam ID:', id);
 
       const isFirstTwoExam = allExams.slice(0, 2).some(exam => exam.id === id);
       console.log('   Is first 2 exam:', isFirstTwoExam);
+      
+      // Additional debugging for exam access
+      if (allExams.length >= 2) {
+        console.log('   First exam:', { id: allExams[0].id, title: allExams[0].title });
+        console.log('   Second exam:', { id: allExams[1].id, title: allExams[1].title });
+      }
 
       // Allow access if user has paid access OR if it's one of the first 2 exams
       if (!hasAccess && !isFirstTwoExam) {
@@ -742,15 +748,21 @@ class ExamController {
       const allExams = await Exam.findAll({
         where: { isActive: true },
         order: [['createdAt', 'ASC']],
-        attributes: ['id', 'title']
+        attributes: ['id', 'title', 'createdAt']
       });
 
-      console.log('   All active exams:', allExams.map(exam => ({ id: exam.id, title: exam.title })));
+      console.log('   All active exams:', allExams.map(exam => ({ id: exam.id, title: exam.title, createdAt: exam.createdAt })));
       console.log('   First 2 exam IDs:', allExams.slice(0, 2).map(exam => exam.id));
       console.log('   Current exam ID:', examId);
 
       const isFirstTwoExam = allExams.slice(0, 2).some(exam => exam.id === examId);
       console.log('   Is first 2 exam:', isFirstTwoExam);
+      
+      // Additional debugging for exam access
+      if (allExams.length >= 2) {
+        console.log('   First exam:', { id: allExams[0].id, title: allExams[0].title });
+        console.log('   Second exam:', { id: allExams[1].id, title: allExams[1].title });
+      }
 
       // Check if user has paid access
       const hasAccess = await AccessCode.findOne({

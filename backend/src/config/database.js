@@ -258,7 +258,8 @@ const createAllMySQLTables = async (sequelize) => {
         passed BOOLEAN NOT NULL,
         isFreeExam BOOLEAN DEFAULT false,
         questionResults JSON NULL,
-        submittedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        answers JSON NULL,
+        completedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
@@ -587,12 +588,13 @@ const addMissingExamResultsColumns = async (sequelize) => {
       FROM INFORMATION_SCHEMA.COLUMNS 
       WHERE TABLE_SCHEMA = DATABASE() 
       AND TABLE_NAME = 'exam_results' 
-      AND COLUMN_NAME = 'questionResults'
+      AND COLUMN_NAME IN ('questionResults', 'answers', 'completedAt')
     `);
     
     const existingColumns = checkColumns[0].map(row => row.COLUMN_NAME);
     console.log('📋 Existing columns in exam_results table:', existingColumns);
     
+    // Add questionResults column if missing
     if (!existingColumns.includes('questionResults')) {
       try {
         console.log('🔄 Adding column: questionResults');
@@ -604,6 +606,41 @@ const addMissingExamResultsColumns = async (sequelize) => {
     } else {
       console.log('✅ Column questionResults already exists, skipping');
     }
+    
+    // Add answers column if missing
+    if (!existingColumns.includes('answers')) {
+      try {
+        console.log('🔄 Adding column: answers');
+        await sequelize.query(`ALTER TABLE exam_results ADD COLUMN answers JSON NULL`);
+        console.log('✅ Column answers added successfully');
+      } catch (error) {
+        console.log('⚠️  Failed to add column answers:', error.message);
+      }
+    } else {
+      console.log('✅ Column answers already exists, skipping');
+    }
+    
+    // Check if submittedAt exists and needs to be renamed to completedAt
+    const checkSubmittedAt = await sequelize.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'exam_results' 
+      AND COLUMN_NAME = 'submittedAt'
+    `);
+    
+    if (checkSubmittedAt[0].length > 0 && !existingColumns.includes('completedAt')) {
+      try {
+        console.log('🔄 Renaming column: submittedAt to completedAt');
+        await sequelize.query(`ALTER TABLE exam_results CHANGE COLUMN submittedAt completedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`);
+        console.log('✅ Column renamed from submittedAt to completedAt successfully');
+      } catch (error) {
+        console.log('⚠️  Failed to rename column submittedAt:', error.message);
+      }
+    } else if (existingColumns.includes('completedAt')) {
+      console.log('✅ Column completedAt already exists, skipping rename');
+    }
+    
   } catch (error) {
     console.log('⚠️  Error checking/adding missing columns in exam_results:', error.message);
   }
