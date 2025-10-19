@@ -45,11 +45,21 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiting
+// Rate limiting - More generous limits for mobile app
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  max: 5000, // limit each IP to 5000 requests per windowMs (increased from 100)
+  message: {
+    error: 'Rate limit exceeded',
+    message: 'Too many requests from this IP, please try again later.',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  skip: (req) => {
+    // Skip rate limiting for health checks
+    return req.path === '/health' || req.path === '/api/health';
+  }
 });
 app.use('/api/', limiter);
 
@@ -337,6 +347,37 @@ app.use('/api/analytics', require('./src/routes/analytics'));
 app.use('/api/notifications', require('./src/routes/notifications'));
 app.use('/api/achievements', require('./src/routes/achievements'));
 console.log('✅ All API routes loaded');
+
+// Error handling middleware - must be after routes
+app.use((err, req, res, next) => {
+  console.error('🚨 Unhandled error:', err);
+  
+  // Handle rate limit errors specifically
+  if (err.status === 429) {
+    return res.status(429).json({
+      success: false,
+      error: 'Rate limit exceeded',
+      message: 'Too many requests from this IP, please try again later.',
+      retryAfter: '15 minutes'
+    });
+  }
+  
+  // Handle JSON parsing errors
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid JSON',
+      message: 'Request body contains invalid JSON'
+    });
+  }
+  
+  // Handle other errors
+  res.status(err.status || 500).json({
+    success: false,
+    error: err.name || 'Internal Server Error',
+    message: err.message || 'An unexpected error occurred'
+  });
+});
 
 // Root endpoint
 app.get('/', (req, res) => {
