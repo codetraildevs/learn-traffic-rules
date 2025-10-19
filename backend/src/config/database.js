@@ -337,12 +337,17 @@ const createAllMySQLTables = async (sequelize) => {
         userId CHAR(36) NOT NULL UNIQUE,
         pushNotifications BOOLEAN DEFAULT true,
         smsNotifications BOOLEAN DEFAULT true,
-        studyReminders BOOLEAN DEFAULT true,
         examReminders BOOLEAN DEFAULT true,
-        achievementAlerts BOOLEAN DEFAULT true,
-        paymentNotifications BOOLEAN DEFAULT true,
-        systemUpdates BOOLEAN DEFAULT true,
+        paymentUpdates BOOLEAN DEFAULT true,
+        systemAnnouncements BOOLEAN DEFAULT true,
+        studyReminders BOOLEAN DEFAULT true,
+        achievementNotifications BOOLEAN DEFAULT true,
         weeklyReports BOOLEAN DEFAULT true,
+        quietHoursEnabled BOOLEAN DEFAULT true,
+        quietHoursStart TIME DEFAULT '22:00:00',
+        quietHoursEnd TIME DEFAULT '07:00:00',
+        vibrationEnabled BOOLEAN DEFAULT true,
+        soundEnabled BOOLEAN DEFAULT true,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`
@@ -703,22 +708,36 @@ const addMissingNotificationPreferencesColumns = async (sequelize) => {
       FROM INFORMATION_SCHEMA.COLUMNS 
       WHERE TABLE_SCHEMA = DATABASE() 
       AND TABLE_NAME = 'notificationpreferences' 
-      AND COLUMN_NAME = 'smsNotifications'
+      AND COLUMN_NAME IN ('smsNotifications', 'paymentUpdates', 'systemAnnouncements', 'achievementNotifications', 'quietHoursEnabled', 'quietHoursStart', 'quietHoursEnd', 'vibrationEnabled', 'soundEnabled')
     `);
     
     const existingColumns = checkColumns[0].map(row => row.COLUMN_NAME);
     console.log('📋 Existing columns in notificationpreferences table:', existingColumns);
     
-    if (!existingColumns.includes('smsNotifications')) {
-      try {
-        console.log('🔄 Adding column: smsNotifications');
-        await sequelize.query(`ALTER TABLE notificationpreferences ADD COLUMN smsNotifications BOOLEAN DEFAULT true`);
-        console.log('✅ Column smsNotifications added successfully');
-      } catch (error) {
-        console.log('⚠️  Failed to add column smsNotifications:', error.message);
+    const columnsToAdd = [
+      { name: 'smsNotifications', sql: 'BOOLEAN DEFAULT true' },
+      { name: 'paymentUpdates', sql: 'BOOLEAN DEFAULT true' },
+      { name: 'systemAnnouncements', sql: 'BOOLEAN DEFAULT true' },
+      { name: 'achievementNotifications', sql: 'BOOLEAN DEFAULT true' },
+      { name: 'quietHoursEnabled', sql: 'BOOLEAN DEFAULT true' },
+      { name: 'quietHoursStart', sql: "TIME DEFAULT '22:00:00'" },
+      { name: 'quietHoursEnd', sql: "TIME DEFAULT '07:00:00'" },
+      { name: 'vibrationEnabled', sql: 'BOOLEAN DEFAULT true' },
+      { name: 'soundEnabled', sql: 'BOOLEAN DEFAULT true' }
+    ];
+    
+    for (const column of columnsToAdd) {
+      if (!existingColumns.includes(column.name)) {
+        try {
+          console.log(`🔄 Adding column: ${column.name}`);
+          await sequelize.query(`ALTER TABLE notificationpreferences ADD COLUMN ${column.name} ${column.sql}`);
+          console.log(`✅ Column ${column.name} added successfully`);
+        } catch (error) {
+          console.log(`⚠️  Failed to add column ${column.name}:`, error.message);
+        }
+      } else {
+        console.log(`✅ Column ${column.name} already exists, skipping`);
       }
-    } else {
-      console.log('✅ Column smsNotifications already exists, skipping');
     }
   } catch (error) {
     console.log('⚠️  Error checking/adding missing columns in notificationpreferences:', error.message);
@@ -827,12 +846,17 @@ const createMySQLTables = async (sequelize) => {
         userId CHAR(36) NOT NULL UNIQUE,
         pushNotifications BOOLEAN DEFAULT true,
         smsNotifications BOOLEAN DEFAULT true,
-        studyReminders BOOLEAN DEFAULT true,
         examReminders BOOLEAN DEFAULT true,
-        achievementAlerts BOOLEAN DEFAULT true,
-        paymentNotifications BOOLEAN DEFAULT true,
-        systemUpdates BOOLEAN DEFAULT true,
+        paymentUpdates BOOLEAN DEFAULT true,
+        systemAnnouncements BOOLEAN DEFAULT true,
+        studyReminders BOOLEAN DEFAULT true,
+        achievementNotifications BOOLEAN DEFAULT true,
         weeklyReports BOOLEAN DEFAULT true,
+        quietHoursEnabled BOOLEAN DEFAULT true,
+        quietHoursStart TIME DEFAULT '22:00:00',
+        quietHoursEnd TIME DEFAULT '07:00:00',
+        vibrationEnabled BOOLEAN DEFAULT true,
+        soundEnabled BOOLEAN DEFAULT true,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`
