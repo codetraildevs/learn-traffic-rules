@@ -284,8 +284,15 @@ const createAllMySQLTables = async (sequelize) => {
         examId CHAR(36),
         isUsed BOOLEAN DEFAULT false,
         paymentTier VARCHAR(50) DEFAULT 'BASIC',
+        paymentAmount DECIMAL(10,2) NULL,
+        durationDays INTEGER DEFAULT 30,
         generatedByManagerId CHAR(36) NULL,
         expiresAt TIMESTAMP NULL,
+        usedAt TIMESTAMP NULL,
+        attemptCount INTEGER DEFAULT 0,
+        lastAttemptAt TIMESTAMP NULL,
+        isBlocked BOOLEAN DEFAULT false,
+        blockedUntil TIMESTAMP NULL,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
@@ -612,22 +619,35 @@ const addMissingAccessCodesAdditionalColumns = async (sequelize) => {
       FROM INFORMATION_SCHEMA.COLUMNS 
       WHERE TABLE_SCHEMA = DATABASE() 
       AND TABLE_NAME = 'access_codes' 
-      AND COLUMN_NAME IN ('generatedByManagerId')
+      AND COLUMN_NAME IN ('generatedByManagerId', 'paymentAmount', 'durationDays', 'usedAt', 'attemptCount', 'lastAttemptAt', 'isBlocked', 'blockedUntil')
     `);
     
     const existingColumns = checkColumns[0].map(row => row.COLUMN_NAME);
     console.log('📋 Existing additional columns in access_codes table:', existingColumns);
     
-    if (!existingColumns.includes('generatedByManagerId')) {
-      try {
-        console.log('🔄 Adding column: generatedByManagerId');
-        await sequelize.query(`ALTER TABLE access_codes ADD COLUMN generatedByManagerId CHAR(36) NULL`);
-        console.log('✅ Column generatedByManagerId added successfully');
-      } catch (error) {
-        console.log('⚠️  Failed to add column generatedByManagerId:', error.message);
+    const columnsToAdd = [
+      { name: 'generatedByManagerId', sql: 'CHAR(36) NULL' },
+      { name: 'paymentAmount', sql: 'DECIMAL(10,2) NULL' },
+      { name: 'durationDays', sql: 'INTEGER DEFAULT 30' },
+      { name: 'usedAt', sql: 'TIMESTAMP NULL' },
+      { name: 'attemptCount', sql: 'INTEGER DEFAULT 0' },
+      { name: 'lastAttemptAt', sql: 'TIMESTAMP NULL' },
+      { name: 'isBlocked', sql: 'BOOLEAN DEFAULT false' },
+      { name: 'blockedUntil', sql: 'TIMESTAMP NULL' }
+    ];
+    
+    for (const column of columnsToAdd) {
+      if (!existingColumns.includes(column.name)) {
+        try {
+          console.log(`🔄 Adding column: ${column.name}`);
+          await sequelize.query(`ALTER TABLE access_codes ADD COLUMN ${column.name} ${column.sql}`);
+          console.log(`✅ Column ${column.name} added successfully`);
+        } catch (error) {
+          console.log(`⚠️  Failed to add column ${column.name}:`, error.message);
+        }
+      } else {
+        console.log(`✅ Column ${column.name} already exists, skipping`);
       }
-    } else {
-      console.log('✅ Column generatedByManagerId already exists, skipping');
     }
   } catch (error) {
     console.log('⚠️  Error checking/adding additional missing columns in access_codes:', error.message);
