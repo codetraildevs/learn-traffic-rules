@@ -314,21 +314,21 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         _buildSimpleStepItem(
           '1',
           'Choose a Plan',
-          'Select from 1 Month, 3 Months, or 6 Months',
+          'Select from 1 Month =30 days, 3 Months = 90 days, or 6 Months = 180 days',
           Icons.credit_card,
         ),
         SizedBox(height: 8.h),
         _buildSimpleStepItem(
           '2',
           'Make Payment',
-          'Send money via MoMo or Bank Transfer',
+          'Send money via MoMo using the payment code provided after selecting a plan',
           Icons.payment,
         ),
         SizedBox(height: 8.h),
         _buildSimpleStepItem(
           '3',
           'Get Access Code',
-          'Contact admin to verify payment and receive code',
+          'Contact admin if exams access is not granted after payment in 5-10 minutes',
           Icons.vpn_key,
         ),
       ],
@@ -397,6 +397,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                     fontSize: 12.sp,
                     color: Colors.grey[600],
                     height: 1.2,
+                    fontStyle: FontStyle.italic,
                   ),
                 ),
               ],
@@ -680,11 +681,65 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   void _openWhatsApp(String phoneNumber) async {
-    final Uri whatsappUri = Uri.parse(
-      'https://wa.me/${phoneNumber.replaceAll('+', '')}',
-    );
-    if (await canLaunchUrl(whatsappUri)) {
-      await launchUrl(whatsappUri);
+    // Use the specific admin WhatsApp number
+    const cleanNumber = '250780494000';
+    final Uri whatsappUri = Uri.parse('https://wa.me/$cleanNumber');
+
+    debugPrint('🔍 WhatsApp URL: $whatsappUri');
+    debugPrint('🔍 Original phone: $phoneNumber');
+    debugPrint('🔍 Clean phone: $cleanNumber');
+
+    try {
+      // Try launching WhatsApp directly without checking canLaunchUrl first
+      // This often works better on Android devices
+      await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
+      debugPrint('✅ WhatsApp launched successfully');
+    } catch (e) {
+      debugPrint('❌ Direct WhatsApp launch failed: $e');
+
+      try {
+        // Fallback: try WhatsApp Web
+        final webUri = Uri.parse(
+          'https://web.whatsapp.com/send?phone=$cleanNumber',
+        );
+        debugPrint('🔄 Trying WhatsApp Web: $webUri');
+        await launchUrl(webUri, mode: LaunchMode.externalApplication);
+        debugPrint('✅ WhatsApp Web launched successfully');
+      } catch (webError) {
+        debugPrint('❌ WhatsApp Web also failed: $webError');
+
+        // Final fallback: try with different launch modes
+        try {
+          await launchUrl(whatsappUri, mode: LaunchMode.platformDefault);
+          debugPrint('✅ WhatsApp launched with platform default mode');
+        } catch (finalError) {
+          debugPrint('❌ All WhatsApp launch attempts failed: $finalError');
+          if (!mounted) return;
+
+          // Show user-friendly error with alternative options
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('WhatsApp not available. Try these alternatives:'),
+                  SizedBox(height: 4.h),
+                  const Text('• Call: +250780494000'),
+                  const Text('• WhatsApp Web: web.whatsapp.com'),
+                ],
+              ),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 5),
+              action: SnackBarAction(
+                label: 'Call Instead',
+                textColor: Colors.white,
+                onPressed: () => _makeCall('+250780494000'),
+              ),
+            ),
+          );
+        }
+      }
     }
   }
 

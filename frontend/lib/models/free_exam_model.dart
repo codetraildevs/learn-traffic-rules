@@ -141,9 +141,9 @@ class PaymentTier {
     if (days == 1) return '1 Day';
     if (days < 7) return '$days Days';
     if (days < 30) {
-      return '$days Week';
+      return '$days Days';
     }
-    return '$days Month';
+    return '$days Days';
   }
 }
 

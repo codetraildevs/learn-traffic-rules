@@ -169,28 +169,28 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
 
                   _buildContactItem(
                     'Email Support',
-                    'support@learntrafficrules.com',
+                    'support.learntrafficrules@gmail.com',
                     Icons.email,
                     () => _launchEmail(),
                   ),
 
                   _buildContactItem(
                     'Phone Support',
-                    '+1 (555) 123-4567',
+                    '+250780494000',
                     Icons.phone,
                     () => _launchPhone(),
                   ),
 
                   _buildContactItem(
                     'WhatsApp',
-                    '+1 (555) 123-4567',
+                    '+250780494000',
                     Icons.chat,
                     () => _launchWhatsApp(),
                   ),
 
                   _buildContactItem(
                     'Live Chat',
-                    'Available 9 AM - 6 PM',
+                    'Available 24/7',
                     Icons.chat_bubble,
                     () => _showLiveChatDialog(),
                   ),
@@ -482,22 +482,117 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
       path: 'support@learntrafficrules.com',
       query: 'subject=Support Request',
     );
-    if (await canLaunchUrl(emailUri)) {
-      await launchUrl(emailUri);
+
+    debugPrint('🔍 Email URI: $emailUri');
+
+    try {
+      // Try launching email directly without checking canLaunchUrl first
+      await launchUrl(emailUri, mode: LaunchMode.externalApplication);
+      debugPrint('✅ Email launched successfully');
+    } catch (e) {
+      debugPrint('❌ Direct email launch failed: $e');
+
+      try {
+        // Fallback: try with platform default mode
+        await launchUrl(emailUri, mode: LaunchMode.platformDefault);
+        debugPrint('✅ Email launched with platform default mode');
+      } catch (finalError) {
+        debugPrint('❌ All email launch attempts failed: $finalError');
+        if (!mounted) return;
+
+        // Show user-friendly error with alternative options
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Email not available. Try these alternatives:'),
+                SizedBox(height: 4.h),
+                const Text('• Call: +250780494000'),
+                const Text('• WhatsApp: +250780494000'),
+                const Text('• Manual: support@learntrafficrules.com'),
+              ],
+            ),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Call Instead',
+              textColor: Colors.white,
+              onPressed: () => _launchPhone(),
+            ),
+          ),
+        );
+      }
     }
   }
 
   void _launchPhone() async {
-    final Uri phoneUri = Uri(scheme: 'tel', path: '+15551234567');
+    final Uri phoneUri = Uri(scheme: 'tel', path: '+250780494000');
     if (await canLaunchUrl(phoneUri)) {
       await launchUrl(phoneUri);
     }
   }
 
   void _launchWhatsApp() async {
-    final Uri whatsappUri = Uri.parse('https://wa.me/15551234567');
-    if (await canLaunchUrl(whatsappUri)) {
-      await launchUrl(whatsappUri);
+    // Use the specific admin WhatsApp number
+    const cleanNumber = '250780494000';
+    final Uri whatsappUri = Uri.parse('https://wa.me/$cleanNumber');
+
+    debugPrint('🔍 WhatsApp URL: $whatsappUri');
+    debugPrint('🔍 Clean phone: $cleanNumber');
+
+    try {
+      // Try launching WhatsApp directly without checking canLaunchUrl first
+      // This often works better on Android devices
+      await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
+      debugPrint('✅ WhatsApp launched successfully');
+    } catch (e) {
+      debugPrint('❌ Direct WhatsApp launch failed: $e');
+
+      try {
+        // Fallback: try WhatsApp Web
+        final webUri = Uri.parse(
+          'https://web.whatsapp.com/send?phone=$cleanNumber',
+        );
+        debugPrint('🔄 Trying WhatsApp Web: $webUri');
+        await launchUrl(webUri, mode: LaunchMode.externalApplication);
+        debugPrint('✅ WhatsApp Web launched successfully');
+      } catch (webError) {
+        debugPrint('❌ WhatsApp Web also failed: $webError');
+
+        // Final fallback: try with different launch modes
+        try {
+          await launchUrl(whatsappUri, mode: LaunchMode.platformDefault);
+          debugPrint('✅ WhatsApp launched with platform default mode');
+        } catch (finalError) {
+          debugPrint('❌ All WhatsApp launch attempts failed: $finalError');
+          if (!mounted) return;
+
+          // Show user-friendly error with alternative options
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('WhatsApp not available. Try these alternatives:'),
+                  SizedBox(height: 4.h),
+                  const Text('• Call: +250780494000'),
+                  const Text('• WhatsApp Web: web.whatsapp.com'),
+                ],
+              ),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 5),
+              action: SnackBarAction(
+                label: 'Call Instead',
+                textColor: Colors.white,
+                onPressed: () => _launchPhone(),
+              ),
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -545,9 +640,9 @@ Payment Options:
 3. Credit/Debit Card
 
 Access Codes:
-- 1500 RWF: 7 days access
-- 3000 RWF: 30 days access  
-- 5000 RWF: 90 days access
+- 1500 RWF: 30 days access
+- 3000 RWF: 90 days access  
+- 5000 RWF: 180 days access
 
 To purchase:
 1. Go to Payment Instructions

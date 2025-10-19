@@ -171,9 +171,10 @@ class TermsConditionsScreen extends StatelessWidget {
                   _buildSection(
                     '13. Contact Information',
                     'If you have any questions about these Terms and Conditions, please contact us at:\n\n'
-                        'Email: legal@learntrafficrules.com\n\n'
-                        'Phone: +1 (555) 123-4567\n\n'
-                        'Address: 123 Learning Street, Education City, EC 12345',
+                        'Email: support.learntrafficrules@gmail.com\n\n'
+                        'Phone: +250780494000\n\n'
+                        'WhatsApp: +250780494000\n\n'
+                        'Live Chat: Available 24/7',
                   ),
                 ],
               ),
