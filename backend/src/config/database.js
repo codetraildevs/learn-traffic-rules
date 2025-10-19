@@ -336,6 +336,7 @@ const createAllMySQLTables = async (sequelize) => {
         id CHAR(36) PRIMARY KEY,
         userId CHAR(36) NOT NULL UNIQUE,
         pushNotifications BOOLEAN DEFAULT true,
+        smsNotifications BOOLEAN DEFAULT true,
         studyReminders BOOLEAN DEFAULT true,
         examReminders BOOLEAN DEFAULT true,
         achievementAlerts BOOLEAN DEFAULT true,
@@ -430,6 +431,7 @@ const createAllMySQLTables = async (sequelize) => {
     await addMissingQuestionsColumns(sequelize);
     await addMissingExamResultsColumns(sequelize);
     await addMissingAccessCodesAdditionalColumns(sequelize);
+    await addMissingNotificationPreferencesColumns(sequelize);
     await refreshTableCache(sequelize);
     
     console.log('🎉 All MySQL tables created successfully!');
@@ -691,6 +693,38 @@ const addMissingAccessCodesAdditionalColumns = async (sequelize) => {
   }
 };
 
+// Add missing columns to notificationpreferences table
+const addMissingNotificationPreferencesColumns = async (sequelize) => {
+  try {
+    console.log('🔄 Checking for missing columns in notificationpreferences table...');
+    
+    const checkColumns = await sequelize.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'notificationpreferences' 
+      AND COLUMN_NAME = 'smsNotifications'
+    `);
+    
+    const existingColumns = checkColumns[0].map(row => row.COLUMN_NAME);
+    console.log('📋 Existing columns in notificationpreferences table:', existingColumns);
+    
+    if (!existingColumns.includes('smsNotifications')) {
+      try {
+        console.log('🔄 Adding column: smsNotifications');
+        await sequelize.query(`ALTER TABLE notificationpreferences ADD COLUMN smsNotifications BOOLEAN DEFAULT true`);
+        console.log('✅ Column smsNotifications added successfully');
+      } catch (error) {
+        console.log('⚠️  Failed to add column smsNotifications:', error.message);
+      }
+    } else {
+      console.log('✅ Column smsNotifications already exists, skipping');
+    }
+  } catch (error) {
+    console.log('⚠️  Error checking/adding missing columns in notificationpreferences:', error.message);
+  }
+};
+
 // Refresh Sequelize table cache to ensure latest schema
 const refreshTableCache = async (sequelize) => {
   try {
@@ -792,6 +826,7 @@ const createMySQLTables = async (sequelize) => {
         id CHAR(36) PRIMARY KEY,
         userId CHAR(36) NOT NULL UNIQUE,
         pushNotifications BOOLEAN DEFAULT true,
+        smsNotifications BOOLEAN DEFAULT true,
         studyReminders BOOLEAN DEFAULT true,
         examReminders BOOLEAN DEFAULT true,
         achievementAlerts BOOLEAN DEFAULT true,
@@ -1043,6 +1078,7 @@ const initializeTables = async () => {
         await addMissingQuestionsColumns(sequelize);
         await addMissingExamResultsColumns(sequelize);
         await addMissingAccessCodesAdditionalColumns(sequelize);
+        await addMissingNotificationPreferencesColumns(sequelize);
         await refreshTableCache(sequelize);
       }
       
