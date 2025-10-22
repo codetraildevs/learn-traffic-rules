@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flash_message/flash_message.dart';
 // import 'package:firebase_core/firebase_core.dart';  // Temporarily disabled
 import 'package:learn_traffic_rules/screens/splash/splash_screen.dart';
+import 'package:learn_traffic_rules/screens/onboarding/disclaimer_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
@@ -75,7 +76,7 @@ class MyApp extends ConsumerWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp(
+    return MaterialApp(
           title: AppConstants.appName,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
@@ -86,6 +87,8 @@ class MyApp extends ConsumerWidget {
             child: _getInitialScreen(authState),
           ),
           routes: {
+            '/main': (context) => _getInitialScreen(authState),
+            '/disclaimer': (context) => const DisclaimerScreen(),
             '/view-profile': (context) => const ViewProfileScreen(),
             '/about-app': (context) => const AboutAppScreen(),
             '/privacy-policy': (context) => const PrivacyPolicyScreen(),
@@ -109,15 +112,41 @@ class MyApp extends ConsumerWidget {
   }
 
   Widget _getInitialScreen(AuthState authState) {
-    switch (authState.status) {
-      case AuthStatus.initial:
-        return const SplashScreen();
-      case AuthStatus.authenticated:
-        return const HomeScreen();
-      case AuthStatus.unauthenticated:
-        return const LoginScreen();
-      case AuthStatus.loading:
-        return const SplashScreen();
+    return FutureBuilder<bool>(
+      future: _checkDisclaimerAccepted(),
+      builder: (context, snapshot) {
+        // Show splash screen while checking disclaimer
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SplashScreen();
+        }
+        
+        // If disclaimer not accepted, show disclaimer screen
+        if (snapshot.data != true) {
+          return const DisclaimerScreen();
+        }
+        
+        // If disclaimer accepted, proceed with normal auth flow
+        switch (authState.status) {
+          case AuthStatus.initial:
+            return const SplashScreen();
+          case AuthStatus.authenticated:
+            return const HomeScreen();
+          case AuthStatus.unauthenticated:
+            return const LoginScreen();
+          case AuthStatus.loading:
+            return const SplashScreen();
+        }
+      },
+    );
+  }
+
+  Future<bool> _checkDisclaimerAccepted() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool('disclaimer_accepted') ?? false;
+    } catch (e) {
+      debugPrint('Error checking disclaimer acceptance: $e');
+      return false;
     }
   }
 }

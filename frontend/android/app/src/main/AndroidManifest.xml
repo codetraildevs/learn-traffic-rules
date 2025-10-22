@@ -20,6 +20,16 @@
         android:icon="@mipmap/launcher_icon"
         android:usesCleartextTraffic="true"
         android:networkSecurityConfig="@xml/network_security_config">
+        
+        <!-- Educational app metadata for Google Play Store -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+        
+        <!-- Educational content category -->
+        <meta-data
+            android:name="android.app.category"
+            android:value="EDUCATION" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -1,157 +1,121 @@
 # Privacy Policy for Learn Traffic Rules
 
-**Last Updated**: [Date]
+**Effective Date**: [Current Date]  
+**Last Updated**: [Current Date]
 
-## 📱 App Information
-- **App Name**: Learn Traffic Rules
-- **Developer**: [Your Company Name]
-- **Purpose**: Educational traffic rules learning application
-- **Category**: Education
+## Educational App Privacy Policy
 
-## 🔒 Data Collection and Use
+Learn Traffic Rules is an educational mobile application designed to help individuals prepare for their provisional driving license examination. This privacy policy explains how we collect, use, and protect your information when you use our educational service.
 
-### Information We Collect
-We collect minimal information necessary to provide our educational services:
+## Information We Collect
 
-#### Educational Data
-- **Progress Tracking**: Your learning progress and quiz scores
-- **Study Preferences**: Your preferred study methods and topics
-- **App Usage**: How you use the app for educational purposes
+### Educational Data
+- **Learning Progress**: We track your exam scores, study progress, and performance analytics to provide personalized learning experiences
+- **Study Preferences**: Notification preferences, study reminders, and learning pace settings
+- **Offline Content**: Downloaded study materials and practice tests for offline learning
 
-#### Device Information
-- **Device ID**: For app functionality and security
-- **App Version**: To provide appropriate features
-- **Operating System**: For compatibility purposes
+### Account Information
+- **Basic Profile**: Name, email address, and phone number for account management
+- **Authentication**: Secure login credentials and device identification for account security
 
-#### No Sensitive Data
-- **No Personal Identification**: We don't collect names, addresses, or personal details
-- **No Government Information**: We don't access official government records
-- **No Financial Data**: We don't collect payment or financial information
+### Technical Data
+- **Device Information**: Device type, operating system, and app version for compatibility and support
+- **Usage Analytics**: App usage patterns, feature interactions, and performance metrics to improve the educational experience
+- **Network Information**: Connection status and data usage for offline/online functionality
 
-### How We Use Your Information
-- **Educational Progress**: Track your learning journey
-- **App Improvement**: Enhance educational features
-- **Technical Support**: Provide app assistance
-- **Learning Analytics**: Help you improve your study habits
+## How We Use Your Information
 
-## 🚫 What We DON'T Do
+### Educational Purposes
+- **Personalized Learning**: Adapt study materials and practice tests based on your performance
+- **Progress Tracking**: Monitor your learning journey and provide feedback on areas for improvement
+- **Study Reminders**: Send notifications to help maintain consistent study habits
+- **Offline Access**: Enable downloading of study materials for offline learning
 
-### No Government Affiliation
-- **Not a Government App**: We are not affiliated with any government agency
-- **No Official Certification**: We don't provide official driving licenses
-- **No Government Data**: We don't access official government databases
-- **Private Educational Tool**: This is a private learning application
+### Service Improvement
+- **App Enhancement**: Analyze usage patterns to improve educational features and user experience
+- **Content Updates**: Update study materials and practice questions based on learning effectiveness
+- **Technical Support**: Provide assistance with app functionality and educational content
 
-### No Data Selling
-- **No Data Sharing**: We don't sell your information to third parties
-- **No Advertising**: We don't use your data for advertising
-- **No Tracking**: We don't track you across other apps
-- **Educational Use Only**: Data used only for educational purposes
+### Communication
+- **Educational Updates**: Inform you about new study materials, practice tests, and app features
+- **Study Reminders**: Send notifications to encourage consistent learning habits
+- **Account Management**: Communicate about account security and service updates
 
-## 🛡️ Data Security
+## Information Sharing
+
+We do not sell, trade, or rent your personal information to third parties. We may share information only in the following circumstances:
+
+### Educational Partners
+- **Learning Analytics**: Aggregated, anonymized data may be shared with educational researchers to improve driving education methods
+- **Content Providers**: Share anonymized performance data with educational content creators to improve study materials
+
+### Legal Requirements
+- **Compliance**: When required by law or to protect our rights and the safety of our users
+- **Legal Process**: In response to valid legal requests from authorities
+
+### Service Providers
+- **Technical Support**: Trusted third-party services that help us operate and improve our educational platform
+- **Data Processing**: Cloud storage and processing services that maintain the security and availability of our educational content
+
+## Data Security
 
 ### Protection Measures
-- **Encrypted Storage**: Your data is securely encrypted
-- **Local Storage**: Most data stored locally on your device
-- **Secure Transmission**: Data transmitted securely when needed
-- **Regular Updates**: Security measures regularly updated
+- **Encryption**: All data transmission is encrypted using industry-standard protocols
+- **Secure Storage**: Personal information is stored securely with appropriate access controls
+- **Regular Audits**: We regularly review and update our security practices
 
-### Data Retention
-- **Educational Progress**: Kept for your learning benefit
-- **App Usage**: Retained for app improvement
-- **Automatic Deletion**: Old data automatically removed
-- **User Control**: You can delete your data anytime
+### Educational Data Protection
+- **Learning Privacy**: Your study progress and performance data are protected with the same security measures as personal information
+- **Offline Security**: Downloaded study materials are stored securely on your device
 
-## 📱 App Permissions
+## Your Rights and Choices
 
-### Required Permissions
-- **Internet Access**: To download educational content
-- **Storage**: To save your learning progress
-- **Notifications**: To remind you to study (optional)
+### Educational Data Control
+- **Progress Access**: View and download your learning progress and performance data
+- **Study Preferences**: Modify notification settings and study reminder preferences
+- **Offline Management**: Control which study materials are downloaded for offline use
 
-### Optional Permissions
-- **Camera**: For scanning traffic signs (if available)
-- **Location**: For location-based learning (if available)
-- **Microphone**: For voice learning features (if available)
+### Account Management
+- **Profile Updates**: Update your account information and preferences
+- **Data Deletion**: Request deletion of your account and associated educational data
+- **Opt-out**: Unsubscribe from non-essential communications while maintaining educational notifications
 
-## 🎯 Educational Purpose
+## Children's Privacy
 
-### Learning Focus
-- **Traffic Rules Education**: Learn road safety and regulations
-- **Practice Tests**: Prepare for driving license examinations
-- **Road Signs Study**: Understand traffic signals and signs
-- **Safety Knowledge**: Improve your driving knowledge
+Learn Traffic Rules is designed for users aged 16 and above who are preparing for provisional driving licenses. We do not knowingly collect information from children under 16. If we become aware that we have collected information from a child under 16, we will take steps to delete such information.
 
-### No Official Certification
-- **Educational Only**: This app is for learning purposes only
-- **No Government License**: We don't provide official driving licenses
-- **Practice Tool**: Use for practice and preparation
-- **Official Procedures**: You must complete official government processes
+## Educational Content Disclaimer
 
-## 🔄 Your Rights
+### Learning Purpose
+- **Educational Tool**: This app is designed as a supplementary educational tool for driving license preparation
+- **Not Official**: We are not affiliated with any government agency or official driving test authority
+- **Study Aid**: Our content is intended to support formal driving education, not replace it
 
-### Data Control
-- **Access Your Data**: View what information we have
-- **Delete Your Data**: Remove your information anytime
-- **Export Data**: Download your learning progress
-- **Opt Out**: Stop data collection if desired
+### Content Accuracy
+- **Regular Updates**: We strive to keep educational content current and accurate
+- **User Responsibility**: Users should verify information with official sources and current regulations
+- **Continuous Learning**: We encourage users to stay updated with the latest traffic rules and regulations
 
-### Privacy Choices
-- **Anonymous Use**: Use the app without providing personal information
-- **Limited Data**: Choose what information to share
-- **Data Deletion**: Request deletion of your data
-- **Contact Us**: Reach out with privacy concerns
+## International Users
 
-## 📞 Contact Information
+If you are using Learn Traffic Rules from outside Rwanda, please note that your information may be transferred to and processed in Rwanda, where our servers are located. By using our educational service, you consent to such transfer and processing.
 
-### Privacy Questions
-- **Email**: [Your Privacy Email]
-- **Address**: [Your Company Address]
-- **Phone**: [Your Contact Number]
-- **Website**: [Your Website]
+## Changes to This Policy
 
-### Support
-- **Educational Support**: Help with learning content
-- **Technical Support**: App functionality assistance
-- **Privacy Concerns**: Questions about data handling
-- **Data Requests**: Access or delete your data
+We may update this privacy policy to reflect changes in our educational services or legal requirements. We will notify users of significant changes through the app or email notifications.
 
-## ⚖️ Legal Compliance
+## Contact Information
 
-### App Store Compliance
-- **Educational Category**: Properly categorized as educational
-- **No Misleading Claims**: Clear about educational purpose
-- **Privacy Standards**: Follows app store privacy requirements
-- **Content Guidelines**: Educational content only
+For questions about this privacy policy or our educational services, please contact us at:
 
-### Government Disclaimer
-- **Not Government App**: Clearly stated throughout app
-- **Educational Tool**: Private learning application
-- **No Official Affiliation**: Not connected to government agencies
-- **Learning Purpose**: For educational use only
-
-## 🔄 Updates to Privacy Policy
-
-### Changes
-- **Regular Updates**: Policy updated as needed
-- **User Notification**: You'll be informed of significant changes
-- **Version History**: Previous versions available
-- **Consent**: Continued use implies acceptance
-
-### Notification
-- **App Updates**: Notified through app updates
-- **Email Notification**: Important changes via email
-- **In-App Notice**: Changes displayed in app
-- **Website Updates**: Policy available on website
+**Email**: privacy@learntrafficrules.com  
+**Support**: support@learntrafficrules.com  
+**Educational Inquiries**: education@learntrafficrules.com
 
 ---
 
-## 📋 Summary
-
-**Learn Traffic Rules** is an educational app designed to help you learn traffic rules and prepare for driving tests. We collect minimal data necessary for educational purposes and do not share your information. This is a private educational tool and is not affiliated with any government agency.
-
-**For questions about this privacy policy, contact us at [Your Contact Information]**
+**Educational Mission**: Learn Traffic Rules is committed to providing safe, effective, and privacy-conscious educational tools to help individuals prepare for their provisional driving license examination and develop essential traffic safety knowledge.
 
 ---
 
-**This privacy policy is designed to be transparent about our data practices while emphasizing the educational nature of our app and its independence from government agencies.**
+*This privacy policy is designed to be transparent about our educational data practices while ensuring the security and privacy of our users' learning journey.*

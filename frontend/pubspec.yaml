@@ -1,5 +1,5 @@
 name: learn_traffic_rules
-description: Educational app for learning traffic rules and preparing for driving license exams. Practice with sample questions, study road signs, and improve your knowledge. This is a private educational tool and is not affiliated with any government agency.
+description: Educational app for provisional driving license preparation. Learn traffic rules, road signs, and driving regulations through interactive practice tests. Designed to help learners prepare for their provisional driving license exam with comprehensive study materials and realistic practice questions. This educational tool supports safe driving knowledge development.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.

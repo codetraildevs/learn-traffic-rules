@@ -89,10 +89,38 @@ class AboutAppScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    'Learn Traffic Rules is a comprehensive mobile application designed to help users master traffic rules and regulations through interactive quizzes and practice exams.',
+                    'Learn Traffic Rules is an educational mobile application designed to help individuals prepare for their provisional driving license examination. This app provides interactive practice tests and study materials to support safe driving knowledge development.',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey700,
                       height: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: AppColors.warning, width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: AppColors.warning,
+                          size: 20.sp,
+                        ),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Text(
+                            'Educational Purpose Only: This app is not affiliated with any government agency or official driving test authority.',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.grey700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   SizedBox(height: 16.h),
@@ -111,6 +139,25 @@ class AboutAppScreen extends StatelessWidget {
                   _buildFeatureItem('• Offline study mode'),
                   _buildFeatureItem('• Achievement system'),
                   _buildFeatureItem('• Regular updates with new questions'),
+                  SizedBox(height: 16.h),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/disclaimer');
+                      },
+                      icon: Icon(Icons.info_outline, size: 20.sp),
+                      label: const Text('View Educational Disclaimer'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.info,
+                        foregroundColor: AppColors.white,
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

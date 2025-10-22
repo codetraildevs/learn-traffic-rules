@@ -20,6 +20,9 @@ class AppConstants {
 
   // App Configuration
   static const String appName = 'Learn Traffic Rules';
+  static const String appSubtitle = 'Provisional Driving License Preparation';
+  static const String appDescription =
+      'Educational app for provisional driving license preparation and traffic safety learning';
   static const String appVersion = '1.0.0';
   static const String appBuildNumber = '1';
 
@@ -86,16 +89,18 @@ class AppConstants {
       'Payment approved! You now have access to all exams.';
   static const String dataSynced = 'Data synchronized successfully!';
 
-  // Exam Categories
+  // Exam Categories - Educational Focus for Provisional License
   static const List<String> examCategories = [
-    'Traffic Signs',
-    'Road Rules',
-    'Vehicle Regulations',
-    'Safety Procedures',
-    'Emergency Situations',
-    'Parking Rules',
-    'Highway Driving',
-    'City Driving',
+    'Traffic Signs & Signals',
+    'Road Rules & Regulations',
+    'Vehicle Safety & Maintenance',
+    'Emergency Procedures',
+    'Parking & Maneuvering',
+    'Highway & Expressway Rules',
+    'City & Urban Driving',
+    'Pedestrian & Cyclist Safety',
+    'Weather & Road Conditions',
+    'Alcohol & Drug Awareness',
   ];
 
   // Difficulty Levels
