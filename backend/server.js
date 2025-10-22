@@ -70,6 +70,19 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from uploads directory
 app.use('/uploads', express.static('uploads'));
 
+// Serve privacy policy and delete account instructions pages
+app.use('/public', express.static('public'));
+
+// Privacy policy route
+app.get('/privacy-policy', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'privacy-policy.html'));
+});
+
+// Delete account instructions route
+app.get('/delete-account-instructions', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'delete-account-instructions.html'));
+});
+
 // Swagger configuration
 const swaggerOptions = {
   definition: {
