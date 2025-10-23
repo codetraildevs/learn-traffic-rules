@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:learn_traffic_rules/core/theme/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../core/constants/app_colors.dart';
-import '../core/constants/app_text_styles.dart';
 
 class PrivacyPolicyModal extends StatelessWidget {
   final String title;
@@ -66,7 +65,7 @@ class PrivacyPolicyModal extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: AppTextStyles.headingMedium.copyWith(
+                    style: AppTextStyles.heading3.copyWith(
                       color: AppColors.grey900,
                       fontWeight: FontWeight.bold,
                     ),
@@ -259,11 +258,28 @@ class PrivacyPolicyModal extends StatelessWidget {
   Future<void> _launchFullPolicy(String url) async {
     try {
       final Uri uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      }
+      
+      // Try direct launch first
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
       debugPrint('Error launching privacy policy: $e');
+      
+      // Show fallback dialog
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Open Privacy Policy'),
+            content: Text('Unable to open browser automatically.\n\nPlease visit: $url'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
     }
   }
 }
