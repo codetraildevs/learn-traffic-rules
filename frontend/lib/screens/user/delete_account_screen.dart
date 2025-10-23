@@ -410,14 +410,8 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
           ),
         );
 
-        // Logout and navigate to login
+        // Logout - this will automatically navigate to login screen
         await ref.read(authProvider.notifier).logout();
-
-        if (mounted) {
-          Navigator.of(
-            context,
-          ).pushNamedAndRemoveUntil('/login', (route) => false);
-        }
       }
     } catch (e) {
       if (mounted) {
