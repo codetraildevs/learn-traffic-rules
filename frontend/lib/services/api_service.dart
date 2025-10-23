@@ -328,11 +328,11 @@ class ApiService {
     );
   }
 
-  Future<Map<String, dynamic>> deleteAccount(String password) async {
+  Future<Map<String, dynamic>> deleteAccount(String phoneNumber) async {
     return await makeRequest(
       'POST',
       '${AppConstants.authEndpoint}/delete-account',
-      body: {'password': password},
+      body: {'phoneNumber': phoneNumber},
     );
   }
 

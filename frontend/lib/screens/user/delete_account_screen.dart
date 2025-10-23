@@ -19,12 +19,12 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
   bool _isLoading = false;
   bool _confirmDeletion = false;
   final TextEditingController _confirmationController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
   @override
   void dispose() {
     _confirmationController.dispose();
-    _passwordController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -232,17 +232,17 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    'Enter your password to confirm deletion:',
+                    'Enter your phone number to confirm deletion:',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey700,
                     ),
                   ),
                   SizedBox(height: 12.h),
                   TextField(
-                    controller: _passwordController,
-                    obscureText: true,
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
-                      hintText: 'Enter your password',
+                      hintText: 'Enter your phone number',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.r),
                       ),
@@ -302,7 +302,10 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 Expanded(
                   child: CustomButton(
                     text: 'Delete Account',
-                    onPressed: _confirmDeletion && _passwordController.text.isNotEmpty && !_isLoading
+                    onPressed:
+                        _confirmDeletion &&
+                            _phoneController.text.isNotEmpty &&
+                            !_isLoading
                         ? _deleteAccount
                         : null,
                     backgroundColor: AppColors.error,
@@ -395,8 +398,8 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
         return;
       }
 
-      // Call delete account API with password
-      await _apiService.deleteAccount(_passwordController.text);
+      // Call delete account API with phone number
+      await _apiService.deleteAccount(_phoneController.text);
 
       // Show success message
       if (mounted) {

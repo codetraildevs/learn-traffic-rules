@@ -414,7 +414,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
-      final response = await _apiService.deleteAccount();
+      final response = await _apiService.deleteAccount(request.phoneNumber);
 
       if ((response['success'] as bool?) ?? false) {
         await logout();

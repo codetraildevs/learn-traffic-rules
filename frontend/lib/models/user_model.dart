@@ -176,9 +176,9 @@ class ResetPasswordRequest {
 
 @JsonSerializable()
 class DeleteAccountRequest {
-  final String password;
+  final String phoneNumber;
 
-  DeleteAccountRequest({required this.password});
+  DeleteAccountRequest({required this.phoneNumber});
 
   factory DeleteAccountRequest.fromJson(Map<String, dynamic> json) =>
       _$DeleteAccountRequestFromJson(json);
