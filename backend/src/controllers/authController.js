@@ -604,7 +604,7 @@ class AuthController {
   }
 
   /**
-   * Delete user account
+   * Delete user account with cascade deletion
    */
   async deleteAccount(req, res) {
     try {
@@ -620,6 +620,8 @@ class AuthController {
       const { password } = req.body;
       const userId = req.user.userId;
 
+      console.log('🗑️ User deleting own account via auth endpoint:', userId);
+
       // Get user and verify password
       const user = await authService.findUserById(userId);
       if (!user) {
@@ -629,6 +631,12 @@ class AuthController {
         });
       }
 
+      console.log('👤 User found:', {
+        id: user.id,
+        fullName: user.fullName,
+        phoneNumber: user.phoneNumber
+      });
+
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
         return res.status(401).json({
@@ -637,15 +645,47 @@ class AuthController {
         });
       }
 
-      // Delete user (cascade will handle related records)
+      // Import models for cascade deletion
+      const { AccessCode, ExamResult, PaymentRequest } = require('../models');
+
+      // Delete all related data first (cascade deletion)
+      console.log('🗑️ Deleting related data...');
+      
+      const deletionResults = await Promise.all([
+        // Delete all access codes
+        AccessCode.destroy({ where: { userId } }),
+        // Delete all exam results
+        ExamResult.destroy({ where: { userId } }),
+        // Delete all payment requests
+        PaymentRequest.destroy({ where: { userId } })
+      ]);
+
+      console.log('✅ Related data deleted:', {
+        accessCodes: deletionResults[0],
+        examResults: deletionResults[1],
+        paymentRequests: deletionResults[2]
+      });
+
+      // Delete the user account
       await user.destroy();
+
+      console.log('✅ User account deleted successfully');
 
       // Log account deletion for audit purposes
       console.log(`Account deleted for user: ${user.fullName} (${user.phoneNumber})`);
 
       res.json({
         success: true,
-        message: 'Account deleted successfully'
+        message: 'Account and all related data deleted successfully',
+        data: {
+          deletedUserId: userId,
+          deletedUserName: user.fullName,
+          deletedData: {
+            accessCodes: deletionResults[0],
+            examResults: deletionResults[1],
+            paymentRequests: deletionResults[2]
+          }
+        }
       });
 
     } catch (error) {
