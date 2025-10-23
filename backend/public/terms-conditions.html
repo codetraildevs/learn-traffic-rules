@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms & Conditions - Learn Traffic Rules</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border-left: 5px solid #ff6b6b;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+        }
+
+        .section h2::before {
+            content: '📋';
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .section p, .section li {
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .section ul {
+            margin-left: 20px;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+            border: 2px solid #e17055;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .warning-box::before {
+            content: '⚠️';
+            font-size: 2em;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            opacity: 0.3;
+        }
+
+        .warning-box h3 {
+            color: #d63031;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .contact-section {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .contact-section h3 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .contact-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .contact-item a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .contact-item a:hover {
+            text-decoration: underline;
+        }
+
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .footer p {
+            margin-bottom: 10px;
+        }
+
+        .version {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .contact-info {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, #ff6b6b, #ee5a24);
+            z-index: 1000;
+            transition: width 0.3s ease;
+        }
+
+        .scroll-indicator {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .scroll-indicator span {
+            display: block;
+            width: 8px;
+            height: 8px;
+            background: #ddd;
+            border-radius: 50%;
+            margin: 5px 0;
+            transition: background 0.3s ease;
+        }
+
+        .scroll-indicator span.active {
+            background: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    
+    <div class="scroll-indicator" id="scrollIndicator">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Terms & Conditions</h1>
+            <p>Learn Traffic Rules - Educational Application</p>
+        </div>
+
+        <div class="content">
+            <div class="warning-box">
+                <h3>Educational Purpose Only</h3>
+                <p><strong>This application is designed for educational practice only and is not affiliated with any government agency or official driving examination body.</strong></p>
+            </div>
+
+            <div class="section">
+                <h2>1. Acceptance of Terms</h2>
+                <p>By downloading, installing, or using the Learn Traffic Rules application, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use the application.</p>
+            </div>
+
+            <div class="section">
+                <h2>2. Educational Purpose</h2>
+                <p>This application is designed to help users prepare for provisional driving license examinations through educational content and practice tests. It serves as a supplementary learning tool and should not be considered as official examination material.</p>
+                <ul>
+                    <li>All content is for educational purposes only</li>
+                    <li>Results and scores are for practice purposes only</li>
+                    <li>Users should verify all information with official sources</li>
+                    <li>This app is not affiliated with any government agency</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>3. User Responsibilities</h2>
+                <p>As a user of this application, you agree to:</p>
+                <ul>
+                    <li>Use the application for educational purposes only</li>
+                    <li>Provide accurate information during registration</li>
+                    <li>Respect intellectual property rights</li>
+                    <li>Not attempt to reverse engineer or modify the application</li>
+                    <li>Not use the application for any illegal or unauthorized purpose</li>
+                    <li>Complete official procedures for obtaining driving licenses</li>
+                    <li>Follow local traffic laws and regulations</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>4. Account Registration</h2>
+                <p>To use certain features of the application, you may need to create an account. You are responsible for:</p>
+                <ul>
+                    <li>Maintaining the confidentiality of your account information</li>
+                    <li>All activities that occur under your account</li>
+                    <li>Providing accurate and up-to-date information</li>
+                    <li>Notifying us immediately of any unauthorized use</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>5. Privacy and Data Collection</h2>
+                <p>We collect minimal data necessary to provide our educational services:</p>
+                <ul>
+                    <li>Phone number for account creation and security</li>
+                    <li>Device information for fraud prevention</li>
+                    <li>Learning progress to personalize your experience</li>
+                    <li>App usage data to improve our services</li>
+                </ul>
+                <p>Your privacy is important to us. We use industry-standard security measures to protect your data and never share your personal information with third parties.</p>
+            </div>
+
+            <div class="section">
+                <h2>6. Intellectual Property</h2>
+                <p>All content, features, and functionality of the application are owned by Learn Traffic Rules and are protected by copyright, trademark, and other intellectual property laws. You may not:</p>
+                <ul>
+                    <li>Copy, modify, or distribute the application</li>
+                    <li>Reverse engineer or attempt to extract source code</li>
+                    <li>Use our trademarks or logos without permission</li>
+                    <li>Create derivative works based on our content</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>7. Service Availability</h2>
+                <p>We strive to maintain service availability but cannot guarantee uninterrupted access. The application may be temporarily unavailable due to:</p>
+                <ul>
+                    <li>Scheduled maintenance</li>
+                    <li>Technical issues</li>
+                    <li>Network connectivity problems</li>
+                    <li>Force majeure events</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>8. Limitation of Liability</h2>
+                <p>To the maximum extent permitted by law, Learn Traffic Rules shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the application.</p>
+            </div>
+
+            <div class="section">
+                <h2>9. Account Termination</h2>
+                <p>You may delete your account at any time through the application settings. We reserve the right to suspend or terminate accounts that violate these terms or engage in inappropriate behavior.</p>
+            </div>
+
+            <div class="section">
+                <h2>10. Changes to Terms</h2>
+                <p>We may update these Terms and Conditions from time to time. We will notify users of any material changes through the application or other appropriate means. Continued use of the application after changes constitutes acceptance of the new terms.</p>
+            </div>
+
+            <div class="section">
+                <h2>11. Governing Law</h2>
+                <p>These Terms and Conditions are governed by the laws of Rwanda. Any disputes arising from these terms or the use of the application shall be resolved in the courts of Rwanda.</p>
+            </div>
+
+            <div class="contact-section">
+                <h3>Questions or Concerns?</h3>
+                <p>If you have any questions about these Terms and Conditions, please contact us:</p>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <strong>📧 Email</strong><br>
+                        <a href="mailto:codetrail.dev@gmail.com">codetrail.dev@gmail.com</a>
+                    </div>
+                    <div class="contact-item">
+                        <strong>📱 WhatsApp</strong><br>
+                        <a href="tel:+250780494000">+250 780 494 000</a>
+                    </div>
+                    <div class="contact-item">
+                        <strong>🌐 Website</strong><br>
+                        <a href="https://learntrafficrules.com">learntrafficrules.com</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>Learn Traffic Rules</strong></p>
+            <p>Educational Traffic Rules Learning Application</p>
+            <p class="version">Version 1.0 - Terms & Conditions</p>
+            <p>Last updated: January 2025</p>
+        </div>
+    </div>
+
+    <script>
+        // Progress bar animation
+        window.addEventListener('scroll', function() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrollPercent = (scrollTop / scrollHeight) * 100;
+            document.getElementById('progressBar').style.width = scrollPercent + '%';
+        });
+
+        // Scroll indicator
+        const sections = document.querySelectorAll('.section');
+        const indicators = document.querySelectorAll('.scroll-indicator span');
+
+        window.addEventListener('scroll', function() {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (window.pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id') || 'section-' + Array.from(sections).indexOf(section);
+                }
+            });
+
+            indicators.forEach((indicator, index) => {
+                indicator.classList.remove('active');
+                if (index === Math.min(Math.floor(window.pageYOffset / (document.documentElement.scrollHeight / 5)), 4)) {
+                    indicator.classList.add('active');
+                }
+            });
+        });
+
+        // Smooth scrolling for internal links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all sections
+        sections.forEach(section => {
+            section.style.opacity = '0';
+            section.style.transform = 'translateY(20px)';
+            section.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(section);
+        });
+    </script>
+</body>
+</html>

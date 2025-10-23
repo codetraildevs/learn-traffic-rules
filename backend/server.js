@@ -83,6 +83,11 @@ app.get('/delete-account-instructions', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'delete-account-instructions.html'));
 });
 
+// Terms and conditions route
+app.get('/terms-conditions', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'terms-conditions.html'));
+});
+
 // Swagger configuration
 const swaggerOptions = {
   definition: {
