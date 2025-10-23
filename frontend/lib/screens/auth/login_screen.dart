@@ -388,25 +388,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             'timestamp': DateTime.now().toIso8601String(),
           });
 
-          // Show enhanced error message
-          final errorIcon = error?.contains('🌐') == true
-              ? '🌐'
-              : error?.contains('⚠️') == true
-              ? '⚠️'
-              : error?.contains('🔐') == true
-              ? '🔐'
-              : error?.contains('📱') == true
-              ? '📱'
-              : error?.contains('⏱️') == true
-              ? '⏱️'
-              : '❌';
+          // Check for specific error types and provide clear messages
+          String errorMessage;
+          String errorDescription;
+          String errorIcon;
+
+          if (error?.contains('Invalid phone number or device ID') == true) {
+            errorIcon = '📱';
+            errorMessage = 'Device Mismatch $errorIcon';
+            errorDescription =
+                'This phone number is registered on a different device.\n\n'
+                'Solutions:\n'
+                '• Use the same device you registered with\n'
+                '• Create a new account with "Create Account" button\n'
+                '• Contact support if you need device change';
+          } else if (error?.contains('🌐') == true) {
+            errorIcon = '🌐';
+            errorMessage = 'Network Error $errorIcon';
+            errorDescription = error ?? 'Please check your internet connection';
+          } else if (error?.contains('⚠️') == true) {
+            errorIcon = '⚠️';
+            errorMessage = 'Warning $errorIcon';
+            errorDescription = error ?? 'Please check your input';
+          } else if (error?.contains('🔐') == true) {
+            errorIcon = '🔐';
+            errorMessage = 'Authentication Error $errorIcon';
+            errorDescription = error ?? 'Please check your credentials';
+          } else if (error?.contains('📱') == true) {
+            errorIcon = '📱';
+            errorMessage = 'Device Error $errorIcon';
+            errorDescription = error ?? 'Please check your device';
+          } else if (error?.contains('⏱️') == true) {
+            errorIcon = '⏱️';
+            errorMessage = 'Timeout Error $errorIcon';
+            errorDescription = error ?? 'Request timed out, please try again';
+          } else {
+            errorIcon = '❌';
+            errorMessage = 'Login Failed $errorIcon';
+            errorDescription =
+                error ?? 'Please check your credentials and try again';
+          }
 
           AppFlashMessage.show(
             context: context,
-            message: 'Login Failed $errorIcon',
-            description: error ?? 'Please check your credentials and try again',
+            message: errorMessage,
+            description: errorDescription,
             type: FlashMessageType.error,
-            duration: const Duration(seconds: 6),
+            duration: const Duration(seconds: 8),
           );
         }
       }

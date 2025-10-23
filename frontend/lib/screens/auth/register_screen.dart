@@ -423,6 +423,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             errorDescription =
                 'This phone number is already registered. Please login instead.';
             errorIcon = '📱';
+          } else if (error?.contains('device is already registered') == true) {
+            errorMessage = 'Device Already Registered';
+            errorDescription =
+                'This device is already registered to another account.\n\n'
+                'Solutions:\n'
+                '• Use a different device\n'
+                '• Contact support for device change\n'
+                '• Login with the existing account';
+            errorIcon = '📱';
           } else if (error?.contains('🌐') == true) {
             errorIcon = '🌐';
           } else if (error?.contains('⚠️') == true) {
