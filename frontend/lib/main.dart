@@ -76,7 +76,7 @@ class MyApp extends ConsumerWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-    return MaterialApp(
+        return MaterialApp(
           title: AppConstants.appName,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
@@ -119,13 +119,15 @@ class MyApp extends ConsumerWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SplashScreen();
         }
-        
+
         // If disclaimer not accepted, show disclaimer screen
         if (snapshot.data != true) {
           return const DisclaimerScreen();
         }
-        
+
         // If disclaimer accepted, proceed with normal auth flow
+
+        // Only navigate automatically on initial load, not during login process
         switch (authState.status) {
           case AuthStatus.initial:
             return const SplashScreen();
@@ -134,7 +136,8 @@ class MyApp extends ConsumerWidget {
           case AuthStatus.unauthenticated:
             return const LoginScreen();
           case AuthStatus.loading:
-            return const SplashScreen();
+            // Don't show splash during login - stay on current screen
+            return const LoginScreen();
         }
       },
     );

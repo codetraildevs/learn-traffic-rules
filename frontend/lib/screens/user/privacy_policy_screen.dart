@@ -42,7 +42,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    'Last updated: September 2024',
+                    'Last updated: October 2025',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey600,
                     ),
@@ -146,9 +146,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   _buildSection(
                     '9. Contact Us',
                     'If you have any questions about this Privacy Policy or our data practices, please contact us at:\n\n'
-                        'Email: privacy@learntrafficrules.com\n\n'
-                        'Phone: +1 (555) 123-4567\n\n'
-                        'Address: 123 Learning Street, Education City, EC 12345',
+                        'Email: codetrail.dev@gmail.com\n\n'
+                        'Phone: +250780494000\n\n'
+                        'Address: Kigali, Rwanda',
                   ),
                 ],
               ),

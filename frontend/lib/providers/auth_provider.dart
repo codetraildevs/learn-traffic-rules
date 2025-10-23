@@ -222,7 +222,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<bool> login(LoginRequest request) async {
     try {
-      state = state.copyWith(isLoading: true, error: null);
+      // Don't change auth state during login to prevent auto-refresh
+      // state = state.copyWith(isLoading: true, error: null);
 
       final response = await _apiService.login(request);
 
@@ -265,11 +266,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         );
         return true;
       } else {
-        state = state.copyWith(
-          status: AuthStatus.unauthenticated,
-          error: response.message,
-          isLoading: false,
-        );
+        debugPrint('❌ LOGIN FAILED: ${response.message}');
+        // Don't change auth state on failure to prevent refresh
         return false;
       }
     } catch (e) {
@@ -286,11 +284,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // Get user-friendly error message
       final userFriendlyError = ErrorHandlerService.getErrorMessage(e);
 
-      state = state.copyWith(
-        status: AuthStatus.unauthenticated,
-        error: userFriendlyError,
-        isLoading: false,
-      );
+      debugPrint('❌ LOGIN ERROR: $userFriendlyError');
+      // Don't change auth state on error to prevent refresh
       return false;
     }
   }

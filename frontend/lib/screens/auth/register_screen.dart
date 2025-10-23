@@ -299,6 +299,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   }
 
   Future<void> _handleRegister() async {
+    // Prevent multiple simultaneous registration attempts
+    if (_isLoading) return;
+
     DebugService.logUserAction('Register button clicked', {
       'fullName': _fullNameController.text.isNotEmpty,
       'phoneNumber': _phoneController.text.isNotEmpty,
@@ -342,7 +345,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       'timestamp': DateTime.now().toIso8601String(),
     });
 
-    setState(() => _isLoading = true);
+    // Set loading state immediately
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
 
     try {
       final request = RegisterRequest(
@@ -549,147 +555,89 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   },
                 ),
 
-                SizedBox(height: 20.h),
+                SizedBox(height: 8.h),
 
-                // Information Section
+                // Clean Information Section
                 Container(
-                  margin: EdgeInsets.symmetric(horizontal: 24.w),
-                  padding: EdgeInsets.all(20.w),
+                  margin: EdgeInsets.symmetric(horizontal: 20.w),
+                  padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(
-                      color: const Color(0xFFE91E63).withValues(alpha: 0.3),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
+                    color: AppColors.grey50,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(color: AppColors.grey200, width: 1),
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Container(
-                            width: 8.w,
-                            height: 8.w,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFE91E63),
-                              shape: BoxShape.circle,
-                            ),
+                          Icon(
+                            Icons.info_outline,
+                            color: AppColors.secondary,
+                            size: 16.sp,
                           ),
-                          SizedBox(width: 12.w),
+                          SizedBox(width: 8.w),
                           Text(
-                            'IMPORTANT INFORMATION',
-                            style: AppTextStyles.bodyLarge.copyWith(
-                              color: const Color(0xFFE91E63),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16.sp,
+                            'Important Information',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.secondary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14.sp,
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 12.h),
+                      SizedBox(height: 8.h),
                       Text(
                         'Fill in your details below to create your account. Your device will be automatically detected for security purposes.',
-                        style: AppTextStyles.bodyMedium.copyWith(
+                        style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.grey700,
-                          fontSize: 14.sp,
-                          height: 1.5,
+                          fontSize: 13.sp,
+                          height: 1.4,
                         ),
                       ),
-                      SizedBox(height: 16.h),
+                      SizedBox(height: 8.h),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            Icons.phone,
-                            color: AppColors.secondary,
-                            size: 18.sp,
+                            Icons.phone_outlined,
+                            color: AppColors.grey600,
+                            size: 14.sp,
                           ),
-                          SizedBox(width: 8.w),
+                          SizedBox(width: 6.w),
                           Text(
                             'Need help? Call ',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.grey700,
-                              fontSize: 14.sp,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.grey600,
+                              fontSize: 13.sp,
                             ),
                           ),
                           GestureDetector(
                             onTap: () async {
                               try {
                                 const phoneNumber = '+250780494000';
-                                debugPrint(
-                                  '📞 Attempting to call: $phoneNumber',
-                                );
-
-                                // Try multiple URL schemes for better Android compatibility
-                                debugPrint(
-                                  '📞 Trying multiple phone call methods',
-                                );
-                                // Try tel: scheme first
                                 final Uri phoneUri = Uri(
                                   scheme: 'tel',
                                   path: phoneNumber,
                                 );
-
                                 if (await canLaunchUrl(phoneUri)) {
                                   await launchUrl(
                                     phoneUri,
                                     mode: LaunchMode.externalApplication,
                                   );
-                                  debugPrint(
-                                    '📞 Phone call launched successfully with tel: scheme',
-                                  );
                                 } else {
-                                  // Try alternative approach with different mode
-                                  debugPrint(
-                                    '📞 tel: scheme failed, trying alternative approach',
-                                  );
-                                  try {
-                                    await launchUrl(
-                                      phoneUri,
-                                      mode: LaunchMode.platformDefault,
-                                    );
-                                    debugPrint(
-                                      '📞 Phone call launched with platform default mode',
-                                    );
-                                  } catch (e) {
-                                    debugPrint(
-                                      '📞 Platform default failed: $e',
-                                    );
-                                    // Try with different URI format
-                                    final Uri altUri = Uri.parse(
-                                      'tel:$phoneNumber',
-                                    );
-                                    try {
-                                      await launchUrl(altUri);
-                                      debugPrint(
-                                        '📞 Phone call launched with alternative URI format',
-                                      );
-                                    } catch (e2) {
-                                      debugPrint(
-                                        '📞 All methods failed, showing dialog: $e2',
-                                      );
-                                      _showPhoneNumberDialog();
-                                    }
-                                  }
+                                  _showPhoneNumberDialog();
                                 }
                               } catch (e) {
-                                debugPrint('📞 Call error: $e');
                                 _showPhoneNumberDialog();
                               }
                             },
                             child: Text(
                               '+250 780 494 000',
-                              style: AppTextStyles.bodyMedium.copyWith(
+                              style: AppTextStyles.bodySmall.copyWith(
                                 color: AppColors.secondary,
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.bold,
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w600,
                                 decoration: TextDecoration.underline,
                               ),
                             ),
@@ -700,7 +648,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   ),
                 ),
 
-                SizedBox(height: 10.h),
+                SizedBox(height: 16.h),
 
                 // Animated Registration Form
                 SlideTransition(
@@ -726,126 +674,65 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            /// SizedBox(height: 4.h),
                             Text(
                               'Fill in your details below to create your account.',
                               style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.info,
-                                fontSize: 12.sp,
+                                color: AppColors.grey600,
+                                fontSize: 14.sp,
                                 fontWeight: FontWeight.w500,
                               ),
-                              textAlign: TextAlign.start,
                             ),
 
-                            SizedBox(height: 20.h),
-                            // Full Name Field with Enhanced Design
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16.r),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.secondary.withValues(
-                                      alpha: 0.1,
-                                    ),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: CustomTextField(
-                                controller: _fullNameController,
-                                label: 'Full Name',
-                                hint: 'Enter your full name',
-                                prefixIcon: Icons.person_outline,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Full name is required';
-                                  }
-                                  if (value.length <
-                                      AppConstants.minNameLength) {
-                                    return 'Name must be at least ${AppConstants.minNameLength} characters';
-                                  }
-                                  return null;
-                                },
-                              ),
+                            SizedBox(height: 12.h),
+
+                            // Full Name Field
+                            CustomTextField(
+                              controller: _fullNameController,
+                              label: 'Full Name',
+                              hint: 'Enter your full name',
+                              prefixIcon: Icons.person_outline,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Full name is required';
+                                }
+                                if (value.length < AppConstants.minNameLength) {
+                                  return 'Name must be at least ${AppConstants.minNameLength} characters';
+                                }
+                                return null;
+                              },
                             ),
 
-                            SizedBox(height: 16.h),
+                            SizedBox(height: 12.h),
 
-                            // Phone Number Field with Enhanced Design
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16.r),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.secondary.withValues(
-                                      alpha: 0.1,
-                                    ),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: CustomTextField(
-                                controller: _phoneController,
-                                label: 'Phone Number',
-                                hint: 'Enter your phone number',
-                                prefixIcon: Icons.phone_outlined,
-                                keyboardType: TextInputType.phone,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Phone number is required';
-                                  }
-                                  if (value.length !=
-                                      AppConstants.phoneNumberLength) {
-                                    return 'Phone number must be ${AppConstants.phoneNumberLength} digits';
-                                  }
-                                  return null;
-                                },
-                              ),
+                            // Phone Number Field
+                            CustomTextField(
+                              controller: _phoneController,
+                              label: 'Phone Number',
+                              hint: 'Enter your phone number',
+                              prefixIcon: Icons.phone_outlined,
+                              keyboardType: TextInputType.phone,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Phone number is required';
+                                }
+                                if (value.length < 10) {
+                                  return 'Please enter a valid phone number';
+                                }
+                                return null;
+                              },
                             ),
 
                             SizedBox(height: 16.h),
 
-                            //SizedBox(height: 20.h),
-
-                            // Register Button with Enhanced Design
-                            Container(
-                              height: 56.h,
-                              // width: 100.w,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    AppColors.secondary,
-                                    AppColors.primary,
-                                  ],
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                ),
-                                borderRadius: BorderRadius.circular(16.r),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.secondary.withValues(
-                                      alpha: 0.3,
-                                    ),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: CustomButton(
-                                  text: 'Create Account',
-                                  icon: Icons.person_add,
-                                  onPressed: _isLoading
-                                      ? null
-                                      : _handleRegister,
-                                  isLoading: _isLoading,
-                                  height: 56.h,
-                                  backgroundColor: Colors.transparent,
-                                  textColor: Colors.white,
-                                ),
-                              ),
+                            // Register Button
+                            CustomButton(
+                              text: 'Create Account',
+                              icon: Icons.person_add,
+                              onPressed: _isLoading ? null : _handleRegister,
+                              isLoading: _isLoading,
+                              height: 50.h,
+                              backgroundColor: AppColors.secondary,
+                              textColor: Colors.white,
                             ),
                           ],
                         ),
@@ -974,8 +861,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   // Launch Privacy Policy
   void _launchPrivacyPolicy() async {
     try {
-      // You can replace this with your actual privacy policy URL
-      const privacyPolicyUrl = 'https://your-website.com/privacy-policy';
+      // Use the actual backend URL
+      const privacyPolicyUrl =
+          'https://traffic.cyangugudims.com/privacy-policy';
 
       if (await canLaunchUrl(Uri.parse(privacyPolicyUrl))) {
         await launchUrl(
@@ -995,8 +883,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   // Launch Terms & Conditions
   void _launchTermsConditions() async {
     try {
-      // You can replace this with your actual terms & conditions URL
-      const termsUrl = 'https://your-website.com/terms-conditions';
+      // Use the actual backend URL
+      const termsUrl =
+          'https://traffic.cyangugudims.com/delete-account-instructions';
 
       if (await canLaunchUrl(Uri.parse(termsUrl))) {
         await launchUrl(

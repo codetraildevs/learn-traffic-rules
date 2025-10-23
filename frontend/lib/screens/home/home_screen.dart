@@ -263,7 +263,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             label: user?.role == 'ADMIN' ? 'Manage Exams' : 'Exams',
           ),
           BottomNavigationBarItem(
-            icon: user?.role != 'USER'
+            icon: user?.role == 'USER'
                 ? const Icon(Icons.analytics)
                 : const Icon(Icons.group),
             label: user?.role == 'USER' ? 'Progress' : 'Manage Users',

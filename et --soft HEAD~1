@@ -1,0 +1,38 @@
+[33mcommit e584ec99507fad8f45c9d1e793e3f14b321cfb51[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: codetraildevs <codetrail.dev@gmail.com>
+Date:   Wed Oct 22 21:45:24 2025 +0200
+
+    Add creative delete account instructions page and update privacy policy with modern design
+
+backend/public/delete-account-instructions.html
+backend/public/privacy-policy.html
+backend/server.js
+frontend/.dart_tool/dartpad/web_plugin_registrant.dart
+frontend/.dart_tool/package_config.json
+frontend/.dart_tool/package_graph.json
+frontend/.dart_tool/version
+frontend/.flutter-plugins-dependencies
+frontend/android/.gradle/8.12/checksums/checksums.lock
+frontend/android/.gradle/8.12/checksums/md5-checksums.bin
+frontend/android/.gradle/8.12/checksums/sha1-checksums.bin
+frontend/android/.gradle/8.12/executionHistory/executionHistory.bin
+frontend/android/.gradle/8.12/executionHistory/executionHistory.lock
+frontend/android/.gradle/8.12/fileChanges/last-build.bin
+frontend/android/.gradle/8.12/fileHashes/fileHashes.bin
+frontend/android/.gradle/8.12/fileHashes/fileHashes.lock
+frontend/android/.gradle/8.12/fileHashes/resourceHashesCache.bin
+frontend/android/.gradle/8.12/gc.properties
+frontend/android/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+frontend/android/.gradle/buildOutputCleanup/cache.properties
+frontend/android/.gradle/buildOutputCleanup/outputFiles.bin
+frontend/android/.gradle/file-system.probe
+frontend/android/.gradle/noVersion/buildLogic.lock
+frontend/android/.gradle/vcs-1/gc.properties
+frontend/android/app/release.keystore
+frontend/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+frontend/android/build/reports/problems/problems-report.html
+frontend/android/gradle/wrapper/gradle-wrapper.jar
+frontend/android/gradlew
+frontend/android/gradlew.bat
+frontend/android/key.properties
+frontend/android/local.properties

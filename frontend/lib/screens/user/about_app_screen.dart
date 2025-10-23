@@ -190,7 +190,7 @@ class AboutAppScreen extends StatelessWidget {
                   _buildInfoRow('Developer', 'Traffic Rules Learning Team'),
                   _buildInfoRow('Contact', 'support@learntrafficrules.com'),
                   _buildInfoRow('Website', 'www.learntrafficrules.com'),
-                  _buildInfoRow('Last Updated', 'September 2024'),
+                  _buildInfoRow('Last Updated', 'October 2025'),
                 ],
               ),
             ),
