@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flash_message/flash_message.dart';
+import 'package:learn_traffic_rules/screens/auth/register_screen.dart';
 // import 'package:firebase_core/firebase_core.dart';  // Temporarily disabled
 import 'package:learn_traffic_rules/screens/splash/splash_screen.dart';
 import 'package:learn_traffic_rules/screens/onboarding/disclaimer_screen.dart';
@@ -97,6 +98,8 @@ class MyApp extends ConsumerWidget {
             '/notifications': (context) => const NotificationsScreen(),
             '/study-reminders': (context) => const StudyRemindersScreen(),
             '/help-support': (context) => const HelpSupportScreen(),
+            '/login': (context) => const LoginScreen(),
+            '/register': (context) => const RegisterScreen(),
           },
           builder: (context, widget) {
             return MediaQuery(

@@ -765,7 +765,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     PrivacyPolicyModal.show(
       context,
       title: 'Privacy Policy',
-      content: 'Learn Traffic Rules is an educational application designed to help users prepare for provisional driving license examinations. This app is not affiliated with any government agency and serves as a practice tool only.\n\n'
+      content:
+          'Learn Traffic Rules is an educational application designed to help users prepare for provisional driving license examinations. This app is not affiliated with any government agency and serves as a practice tool only.\n\n'
           'We collect minimal data necessary to provide our educational services:\n'
           '• Phone number for account creation and security\n'
           '• Device information for fraud prevention\n'
@@ -781,7 +782,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     PrivacyPolicyModal.show(
       context,
       title: 'Terms & Conditions',
-      content: 'By using Learn Traffic Rules, you agree to these terms:\n\n'
+      content:
+          'By using Learn Traffic Rules, you agree to these terms:\n\n'
           'Educational Purpose: This app is designed for educational practice only and is not affiliated with any government agency or official driving examination body.\n\n'
           'User Responsibilities:\n'
           '• Provide accurate information during registration\n'

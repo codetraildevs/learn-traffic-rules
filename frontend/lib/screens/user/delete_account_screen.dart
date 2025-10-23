@@ -417,7 +417,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
         if (mounted) {
           Navigator.of(
             context,
-          ).pushNamedAndRemoveUntil('/main', (route) => false);
+          ).pushNamedAndRemoveUntil('/register', (route) => false);
         }
       }
     } catch (e) {

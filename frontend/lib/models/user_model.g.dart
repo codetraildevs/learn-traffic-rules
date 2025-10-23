@@ -141,8 +141,8 @@ Map<String, dynamic> _$ResetPasswordRequestToJson(
 
 DeleteAccountRequest _$DeleteAccountRequestFromJson(
   Map<String, dynamic> json,
-) => DeleteAccountRequest(password: json['password'] as String);
+) => DeleteAccountRequest(phoneNumber: json['phoneNumber'] as String);
 
 Map<String, dynamic> _$DeleteAccountRequestToJson(
   DeleteAccountRequest instance,
-) => <String, dynamic>{'password': instance.password};
+) => <String, dynamic>{'phoneNumber': instance.phoneNumber};
