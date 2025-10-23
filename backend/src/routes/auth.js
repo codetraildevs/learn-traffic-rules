@@ -441,23 +441,23 @@ router.post('/reset-password',
  *           schema:
  *             type: object
  *             required:
- *               - password
+ *               - phoneNumber
  *             properties:
- *               password:
+ *               phoneNumber:
  *                 type: string
- *                 description: Current password for verification
+ *                 description: Phone number for verification
  *     responses:
  *       200:
  *         description: Account deleted successfully
  *       401:
- *         description: Invalid password
+ *         description: Phone number does not match
  *       404:
  *         description: User not found
  */
 router.post('/delete-account',
   authMiddleware.authenticate,
   [
-    body('password').notEmpty().withMessage('Password is required for account deletion')
+    body('phoneNumber').notEmpty().withMessage('Phone number is required for account deletion')
   ],
   authController.deleteAccount.bind(authController)
 );

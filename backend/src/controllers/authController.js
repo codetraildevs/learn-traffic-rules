@@ -604,7 +604,7 @@ class AuthController {
   }
 
   /**
-   * Delete user account with cascade deletion
+   * Delete user account with phone number verification
    */
   async deleteAccount(req, res) {
     try {
@@ -617,12 +617,12 @@ class AuthController {
         });
       }
 
-      const { password } = req.body;
+      const { phoneNumber } = req.body;
       const userId = req.user.userId;
 
       console.log('🗑️ User deleting own account via auth endpoint:', userId);
 
-      // Get user and verify password
+      // Get user and verify phone number
       const user = await authService.findUserById(userId);
       if (!user) {
         return res.status(404).json({
@@ -637,11 +637,11 @@ class AuthController {
         phoneNumber: user.phoneNumber
       });
 
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (!isPasswordValid) {
+      // Verify phone number matches
+      if (user.phoneNumber !== phoneNumber) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid password'
+          message: 'Phone number does not match your account'
         });
       }
 
