@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_button.dart';
+import '../../widgets/privacy_policy_modal.dart';
 import '../../services/device_service.dart';
 import '../../services/debug_service.dart';
 import '../../services/flash_message_service.dart';
@@ -719,7 +720,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         TextButton(
-                          onPressed: () => _launchPrivacyPolicy(),
+                          onPressed: () => _showPrivacyPolicyModal(),
                           child: Text(
                             'Privacy Policy',
                             style: AppTextStyles.link.copyWith(
@@ -737,7 +738,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           ),
                         ),
                         TextButton(
-                          onPressed: () => _launchTermsConditions(),
+                          onPressed: () => _showTermsConditionsModal(),
                           child: Text(
                             'Terms & Conditions',
                             style: AppTextStyles.link.copyWith(
@@ -759,48 +760,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
-  // Launch Privacy Policy
-  void _launchPrivacyPolicy() async {
-    try {
-      // Use the actual backend URL
-      const privacyPolicyUrl =
-          'https://traffic.cyangugudims.com/privacy-policy';
-
-      if (await canLaunchUrl(Uri.parse(privacyPolicyUrl))) {
-        await launchUrl(
-          Uri.parse(privacyPolicyUrl),
-          mode: LaunchMode.externalApplication,
-        );
-      } else {
-        // Fallback: Show privacy policy in a dialog
-        _showPrivacyPolicyDialog();
-      }
-    } catch (e) {
-      // Fallback: Show privacy policy in a dialog
-      _showPrivacyPolicyDialog();
-    }
+  // Show Privacy Policy Modal
+  void _showPrivacyPolicyModal() {
+    PrivacyPolicyModal.show(
+      context,
+      title: 'Privacy Policy',
+      content: 'Learn Traffic Rules is an educational application designed to help users prepare for provisional driving license examinations. This app is not affiliated with any government agency and serves as a practice tool only.\n\n'
+          'We collect minimal data necessary to provide our educational services:\n'
+          '• Phone number for account creation and security\n'
+          '• Device information for fraud prevention\n'
+          '• Learning progress to personalize your experience\n'
+          '• App usage data to improve our services\n\n'
+          'Your privacy is important to us. We use industry-standard security measures to protect your data and never share your personal information with third parties.',
+      fullPolicyUrl: 'https://traffic.cyangugudims.com/privacy-policy',
+    );
   }
 
-  // Launch Terms & Conditions
-  void _launchTermsConditions() async {
-    try {
-      // Use the actual backend URL
-      const termsUrl =
-          'https://traffic.cyangugudims.com/delete-account-instructions';
-
-      if (await canLaunchUrl(Uri.parse(termsUrl))) {
-        await launchUrl(
-          Uri.parse(termsUrl),
-          mode: LaunchMode.externalApplication,
-        );
-      } else {
-        // Fallback: Show terms & conditions in a dialog
-        _showTermsConditionsDialog();
-      }
-    } catch (e) {
-      // Fallback: Show terms & conditions in a dialog
-      _showTermsConditionsDialog();
-    }
+  // Show Terms & Conditions Modal
+  void _showTermsConditionsModal() {
+    PrivacyPolicyModal.show(
+      context,
+      title: 'Terms & Conditions',
+      content: 'By using Learn Traffic Rules, you agree to these terms:\n\n'
+          'Educational Purpose: This app is designed for educational practice only and is not affiliated with any government agency or official driving examination body.\n\n'
+          'User Responsibilities:\n'
+          '• Provide accurate information during registration\n'
+          '• Use the app for educational purposes only\n'
+          '• Respect intellectual property rights\n'
+          '• Not attempt to reverse engineer the app\n\n'
+          'Service Availability: We strive to maintain service availability but cannot guarantee uninterrupted access.\n\n'
+          'Account Termination: You may delete your account at any time. We reserve the right to suspend accounts that violate these terms.',
+      fullPolicyUrl: 'https://traffic.cyangugudims.com/privacy-policy',
+    );
   }
 
   // Show Privacy Policy Dialog
@@ -907,11 +898,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           children: [
             const Icon(Icons.description_outlined, color: AppColors.primary),
             SizedBox(width: 8.w),
-            Text(
-              'Terms & Conditions',
-              style: AppTextStyles.heading3.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
+            Expanded(
+              child: Text(
+                'Terms & Conditions',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.heading3.copyWith(
+                  color: AppColors.primary,
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -948,7 +943,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               ),
               SizedBox(height: 4.h),
               const Text(
-                '• This app is NOT affiliated with any government agency\n'
+                '• This app is NOT affiliated with any government agency \n'
                 '• This app does NOT provide official driving licenses\n'
                 '• This app does NOT guarantee passing any examination\n'
                 '• You must complete official government procedures',

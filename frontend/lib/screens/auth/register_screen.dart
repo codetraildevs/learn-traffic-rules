@@ -8,6 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_button.dart';
+import '../../widgets/privacy_policy_modal.dart';
 import '../../services/device_service.dart';
 import '../../services/debug_service.dart';
 import '../../services/flash_message_service.dart';
@@ -32,51 +33,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   String? _deviceModel;
   String? _platformName;
 
-  late AnimationController _logoController;
-  late AnimationController _formController;
-  late Animation<double> _logoAnimation;
-  late Animation<double> _formAnimation;
-  late Animation<Offset> _slideAnimation;
-
   @override
   void initState() {
     super.initState();
-    _initializeAnimations();
     _initializeDeviceInfo();
     // Pre-fill for testing
     _fullNameController.text = '';
     _phoneController.text = '';
-  }
-
-  void _initializeAnimations() {
-    _logoController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    );
-
-    _formController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
-
-    _logoAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.elasticOut),
-    );
-
-    _formAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _formController, curve: Curves.easeInOut),
-    );
-
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
-          CurvedAnimation(parent: _formController, curve: Curves.easeOutCubic),
-        );
-
-    // Start animations
-    _logoController.forward();
-    Future.delayed(const Duration(milliseconds: 300), () {
-      _formController.forward();
-    });
   }
 
   Future<void> _initializeDeviceInfo() async {
@@ -131,8 +94,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   void dispose() {
     _fullNameController.dispose();
     _phoneController.dispose();
-    _logoController.dispose();
-    _formController.dispose();
     super.dispose();
   }
 
@@ -482,433 +443,349 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF0E6FF), // Light purple background
-              Color(0xFFE1D5FF), // Slightly darker purple
-              Color(0xFFD1C7FF), // Medium purple
-            ],
-            stops: [0.0, 0.5, 1.0],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                SizedBox(height: 20.h),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Creative Header with Traffic Rules SVG Illustration
+              Column(
+                children: [
+                  SizedBox(height: 20.h),
 
-                // Creative Header with Traffic Rules SVG Illustration
-                AnimatedBuilder(
-                  animation: _logoAnimation,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _logoAnimation.value,
-                      child: Column(
-                        children: [
-                          SizedBox(height: 20.h),
-
-                          // App Title with Creative Styling
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 20.w,
-                              vertical: 12.h,
-                            ),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  AppColors.secondary,
-                                  AppColors.primary,
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              borderRadius: BorderRadius.circular(5.r),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.secondary.withValues(
-                                    alpha: 0.3,
-                                  ),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              'JOIN OUR COMMUNITY',
-                              style: AppTextStyles.heading1.copyWith(
-                                color: Colors.white,
-                                fontSize: 18.sp,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                          ),
-
-                          SizedBox(height: 10.h),
-
-                          Text(
-                            'Learn • Practice • Master',
-                            style: AppTextStyles.bodyLarge.copyWith(
-                              color: AppColors.grey700,
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-
-                SizedBox(height: 8.h),
-
-                // Clean Information Section
-                Container(
-                  margin: EdgeInsets.symmetric(horizontal: 20.w),
-                  padding: EdgeInsets.all(16.w),
-                  decoration: BoxDecoration(
-                    color: AppColors.grey50,
-                    borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(color: AppColors.grey200, width: 1),
+                  // App Title with Creative Styling
+                  Text(
+                    'Create Account For Free',
+                    style: AppTextStyles.heading2.copyWith(
+                      color: AppColors.black,
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: AppColors.secondary,
-                            size: 16.sp,
-                          ),
-                          SizedBox(width: 8.w),
-                          Text(
-                            'Important Information',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.secondary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14.sp,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        'Fill in your details below to create your account. Your device will be automatically detected for security purposes.',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.grey700,
-                          fontSize: 13.sp,
-                          height: 1.4,
+                  SizedBox(height: 10.h),
+
+                  Text(
+                    'Learn • Practice • Master',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: AppColors.grey700,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 8.h),
+
+              // Clean Information Section
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 20.w),
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: AppColors.grey50,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: AppColors.grey200, width: 1),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: AppColors.secondary,
+                          size: 16.sp,
                         ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          'Important Information',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.secondary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'Fill in your details below to create your account. Your device will be automatically detected for security purposes.',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.grey700,
+                        fontSize: 13.sp,
+                        height: 1.4,
                       ),
-                      SizedBox(height: 8.h),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.phone_outlined,
+                    ),
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.phone_outlined,
+                          color: AppColors.grey600,
+                          size: 14.sp,
+                        ),
+                        SizedBox(width: 6.w),
+                        Text(
+                          'Need help? Call ',
+                          style: AppTextStyles.bodySmall.copyWith(
                             color: AppColors.grey600,
-                            size: 14.sp,
+                            fontSize: 13.sp,
                           ),
-                          SizedBox(width: 6.w),
-                          Text(
-                            'Need help? Call ',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.grey600,
-                              fontSize: 13.sp,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () async {
-                              try {
-                                const phoneNumber = '+250780494000';
-                                final Uri phoneUri = Uri(
-                                  scheme: 'tel',
-                                  path: phoneNumber,
+                        ),
+                        GestureDetector(
+                          onTap: () async {
+                            try {
+                              const phoneNumber = '+250780494000';
+                              final Uri phoneUri = Uri(
+                                scheme: 'tel',
+                                path: phoneNumber,
+                              );
+                              if (await canLaunchUrl(phoneUri)) {
+                                await launchUrl(
+                                  phoneUri,
+                                  mode: LaunchMode.externalApplication,
                                 );
-                                if (await canLaunchUrl(phoneUri)) {
-                                  await launchUrl(
-                                    phoneUri,
-                                    mode: LaunchMode.externalApplication,
-                                  );
-                                } else {
-                                  _showPhoneNumberDialog();
-                                }
-                              } catch (e) {
+                              } else {
                                 _showPhoneNumberDialog();
                               }
-                            },
-                            child: Text(
-                              '+250 780 494 000',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.secondary,
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w600,
-                                decoration: TextDecoration.underline,
-                              ),
+                            } catch (e) {
+                              _showPhoneNumberDialog();
+                            }
+                          },
+                          child: Text(
+                            '+250 780 494 000',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.secondary,
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
                             ),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 16.h),
-
-                // Animated Registration Form
-                SlideTransition(
-                  position: _slideAnimation,
-                  child: FadeTransition(
-                    opacity: _formAnimation,
-                    child: Container(
-                      margin: EdgeInsets.symmetric(horizontal: 20.w),
-                      padding: EdgeInsets.all(20.w),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.secondary.withValues(alpha: 0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              'Fill in your details below to create your account.',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.grey600,
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-
-                            SizedBox(height: 12.h),
-
-                            // Full Name Field
-                            CustomTextField(
-                              controller: _fullNameController,
-                              label: 'Full Name',
-                              hint: 'Enter your full name',
-                              prefixIcon: Icons.person_outline,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Full name is required';
-                                }
-                                if (value.length < AppConstants.minNameLength) {
-                                  return 'Name must be at least ${AppConstants.minNameLength} characters';
-                                }
-                                return null;
-                              },
-                            ),
-
-                            SizedBox(height: 12.h),
-
-                            // Phone Number Field
-                            CustomTextField(
-                              controller: _phoneController,
-                              label: 'Phone Number',
-                              hint: 'Enter your phone number',
-                              prefixIcon: Icons.phone_outlined,
-                              keyboardType: TextInputType.phone,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Phone number is required';
-                                }
-                                if (value.length < 10) {
-                                  return 'Please enter a valid phone number';
-                                }
-                                return null;
-                              },
-                            ),
-
-                            SizedBox(height: 16.h),
-
-                            // Register Button
-                            CustomButton(
-                              text: 'Create Account',
-                              icon: Icons.person_add,
-                              onPressed: _isLoading ? null : _handleRegister,
-                              isLoading: _isLoading,
-                              height: 50.h,
-                              backgroundColor: AppColors.secondary,
-                              textColor: Colors.white,
-                            ),
-                          ],
                         ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 10.h),
-
-                // Login Link with Creative Design
-                Container(
-                  margin: EdgeInsets.symmetric(horizontal: 24.w),
-                  padding: EdgeInsets.all(20.w),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.secondary.withValues(alpha: 0.1),
-                        AppColors.primary.withValues(alpha: 0.1),
                       ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(20.r),
-                    border: Border.all(
-                      color: AppColors.secondary.withValues(alpha: 0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Already have an account?',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.grey700,
-                          fontSize: 14.sp,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: Text(
-                          'Sign In',
-                          style: AppTextStyles.link.copyWith(
-                            color: AppColors.secondary,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
+              ),
 
-                SizedBox(height: 20.h),
+              SizedBox(height: 16.h),
 
-                // Privacy Policy and Terms & Conditions Links
-                Container(
-                  margin: EdgeInsets.symmetric(horizontal: 24.w),
-                  padding: EdgeInsets.all(16.w),
-                  decoration: BoxDecoration(
-                    color: AppColors.grey50,
-                    borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(color: AppColors.grey200, width: 1),
-                  ),
+              // Animated Registration Form
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 10.w),
+                padding: EdgeInsets.all(15.w),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.secondary.withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Form(
+                  key: _formKey,
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'By creating an account, you agree to our',
-                        style: AppTextStyles.caption.copyWith(
+                        'Fill in your details below to create your account.',
+                        style: AppTextStyles.bodyMedium.copyWith(
                           color: AppColors.grey600,
                           fontSize: 12.sp,
+                          fontWeight: FontWeight.w400,
+                          fontStyle: FontStyle.italic,
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 8.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          TextButton(
-                            onPressed: () => _launchPrivacyPolicy(),
-                            child: Text(
-                              'Privacy Policy',
-                              style: AppTextStyles.link.copyWith(
-                                color: AppColors.primary,
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            ' and ',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.grey600,
-                              fontSize: 12.sp,
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () => _launchTermsConditions(),
-                            child: Text(
-                              'Terms & Conditions',
-                              style: AppTextStyles.link.copyWith(
-                                color: AppColors.primary,
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
+
+                      SizedBox(height: 12.h),
+
+                      // Full Name Field
+                      CustomTextField(
+                        controller: _fullNameController,
+                        label: 'Full Name',
+                        hint: 'Enter your full name',
+                        prefixIcon: Icons.person_outline,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Full name is required';
+                          }
+                          if (value.length < AppConstants.minNameLength) {
+                            return 'Name must be at least ${AppConstants.minNameLength} characters';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      SizedBox(height: 12.h),
+
+                      // Phone Number Field
+                      CustomTextField(
+                        controller: _phoneController,
+                        label: 'Phone Number',
+                        hint: 'Enter your phone number',
+                        prefixIcon: Icons.phone_outlined,
+                        keyboardType: TextInputType.phone,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Phone number is required';
+                          }
+                          if (value.length < 10) {
+                            return 'Please enter a valid phone number';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      SizedBox(height: 16.h),
+
+                      // Register Button
+                      CustomButton(
+                        text: 'Create Account',
+                        icon: Icons.person_add,
+                        onPressed: _isLoading ? null : _handleRegister,
+                        isLoading: _isLoading,
+                        height: 50.h,
+                        backgroundColor: AppColors.primary,
+                        textColor: Colors.white,
                       ),
                     ],
                   ),
                 ),
+              ),
 
-                SizedBox(height: 40.h),
-              ],
-            ),
+              SizedBox(height: 10.h),
+
+              // Login Link with Creative Design
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Already have an account?',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.grey700,
+                      fontSize: 14.sp,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      'Sign In',
+                      style: AppTextStyles.link.copyWith(
+                        color: AppColors.secondary,
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              SizedBox(height: 20.h),
+
+              // Privacy Policy and Terms & Conditions Links
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 24.w),
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: AppColors.grey50,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: AppColors.grey200, width: 1),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      'By creating an account, you agree to our',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.grey600,
+                        fontSize: 12.sp,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 8.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          onPressed: () => _showPrivacyPolicyModal(),
+                          child: Text(
+                            'Privacy Policy',
+                            style: AppTextStyles.link.copyWith(
+                              color: AppColors.primary,
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          ' and ',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.grey600,
+                            fontSize: 12.sp,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => _showTermsConditionsModal(),
+                          child: Text(
+                            'Terms & Conditions',
+                            style: AppTextStyles.link.copyWith(
+                              color: AppColors.primary,
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 40.h),
+            ],
           ),
         ),
       ),
     );
   }
 
-  // Launch Privacy Policy
-  void _launchPrivacyPolicy() async {
-    try {
-      // Use the actual backend URL
-      const privacyPolicyUrl =
-          'https://traffic.cyangugudims.com/privacy-policy';
-
-      if (await canLaunchUrl(Uri.parse(privacyPolicyUrl))) {
-        await launchUrl(
-          Uri.parse(privacyPolicyUrl),
-          mode: LaunchMode.externalApplication,
-        );
-      } else {
-        // Fallback: Show privacy policy in a dialog
-        _showPrivacyPolicyDialog();
-      }
-    } catch (e) {
-      // Fallback: Show privacy policy in a dialog
-      _showPrivacyPolicyDialog();
-    }
+  // Show Privacy Policy Modal
+  void _showPrivacyPolicyModal() {
+    PrivacyPolicyModal.show(
+      context,
+      title: 'Privacy Policy',
+      content:
+          'Learn Traffic Rules is an educational application designed to help users prepare for provisional driving license examinations. This app is not affiliated with any government agency and serves as a practice tool only.\n\n'
+          'We collect minimal data necessary to provide our educational services:\n'
+          '• Phone number for account creation and security\n'
+          '• Device information for fraud prevention\n'
+          '• Learning progress to personalize your experience\n'
+          '• App usage data to improve our services\n\n'
+          'Your privacy is important to us. We use industry-standard security measures to protect your data and never share your personal information with third parties.',
+      fullPolicyUrl: 'https://traffic.cyangugudims.com/privacy-policy',
+    );
   }
 
-  // Launch Terms & Conditions
-  void _launchTermsConditions() async {
-    try {
-      // Use the actual backend URL
-      const termsUrl =
-          'https://traffic.cyangugudims.com/delete-account-instructions';
-
-      if (await canLaunchUrl(Uri.parse(termsUrl))) {
-        await launchUrl(
-          Uri.parse(termsUrl),
-          mode: LaunchMode.externalApplication,
-        );
-      } else {
-        // Fallback: Show terms & conditions in a dialog
-        _showTermsConditionsDialog();
-      }
-    } catch (e) {
-      // Fallback: Show terms & conditions in a dialog
-      _showTermsConditionsDialog();
-    }
+  // Show Terms & Conditions Modal
+  void _showTermsConditionsModal() {
+    PrivacyPolicyModal.show(
+      context,
+      title: 'Terms & Conditions',
+      content:
+          'By using Learn Traffic Rules, you agree to these terms:\n\n'
+          'Educational Purpose: This app is designed for educational practice only and is not affiliated with any government agency or official driving examination body.\n\n'
+          'User Responsibilities:\n'
+          '• Provide accurate information during registration\n'
+          '• Use the app for educational purposes only\n'
+          '• Respect intellectual property rights\n'
+          '• Not attempt to reverse engineer the app\n\n'
+          'Service Availability: We strive to maintain service availability but cannot guarantee uninterrupted access.\n\n'
+          'Account Termination: You may delete your account at any time. We reserve the right to suspend accounts that violate these terms.',
+      fullPolicyUrl: 'https://traffic.cyangugudims.com/terms-conditions',
+    );
   }
 
   // Show Privacy Policy Dialog
