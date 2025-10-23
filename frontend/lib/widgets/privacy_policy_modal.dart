@@ -185,7 +185,7 @@ class PrivacyPolicyModal extends StatelessWidget {
               children: [
                 // Full policy link
                 GestureDetector(
-                  onTap: () => _launchFullPolicy(fullPolicyUrl),
+                  onTap: () => _launchFullPolicy(fullPolicyUrl, context),
                   child: Container(
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -255,22 +255,24 @@ class PrivacyPolicyModal extends StatelessWidget {
     );
   }
 
-  Future<void> _launchFullPolicy(String url) async {
+  Future<void> _launchFullPolicy(String url, BuildContext buildContext) async {
     try {
       final Uri uri = Uri.parse(url);
-      
+
       // Try direct launch first
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (e) {
       debugPrint('Error launching privacy policy: $e');
-      
+
       // Show fallback dialog
-      if (context.mounted) {
+      if (buildContext.mounted) {
         showDialog(
-          context: context,
+          context: buildContext,
           builder: (context) => AlertDialog(
             title: const Text('Open Privacy Policy'),
-            content: Text('Unable to open browser automatically.\n\nPlease visit: $url'),
+            content: Text(
+              'Unable to open browser automatically.\n\nPlease visit: $url',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
