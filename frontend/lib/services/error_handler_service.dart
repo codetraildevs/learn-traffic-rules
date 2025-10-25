@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 class ErrorHandlerService {
   /// Converts technical errors into user-friendly messages
-  static String getErrorMessage(dynamic error) {
+  static String getErrorMessage(dynamic error, {String? context}) {
     if (error == null) return 'An unknown error occurred';
 
     final errorString = error.toString().toLowerCase();
@@ -64,21 +64,51 @@ class ErrorHandlerService {
       return '📞 Invalid Phone Number\n\nPlease enter a valid phone number.';
     }
 
+    // Context-specific phone number errors
+    if (errorString.contains('phone number is already registered')) {
+      return '📱 Phone Number Already Registered\n\nThis phone number is already registered. Please login instead.';
+    }
+
+    // Handle "Invalid phone number or device ID" based on context
+    if (errorString.contains('invalid phone number or device id')) {
+      if (context == 'login') {
+        return '📞 Phone Number Not Found\n\nThis phone number is not registered. Please create an account first.';
+      } else if (context == 'register') {
+        return '📱 Device Mismatch\n\nThis phone number is registered on a different device. Please use the same device you registered with.';
+      } else {
+        return '📞 Invalid Phone Number\n\nPlease check your phone number and try again.';
+      }
+    }
+
+    // Phone number not found (for login context)
+    if (errorString.contains('phone number not found') ||
+        errorString.contains('user not found') ||
+        errorString.contains('phone not registered')) {
+      return '📞 Phone Number Not Found\n\nThis phone number is not registered. Please create an account first.';
+    }
+
     // Timeout errors
     if (errorString.contains('timeout') || errorString.contains('timed out')) {
       return '⏱️ Request Timeout\n\nThe request took too long to complete. Please check your connection and try again.';
     }
 
     // Rate limit errors
-    if (errorString.contains('429') || 
+    if (errorString.contains('429') ||
         errorString.contains('rate limit') ||
         errorString.contains('too many requests')) {
       return '🚫 Rate Limit Exceeded\n\nYou\'re making requests too quickly. Please wait a moment before trying again.';
     }
 
-    // API errors
+    // API errors - preserve the actual error message from backend
     if (errorString.contains('apiexception')) {
-      return '🔧 API Error\n\nThere was a problem with the server. Please try again.';
+      // Extract the actual error message from ApiException
+      final errorMessage = error.toString();
+      // Remove "ApiException: " prefix if present
+      final cleanMessage = errorMessage.replaceFirst(
+        RegExp(r'^ApiException:\s*'),
+        '',
+      );
+      return cleanMessage;
     }
 
     // Generic fallback
@@ -118,7 +148,7 @@ class ErrorHandlerService {
       return 'Request timeout';
     }
 
-    if (errorString.contains('429') || 
+    if (errorString.contains('429') ||
         errorString.contains('rate limit') ||
         errorString.contains('too many requests')) {
       return 'Too many requests';
@@ -157,7 +187,7 @@ class ErrorHandlerService {
       return '⏱️';
     }
 
-    if (errorString.contains('429') || 
+    if (errorString.contains('429') ||
         errorString.contains('rate limit') ||
         errorString.contains('too many requests')) {
       return '🚫';

@@ -281,8 +281,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
         },
       );
 
-      // Get user-friendly error message
-      final userFriendlyError = ErrorHandlerService.getErrorMessage(e);
+      // Get user-friendly error message with context
+      final userFriendlyError = ErrorHandlerService.getErrorMessage(
+        e,
+        context: 'login',
+      );
 
       debugPrint('❌ LOGIN ERROR: $userFriendlyError');
       // Don't change auth state on error to prevent refresh
@@ -350,8 +353,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
         },
       );
 
-      // Get user-friendly error message
-      final userFriendlyError = ErrorHandlerService.getErrorMessage(e);
+      // Get user-friendly error message with context
+      final userFriendlyError = ErrorHandlerService.getErrorMessage(
+        e,
+        context: 'register',
+      );
 
       state = state.copyWith(
         status: AuthStatus.unauthenticated,
