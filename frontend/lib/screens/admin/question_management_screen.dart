@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:learn_traffic_rules/core/constants/app_constants.dart';
 import 'package:learn_traffic_rules/services/flash_message_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/exam_model.dart';
@@ -246,8 +247,8 @@ class _QuestionManagementScreenState
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8.r),
                   child: Image.network(
-                    question.questionImgUrl!,
-                    fit: BoxFit.cover,
+                    '${AppConstants.baseUrlImage}${question.questionImgUrl!}',
+                    fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         color: AppColors.grey100,
@@ -834,8 +835,8 @@ class _EditQuestionDialogState extends State<_EditQuestionDialog> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8.r),
                     child: Image.network(
-                      widget.question.questionImgUrl!,
-                      fit: BoxFit.cover,
+                      '${AppConstants.baseUrlImage}${widget.question.questionImgUrl!}',
+                      fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           color: AppColors.grey100,

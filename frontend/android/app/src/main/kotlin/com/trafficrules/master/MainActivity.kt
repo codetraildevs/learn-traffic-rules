@@ -1,4 +1,4 @@
-package com.example.learn_traffic_rules
+package com.trafficrules.master
 
 import android.os.Bundle
 import android.view.WindowManager
@@ -7,7 +7,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "com.example.learn_traffic_rules/security"
+    private val CHANNEL = "com.trafficrules.master/security"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

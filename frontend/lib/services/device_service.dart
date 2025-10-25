@@ -144,8 +144,8 @@ class DeviceService {
     final androidInfo = await _deviceInfo.androidInfo;
     final packageInfo = await PackageInfo.fromPlatform();
 
-    // Create a unique device ID using multiple characteristics
-    // This ensures each user gets a unique ID even on the same device model
+    // Create a consistent device ID using device characteristics only
+    // This ensures the same device always gets the same ID
     final deviceCharacteristics = [
       androidInfo.brand, // Device brand (e.g., TECNO)
       androidInfo.model, // Device model (e.g., TECNO BF7)
@@ -154,9 +154,7 @@ class DeviceService {
       androidInfo.hardware, // Hardware info
       androidInfo.product, // Product name
       packageInfo.packageName, // App package name
-      packageInfo.version, // App version
-      DateTime.now().millisecondsSinceEpoch
-          .toString(), // Timestamp for uniqueness
+      // Removed timestamp to ensure consistency
     ];
 
     // Create a hash from all characteristics
@@ -170,13 +168,18 @@ class DeviceService {
 
   Future<String> _getIOSDeviceId() async {
     final iosInfo = await _deviceInfo.iosInfo;
-    // Use identifierForVendor for high security
-    return 'ios-${iosInfo.identifierForVendor ?? DateTime.now().millisecondsSinceEpoch.toString()}';
+    // Use identifierForVendor for high security and consistency
+    final identifier =
+        iosInfo.identifierForVendor ?? iosInfo.name ?? 'unknown-ios-device';
+    return 'ios-${identifier.hashCode}';
   }
 
   Future<String> _getFallbackDeviceId() async {
     final packageInfo = await PackageInfo.fromPlatform();
-    return '${Platform.operatingSystem}-${packageInfo.packageName}-${DateTime.now().millisecondsSinceEpoch}';
+    // Use consistent characteristics without timestamp
+    final combined =
+        '${Platform.operatingSystem}-${packageInfo.packageName}-${packageInfo.version}';
+    return 'fallback-${combined.hashCode}';
   }
 
   /// Get platform name for display
@@ -226,6 +229,21 @@ class DeviceService {
     await prefs.remove('device_fingerprint');
     _cachedDeviceId = null;
     _cachedDeviceFingerprint = null;
+  }
+
+  /// Generate a new device ID (useful for testing or device changes)
+  Future<String> generateNewDeviceId() async {
+    // Clear cached data
+    _cachedDeviceId = null;
+    _cachedDeviceFingerprint = null;
+
+    // Clear stored data
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('secure_device_id');
+    await prefs.remove('device_fingerprint');
+
+    // Generate new ID
+    return await getDeviceId();
   }
 
   /// Check if this is an admin device (for testing)

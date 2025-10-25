@@ -54,9 +54,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   }
 
   Future<void> _loadUsers() async {
-    setState(() {
-      _isLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     try {
       debugPrint('🔄 Loading users...');
@@ -71,10 +73,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             '👤 User: ${user.fullName}, isBlocked: ${user.isBlocked}, blockReason: ${user.blockReason ?? 'None'}',
           );
         }
-        setState(() {
-          _users = response.data.users;
-          _filteredUsers = _users;
-        });
+        if (mounted) {
+          setState(() {
+            _users = response.data.users;
+            _filteredUsers = _users;
+          });
+        }
         _applyFiltersAndSort();
       } else {
         debugPrint('❌ Failed to load users: ${response.message}');
@@ -83,9 +87,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       debugPrint('❌ Error loading users: $e');
       _showErrorSnackBar('Failed to load users: $e');
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -141,9 +147,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       return _sortAscending ? comparison : -comparison;
     });
 
-    setState(() {
-      _filteredUsers = filtered;
-    });
+    if (mounted) {
+      setState(() {
+        _filteredUsers = filtered;
+      });
+    }
   }
 
   void _onSearchChanged(String query) {

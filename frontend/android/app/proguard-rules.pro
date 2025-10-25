@@ -49,7 +49,7 @@
 }
 
 # Keep model classes for JSON serialization
--keep class com.example.learn_traffic_rules.models.** { *; }
+-keep class com.trafficrules.master.models.** { *; }
 -keep class * extends com.google.gson.TypeAdapter
 -keep class * implements com.google.gson.TypeAdapterFactory
 -keep class * implements com.google.gson.JsonSerializer
@@ -66,7 +66,7 @@
 -keep class com.dexterous.** { *; }
 
 # Keep device info classes
--keep class com.example.learn_traffic_rules.** { *; }
+-keep class com.trafficrules.master.** { *; }
 
 # Keep Google Play Core classes (required for deferred components)
 -keep class com.google.android.play.core.** { *; }

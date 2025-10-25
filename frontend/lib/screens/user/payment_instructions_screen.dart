@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:learn_traffic_rules/screens/user/available_exams_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/theme/app_theme.dart';
 import '../../models/free_exam_model.dart';
 import '../../services/user_management_service.dart';
 import '../../widgets/custom_button.dart';
@@ -79,7 +80,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: const Color(0xFF2E7D32),
+        backgroundColor: AppColors.primary,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -163,14 +164,14 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
       padding: EdgeInsets.all(8.w),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+          colors: [AppColors.primary, AppColors.secondary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(8.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withValues(alpha: 0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -226,14 +227,14 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF2196F3), Color(0xFF1976D2)],
+          colors: [AppColors.primary, AppColors.secondary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(10.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withValues(alpha: 0.15),
+            color: AppColors.secondary.withValues(alpha: 0.15),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -361,7 +362,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
             width: 32.w,
             height: 32.w,
             decoration: BoxDecoration(
-              color: const Color(0xFF2E7D32),
+              color: AppColors.primary,
               borderRadius: BorderRadius.circular(16.r),
             ),
             child: Center(
@@ -376,7 +377,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
             ),
           ),
           SizedBox(width: 12.w),
-          Icon(icon, size: 20.w, color: const Color(0xFF2E7D32)),
+          Icon(icon, size: 20.w, color: AppColors.primary),
           SizedBox(width: 8.w),
           Expanded(
             child: Column(
@@ -420,7 +421,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
             color: Colors.grey[800],
           ),
         ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 16.h),
         // Show only the first 3 payment tiers in a simplified format
         ..._paymentData!.paymentTiers
             .take(3)
@@ -436,16 +437,16 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
       margin: EdgeInsets.only(bottom: 8.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: isPopular ? const Color(0xFF2E7D32) : Colors.white,
+        color: isPopular ? AppColors.primary : Colors.white,
         borderRadius: BorderRadius.circular(10.r),
         border: Border.all(
-          color: isPopular ? const Color(0xFF2E7D32) : Colors.grey[300]!,
+          color: isPopular ? AppColors.primary : Colors.grey[300]!,
           width: isPopular ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
             color: isPopular
-                ? const Color(0xFF2E7D32).withValues(alpha: 0.15)
+                ? AppColors.primary.withValues(alpha: 0.15)
                 : Colors.grey.withValues(alpha: 0.08),
             blurRadius: 3,
             offset: const Offset(0, 1),
@@ -458,13 +459,13 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
               decoration: BoxDecoration(
-                color: Colors.orange,
+                color: AppColors.secondary,
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Text(
                 'POPULAR',
                 style: TextStyle(
-                  fontSize: 8.sp,
+                  fontSize: 10.sp,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -497,12 +498,8 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           ElevatedButton(
             onPressed: () => _selectPlan(tier),
             style: ElevatedButton.styleFrom(
-              backgroundColor: isPopular
-                  ? Colors.white
-                  : const Color(0xFF2E7D32),
-              foregroundColor: isPopular
-                  ? const Color(0xFF2E7D32)
-                  : Colors.white,
+              backgroundColor: isPopular ? Colors.white : AppColors.primary,
+              foregroundColor: isPopular ? AppColors.primary : Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6.r),
@@ -528,14 +525,14 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.contact_phone, color: Colors.blue[700], size: 20.w),
+              Icon(Icons.contact_phone, color: AppColors.secondary, size: 20.w),
               SizedBox(width: 6.w),
               Text(
                 'Contact Admin',
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue[700],
+                  color: AppColors.secondary,
                 ),
               ),
             ],
@@ -547,6 +544,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
               fontSize: 12.sp,
               color: Colors.grey[700],
               height: 1.3,
+              fontStyle: FontStyle.italic,
             ),
           ),
           SizedBox(height: 12.h),
@@ -558,7 +556,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                   icon: Icon(Icons.phone, size: 16.w),
                   label: const Text('Call'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2E7D32),
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(vertical: 10.h),
                     shape: RoundedRectangleBorder(
@@ -575,7 +573,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                   icon: Icon(Icons.chat, size: 16.w),
                   label: const Text('WhatsApp'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: AppColors.secondary,
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(vertical: 10.h),
                     shape: RoundedRectangleBorder(

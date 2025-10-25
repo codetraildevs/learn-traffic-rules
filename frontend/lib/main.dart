@@ -26,6 +26,9 @@ import 'screens/user/notifications_screen.dart';
 import 'screens/user/study_reminders_screen.dart';
 import 'screens/user/help_support_screen.dart';
 
+// Provider for disclaimer status
+final disclaimerAcceptedProvider = StateProvider<bool>((ref) => false);
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -72,6 +75,11 @@ class MyApp extends ConsumerWidget {
     final authState = ref.watch(authProvider);
     final themeMode = ref.watch(themeModeProvider);
 
+    // Initialize disclaimer status
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeDisclaimerStatus(ref);
+    });
+
     return ScreenUtilInit(
       designSize: const Size(375, 812), // iPhone X design size
       minTextAdapt: true,
@@ -115,35 +123,60 @@ class MyApp extends ConsumerWidget {
   }
 
   Widget _getInitialScreen(AuthState authState) {
-    return FutureBuilder<bool>(
-      future: _checkDisclaimerAccepted(),
-      builder: (context, snapshot) {
-        // Show splash screen while checking disclaimer
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SplashScreen();
-        }
+    return Consumer(
+      builder: (context, ref, child) {
+        final disclaimerAccepted = ref.watch(disclaimerAcceptedProvider);
 
         // If disclaimer not accepted, show disclaimer screen
-        if (snapshot.data != true) {
+        if (!disclaimerAccepted) {
+          debugPrint(
+            '🔄 MAIN: Disclaimer not accepted, showing DisclaimerScreen',
+          );
           return const DisclaimerScreen();
         }
 
         // If disclaimer accepted, proceed with normal auth flow
+        debugPrint('🔄 MAIN: Disclaimer accepted, checking auth state');
+        debugPrint('🔄 MAIN: Auth state changed to: ${authState.status}');
+        debugPrint('🔄 MAIN: User: ${authState.user?.fullName}');
+        debugPrint('🔄 MAIN: Is loading: ${authState.isLoading}');
+        debugPrint('🔄 MAIN: Auth provider state: ${ref.read(authProvider)}');
 
-        // Only navigate automatically on initial load, not during login process
+        // If auth state is still initial and disclaimer is accepted,
+        // wait for auth initialization to complete
+        if (authState.status == AuthStatus.initial) {
+          debugPrint('🔄 MAIN: Auth still initializing, showing SplashScreen');
+          return const SplashScreen();
+        }
+
         switch (authState.status) {
           case AuthStatus.initial:
+            debugPrint('🔄 MAIN: Showing SplashScreen');
             return const SplashScreen();
           case AuthStatus.authenticated:
+            debugPrint('🔄 MAIN: Showing HomeScreen');
             return const HomeScreen();
           case AuthStatus.unauthenticated:
+            debugPrint('🔄 MAIN: Showing LoginScreen');
             return const LoginScreen();
           case AuthStatus.loading:
+            debugPrint('🔄 MAIN: Showing LoginScreen (loading)');
             // Don't show splash during login - stay on current screen
             return const LoginScreen();
         }
       },
     );
+  }
+
+  Future<void> _initializeDisclaimerStatus(WidgetRef ref) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final disclaimerAccepted = prefs.getBool('disclaimer_accepted') ?? false;
+      ref.read(disclaimerAcceptedProvider.notifier).state = disclaimerAccepted;
+      debugPrint('🔄 MAIN: Disclaimer status initialized: $disclaimerAccepted');
+    } catch (e) {
+      debugPrint('Error initializing disclaimer status: $e');
+    }
   }
 
   Future<bool> _checkDisclaimerAccepted() async {

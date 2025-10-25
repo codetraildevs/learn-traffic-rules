@@ -593,14 +593,14 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+          colors: [AppColors.secondary, AppColors.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withValues(alpha: 0.3),
+            color: AppColors.secondary.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -646,7 +646,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                   onPressed: () => _showPaymentInstructions(),
                   width: double.infinity,
                   backgroundColor: Colors.white,
-                  textColor: const Color(0xFF2E7D32),
+                  textColor: AppColors.primary,
                 ),
               ),
               SizedBox(width: 12.w),
@@ -655,7 +655,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                   text: 'Contact Admin',
                   onPressed: _contactAdmin,
                   width: double.infinity,
-                  backgroundColor: Colors.orange,
+                  backgroundColor: AppColors.secondary,
                 ),
               ),
             ],

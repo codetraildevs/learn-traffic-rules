@@ -62,10 +62,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _loadDashboardData() async {
-    setState(() {
-      _isLoading = true;
-      _error = '';
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _error = '';
+      });
+    }
 
     try {
       final authState = ref.read(authProvider);
@@ -77,13 +79,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         await _loadAdminDashboardData();
       }
     } catch (e) {
-      setState(() {
-        _error = 'Failed to load dashboard data: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to load dashboard data: $e';
+        });
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

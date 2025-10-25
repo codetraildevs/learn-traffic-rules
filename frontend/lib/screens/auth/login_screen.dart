@@ -31,52 +31,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   String? _deviceModel;
   String? _platformName;
 
-  // late AnimationController _logoController;
-  // late AnimationController _formController;
-  // late Animation<double> _logoAnimation;
-  // late Animation<double> _formAnimation;
-  // late Animation<Offset> _slideAnimation;
-
   @override
   void initState() {
     super.initState();
-    //_initializeAnimations();
     _initializeDeviceInfo();
     // Pre-fill for testing - using admin account
     // Admin: 0729111458 (bypasses device ID validation)
     _phoneController.text = '';
   }
-
-  // void _initializeAnimations() {
-  //   _logoController = AnimationController(
-  //     duration: const Duration(milliseconds: 1500),
-  //     vsync: this,
-  //   );
-
-  //   _formController = AnimationController(
-  //     duration: const Duration(milliseconds: 800),
-  //     vsync: this,
-  //   );
-
-  //   _logoAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-  //     CurvedAnimation(parent: _logoController, curve: Curves.elasticOut),
-  //   );
-
-  //   _formAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-  //     CurvedAnimation(parent: _formController, curve: Curves.easeInOut),
-  //   );
-
-  //   _slideAnimation =
-  //       Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-  //         CurvedAnimation(parent: _formController, curve: Curves.easeOutCubic),
-  //       );
-
-  //   // Start animations
-  //   _logoController.forward();
-  //   Future.delayed(const Duration(milliseconds: 500), () {
-  //     _formController.forward();
-  //   });
-  // }
 
   Future<void> _initializeDeviceInfo() async {
     try {
@@ -372,14 +334,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             'timestamp': DateTime.now().toIso8601String(),
           });
 
-          AppFlashMessage.show(
-            context: context,
-            message: 'Login Successful!',
-            description: 'Welcome back to Traffic Rules Master',
-            type: FlashMessageType.success,
-            duration: const Duration(seconds: 2),
-          );
-          // Navigation will be handled by main.dart automatically
+          // Let main.dart handle navigation automatically
+          // The auth state change will trigger the rebuild
         } else {
           final error = ref.read(authProvider).error;
 
@@ -390,44 +346,89 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           });
 
           // Check for specific error types and provide clear messages
-          String errorMessage;
-          String errorDescription;
-          String errorIcon;
+          String errorMessage = 'Login Failed';
+          String errorDescription =
+              'Please check your credentials and try again';
+          String errorIcon = '❌';
 
-          if (error?.contains('Invalid phone number or device ID') == true) {
+          // Debug the actual error message
+          debugPrint('🔍 LOGIN ERROR DEBUG:');
+          debugPrint('   Raw error: $error');
+          debugPrint('   Error type: ${error.runtimeType}');
+
+          // Handle specific error cases with comprehensive pattern matching
+          final errorString = error?.toString().toLowerCase() ?? '';
+
+          if (errorString.contains('invalid phone number or device id') ||
+              errorString.contains('device mismatch') ||
+              errorString.contains('device not found') ||
+              errorString.contains('device binding') ||
+              errorString.contains('device conflict') ||
+              errorString.contains('device not registered')) {
             errorIcon = '📱';
-            errorMessage = 'Device Mismatch $errorIcon';
+            errorMessage = 'Device Mismatch';
             errorDescription =
                 'This phone number is registered on a different device.\n\n'
                 'Solutions:\n'
                 '• Use the same device you registered with\n'
                 '• Create a new account with "Create Account" button\n'
                 '• Contact support if you need device change';
-          } else if (error?.contains('🌐') == true) {
-            errorIcon = '🌐';
-            errorMessage = 'Network Error $errorIcon';
-            errorDescription = error ?? 'Please check your internet connection';
-          } else if (error?.contains('⚠️') == true) {
-            errorIcon = '⚠️';
-            errorMessage = 'Warning $errorIcon';
-            errorDescription = error ?? 'Please check your input';
-          } else if (error?.contains('🔐') == true) {
-            errorIcon = '🔐';
-            errorMessage = 'Authentication Error $errorIcon';
-            errorDescription = error ?? 'Please check your credentials';
-          } else if (error?.contains('📱') == true) {
-            errorIcon = '📱';
-            errorMessage = 'Device Error $errorIcon';
-            errorDescription = error ?? 'Please check your device';
-          } else if (error?.contains('⏱️') == true) {
-            errorIcon = '⏱️';
-            errorMessage = 'Timeout Error $errorIcon';
-            errorDescription = error ?? 'Request timed out, please try again';
-          } else {
-            errorIcon = '❌';
-            errorMessage = 'Login Failed $errorIcon';
+          } else if (errorString.contains('invalid phone') ||
+              errorString.contains('phone number invalid') ||
+              errorString.contains('invalid phone number') ||
+              errorString.contains('phone not found') ||
+              errorString.contains('user not found')) {
+            errorIcon = '📞';
+            errorMessage = 'Phone Number Not Found';
             errorDescription =
-                error ?? 'Please check your credentials and try again';
+                'This phone number is not registered. Please create an account first.';
+          } else if (errorString.contains('invalid credentials') ||
+              errorString.contains('wrong password') ||
+              errorString.contains('authentication failed') ||
+              errorString.contains('unauthorized') ||
+              errorString.contains('401')) {
+            errorIcon = '🔐';
+            errorMessage = 'Invalid Credentials';
+            errorDescription = 'Please check your phone number and try again.';
+          } else if (errorString.contains('network') ||
+              errorString.contains('connection') ||
+              errorString.contains('timeout') ||
+              errorString.contains('unreachable') ||
+              errorString.contains('socketexception')) {
+            errorIcon = '🌐';
+            errorMessage = 'Network Error';
+            errorDescription =
+                'Please check your internet connection and try again.';
+          } else if (errorString.contains('server') ||
+              errorString.contains('api error') ||
+              errorString.contains('internal server') ||
+              errorString.contains('500') ||
+              errorString.contains('502') ||
+              errorString.contains('503')) {
+            errorIcon = '⚠️';
+            errorMessage = 'Server Error';
+            errorDescription =
+                'There was a problem with the server. Please try again in a few moments.';
+          } else if (errorString.contains('rate limit') ||
+              errorString.contains('too many requests') ||
+              errorString.contains('429')) {
+            errorIcon = '⏱️';
+            errorMessage = 'Too Many Requests';
+            errorDescription =
+                'You are making requests too quickly. Please wait a moment and try again.';
+          } else if (errorString.contains('forbidden') ||
+              errorString.contains('403')) {
+            errorIcon = '🔐';
+            errorMessage = 'Access Denied';
+            errorDescription =
+                'You do not have permission to perform this action.';
+          } else {
+            // Generic error with the actual error message
+            errorMessage = 'Login Failed';
+            errorDescription =
+                error?.toString() ??
+                'Please check your credentials and try again';
+            errorIcon = '❌';
           }
 
           AppFlashMessage.show(
@@ -593,7 +594,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
               SizedBox(height: 8.h),
 
-              // Animated Login Form
               Container(
                 margin: EdgeInsets.symmetric(horizontal: 20.w),
                 padding: EdgeInsets.all(16.w),
@@ -619,9 +619,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           color: AppColors.grey600,
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w500,
+                          fontStyle: FontStyle.italic,
                         ),
                       ),
-
                       SizedBox(height: 8.h),
 
                       // Phone Number Field
@@ -693,9 +693,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   ),
                 ],
               ),
-
-              SizedBox(height: 30.h),
-
+              SizedBox(height: 20.h),
               // Privacy Policy and Terms & Conditions Links
               Container(
                 margin: EdgeInsets.symmetric(horizontal: 16.w),
@@ -792,208 +790,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           '• Not attempt to reverse engineer the app\n\n'
           'Service Availability: We strive to maintain service availability but cannot guarantee uninterrupted access.\n\n'
           'Account Termination: You may delete your account at any time. We reserve the right to suspend accounts that violate these terms.',
-      fullPolicyUrl: 'https://traffic.cyangugudims.com/privacy-policy',
-    );
-  }
-
-  // Show Privacy Policy Dialog
-  void _showPrivacyPolicyDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.privacy_tip_outlined, color: AppColors.primary),
-            SizedBox(width: 8.w),
-            Text(
-              'Privacy Policy',
-              style: AppTextStyles.heading3.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Learn Traffic Rules - Privacy Policy',
-                style: AppTextStyles.bodyLarge.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 12.h),
-              const Text(
-                'This educational app is designed to help you learn traffic rules and prepare for driving tests.',
-                style: AppTextStyles.bodyMedium,
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                'Data Collection:',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              const Text(
-                '• We collect minimal information necessary for educational purposes\n'
-                '• Your learning progress and quiz scores\n'
-                '• Device information for app functionality\n'
-                '• No personal identification or sensitive data',
-                style: AppTextStyles.bodySmall,
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                'Data Use:',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              const Text(
-                '• Educational progress tracking\n'
-                '• App improvement and features\n'
-                '• Technical support\n'
-                '• We do not share your data with third parties',
-                style: AppTextStyles.bodySmall,
-              ),
-              SizedBox(height: 12.h),
-              Container(
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Text(
-                  'This is a private educational tool and is not affiliated with any government agency.',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Close',
-              style: AppTextStyles.button.copyWith(color: AppColors.grey600),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Show Terms & Conditions Dialog
-  void _showTermsConditionsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.description_outlined, color: AppColors.primary),
-            SizedBox(width: 8.w),
-            Expanded(
-              child: Text(
-                'Terms & Conditions',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.heading3.copyWith(
-                  color: AppColors.primary,
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Learn Traffic Rules - Terms & Conditions',
-                style: AppTextStyles.bodyLarge.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                'Educational Purpose:',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              const Text(
-                'This app is designed solely for educational purposes to help you learn traffic rules and practice for driving examinations.',
-                style: AppTextStyles.bodySmall,
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                'Important Disclaimers:',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              const Text(
-                '• This app is NOT affiliated with any government agency \n'
-                '• This app does NOT provide official driving licenses\n'
-                '• This app does NOT guarantee passing any examination\n'
-                '• You must complete official government procedures',
-                style: AppTextStyles.bodySmall,
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                'User Responsibilities:',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              const Text(
-                '• Use for educational purposes only\n'
-                '• Complete official procedures for licenses\n'
-                '• Verify information with official sources\n'
-                '• Follow local traffic laws and regulations',
-                style: AppTextStyles.bodySmall,
-              ),
-              SizedBox(height: 12.h),
-              Container(
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Text(
-                  'This is a private educational tool. Always verify information with official government sources.',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.error,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Close',
-              style: AppTextStyles.button.copyWith(color: AppColors.grey600),
-            ),
-          ),
-        ],
-      ),
+      fullPolicyUrl: 'https://traffic.cyangugudims.com/terms-conditions',
     );
   }
 }

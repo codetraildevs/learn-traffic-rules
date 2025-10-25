@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class DisclaimerScreen extends StatefulWidget {
+import '../../core/theme/app_theme.dart';
+import '../../main.dart';
+
+class DisclaimerScreen extends ConsumerStatefulWidget {
   const DisclaimerScreen({super.key});
 
   @override
-  State<DisclaimerScreen> createState() => _DisclaimerScreenState();
+  ConsumerState<DisclaimerScreen> createState() => _DisclaimerScreenState();
 }
 
-class _DisclaimerScreenState extends State<DisclaimerScreen> {
+class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
   bool _hasAcceptedDisclaimer = false;
 
   @override
@@ -171,7 +175,7 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
                               ? _proceedToApp
                               : null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4F46E5),
+                            backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
@@ -187,7 +191,7 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 16.h),
+                      SizedBox(height: 20.h),
 
                       // Checkbox for acceptance
                       Row(
@@ -275,9 +279,15 @@ class _DisclaimerScreenState extends State<DisclaimerScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('disclaimer_accepted', true);
 
-    // Navigate to main app
-    if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/main');
-    }
+    // Update the provider to trigger rebuild
+    ref.read(disclaimerAcceptedProvider.notifier).state = true;
+
+    debugPrint('🔄 DISCLAIMER: Disclaimer accepted, provider updated');
+    debugPrint(
+      '🔄 DISCLAIMER: Letting main app handle navigation automatically',
+    );
+
+    // Don't navigate manually - let the main app handle it automatically
+    // The provider update will trigger a rebuild and show the appropriate screen
   }
 }

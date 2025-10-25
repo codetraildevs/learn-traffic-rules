@@ -26,7 +26,7 @@ class ExamProgressScreen extends StatefulWidget {
 class _ExamProgressScreenState extends State<ExamProgressScreen> {
   bool _isRetaking = false;
   static const MethodChannel _securityChannel = MethodChannel(
-    'com.example.learn_traffic_rules/security',
+    'com.trafficrules.master/security',
   );
 
   Future<void> _disableScreenshots() async {
@@ -532,7 +532,7 @@ class _SecureDetailedAnswersModal extends StatefulWidget {
 class _SecureDetailedAnswersModalState
     extends State<_SecureDetailedAnswersModal> {
   static const MethodChannel _securityChannel = MethodChannel(
-    'com.example.learn_traffic_rules/security',
+    'com.trafficrules.master/security',
   );
 
   @override

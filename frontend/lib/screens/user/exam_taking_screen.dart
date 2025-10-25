@@ -51,7 +51,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
   // Removed _screenshotAttempts - not needed for current implementation
   bool _isExamCompleted = false;
   static const MethodChannel _securityChannel = MethodChannel(
-    'com.example.learn_traffic_rules/security',
+    'com.trafficrules.master/security',
   );
 
   // Timer

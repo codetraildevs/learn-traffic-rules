@@ -373,36 +373,91 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           // Show enhanced error message with specific handling for common errors
           String errorMessage = 'Registration Failed';
           String errorDescription =
-              error ?? 'Please check your information and try again';
+              'Please check your information and try again';
           String errorIcon = '❌';
 
-          // Handle specific error cases
-          if (error?.toLowerCase().contains('already registered') == true ||
-              error?.toLowerCase().contains('phone number is already') ==
-                  true) {
+          // Debug the actual error message
+          debugPrint('🔍 REGISTER ERROR DEBUG:');
+          debugPrint('   Raw error: $error');
+          debugPrint('   Error type: ${error.runtimeType}');
+
+          // Handle specific error cases with comprehensive pattern matching
+          final errorString = error?.toString().toLowerCase() ?? '';
+
+          if (errorString.contains('phone number is already registered') ||
+              errorString.contains('already registered') ||
+              errorString.contains('phone number is already') ||
+              errorString.contains('phone already exists') ||
+              errorString.contains('user already exists') ||
+              errorString.contains('phone number already')) {
             errorMessage = 'Phone Number Already Registered';
             errorDescription =
                 'This phone number is already registered. Please login instead.';
             errorIcon = '📱';
-          } else if (error?.contains('device is already registered') == true) {
+          } else if (errorString.contains('device is already registered') ||
+              errorString.contains('device already registered') ||
+              errorString.contains('device is already') ||
+              errorString.contains('device already exists') ||
+              errorString.contains('device already used') ||
+              errorString.contains('device binding') ||
+              errorString.contains('device conflict')) {
             errorMessage = 'Device Already Registered';
             errorDescription =
                 'This device is already registered to another account.\n\n'
-                'Solutions:\n'
-                '• Use a different device\n'
-                '• Contact support for device change\n'
-                '• Login with the existing account';
+                'Please login with the existing account instead of registering a new one.';
             errorIcon = '📱';
-          } else if (error?.contains('🌐') == true) {
+          } else if (errorString.contains('invalid phone') ||
+              errorString.contains('phone number invalid') ||
+              errorString.contains('invalid phone number')) {
+            errorMessage = 'Invalid Phone Number';
+            errorDescription =
+                'Please enter a valid phone number (10 digits starting with 07).';
+            errorIcon = '📞';
+          } else if (errorString.contains('name too short') ||
+              errorString.contains('invalid name') ||
+              errorString.contains('name required')) {
+            errorMessage = 'Invalid Name';
+            errorDescription =
+                'Please enter a valid full name (at least 3 characters).';
+            errorIcon = '✏️';
+          } else if (errorString.contains('network') ||
+              errorString.contains('connection') ||
+              errorString.contains('timeout') ||
+              errorString.contains('unreachable')) {
+            errorMessage = 'Network Error';
+            errorDescription =
+                'Please check your internet connection and try again.';
             errorIcon = '🌐';
-          } else if (error?.contains('⚠️') == true) {
+          } else if (errorString.contains('server') ||
+              errorString.contains('api error') ||
+              errorString.contains('internal server') ||
+              errorString.contains('500')) {
+            errorMessage = 'Server Error';
+            errorDescription =
+                'There was a problem with the server. Please try again in a few moments.';
             errorIcon = '⚠️';
-          } else if (error?.contains('🔐') == true) {
-            errorIcon = '🔐';
-          } else if (error?.contains('📱') == true) {
-            errorIcon = '📱';
-          } else if (error?.contains('⏱️') == true) {
+          } else if (errorString.contains('rate limit') ||
+              errorString.contains('too many requests') ||
+              errorString.contains('429')) {
+            errorMessage = 'Too Many Requests';
+            errorDescription =
+                'You are making requests too quickly. Please wait a moment and try again.';
             errorIcon = '⏱️';
+          } else if (errorString.contains('unauthorized') ||
+              errorString.contains('forbidden') ||
+              errorString.contains('401') ||
+              errorString.contains('403')) {
+            errorMessage = 'Access Denied';
+            errorDescription =
+                'You do not have permission to perform this action.';
+            errorIcon = '🔐';
+          } else {
+            // Generic error with the actual error message
+            errorMessage = 'Registration Failed';
+            errorDescription =
+                error?.toString() ??
+                'Please check your information and try again';
+            errorIcon = '❌';
           }
 
           AppFlashMessage.show(
@@ -412,9 +467,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             type: FlashMessageType.error,
             duration: const Duration(seconds: 8),
             onTap:
-                (error?.toLowerCase().contains('already registered') == true ||
-                    error?.toLowerCase().contains('phone number is already') ==
-                        true)
+                (errorString.contains('phone number is already registered') ||
+                    errorString.contains('already registered') ||
+                    errorString.contains('phone number is already') ||
+                    errorString.contains('phone already exists') ||
+                    errorString.contains('user already exists') ||
+                    errorString.contains('phone number already') ||
+                    errorString.contains('device is already registered') ||
+                    errorString.contains('device already registered') ||
+                    errorString.contains('device is already') ||
+                    errorString.contains('device already exists') ||
+                    errorString.contains('device already used') ||
+                    errorString.contains('device binding') ||
+                    errorString.contains('device conflict'))
                 ? () {
                     // Navigate to login screen when user taps on "already registered" message
                     Navigator.pop(context);
@@ -568,8 +633,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               ),
 
               SizedBox(height: 16.h),
-
-              // Animated Registration Form
               Container(
                 margin: EdgeInsets.symmetric(horizontal: 10.w),
                 padding: EdgeInsets.all(15.w),
@@ -675,7 +738,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     child: Text(
                       'Sign In',
                       style: AppTextStyles.link.copyWith(
-                        color: AppColors.secondary,
+                        color: AppColors.primary,
                         fontSize: 14.sp,
                         fontWeight: FontWeight.bold,
                       ),
@@ -783,205 +846,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           'Service Availability: We strive to maintain service availability but cannot guarantee uninterrupted access.\n\n'
           'Account Termination: You may delete your account at any time. We reserve the right to suspend accounts that violate these terms.',
       fullPolicyUrl: 'https://traffic.cyangugudims.com/terms-conditions',
-    );
-  }
-
-  // Show Privacy Policy Dialog
-  void _showPrivacyPolicyDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.privacy_tip_outlined, color: AppColors.primary),
-            SizedBox(width: 8.w),
-            Text(
-              'Privacy Policy',
-              style: AppTextStyles.heading3.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Learn Traffic Rules - Privacy Policy',
-                style: AppTextStyles.bodyLarge.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 12.h),
-              const Text(
-                'This educational app is designed to help you learn traffic rules and prepare for driving tests.',
-                style: AppTextStyles.bodyMedium,
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                'Data Collection:',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              const Text(
-                '• We collect minimal information necessary for educational purposes\n'
-                '• Your learning progress and quiz scores\n'
-                '• Device information for app functionality\n'
-                '• No personal identification or sensitive data',
-                style: AppTextStyles.bodySmall,
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                'Data Use:',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              const Text(
-                '• Educational progress tracking\n'
-                '• App improvement and features\n'
-                '• Technical support\n'
-                '• We do not share your data with third parties',
-                style: AppTextStyles.bodySmall,
-              ),
-              SizedBox(height: 12.h),
-              Container(
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Text(
-                  'This is a private educational tool and is not affiliated with any government agency.',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Close',
-              style: AppTextStyles.button.copyWith(color: AppColors.grey600),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Show Terms & Conditions Dialog
-  void _showTermsConditionsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.description_outlined, color: AppColors.primary),
-            SizedBox(width: 8.w),
-            Expanded(
-              child: Text(
-                'Terms & Conditions',
-                style: AppTextStyles.heading3.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Learn Traffic Rules - Terms & Conditions',
-                style: AppTextStyles.bodyLarge.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                'Educational Purpose:',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              const Text(
-                'This app is designed solely for educational purposes to help you learn traffic rules and practice for driving examinations.',
-                style: AppTextStyles.bodySmall,
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                'Important Disclaimers:',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              const Text(
-                '• This app is NOT affiliated with any government agency\n'
-                '• This app does NOT provide official driving licenses\n'
-                '• This app does NOT guarantee passing any examination\n'
-                '• You must complete official government procedures',
-                style: AppTextStyles.bodySmall,
-              ),
-              SizedBox(height: 12.h),
-              Text(
-                'User Responsibilities:',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              const Text(
-                '• Use for educational purposes only\n'
-                '• Complete official procedures for licenses\n'
-                '• Verify information with official sources\n'
-                '• Follow local traffic laws and regulations',
-                style: AppTextStyles.bodySmall,
-              ),
-              SizedBox(height: 12.h),
-              Container(
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Text(
-                  'This is a private educational tool. Always verify information with official government sources.',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.error,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Close',
-              style: AppTextStyles.button.copyWith(color: AppColors.grey600),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

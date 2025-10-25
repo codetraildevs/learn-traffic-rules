@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:learn_traffic_rules/core/constants/app_constants.dart';
+import 'package:learn_traffic_rules/core/theme/app_theme.dart';
 import 'package:learn_traffic_rules/screens/user/available_exams_screen.dart';
 import 'package:learn_traffic_rules/screens/user/exam_progress_screen.dart';
 import '../../models/exam_result_model.dart';
@@ -23,7 +24,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
   bool _isLoading = true;
   String? _error;
   static const MethodChannel _securityChannel = MethodChannel(
-    'com.example.learn_traffic_rules/security',
+    'com.trafficrules.master/security',
   );
 
   Future<void> _disableScreenshots() async {
@@ -94,7 +95,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: const Color(0xFF2E7D32),
+        backgroundColor: AppColors.primary,
         elevation: 0,
         centerTitle: true,
       ),
@@ -182,8 +183,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                           icon: const Icon(Icons.quiz),
                           label: const Text('Take Exam'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF2E7D32),
-                            side: const BorderSide(color: Color(0xFF2E7D32)),
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(color: AppColors.primary),
                             padding: EdgeInsets.symmetric(vertical: 16.h),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12.r),
@@ -325,7 +326,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                             icon: const Icon(Icons.quiz),
                             label: const Text('Take Exam'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2E7D32),
+                              backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
                               padding: EdgeInsets.symmetric(vertical: 16.h),
                               shape: RoundedRectangleBorder(
@@ -341,8 +342,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
                             icon: const Icon(Icons.refresh),
                             label: const Text('Refresh'),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF2E7D32),
-                              side: const BorderSide(color: Color(0xFF2E7D32)),
+                              foregroundColor: AppColors.primary,
+                              side: const BorderSide(color: AppColors.primary),
                               padding: EdgeInsets.symmetric(vertical: 16.h),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12.r),
@@ -1444,7 +1445,7 @@ class _SecureDetailedAnswersModal extends StatefulWidget {
 class _SecureDetailedAnswersModalState
     extends State<_SecureDetailedAnswersModal> {
   static const MethodChannel _securityChannel = MethodChannel(
-    'com.example.learn_traffic_rules/security',
+    'com.trafficrules.master/security',
   );
 
   @override
