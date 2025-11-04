@@ -7,6 +7,12 @@ class ErrorHandlerService {
 
     final errorString = error.toString().toLowerCase();
 
+    // Debug logging to see what error we're processing
+    debugPrint('🔍 ERROR HANDLER DEBUG:');
+    debugPrint('   Raw error: $error');
+    debugPrint('   Error string: $errorString');
+    debugPrint('   Context: $context');
+
     // Network/Connection errors
     if (errorString.contains('connection timed out') ||
         errorString.contains('connection refused') ||
@@ -36,8 +42,40 @@ class ErrorHandlerService {
       return '🔄 Server Error\n\nThe server is experiencing issues. Please try again in a moment.';
     }
 
-    // Authentication errors
+    // Context-specific phone number errors (check these FIRST before generic 401)
+    if (errorString.contains('phone number is already registered')) {
+      debugPrint(
+        '🔍 ERROR HANDLER: Matched "phone number is already registered"',
+      );
+      return '📱 Phone Number Already Registered\n\nThis phone number is already registered. Please login instead.';
+    }
+
+    // Handle "Invalid phone number or device ID" based on context (check this BEFORE generic 401)
+    if (errorString.contains('invalid phone number or device id')) {
+      debugPrint(
+        '🔍 ERROR HANDLER: Matched "invalid phone number or device id"',
+      );
+      if (context == 'login') {
+        debugPrint(
+          '🔍 ERROR HANDLER: Returning "Phone Number Not Found" for login context',
+        );
+        return '📞 Phone Number Not Found\n\nThis phone number is not registered. Please create an account first.';
+      } else if (context == 'register') {
+        debugPrint(
+          '🔍 ERROR HANDLER: Returning "Device Mismatch" for register context',
+        );
+        return '📱 Device Mismatch\n\nThis phone number is registered on a different device. Please use the same device you registered with.';
+      } else {
+        debugPrint(
+          '🔍 ERROR HANDLER: Returning generic "Invalid Phone Number"',
+        );
+        return '📞 Invalid Phone Number\n\nPlease check your phone number and try again.';
+      }
+    }
+
+    // Authentication errors (check these AFTER specific phone number errors)
     if (errorString.contains('401') || errorString.contains('unauthorized')) {
+      debugPrint('🔍 ERROR HANDLER: Matched "401/unauthorized"');
       return '🔐 Authentication Error\n\nInvalid credentials. Please check your username and password.';
     }
 
@@ -62,22 +100,6 @@ class ErrorHandlerService {
     if (errorString.contains('phone number') &&
         errorString.contains('invalid')) {
       return '📞 Invalid Phone Number\n\nPlease enter a valid phone number.';
-    }
-
-    // Context-specific phone number errors
-    if (errorString.contains('phone number is already registered')) {
-      return '📱 Phone Number Already Registered\n\nThis phone number is already registered. Please login instead.';
-    }
-
-    // Handle "Invalid phone number or device ID" based on context
-    if (errorString.contains('invalid phone number or device id')) {
-      if (context == 'login') {
-        return '📞 Phone Number Not Found\n\nThis phone number is not registered. Please create an account first.';
-      } else if (context == 'register') {
-        return '📱 Device Mismatch\n\nThis phone number is registered on a different device. Please use the same device you registered with.';
-      } else {
-        return '📞 Invalid Phone Number\n\nPlease check your phone number and try again.';
-      }
     }
 
     // Phone number not found (for login context)

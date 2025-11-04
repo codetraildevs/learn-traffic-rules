@@ -479,7 +479,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
   void _launchEmail() async {
     final Uri emailUri = Uri(
       scheme: 'mailto',
-      path: 'support@learntrafficrules.com',
+      path: 'engineers.devs@gmail.com',
       query: 'subject=Support Request',
     );
 
@@ -511,7 +511,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                 SizedBox(height: 4.h),
                 const Text('• Call: +250780494000'),
                 const Text('• WhatsApp: +250780494000'),
-                const Text('• Manual: support@learntrafficrules.com'),
+                const Text('• Manual: engineers.devs@gmail.com'),
               ],
             ),
             backgroundColor: Colors.orange,

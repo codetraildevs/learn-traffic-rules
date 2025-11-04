@@ -146,7 +146,7 @@ Version 1.0.0 - Initial Release
 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 <uses-permission android:name="android.permission.VIBRATE" />
 <uses-permission android:name="android.permission.WAKE_LOCK" />
-<uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+<!-- USE_FULL_SCREEN_INTENT removed - not needed for traffic rules app -->
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 ```
 
@@ -205,7 +205,7 @@ Version 1.0.0 - Initial Release
 
 ### Contact Details
 - **Developer**: Traffic Rules Learning Team
-- **Email**: support@learntrafficrules.com
+- **Email**: engineers.devs@gmail.com
 - **Website**: www.learntrafficrules.com
 - **Privacy Policy**: [URL to hosted privacy policy]
 

@@ -94,10 +94,10 @@ class PrivacyPolicyModal extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(16.w),
                     decoration: BoxDecoration(
-                      color: AppColors.warning.withOpacity(0.1),
+                      color: AppColors.warning.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12.r),
                       border: Border.all(
-                        color: AppColors.warning.withOpacity(0.3),
+                        color: AppColors.warning.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -175,7 +175,7 @@ class PrivacyPolicyModal extends StatelessWidget {
           // Bottom section with full policy link
           Container(
             padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.grey50,
               border: Border(
                 top: BorderSide(color: AppColors.grey200, width: 1),

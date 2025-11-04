@@ -57,8 +57,6 @@ Are you preparing for your driving license exam? Look no further! Learn Traffic 
 
 Start your journey to becoming a confident, knowledgeable driver today! Download Learn Traffic Rules and take the first step towards passing your driving test with flying colors.
 
-🎉 Join thousands of successful drivers who have already passed their tests using our app!
-
 #DrivingTest #TrafficRules #RoadSafety #LearnToDrive #DrivingLicense #SafeDriving
 ```
 
@@ -160,8 +158,6 @@ Learn Traffic Rules is the ultimate app for mastering traffic regulations and ac
 • Vehicle safety procedures
 • Emergency situations
 • Parking rules and more
-
-🏆 Join thousands of successful drivers who have already passed their tests using our app!
 
 Download now and start your journey to driving success! 🚀
 ```

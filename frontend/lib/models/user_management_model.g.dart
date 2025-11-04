@@ -6,32 +6,32 @@ part of 'user_management_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-UserWithStats _$UserWithStatsFromJson(Map<String, dynamic> json) =>
-    UserWithStats(
-      id: json['id'] as String,
-      fullName: json['fullName'] as String,
-      phoneNumber: json['phoneNumber'] as String,
-      email: json['email'] as String?,
-      role: json['role'] as String,
-      isActive: json['isActive'] as bool,
-      lastLogin: json['lastLogin'] == null
-          ? null
-          : DateTime.parse(json['lastLogin'] as String),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
-      accessCodeStats: AccessCodeStats.fromJson(
-        json['accessCodeStats'] as Map<String, dynamic>,
-      ),
-      remainingDays: (json['remainingDays'] as num?)?.toInt() ?? 0,
-      expiresAt: json['expiresAt'] == null
-          ? null
-          : DateTime.parse(json['expiresAt'] as String),
-      isBlocked: json['isBlocked'] as bool?,
-      blockReason: json['blockReason'] as String?,
-      blockedAt: json['blockedAt'] == null
-          ? null
-          : DateTime.parse(json['blockedAt'] as String),
-    );
+// UserWithStats _$UserWithStatsFromJson(Map<String, dynamic> json) =>
+//     UserWithStats(
+//       id: json['id'] as String,
+//       fullName: json['fullName'] as String,
+//       phoneNumber: json['phoneNumber'] as String,
+//       email: json['email'] as String?,
+//       role: json['role'] as String,
+//       isActive: json['isActive'] as bool,
+//       lastLogin: json['lastLogin'] == null
+//           ? null
+//           : DateTime.parse(json['lastLogin'] as String),
+//       createdAt: DateTime.parse(json['createdAt'] as String),
+//       updatedAt: DateTime.parse(json['updatedAt'] as String),
+//       accessCodeStats: AccessCodeStats.fromJson(
+//         json['accessCodeStats'] as Map<String, dynamic>,
+//       ),
+//       remainingDays: (json['remainingDays'] as num?)?.toInt() ?? 0,
+//       expiresAt: json['expiresAt'] == null
+//           ? null
+//           : DateTime.parse(json['expiresAt'] as String),
+//       isBlocked: json['isBlocked'] as bool?,
+//       blockReason: json['blockReason'] as String?,
+//       blockedAt: json['blockedAt'] == null
+//           ? null
+//           : DateTime.parse(json['blockedAt'] as String),
+//     );
 
 Map<String, dynamic> _$UserWithStatsToJson(UserWithStats instance) =>
     <String, dynamic>{
@@ -52,16 +52,16 @@ Map<String, dynamic> _$UserWithStatsToJson(UserWithStats instance) =>
       'blockedAt': instance.blockedAt?.toIso8601String(),
     };
 
-AccessCodeStats _$AccessCodeStatsFromJson(Map<String, dynamic> json) =>
-    AccessCodeStats(
-      total: (json['total'] as num?)?.toInt() ?? 0,
-      active: (json['active'] as num?)?.toInt() ?? 0,
-      used: (json['used'] as num?)?.toInt() ?? 0,
-      expired: (json['expired'] as num?)?.toInt() ?? 0,
-      latestCode: json['latestCode'] == null
-          ? null
-          : AccessCode.fromJson(json['latestCode'] as Map<String, dynamic>),
-    );
+// AccessCodeStats _$AccessCodeStatsFromJson(Map<String, dynamic> json) =>
+//     AccessCodeStats(
+//       total: (json['total'] as num?)?.toInt() ?? 0,
+//       active: (json['active'] as num?)?.toInt() ?? 0,
+//       used: (json['used'] as num?)?.toInt() ?? 0,
+//       expired: (json['expired'] as num?)?.toInt() ?? 0,
+//       latestCode: json['latestCode'] == null
+//           ? null
+//           : AccessCode.fromJson(json['latestCode'] as Map<String, dynamic>),
+//     );
 
 Map<String, dynamic> _$AccessCodeStatsToJson(AccessCodeStats instance) =>
     <String, dynamic>{
@@ -72,12 +72,12 @@ Map<String, dynamic> _$AccessCodeStatsToJson(AccessCodeStats instance) =>
       'latestCode': instance.latestCode,
     };
 
-UserListResponse _$UserListResponseFromJson(Map<String, dynamic> json) =>
-    UserListResponse(
-      success: json['success'] as bool,
-      message: json['message'] as String,
-      data: UserListData.fromJson(json['data'] as Map<String, dynamic>),
-    );
+// UserListResponse _$UserListResponseFromJson(Map<String, dynamic> json) =>
+//     UserListResponse(
+//       success: json['success'] as bool,
+//       message: json['message'] as String,
+//       data: UserListData.fromJson(json['data'] as Map<String, dynamic>),
+//     );
 
 Map<String, dynamic> _$UserListResponseToJson(UserListResponse instance) =>
     <String, dynamic>{
@@ -86,14 +86,14 @@ Map<String, dynamic> _$UserListResponseToJson(UserListResponse instance) =>
       'data': instance.data,
     };
 
-UserListData _$UserListDataFromJson(Map<String, dynamic> json) => UserListData(
-  users: (json['users'] as List<dynamic>)
-      .map((e) => UserWithStats.fromJson(e as Map<String, dynamic>))
-      .toList(),
-  pagination: UserPagination.fromJson(
-    json['pagination'] as Map<String, dynamic>,
-  ),
-);
+// UserListData _$UserListDataFromJson(Map<String, dynamic> json) => UserListData(
+//   users: (json['users'] as List<dynamic>)
+//       .map((e) => UserWithStats.fromJson(e as Map<String, dynamic>))
+//       .toList(),
+//   pagination: UserPagination.fromJson(
+//     json['pagination'] as Map<String, dynamic>,
+//   ),
+// );
 
 Map<String, dynamic> _$UserListDataToJson(UserListData instance) =>
     <String, dynamic>{
@@ -101,13 +101,13 @@ Map<String, dynamic> _$UserListDataToJson(UserListData instance) =>
       'pagination': instance.pagination,
     };
 
-UserPagination _$UserPaginationFromJson(Map<String, dynamic> json) =>
-    UserPagination(
-      total: (json['total'] as num?)?.toInt() ?? 0,
-      page: (json['page'] as num?)?.toInt() ?? 1,
-      limit: (json['limit'] as num?)?.toInt() ?? 20,
-      totalPages: (json['totalPages'] as num?)?.toInt() ?? 1,
-    );
+// UserPagination _$UserPaginationFromJson(Map<String, dynamic> json) =>
+//     UserPagination(
+//       total: (json['total'] as num?)?.toInt() ?? 0,
+//       page: (json['page'] as num?)?.toInt() ?? 1,
+//       limit: (json['limit'] as num?)?.toInt() ?? 20,
+//       totalPages: (json['totalPages'] as num?)?.toInt() ?? 1,
+//     );
 
 Map<String, dynamic> _$UserPaginationToJson(UserPagination instance) =>
     <String, dynamic>{
@@ -307,13 +307,13 @@ Map<String, dynamic> _$AccessCodeStatsSummaryToJson(
   'used': instance.used,
 };
 
-RemainingDaysResponse _$RemainingDaysResponseFromJson(
-  Map<String, dynamic> json,
-) => RemainingDaysResponse(
-  success: json['success'] as bool,
-  message: json['message'] as String,
-  data: RemainingDaysData.fromJson(json['data'] as Map<String, dynamic>),
-);
+// RemainingDaysResponse _$RemainingDaysResponseFromJson(
+//   Map<String, dynamic> json,
+// ) => RemainingDaysResponse(
+//   success: json['success'] as bool,
+//   message: json['message'] as String,
+//   data: RemainingDaysData.fromJson(json['data'] as Map<String, dynamic>),
+// );
 
 Map<String, dynamic> _$RemainingDaysResponseToJson(
   RemainingDaysResponse instance,
@@ -323,12 +323,12 @@ Map<String, dynamic> _$RemainingDaysResponseToJson(
   'data': instance.data,
 };
 
-RemainingDaysData _$RemainingDaysDataFromJson(Map<String, dynamic> json) =>
-    RemainingDaysData(
-      remainingDays: (json['remainingDays'] as num).toInt(),
-      hasActiveAccess: json['hasActiveAccess'] as bool,
-      activeCodesCount: (json['activeCodesCount'] as num).toInt(),
-    );
+// RemainingDaysData _$RemainingDaysDataFromJson(Map<String, dynamic> json) =>
+//     RemainingDaysData(
+//       remainingDays: (json['remainingDays'] as num).toInt(),
+//       hasActiveAccess: json['hasActiveAccess'] as bool,
+//       activeCodesCount: (json['activeCodesCount'] as num).toInt(),
+//     );
 
 Map<String, dynamic> _$RemainingDaysDataToJson(RemainingDaysData instance) =>
     <String, dynamic>{

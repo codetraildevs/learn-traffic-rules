@@ -349,7 +349,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           String errorMessage = 'Login Failed';
           String errorDescription =
               'Please check your credentials and try again';
-          String errorIcon = '❌';
 
           // Debug the actual error message
           debugPrint('🔍 LOGIN ERROR DEBUG:');
@@ -359,13 +358,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           // Handle specific error cases with comprehensive pattern matching
           final errorString = error?.toString().toLowerCase() ?? '';
 
-          if (errorString.contains('invalid phone number or device id') ||
-              errorString.contains('device mismatch') ||
+          if (errorString.contains('device mismatch') ||
               errorString.contains('device not found') ||
               errorString.contains('device binding') ||
               errorString.contains('device conflict') ||
               errorString.contains('device not registered')) {
-            errorIcon = '📱';
             errorMessage = 'Device Mismatch';
             errorDescription =
                 'This phone number is registered on a different device.\n\n'
@@ -373,12 +370,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 '• Use the same device you registered with\n'
                 '• Create a new account with "Create Account" button\n'
                 '• Contact support if you need device change';
+          } else if (errorString.contains(
+            'invalid phone number or device id',
+          )) {
+            errorMessage = 'Phone Number Not Found';
+            errorDescription =
+                'This phone number is not registered. Please create an account first.';
           } else if (errorString.contains('invalid phone') ||
               errorString.contains('phone number invalid') ||
               errorString.contains('invalid phone number') ||
               errorString.contains('phone not found') ||
               errorString.contains('user not found')) {
-            errorIcon = '📞';
             errorMessage = 'Phone Number Not Found';
             errorDescription =
                 'This phone number is not registered. Please create an account first.';
@@ -387,7 +389,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               errorString.contains('authentication failed') ||
               errorString.contains('unauthorized') ||
               errorString.contains('401')) {
-            errorIcon = '🔐';
             errorMessage = 'Invalid Credentials';
             errorDescription = 'Please check your phone number and try again.';
           } else if (errorString.contains('network') ||
@@ -395,7 +396,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               errorString.contains('timeout') ||
               errorString.contains('unreachable') ||
               errorString.contains('socketexception')) {
-            errorIcon = '🌐';
             errorMessage = 'Network Error';
             errorDescription =
                 'Please check your internet connection and try again.';
@@ -405,20 +405,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               errorString.contains('500') ||
               errorString.contains('502') ||
               errorString.contains('503')) {
-            errorIcon = '⚠️';
             errorMessage = 'Server Error';
             errorDescription =
                 'There was a problem with the server. Please try again in a few moments.';
           } else if (errorString.contains('rate limit') ||
               errorString.contains('too many requests') ||
               errorString.contains('429')) {
-            errorIcon = '⏱️';
             errorMessage = 'Too Many Requests';
             errorDescription =
                 'You are making requests too quickly. Please wait a moment and try again.';
           } else if (errorString.contains('forbidden') ||
               errorString.contains('403')) {
-            errorIcon = '🔐';
             errorMessage = 'Access Denied';
             errorDescription =
                 'You do not have permission to perform this action.';
@@ -428,7 +425,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             errorDescription =
                 error?.toString() ??
                 'Please check your credentials and try again';
-            errorIcon = '❌';
           }
 
           AppFlashMessage.show(

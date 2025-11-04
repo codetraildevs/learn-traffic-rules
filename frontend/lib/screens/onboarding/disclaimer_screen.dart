@@ -40,7 +40,9 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                         borderRadius: BorderRadius.circular(24.r),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF4F46E5).withOpacity(0.3),
+                            color: const Color(
+                              0xFF4F46E5,
+                            ).withValues(alpha: 0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -240,7 +242,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
           width: 40.w,
           height: 40.w,
           decoration: BoxDecoration(
-            color: const Color(0xFF4F46E5).withOpacity(0.1),
+            color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: Icon(icon, size: 20.w, color: const Color(0xFF4F46E5)),

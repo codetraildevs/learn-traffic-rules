@@ -300,7 +300,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.notifications),
             onPressed: () {
-              // Navigate to notifications
+              Navigator.pushNamed(context, '/notifications');
             },
           ),
         ],

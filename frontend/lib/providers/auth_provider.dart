@@ -288,7 +288,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
 
       debugPrint('❌ LOGIN ERROR: $userFriendlyError');
-      // Don't change auth state on error to prevent refresh
+
+      // Set error in auth state so login screen can display it
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        error: userFriendlyError,
+        isLoading: false,
+      );
+
       return false;
     }
   }

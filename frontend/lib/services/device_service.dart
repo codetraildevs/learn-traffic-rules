@@ -169,8 +169,7 @@ class DeviceService {
   Future<String> _getIOSDeviceId() async {
     final iosInfo = await _deviceInfo.iosInfo;
     // Use identifierForVendor for high security and consistency
-    final identifier =
-        iosInfo.identifierForVendor ?? iosInfo.name ?? 'unknown-ios-device';
+    final identifier = iosInfo.identifierForVendor ?? iosInfo.name;
     return 'ios-${identifier.hashCode}';
   }
 

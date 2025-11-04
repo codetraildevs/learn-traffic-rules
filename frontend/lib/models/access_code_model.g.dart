@@ -6,13 +6,13 @@ part of 'access_code_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-AccessCodeUser _$AccessCodeUserFromJson(Map<String, dynamic> json) =>
-    AccessCodeUser(
-      id: json['id'] as String,
-      fullName: json['fullName'] as String,
-      phoneNumber: json['phoneNumber'] as String?,
-      role: json['role'] as String,
-    );
+// AccessCodeUser _$AccessCodeUserFromJson(Map<String, dynamic> json) =>
+//     AccessCodeUser(
+//       id: json['id'] as String,
+//       fullName: json['fullName'] as String,
+//       phoneNumber: json['phoneNumber'] as String?,
+//       role: json['role'] as String,
+//     );
 
 Map<String, dynamic> _$AccessCodeUserToJson(AccessCodeUser instance) =>
     <String, dynamic>{
@@ -22,33 +22,33 @@ Map<String, dynamic> _$AccessCodeUserToJson(AccessCodeUser instance) =>
       'role': instance.role,
     };
 
-AccessCode _$AccessCodeFromJson(Map<String, dynamic> json) => AccessCode(
-  id: json['id'] as String,
-  code: json['code'] as String,
-  userId: json['userId'] as String,
-  generatedByManagerId: json['generatedByManagerId'] as String?,
-  paymentAmount: (json['paymentAmount'] as num).toDouble(),
-  durationDays: (json['durationDays'] as num).toInt(),
-  paymentTier: json['paymentTier'] as String,
-  expiresAt: DateTime.parse(json['expiresAt'] as String),
-  isUsed: json['isUsed'] as bool,
-  usedAt: json['usedAt'] == null
-      ? null
-      : DateTime.parse(json['usedAt'] as String),
-  attemptCount: (json['attemptCount'] as num).toInt(),
-  isBlocked: json['isBlocked'] as bool,
-  blockedUntil: json['blockedUntil'] == null
-      ? null
-      : DateTime.parse(json['blockedUntil'] as String),
-  createdAt: DateTime.parse(json['createdAt'] as String),
-  updatedAt: DateTime.parse(json['updatedAt'] as String),
-  user: json['user'] == null
-      ? null
-      : AccessCodeUser.fromJson(json['user'] as Map<String, dynamic>),
-  generatedBy: json['generatedBy'] == null
-      ? null
-      : AccessCodeUser.fromJson(json['generatedBy'] as Map<String, dynamic>),
-);
+// AccessCode _$AccessCodeFromJson(Map<String, dynamic> json) => AccessCode(
+//   id: json['id'] as String,
+//   code: json['code'] as String,
+//   userId: json['userId'] as String,
+//   generatedByManagerId: json['generatedByManagerId'] as String?,
+//   paymentAmount: (json['paymentAmount'] as num).toDouble(),
+//   durationDays: (json['durationDays'] as num).toInt(),
+//   paymentTier: json['paymentTier'] as String,
+//   expiresAt: DateTime.parse(json['expiresAt'] as String),
+//   isUsed: json['isUsed'] as bool,
+//   usedAt: json['usedAt'] == null
+//       ? null
+//       : DateTime.parse(json['usedAt'] as String),
+//   attemptCount: (json['attemptCount'] as num).toInt(),
+//   isBlocked: json['isBlocked'] as bool,
+//   blockedUntil: json['blockedUntil'] == null
+//       ? null
+//       : DateTime.parse(json['blockedUntil'] as String),
+//   createdAt: DateTime.parse(json['createdAt'] as String),
+//   updatedAt: DateTime.parse(json['updatedAt'] as String),
+//   user: json['user'] == null
+//       ? null
+//       : AccessCodeUser.fromJson(json['user'] as Map<String, dynamic>),
+//   generatedBy: json['generatedBy'] == null
+//       ? null
+//       : AccessCodeUser.fromJson(json['generatedBy'] as Map<String, dynamic>),
+// );
 
 Map<String, dynamic> _$AccessCodeToJson(AccessCode instance) =>
     <String, dynamic>{
@@ -133,15 +133,15 @@ Map<String, dynamic> _$AccessCodeListResponseToJson(
   'data': instance.data,
 };
 
-AccessCodeListData _$AccessCodeListDataFromJson(Map<String, dynamic> json) =>
-    AccessCodeListData(
-      accessCodes: (json['accessCodes'] as List<dynamic>)
-          .map((e) => AccessCode.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      pagination: AccessCodePagination.fromJson(
-        json['pagination'] as Map<String, dynamic>,
-      ),
-    );
+// AccessCodeListData _$AccessCodeListDataFromJson(Map<String, dynamic> json) =>
+//     AccessCodeListData(
+//       accessCodes: (json['accessCodes'] as List<dynamic>)
+//           .map((e) => AccessCode.fromJson(e as Map<String, dynamic>))
+//           .toList(),
+//       pagination: AccessCodePagination.fromJson(
+//         json['pagination'] as Map<String, dynamic>,
+//       ),
+//     );
 
 Map<String, dynamic> _$AccessCodeListDataToJson(AccessCodeListData instance) =>
     <String, dynamic>{
@@ -149,14 +149,14 @@ Map<String, dynamic> _$AccessCodeListDataToJson(AccessCodeListData instance) =>
       'pagination': instance.pagination,
     };
 
-AccessCodePagination _$AccessCodePaginationFromJson(
-  Map<String, dynamic> json,
-) => AccessCodePagination(
-  total: (json['total'] as num).toInt(),
-  page: (json['page'] as num).toInt(),
-  limit: (json['limit'] as num).toInt(),
-  totalPages: (json['totalPages'] as num).toInt(),
-);
+// AccessCodePagination _$AccessCodePaginationFromJson(
+//   Map<String, dynamic> json,
+// ) => AccessCodePagination(
+//   total: (json['total'] as num).toInt(),
+//   page: (json['page'] as num).toInt(),
+//   limit: (json['limit'] as num).toInt(),
+//   totalPages: (json['totalPages'] as num).toInt(),
+// );
 
 Map<String, dynamic> _$AccessCodePaginationToJson(
   AccessCodePagination instance,

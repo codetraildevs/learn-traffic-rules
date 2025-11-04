@@ -68,12 +68,20 @@
 # Keep device info classes
 -keep class com.trafficrules.master.** { *; }
 
-# Keep Google Play Core classes (required for deferred components)
--keep class com.google.android.play.core.** { *; }
+# Play Core removed - not needed for this app
+# Completely ignore all Play Core references since we don't use deferred components
 -dontwarn com.google.android.play.core.**
+-dontwarn com.google.android.play.core.splitcompat.**
+-dontwarn com.google.android.play.core.splitinstall.**
+-dontwarn com.google.android.play.core.tasks.**
 
-# Keep Flutter deferred components
--keep class io.flutter.embedding.engine.deferredcomponents.** { *; }
+# Ignore Flutter deferred components since we disabled them
+-dontwarn io.flutter.embedding.engine.deferredcomponents.**
+-dontwarn io.flutter.embedding.android.FlutterPlayStoreSplitApplication
+
+# Keep only essential Flutter classes
+-keep class io.flutter.embedding.android.FlutterActivity { *; }
+-keep class io.flutter.embedding.engine.FlutterEngine { *; }
 -keep class io.flutter.embedding.android.FlutterPlayStoreSplitApplication { *; }
 
 # General Android rules

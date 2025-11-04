@@ -146,9 +146,10 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   _buildSection(
                     '9. Contact Us',
                     'If you have any questions about this Privacy Policy or our data practices, please contact us at:\n\n'
-                        'Email: codetrail.dev@gmail.com\n\n'
-                        'Phone: +250780494000\n\n'
-                        'Address: Kigali, Rwanda',
+                        'Email: engineers.devs@gmail.com\n\n'
+                        'Phone: +250791347174\n\n'
+                        'WhatsApp: +250791347174\n\n'
+                        'Live Chat: Available 24/7',
                   ),
                 ],
               ),

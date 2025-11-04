@@ -32,7 +32,7 @@
 
 ### Contact Information
 - **Developer**: Traffic Rules Learning Team
-- **Email**: support@learntrafficrules.com
+- **Email**: engineers.devs@gmail.com
 - **Website**: www.learntrafficrules.com
 - **Privacy Policy URL**: [Must be hosted online]
 
@@ -102,7 +102,7 @@
 ### For Users
 - In-app help and support screen
 - WhatsApp support: +250780494000
-- Email support: support@learntrafficrules.com
+- Email support: engineers.devs@gmail.com
 - Educational disclaimer accessible in app
 
 ### For Publisher

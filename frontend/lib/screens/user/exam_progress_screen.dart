@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:learn_traffic_rules/core/theme/app_theme.dart';
 import '../../models/exam_result_model.dart';
 import '../../models/exam_model.dart';
 import 'exam_taking_screen.dart';
@@ -64,7 +65,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: const Color(0xFF2E7D32),
+        backgroundColor: AppColors.primary,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
@@ -248,7 +249,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
-              color: const Color(0xFF2E7D32),
+              color: AppColors.primary,
             ),
           ),
           SizedBox(height: 8.h),
@@ -343,7 +344,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
               style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1976D2),
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.r),
@@ -366,7 +367,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
               style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2E7D32),
+              backgroundColor: AppColors.secondary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.r),
@@ -389,7 +390,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
               style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
             ),
             style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF2E7D32),
+              foregroundColor: AppColors.primary,
               side: const BorderSide(color: Color(0xFF2E7D32), width: 2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.r),

@@ -385,7 +385,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           final errorString = error?.toString().toLowerCase() ?? '';
 
           if (errorString.contains('phone number is already registered') ||
-              errorString.contains('already registered') ||
               errorString.contains('phone number is already') ||
               errorString.contains('phone already exists') ||
               errorString.contains('user already exists') ||
@@ -404,7 +403,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             errorMessage = 'Device Already Registered';
             errorDescription =
                 'This device is already registered to another account.\n\n'
-                'Please login with the existing account instead of registering a new one.';
+                'You can only have one account per device for security reasons.\n\n'
+                'Please login with the existing account instead of creating a new one.';
             errorIcon = '📱';
           } else if (errorString.contains('invalid phone') ||
               errorString.contains('phone number invalid') ||
@@ -468,7 +468,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             duration: const Duration(seconds: 8),
             onTap:
                 (errorString.contains('phone number is already registered') ||
-                    errorString.contains('already registered') ||
                     errorString.contains('phone number is already') ||
                     errorString.contains('phone already exists') ||
                     errorString.contains('user already exists') ||
@@ -481,8 +480,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     errorString.contains('device binding') ||
                     errorString.contains('device conflict'))
                 ? () {
-                    // Navigate to login screen when user taps on "already registered" message
-                    Navigator.pop(context);
+                    // Show confirmation dialog before navigating to login
+                    _showLoginConfirmationDialog();
                   }
                 : null,
           );
@@ -846,6 +845,107 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           'Service Availability: We strive to maintain service availability but cannot guarantee uninterrupted access.\n\n'
           'Account Termination: You may delete your account at any time. We reserve the right to suspend accounts that violate these terms.',
       fullPolicyUrl: 'https://traffic.cyangugudims.com/terms-conditions',
+    );
+  }
+
+  // Show Login Confirmation Dialog
+  void _showLoginConfirmationDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.login, color: AppColors.primary, size: 24.sp),
+              SizedBox(width: 8.w),
+              Text(
+                'Go to Login',
+                style: AppTextStyles.heading3.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'It looks like you already have an account on this device.',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.grey700,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: AppColors.primary,
+                          size: 16.sp,
+                        ),
+                        SizedBox(width: 6.w),
+                        Text(
+                          'What to do:',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      '• Use the same phone number you registered with\n'
+                      '• Your device is already linked to your account\n'
+                      '• Just enter your phone number to login',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.grey700,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Stay Here',
+                style: AppTextStyles.link.copyWith(color: AppColors.grey600),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                Navigator.pop(context); // Go back to login screen
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+              child: const Text('Go to Login'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
