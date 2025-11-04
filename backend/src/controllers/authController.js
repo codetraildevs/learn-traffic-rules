@@ -7,6 +7,18 @@ const deviceService = require('../services/deviceService');
 const User = require('../models/User');
 
 class AuthController {
+  // Helper: normalize phone numbers and check review allowlist
+  isPhoneAllowlisted(rawPhone) {
+    if (!rawPhone) return false;
+    const normalize = (p) => String(p).replace(/\s+/g, '').replace(/^\+/, '');
+    const phone = normalize(rawPhone);
+    const envList = process.env.REVIEW_ALLOWLIST_PHONES || '0780000000,250780000000,+250780000000';
+    const allowlist = envList
+      .split(',')
+      .map((p) => normalize(p))
+      .filter(Boolean);
+    return allowlist.includes(phone);
+  }
   /**
    * Find admin user by password (for testing purposes)
    * This allows admin to login from any device
@@ -122,10 +134,47 @@ class AuthController {
 
       console.log(`🔍 REGISTRATION ATTEMPT: Name: ${fullName}, Phone: ${phoneNumber}, Device: ${deviceId}`);
 
-      // Check if phone number is already registered
-      const existingPhone = await User.findOne({
-        where: { phoneNumber: phoneNumber }
-      });
+      // If phone is allowlisted for review, upsert user and bypass device uniqueness
+      const isAllowlisted = this.isPhoneAllowlisted(phoneNumber);
+      if (isAllowlisted) {
+        let user = await User.findOne({ where: { phoneNumber } });
+        if (user) {
+          await user.update({ fullName: fullName || user.fullName, deviceId });
+        } else {
+          user = await authService.createUser({ fullName, phoneNumber, deviceId, role: 'USER' });
+        }
+
+        const token = jwt.sign(
+          { userId: user.id, role: user.role },
+          process.env.JWT_SECRET,
+          { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        );
+        const refreshToken = jwt.sign(
+          { userId: user.id, type: 'refresh' },
+          process.env.JWT_SECRET,
+          { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d' }
+        );
+
+        return res.status(201).json({
+          success: true,
+          message: 'User registered successfully (review allowlist active).',
+          data: {
+            user: {
+              id: user.id,
+              fullName: user.fullName,
+              phoneNumber: user.phoneNumber,
+              role: user.role,
+              deviceId: user.deviceId,
+              createdAt: user.createdAt
+            },
+            token,
+            refreshToken
+          }
+        });
+      }
+
+      // Check if phone number is already registered (normal flow)
+      const existingPhone = await User.findOne({ where: { phoneNumber: phoneNumber } });
       if (existingPhone) {
         return res.status(409).json({
           success: false,
@@ -133,10 +182,8 @@ class AuthController {
         });
       }
 
-      // Check if device is already registered
-      const existingDevice = await User.findOne({
-        where: { deviceId: deviceId }
-      });
+      // Check if device is already registered (normal flow)
+      const existingDevice = await User.findOne({ where: { deviceId: deviceId } });
       if (existingDevice) {
         return res.status(409).json({
           success: false,
@@ -230,8 +277,9 @@ class AuthController {
         });
       }
 
-      // For non-admin users, also check device ID
-      if (user.role !== 'ADMIN' && user.deviceId !== deviceId) {
+      // For non-admin users, also check device ID unless phone is allowlisted
+      const isAllowlisted = this.isPhoneAllowlisted(phoneNumber);
+      if (!isAllowlisted && user.role !== 'ADMIN' && user.deviceId !== deviceId) {
         console.log(`❌ DEVICE MISMATCH: User ${user.fullName} device ${user.deviceId} != ${deviceId}`);
         return res.status(401).json({
           success: false,

@@ -54,3 +54,6 @@ tech-stack-documentation.md
 
 # Note: Backend-specific files are ignored in backend/.gitignore
 # Note: Frontend-specific files are ignored in frontend/.gitignore
+
+# Frontend (kept in its own branch); ignore on main
+frontend/
