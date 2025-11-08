@@ -6,12 +6,12 @@ part of 'free_exam_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-// FreeExamResponse _$FreeExamResponseFromJson(Map<String, dynamic> json) =>
-//     FreeExamResponse(
-//       success: json['success'] as bool,
-//       message: json['message'] as String,
-//       data: FreeExamData.fromJson(json['data'] as Map<String, dynamic>),
-//     );
+FreeExamResponse _$FreeExamResponseFromJson(Map<String, dynamic> json) =>
+    FreeExamResponse(
+      success: json['success'] as bool,
+      message: json['message'] as String,
+      data: FreeExamData.fromJson(json['data'] as Map<String, dynamic>),
+    );
 
 Map<String, dynamic> _$FreeExamResponseToJson(FreeExamResponse instance) =>
     <String, dynamic>{
@@ -20,18 +20,18 @@ Map<String, dynamic> _$FreeExamResponseToJson(FreeExamResponse instance) =>
       'data': instance.data,
     };
 
-// FreeExamData _$FreeExamDataFromJson(Map<String, dynamic> json) => FreeExamData(
-//   exams: (json['exams'] as List<dynamic>)
-//       .map((e) => Exam.fromJson(e as Map<String, dynamic>))
-//       .toList(),
-//   isFreeUser: json['isFreeUser'] as bool,
-//   freeExamsRemaining: (json['freeExamsRemaining'] as num).toInt(),
-//   paymentInstructions: json['paymentInstructions'] == null
-//       ? null
-//       : PaymentInstructions.fromJson(
-//           json['paymentInstructions'] as Map<String, dynamic>,
-//         ),
-// );
+FreeExamData _$FreeExamDataFromJson(Map<String, dynamic> json) => FreeExamData(
+  exams: (json['exams'] as List<dynamic>)
+      .map((e) => Exam.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  isFreeUser: json['isFreeUser'] as bool,
+  freeExamsRemaining: (json['freeExamsRemaining'] as num).toInt(),
+  paymentInstructions: json['paymentInstructions'] == null
+      ? null
+      : PaymentInstructions.fromJson(
+          json['paymentInstructions'] as Map<String, dynamic>,
+        ),
+);
 
 Map<String, dynamic> _$FreeExamDataToJson(FreeExamData instance) =>
     <String, dynamic>{
@@ -64,12 +64,12 @@ Map<String, dynamic> _$PaymentInstructionsToJson(
   'paymentTiers': instance.paymentTiers,
 };
 
-// ContactInfo _$ContactInfoFromJson(Map<String, dynamic> json) => ContactInfo(
-//   phone: json['phone'] as String,
-//   whatsapp: json['whatsapp'] as String,
-//   email: json['email'] as String?,
-//   workingHours: json['workingHours'] as String?,
-// );
+ContactInfo _$ContactInfoFromJson(Map<String, dynamic> json) => ContactInfo(
+  phone: json['phone'] as String,
+  whatsapp: json['whatsapp'] as String,
+  email: json['email'] as String?,
+  workingHours: json['workingHours'] as String?,
+);
 
 Map<String, dynamic> _$ContactInfoToJson(ContactInfo instance) =>
     <String, dynamic>{
@@ -79,14 +79,14 @@ Map<String, dynamic> _$ContactInfoToJson(ContactInfo instance) =>
       'workingHours': instance.workingHours,
     };
 
-// PaymentTier _$PaymentTierFromJson(Map<String, dynamic> json) => PaymentTier(
-//   amount: (json['amount'] as num).toInt(),
-//   days: (json['days'] as num).toInt(),
-//   description: json['description'] as String,
-//   features: (json['features'] as List<dynamic>?)
-//       ?.map((e) => e as String)
-//       .toList(),
-// );
+PaymentTier _$PaymentTierFromJson(Map<String, dynamic> json) => PaymentTier(
+  amount: (json['amount'] as num).toInt(),
+  days: (json['days'] as num).toInt(),
+  description: json['description'] as String,
+  features: (json['features'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+);
 
 Map<String, dynamic> _$PaymentTierToJson(PaymentTier instance) =>
     <String, dynamic>{
@@ -178,22 +178,22 @@ Map<String, dynamic> _$PaymentInstructionsResponseToJson(
   'data': instance.data,
 };
 
-// PaymentInstructionsData _$PaymentInstructionsDataFromJson(
-//   Map<String, dynamic> json,
-// ) => PaymentInstructionsData(
-//   title: json['title'] as String,
-//   description: json['description'] as String,
-//   steps: (json['steps'] as List<dynamic>).map((e) => e as String).toList(),
-//   contactInfo: ContactInfo.fromJson(
-//     json['contactInfo'] as Map<String, dynamic>,
-//   ),
-//   paymentMethods: (json['paymentMethods'] as List<dynamic>)
-//       .map((e) => PaymentMethod.fromJson(e as Map<String, dynamic>))
-//       .toList(),
-//   paymentTiers: (json['paymentTiers'] as List<dynamic>)
-//       .map((e) => PaymentTier.fromJson(e as Map<String, dynamic>))
-//       .toList(),
-// );
+PaymentInstructionsData _$PaymentInstructionsDataFromJson(
+  Map<String, dynamic> json,
+) => PaymentInstructionsData(
+  title: json['title'] as String,
+  description: json['description'] as String,
+  steps: (json['steps'] as List<dynamic>).map((e) => e as String).toList(),
+  contactInfo: ContactInfo.fromJson(
+    json['contactInfo'] as Map<String, dynamic>,
+  ),
+  paymentMethods: (json['paymentMethods'] as List<dynamic>)
+      .map((e) => PaymentMethod.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  paymentTiers: (json['paymentTiers'] as List<dynamic>)
+      .map((e) => PaymentTier.fromJson(e as Map<String, dynamic>))
+      .toList(),
+);
 
 Map<String, dynamic> _$PaymentInstructionsDataToJson(
   PaymentInstructionsData instance,
@@ -206,12 +206,12 @@ Map<String, dynamic> _$PaymentInstructionsDataToJson(
   'paymentTiers': instance.paymentTiers,
 };
 
-// PaymentMethod _$PaymentMethodFromJson(Map<String, dynamic> json) =>
-//     PaymentMethod(
-//       name: json['name'] as String,
-//       details: json['details'] as String,
-//       instructions: json['instructions'] as String,
-//     );
+PaymentMethod _$PaymentMethodFromJson(Map<String, dynamic> json) =>
+    PaymentMethod(
+      name: json['name'] as String,
+      details: json['details'] as String,
+      instructions: json['instructions'] as String,
+    );
 
 Map<String, dynamic> _$PaymentMethodToJson(PaymentMethod instance) =>
     <String, dynamic>{
