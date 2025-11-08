@@ -331,7 +331,8 @@ router.post('/',
     body('category').notEmpty().withMessage('Category is required'),
     body('difficulty').isIn(['EASY', 'MEDIUM', 'HARD']).withMessage('Invalid difficulty level'),
     body('duration').isInt({ min: 1 }).withMessage('Duration must be a positive integer'),
-    body('passingScore').isInt({ min: 0, max: 100 }).withMessage('Passing score must be between 0 and 100')
+    body('passingScore').isInt({ min: 0, max: 100 }).withMessage('Passing score must be between 0 and 100'),
+    body('examType').notEmpty().withMessage('Exam type is required').isIn(['kinyarwanda', 'english', 'french']).withMessage('Invalid exam type. Must be kinyarwanda, english, or french')
   ],
   examController.createExam
 );

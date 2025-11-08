@@ -601,10 +601,20 @@ const getFreeExams = async (req, res) => {
       }
     });
 
-    // Get all active exams
+    // Get examType filter from query parameter
+    const { examType } = req.query;
+    
+    // Build where clause
+    const whereClause = { isActive: true };
+    if (examType) {
+      // Filter by exam type (case-insensitive)
+      whereClause.examType = examType.toLowerCase();
+    }
+    
+    // Get all active exams (optionally filtered by examType)
     const allExams = await Exam.findAll({
-      where: { isActive: true },
-      attributes: ['id', 'title', 'description', 'category', 'difficulty', 'duration', 'passingScore', 'examImgUrl', 'createdAt'],
+      where: whereClause,
+      attributes: ['id', 'title', 'description', 'category', 'difficulty', 'duration', 'passingScore', 'examImgUrl', 'examType', 'createdAt'],
       order: [['createdAt', 'ASC']] // Order by creation date ASC to get the oldest first
     });
 

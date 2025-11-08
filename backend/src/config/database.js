@@ -224,6 +224,7 @@ const createAllMySQLTables = async (sequelize) => {
         duration INTEGER DEFAULT 30,
         passingScore INTEGER DEFAULT 60,
         examImgUrl VARCHAR(500) NULL,
+        examType ENUM('kinyarwanda', 'english', 'french') DEFAULT 'kinyarwanda',
         isActive BOOLEAN DEFAULT true,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -531,12 +532,13 @@ const addMissingExamsColumns = async (sequelize) => {
       FROM INFORMATION_SCHEMA.COLUMNS 
       WHERE TABLE_SCHEMA = DATABASE() 
       AND TABLE_NAME = 'exams' 
-      AND COLUMN_NAME = 'examImgUrl'
+      AND COLUMN_NAME IN ('examImgUrl', 'examType')
     `);
     
     const existingColumns = checkColumns[0].map(row => row.COLUMN_NAME);
     console.log('📋 Existing columns in exams table:', existingColumns);
     
+    // Add examImgUrl if missing
     if (!existingColumns.includes('examImgUrl')) {
       try {
         console.log('🔄 Adding column: examImgUrl');
@@ -547,6 +549,36 @@ const addMissingExamsColumns = async (sequelize) => {
       }
     } else {
       console.log('✅ Column examImgUrl already exists, skipping');
+    }
+    
+    // Add examType if missing
+    if (!existingColumns.includes('examType')) {
+      try {
+        console.log('🔄 Adding column: examType');
+        // First check if ENUM type exists, if not create it
+        await sequelize.query(`
+          ALTER TABLE exams 
+          ADD COLUMN examType ENUM('kinyarwanda', 'english', 'french') 
+          DEFAULT 'kinyarwanda'
+        `);
+        console.log('✅ Column examType added successfully');
+      } catch (error) {
+        console.log('⚠️  Failed to add column examType:', error.message);
+        // If ENUM doesn't work, try VARCHAR as fallback
+        try {
+          console.log('🔄 Trying VARCHAR as fallback for examType...');
+          await sequelize.query(`
+            ALTER TABLE exams 
+            ADD COLUMN examType VARCHAR(20) 
+            DEFAULT 'kinyarwanda'
+          `);
+          console.log('✅ Column examType added as VARCHAR successfully');
+        } catch (fallbackError) {
+          console.log('⚠️  Failed to add column examType as VARCHAR:', fallbackError.message);
+        }
+      }
+    } else {
+      console.log('✅ Column examType already exists, skipping');
     }
   } catch (error) {
     console.log('⚠️  Error checking/adding missing columns in exams:', error.message);

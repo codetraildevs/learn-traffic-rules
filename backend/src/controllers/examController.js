@@ -14,8 +14,17 @@ class ExamController {
    */
   async getAllExams(req, res) {
     try {
+      const { examType } = req.query;
+      
+      // Build where clause
+      const whereClause = { isActive: true };
+      if (examType) {
+        // Filter by exam type (case-insensitive)
+        whereClause.examType = examType.toLowerCase();
+      }
+      
       const exams = await Exam.findAll({
-        where: { isActive: true },
+        where: whereClause,
         order: [['createdAt', 'DESC']]
       });
 
@@ -398,8 +407,15 @@ class ExamController {
         duration,
         questionCount,
         passingScore,
-        examImgUrl
+        examImgUrl,
+        examType
       } = req.body;
+
+      // Validate examType if provided
+      const validExamTypes = ['kinyarwanda', 'english', 'french'];
+      const finalExamType = examType && validExamTypes.includes(examType.toLowerCase())
+        ? examType.toLowerCase()
+        : 'kinyarwanda'; // Default to kinyarwanda
 
       const exam = await Exam.create({
         title,
@@ -410,6 +426,7 @@ class ExamController {
         questionCount,
         passingScore,
         examImgUrl,
+        examType: finalExamType,
         isActive: true
       });
 

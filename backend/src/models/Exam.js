@@ -59,6 +59,14 @@ const Exam = sequelize.define('Exam', {
     validate: {
       len: [0, 500]
     }
+  },
+  examType: {
+    type: DataTypes.ENUM('kinyarwanda', 'english', 'french'),
+    allowNull: true,
+    defaultValue: 'kinyarwanda',
+    validate: {
+      isIn: [['kinyarwanda', 'english', 'french']]
+    }
   }
 }, {
   tableName: 'exams',
@@ -79,6 +87,7 @@ Exam.prototype.toJSON = function() {
     passingScore: this.passingScore,
     isActive: this.isActive,
     examImgUrl: this.examImgUrl,
+    examType: this.examType,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt
   };
