@@ -26,6 +26,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen>
   final _durationController = TextEditingController(text: '30');
   final _passingScoreController = TextEditingController(text: '70');
   String _selectedDifficulty = 'MEDIUM';
+  String _selectedExamType = 'kinyarwanda';
   bool _isActive = true;
   File? _selectedImage;
   String? _uploadedImageUrl;
@@ -194,6 +195,33 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen>
                       ),
                       SizedBox(width: 12.w),
                       Expanded(child: _buildDifficultyOption('HARD', 'Hard')),
+                    ],
+                  ),
+
+                  SizedBox(height: 24.h),
+
+                  // Exam Type Selection
+                  Text(
+                    'Exam Type',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildExamTypeOption(
+                          'kinyarwanda',
+                          'Kinyarwanda',
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: _buildExamTypeOption('english', 'English'),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(child: _buildExamTypeOption('french', 'French')),
                     ],
                   ),
 
@@ -418,6 +446,36 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen>
     );
   }
 
+  Widget _buildExamTypeOption(String value, String label) {
+    final isSelected = _selectedExamType == value;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedExamType = value;
+        });
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.secondary : AppColors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: isSelected ? AppColors.secondary : AppColors.grey300,
+            width: 2,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: isSelected ? AppColors.white : AppColors.grey700,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
   void _createExam() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -434,6 +492,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen>
       passingScore: int.parse(_passingScoreController.text),
       isActive: _isActive,
       examImgUrl: _uploadedImageUrl,
+      examType: _selectedExamType,
     );
 
     final success = await ref.read(examProvider.notifier).createExam(request);

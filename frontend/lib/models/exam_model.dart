@@ -2,6 +2,39 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'exam_model.g.dart';
 
+enum ExamType {
+  kinyarwanda,
+  english,
+  french;
+
+  String get displayName {
+    switch (this) {
+      case ExamType.kinyarwanda:
+        return 'Kinyarwanda';
+      case ExamType.english:
+        return 'English';
+      case ExamType.french:
+        return 'French';
+    }
+  }
+
+  static ExamType? fromString(String? value) {
+    if (value == null) return null;
+    switch (value.toLowerCase()) {
+      case 'kinyarwanda':
+        return ExamType.kinyarwanda;
+      case 'english':
+        return ExamType.english;
+      case 'french':
+        return ExamType.french;
+      default:
+        return null;
+    }
+  }
+
+  String toJson() => name;
+}
+
 @JsonSerializable()
 class Exam {
   final String id;
@@ -15,6 +48,7 @@ class Exam {
   final String? examImgUrl;
   final int? questionCount;
   final bool? isFirstTwo;
+  final String? examType;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -30,6 +64,7 @@ class Exam {
     this.examImgUrl,
     this.questionCount,
     this.isFirstTwo,
+    this.examType,
     this.createdAt,
     this.updatedAt,
   });
@@ -47,6 +82,7 @@ class Exam {
       examImgUrl: json['examImgUrl'] as String?,
       questionCount: (json['questionCount'] as num?)?.toInt(),
       isFirstTwo: json['isFirstTwo'] as bool?,
+      examType: json['examType'] as String?,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString())
           : null,
@@ -69,6 +105,7 @@ class Exam {
     String? examImgUrl,
     int? questionCount,
     bool? isFirstTwo,
+    String? examType,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -84,10 +121,13 @@ class Exam {
       examImgUrl: examImgUrl ?? this.examImgUrl,
       questionCount: questionCount ?? this.questionCount,
       isFirstTwo: isFirstTwo ?? this.isFirstTwo,
+      examType: examType ?? this.examType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  ExamType? get examTypeEnum => ExamType.fromString(examType);
 
   String get difficultyDisplay {
     switch (difficulty.toUpperCase()) {
@@ -125,6 +165,7 @@ class CreateExamRequest {
   final int passingScore;
   final bool isActive;
   final String? examImgUrl;
+  final String examType;
 
   const CreateExamRequest({
     required this.title,
@@ -135,6 +176,7 @@ class CreateExamRequest {
     required this.passingScore,
     required this.isActive,
     this.examImgUrl,
+    required this.examType,
   });
 
   factory CreateExamRequest.fromJson(Map<String, dynamic> json) =>
@@ -152,6 +194,7 @@ class UpdateExamRequest {
   final int? passingScore;
   final bool? isActive;
   final String? examImgUrl;
+  final String? examType;
 
   const UpdateExamRequest({
     this.title,
@@ -162,6 +205,7 @@ class UpdateExamRequest {
     this.passingScore,
     this.isActive,
     this.examImgUrl,
+    this.examType,
   });
 
   factory UpdateExamRequest.fromJson(Map<String, dynamic> json) =>

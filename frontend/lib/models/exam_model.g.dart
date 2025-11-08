@@ -6,25 +6,26 @@ part of 'exam_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-// Exam _$ExamFromJson(Map<String, dynamic> json) => Exam(
-//   id: json['id'] as String,
-//   title: json['title'] as String,
-//   description: json['description'] as String?,
-//   category: json['category'] as String?,
-//   difficulty: json['difficulty'] as String,
-//   duration: (json['duration'] as num).toInt(),
-//   passingScore: (json['passingScore'] as num).toInt(),
-//   isActive: json['isActive'] as bool,
-//   examImgUrl: json['examImgUrl'] as String?,
-//   questionCount: (json['questionCount'] as num?)?.toInt(),
-//   isFirstTwo: json['isFirstTwo'] as bool?,
-//   createdAt: json['createdAt'] == null
-//       ? null
-//       : DateTime.parse(json['createdAt'] as String),
-//   updatedAt: json['updatedAt'] == null
-//       ? null
-//       : DateTime.parse(json['updatedAt'] as String),
-// );
+Exam _$ExamFromJson(Map<String, dynamic> json) => Exam(
+  id: json['id'] as String,
+  title: json['title'] as String,
+  description: json['description'] as String?,
+  category: json['category'] as String?,
+  difficulty: json['difficulty'] as String,
+  duration: (json['duration'] as num).toInt(),
+  passingScore: (json['passingScore'] as num).toInt(),
+  isActive: json['isActive'] as bool,
+  examImgUrl: json['examImgUrl'] as String?,
+  questionCount: (json['questionCount'] as num?)?.toInt(),
+  isFirstTwo: json['isFirstTwo'] as bool?,
+  examType: json['examType'] as String?,
+  createdAt: json['createdAt'] == null
+      ? null
+      : DateTime.parse(json['createdAt'] as String),
+  updatedAt: json['updatedAt'] == null
+      ? null
+      : DateTime.parse(json['updatedAt'] as String),
+);
 
 Map<String, dynamic> _$ExamToJson(Exam instance) => <String, dynamic>{
   'id': instance.id,
@@ -38,6 +39,7 @@ Map<String, dynamic> _$ExamToJson(Exam instance) => <String, dynamic>{
   'examImgUrl': instance.examImgUrl,
   'questionCount': instance.questionCount,
   'isFirstTwo': instance.isFirstTwo,
+  'examType': instance.examType,
   'createdAt': instance.createdAt?.toIso8601String(),
   'updatedAt': instance.updatedAt?.toIso8601String(),
 };
@@ -52,6 +54,7 @@ CreateExamRequest _$CreateExamRequestFromJson(Map<String, dynamic> json) =>
       passingScore: (json['passingScore'] as num).toInt(),
       isActive: json['isActive'] as bool,
       examImgUrl: json['examImgUrl'] as String?,
+      examType: json['examType'] as String,
     );
 
 Map<String, dynamic> _$CreateExamRequestToJson(CreateExamRequest instance) =>
@@ -64,6 +67,7 @@ Map<String, dynamic> _$CreateExamRequestToJson(CreateExamRequest instance) =>
       'passingScore': instance.passingScore,
       'isActive': instance.isActive,
       'examImgUrl': instance.examImgUrl,
+      'examType': instance.examType,
     };
 
 UpdateExamRequest _$UpdateExamRequestFromJson(Map<String, dynamic> json) =>
@@ -76,6 +80,7 @@ UpdateExamRequest _$UpdateExamRequestFromJson(Map<String, dynamic> json) =>
       passingScore: (json['passingScore'] as num?)?.toInt(),
       isActive: json['isActive'] as bool?,
       examImgUrl: json['examImgUrl'] as String?,
+      examType: json['examType'] as String?,
     );
 
 Map<String, dynamic> _$UpdateExamRequestToJson(UpdateExamRequest instance) =>
@@ -88,6 +93,7 @@ Map<String, dynamic> _$UpdateExamRequestToJson(UpdateExamRequest instance) =>
       'passingScore': instance.passingScore,
       'isActive': instance.isActive,
       'examImgUrl': instance.examImgUrl,
+      'examType': instance.examType,
     };
 
 ExamResponse _$ExamResponseFromJson(Map<String, dynamic> json) => ExamResponse(

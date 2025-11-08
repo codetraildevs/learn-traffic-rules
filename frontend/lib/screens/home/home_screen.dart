@@ -97,6 +97,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     try {
       // Load user's exam results
       _examResults = await _examService.getUserExamResults();
+      // Load available exams to display grouped by type
+      _exams = await _examService.getAvailableExams();
       _calculateUserStats();
     } catch (e) {
       debugPrint('Error loading user dashboard data: $e');
@@ -333,9 +335,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         SizedBox(height: 24.h),
                       ],
 
-                      // Quick Stats
-                      _buildQuickStats(user),
-                      SizedBox(height: 24.h),
+                      // Quick Stats (for admin only)
+                      if (user?.role == 'ADMIN') ...[
+                        _buildQuickStats(user),
+                        SizedBox(height: 24.h),
+                      ],
+
+                      // Exams grouped by type (for users)
+                      if (user?.role == 'USER') ...[
+                        _buildExamsByType(),
+                        SizedBox(height: 24.h),
+                      ],
 
                       // Recent Activity
                       _buildRecentActivity(user),
@@ -749,6 +759,222 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ],
+    );
+  }
+
+  Widget _buildExamsByType() {
+    // Group exams by type
+    final Map<String, List<Exam>> examsByType = {};
+
+    // Get unique exam types from database
+    final activeExams = _exams.where((exam) => exam.isActive).toList();
+
+    for (final exam in activeExams) {
+      final type = exam.examType?.toLowerCase() ?? 'unknown';
+      examsByType.putIfAbsent(type, () => []).add(exam);
+    }
+
+    // Order: kinyarwanda, english, french
+    final orderedTypes = ['kinyarwanda', 'english', 'french'];
+    final availableTypes = orderedTypes
+        .where((type) => examsByType.containsKey(type))
+        .toList();
+
+    if (availableTypes.isEmpty) {
+      return Container(
+        padding: EdgeInsets.all(20.w),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(16.r),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.quiz_outlined, size: 48.sp, color: AppColors.grey400),
+            SizedBox(height: 16.h),
+            Text(
+              'No exams available',
+              style: AppTextStyles.bodyLarge.copyWith(color: AppColors.grey600),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Available Exams',
+          style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+        ),
+        SizedBox(height: 16.h),
+        ...availableTypes.map((type) {
+          final exams = examsByType[type]!;
+          final displayName = type[0].toUpperCase() + type.substring(1);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Section header (clickable to view all exams of this type)
+              GestureDetector(
+                onTap: () {
+                  // Navigate to available exams screen filtered by this type
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          AvailableExamsScreen(initialExamType: type),
+                    ),
+                  );
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.h),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.language,
+                        size: 20.sp,
+                        color: AppColors.primary,
+                      ),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          '$displayName Exams',
+                          style: AppTextStyles.heading3.copyWith(
+                            fontSize: 18.sp,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 4.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Text(
+                          '${exams.length}',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16.sp,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Exams grid
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 1.5,
+                  crossAxisSpacing: 12.w,
+                  mainAxisSpacing: 12.h,
+                ),
+                itemCount: exams.length,
+                itemBuilder: (context, index) {
+                  final exam = exams[index];
+                  return _buildExamTypeCard(exam);
+                },
+              ),
+              SizedBox(height: 24.h),
+            ],
+          );
+        }).toList(),
+      ],
+    );
+  }
+
+  Widget _buildExamTypeCard(Exam exam) {
+    return GestureDetector(
+      onTap: () {
+        // Navigate to available exams screen filtered by this exam's type
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                AvailableExamsScreen(initialExamType: exam.examType),
+          ),
+        );
+      },
+      child: Container(
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.black.withValues(alpha: 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  exam.title,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13.sp,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  '${exam.questionCount ?? 0} Questions',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.grey600,
+                    fontSize: 11.sp,
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Icon(
+                  Icons.timer_outlined,
+                  size: 14.sp,
+                  color: AppColors.grey600,
+                ),
+                SizedBox(width: 4.w),
+                Text(
+                  '${exam.duration}m',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.grey600,
+                    fontSize: 11.sp,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
