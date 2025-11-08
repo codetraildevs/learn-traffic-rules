@@ -415,7 +415,7 @@ class ExamController {
       const validExamTypes = ['kinyarwanda', 'english', 'french'];
       const finalExamType = examType && validExamTypes.includes(examType.toLowerCase())
         ? examType.toLowerCase()
-        : 'kinyarwanda'; // Default to kinyarwanda
+        : 'english'; // Default to english
 
       const exam = await Exam.create({
         title,

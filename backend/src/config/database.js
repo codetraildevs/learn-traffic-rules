@@ -224,7 +224,7 @@ const createAllMySQLTables = async (sequelize) => {
         duration INTEGER DEFAULT 30,
         passingScore INTEGER DEFAULT 60,
         examImgUrl VARCHAR(500) NULL,
-        examType ENUM('kinyarwanda', 'english', 'french') DEFAULT 'kinyarwanda',
+        examType ENUM('kinyarwanda', 'english', 'french') DEFAULT 'english',
         isActive BOOLEAN DEFAULT true,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -559,7 +559,7 @@ const addMissingExamsColumns = async (sequelize) => {
         await sequelize.query(`
           ALTER TABLE exams 
           ADD COLUMN examType ENUM('kinyarwanda', 'english', 'french') 
-          DEFAULT 'kinyarwanda'
+          DEFAULT 'english'
         `);
         console.log('✅ Column examType added successfully');
       } catch (error) {
@@ -570,7 +570,7 @@ const addMissingExamsColumns = async (sequelize) => {
           await sequelize.query(`
             ALTER TABLE exams 
             ADD COLUMN examType VARCHAR(20) 
-            DEFAULT 'kinyarwanda'
+            DEFAULT 'english'
           `);
           console.log('✅ Column examType added as VARCHAR successfully');
         } catch (fallbackError) {
