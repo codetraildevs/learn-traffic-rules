@@ -1,58 +1,48 @@
-#!/usr/bin/env node
+/**
+ * Database Seeding Script
+ * 
+ * This script allows you to seed the database with initial data.
+ * It will skip existing data by default to prevent data loss.
+ * 
+ * Usage:
+ *   node seed.js              - Seed with skip existing (default, safe)
+ *   node seed.js --force      - Seed everything (may create duplicates)
+ *   node seed.js --courses-only - Seed only courses
+ */
 
 const DatabaseSeeder = require('./src/config/seeders');
-const { sequelize } = require('./src/config/database');
+const { testConnection } = require('./src/config/database');
 
-async function runSeeder() {
+async function main() {
   try {
+    console.log('🌱 Starting database seeding process...');
+    
     // Test database connection
-    await sequelize.authenticate();
-    console.log('✅ Database connected successfully');
-    
-    // Check command line arguments
-    const command = process.argv[2];
-    
-    if (command === 'clear') {
-      await DatabaseSeeder.clear();
-    } else if (command === 'fresh') {
-      await DatabaseSeeder.clear();
-      await DatabaseSeeder.run();
-    } else {
-      // Default: run seeder
-      await DatabaseSeeder.run();
+    const connected = await testConnection();
+    if (!connected) {
+      console.error('❌ Database connection failed. Please check your database configuration.');
+      process.exit(1);
     }
     
-    console.log('🎉 Seeding process completed!');
+    // Parse command line arguments
+    const args = process.argv.slice(2);
+    const force = args.includes('--force');
+    const coursesOnly = args.includes('--courses-only');
+    
+    if (coursesOnly) {
+      console.log('📚 Seeding courses only...');
+      await DatabaseSeeder.seedCourses();
+    } else {
+      // Run all seeders
+      await DatabaseSeeder.run(!force); // skipExisting = !force
+    }
+    
+    console.log('✅ Seeding completed successfully!');
     process.exit(0);
   } catch (error) {
-    console.error('❌ Seeding failed:', error.message);
+    console.error('❌ Seeding failed:', error);
     process.exit(1);
   }
 }
 
-// Show usage information
-if (process.argv.includes('--help') || process.argv.includes('-h')) {
-  console.log(`
-🌱 Database Seeder Usage:
-
-  node seed.js           # Run seeder (add data)
-  node seed.js clear     # Clear all seeded data
-  node seed.js fresh     # Clear and re-seed data
-  node seed.js --help    # Show this help
-
-📋 What gets seeded:
-  - Users (Admin, Manager, Regular users)
-  - Exams (Traffic signs, Road rules, etc.)
-  - Questions (Sample questions for exams)
-  - Payment requests (Sample payment data)
-  - Access codes (Generated for approved payments)
-  - Exam results (Sample user results)
-
-🔑 Default login credentials:
-  - All users have password: "password123"
-  - Device IDs are unique for each user
-  `);
-  process.exit(0);
-}
-
-runSeeder();
+main();

@@ -7,6 +7,10 @@ const ExamResult = require('../models/ExamResult');
 const Notification = require('../models/Notification');
 const StudyReminder = require('../models/StudyReminder');
 const NotificationPreferences = require('../models/NotificationPreferences');
+const Course = require('../models/Course');
+const CourseContent = require('../models/CourseContent');
+const CourseProgress = require('../models/CourseProgress');
+const CourseContentProgress = require('../models/CourseContentProgress');
 
 // Define associations
 const setupAssociations = () => {
@@ -17,6 +21,8 @@ const setupAssociations = () => {
   User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
   User.hasMany(StudyReminder, { foreignKey: 'userId', as: 'studyReminders' });
   User.hasOne(NotificationPreferences, { foreignKey: 'userId', as: 'notificationPreferences' });
+  User.hasMany(CourseProgress, { foreignKey: 'userId', as: 'courseProgress' });
+  User.hasMany(CourseContentProgress, { foreignKey: 'userId', as: 'courseContentProgress' });
 
   // Exam associations
   Exam.hasMany(Question, { foreignKey: 'examId', as: 'questions' });
@@ -44,6 +50,23 @@ const setupAssociations = () => {
 
   // NotificationPreferences associations
   NotificationPreferences.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+  // Course associations
+  Course.hasMany(CourseContent, { foreignKey: 'courseId', as: 'contents' });
+  Course.hasMany(CourseProgress, { foreignKey: 'courseId', as: 'progress' });
+
+  // CourseContent associations
+  CourseContent.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
+  CourseContent.hasMany(CourseContentProgress, { foreignKey: 'courseContentId', as: 'contentProgress' });
+
+  // CourseProgress associations
+  CourseProgress.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+  CourseProgress.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
+
+  // CourseContentProgress associations
+  CourseContentProgress.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+  CourseContentProgress.belongsTo(Course, { foreignKey: 'courseId', as: 'course' });
+  CourseContentProgress.belongsTo(CourseContent, { foreignKey: 'courseContentId', as: 'content' });
 };
 
 module.exports = setupAssociations;

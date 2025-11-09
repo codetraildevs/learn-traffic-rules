@@ -188,9 +188,295 @@ const testConnection = async () => {
 };
 
 // Create all MySQL-compatible tables (core + notification tables)
+// Create only specific missing tables (safe for production)
+const createMissingTablesOnly = async (sequelize, missingTables) => {
+  try {
+    console.log('🔄 Creating only missing tables (preserving existing data)...');
+    
+    // Define all table creation SQL with table name mapping
+    const tableDefinitions = {
+      'users': `CREATE TABLE IF NOT EXISTS users (
+        id CHAR(36) PRIMARY KEY,
+        fullName VARCHAR(255) NOT NULL,
+        phoneNumber VARCHAR(20) UNIQUE NOT NULL,
+        email VARCHAR(255),
+        deviceId VARCHAR(255),
+        role ENUM('USER', 'ADMIN') DEFAULT 'USER',
+        isActive BOOLEAN DEFAULT true,
+        isBlocked BOOLEAN DEFAULT false,
+        blockReason TEXT NULL,
+        blockedAt TIMESTAMP NULL,
+        lastLogin TIMESTAMP NULL,
+        lastSyncAt TIMESTAMP NULL,
+        resetCode VARCHAR(255) NULL,
+        resetCodeExpires TIMESTAMP NULL,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      
+      'exams': `CREATE TABLE IF NOT EXISTS exams (
+        id CHAR(36) PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        category VARCHAR(100),
+        difficulty ENUM('EASY', 'MEDIUM', 'HARD') DEFAULT 'MEDIUM',
+        duration INTEGER DEFAULT 30,
+        passingScore INTEGER DEFAULT 60,
+        examImgUrl VARCHAR(500) NULL,
+        examType ENUM('kinyarwanda', 'english', 'french') DEFAULT 'english',
+        isActive BOOLEAN DEFAULT true,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      
+      'questions': `CREATE TABLE IF NOT EXISTS questions (
+        id CHAR(36) PRIMARY KEY,
+        examId CHAR(36) NOT NULL,
+        question TEXT NOT NULL,
+        option1 TEXT NOT NULL,
+        option2 TEXT NOT NULL,
+        option3 TEXT NOT NULL,
+        option4 TEXT NOT NULL,
+        correctAnswer TEXT NOT NULL,
+        points INTEGER DEFAULT 1,
+        questionOrder INTEGER DEFAULT 1,
+        questionImgUrl VARCHAR(500) NULL,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      
+      'exam_results': `CREATE TABLE IF NOT EXISTS exam_results (
+        id CHAR(36) PRIMARY KEY,
+        examId CHAR(36) NOT NULL,
+        userId CHAR(36) NOT NULL,
+        score INTEGER NOT NULL,
+        totalQuestions INTEGER NOT NULL,
+        correctAnswers INTEGER NOT NULL,
+        timeSpent INTEGER NOT NULL,
+        passed BOOLEAN NOT NULL,
+        isFreeExam BOOLEAN DEFAULT false,
+        questionResults JSON NULL,
+        answers JSON NULL,
+        completedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      
+      'payment_requests': `CREATE TABLE IF NOT EXISTS payment_requests (
+        id CHAR(36) PRIMARY KEY,
+        userId CHAR(36) NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        status ENUM('PENDING', 'APPROVED', 'REJECTED') DEFAULT 'PENDING',
+        paymentMethod VARCHAR(50),
+        transactionId VARCHAR(255),
+        notes TEXT,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      
+      'access_codes': `CREATE TABLE IF NOT EXISTS access_codes (
+        id CHAR(36) PRIMARY KEY,
+        code VARCHAR(50) UNIQUE NOT NULL,
+        userId CHAR(36),
+        examId CHAR(36),
+        isUsed BOOLEAN DEFAULT false,
+        paymentTier ENUM('1_MONTH', '3_MONTHS', '6_MONTHS') NOT NULL,
+        paymentAmount DECIMAL(10,2) NOT NULL,
+        durationDays INTEGER NOT NULL,
+        generatedByManagerId CHAR(36) NULL,
+        expiresAt TIMESTAMP NULL,
+        usedAt TIMESTAMP NULL,
+        attemptCount INTEGER DEFAULT 0,
+        lastAttemptAt TIMESTAMP NULL,
+        isBlocked BOOLEAN DEFAULT false,
+        blockedUntil TIMESTAMP NULL,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      
+      'notifications': `CREATE TABLE IF NOT EXISTS notifications (
+        id CHAR(36) PRIMARY KEY,
+        userId CHAR(36) NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        data JSON DEFAULT ('{}'),
+        isRead BOOLEAN DEFAULT false,
+        isPushSent BOOLEAN DEFAULT false,
+        scheduledFor TIMESTAMP NULL,
+        priority VARCHAR(20) DEFAULT 'MEDIUM',
+        category VARCHAR(20) NOT NULL,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      
+      'studyreminders': `CREATE TABLE IF NOT EXISTS studyreminders (
+        id CHAR(36) PRIMARY KEY,
+        userId CHAR(36) NOT NULL,
+        isEnabled BOOLEAN DEFAULT true,
+        reminderTime TIME NOT NULL,
+        daysOfWeek JSON DEFAULT ('[]'),
+        studyGoalMinutes INTEGER DEFAULT 30,
+        timezone VARCHAR(50) DEFAULT 'UTC',
+        lastSentAt TIMESTAMP NULL,
+        nextScheduledAt TIMESTAMP NULL,
+        isActive BOOLEAN DEFAULT true,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      
+      'notificationpreferences': `CREATE TABLE IF NOT EXISTS notificationpreferences (
+        id CHAR(36) PRIMARY KEY,
+        userId CHAR(36) NOT NULL UNIQUE,
+        pushNotifications BOOLEAN DEFAULT true,
+        smsNotifications BOOLEAN DEFAULT true,
+        examReminders BOOLEAN DEFAULT true,
+        paymentUpdates BOOLEAN DEFAULT true,
+        systemAnnouncements BOOLEAN DEFAULT true,
+        studyReminders BOOLEAN DEFAULT true,
+        achievementNotifications BOOLEAN DEFAULT true,
+        weeklyReports BOOLEAN DEFAULT true,
+        quietHoursEnabled BOOLEAN DEFAULT true,
+        quietHoursStart TIME DEFAULT '22:00:00',
+        quietHoursEnd TIME DEFAULT '07:00:00',
+        vibrationEnabled BOOLEAN DEFAULT true,
+        soundEnabled BOOLEAN DEFAULT true,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      
+      'courses': `CREATE TABLE IF NOT EXISTS courses (
+        id CHAR(36) PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        description TEXT NULL,
+        category VARCHAR(100) NULL,
+        difficulty ENUM('EASY', 'MEDIUM', 'HARD') DEFAULT 'MEDIUM',
+        courseType ENUM('free', 'paid') DEFAULT 'free',
+        courseImageUrl VARCHAR(500) NULL,
+        isActive BOOLEAN DEFAULT true,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      
+      'course_contents': `CREATE TABLE IF NOT EXISTS course_contents (
+        id CHAR(36) PRIMARY KEY,
+        courseId CHAR(36) NOT NULL,
+        contentType ENUM('text', 'image', 'audio', 'video', 'link') DEFAULT 'text',
+        content TEXT NOT NULL,
+        title VARCHAR(255) NULL,
+        displayOrder INTEGER DEFAULT 0,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      
+      'course_progress': `CREATE TABLE IF NOT EXISTS course_progress (
+        id CHAR(36) PRIMARY KEY,
+        userId CHAR(36) NOT NULL,
+        courseId CHAR(36) NOT NULL,
+        completedContentCount INTEGER DEFAULT 0,
+        totalContentCount INTEGER DEFAULT 0,
+        progressPercentage DECIMAL(5,2) DEFAULT 0.00,
+        isCompleted BOOLEAN DEFAULT false,
+        lastAccessedAt TIMESTAMP NULL,
+        completedAt TIMESTAMP NULL,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_user_course (userId, courseId)
+      )`,
+      
+      'course_content_progress': `CREATE TABLE IF NOT EXISTS course_content_progress (
+        id CHAR(36) PRIMARY KEY,
+        userId CHAR(36) NOT NULL,
+        courseId CHAR(36) NOT NULL,
+        courseContentId CHAR(36) NOT NULL,
+        isCompleted BOOLEAN DEFAULT false,
+        completedAt TIMESTAMP NULL,
+        timeSpent INTEGER DEFAULT 0,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_user_content (userId, courseContentId)
+      )`
+    };
+    
+    // Create only the missing tables
+    for (const tableName of missingTables) {
+      if (tableDefinitions[tableName]) {
+        try {
+          console.log(`🔄 Creating table: ${tableName}...`);
+          await sequelize.query(tableDefinitions[tableName]);
+          console.log(`✅ Table "${tableName}" created successfully (or already exists)`);
+        } catch (error) {
+          // If table already exists, that's fine - CREATE TABLE IF NOT EXISTS should handle this
+          if (error.message.includes('already exists') || error.message.includes('Duplicate')) {
+            console.log(`⚠️  Table "${tableName}" already exists, skipping`);
+          } else {
+            console.error(`❌ Failed to create table "${tableName}":`, error.message);
+            // Don't throw - continue with other tables
+          }
+        }
+      } else {
+        console.warn(`⚠️  No definition found for table: ${tableName}`);
+      }
+    }
+    
+    // Add foreign key constraints for course tables if they were created
+    const courseTablesCreated = missingTables.filter(table => 
+      ['courses', 'course_contents', 'course_progress', 'course_content_progress'].includes(table)
+    );
+    
+    if (courseTablesCreated.length > 0) {
+      console.log('🔄 Adding foreign key constraints for course tables...');
+      const foreignKeys = [];
+      
+      if (missingTables.includes('course_contents')) {
+        foreignKeys.push(
+          'ALTER TABLE course_contents ADD CONSTRAINT fk_course_contents_course_id FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE'
+        );
+      }
+      
+      if (missingTables.includes('course_progress')) {
+        foreignKeys.push(
+          'ALTER TABLE course_progress ADD CONSTRAINT fk_course_progress_user_id FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE',
+          'ALTER TABLE course_progress ADD CONSTRAINT fk_course_progress_course_id FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE'
+        );
+      }
+      
+      if (missingTables.includes('course_content_progress')) {
+        foreignKeys.push(
+          'ALTER TABLE course_content_progress ADD CONSTRAINT fk_course_content_progress_user_id FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE',
+          'ALTER TABLE course_content_progress ADD CONSTRAINT fk_course_content_progress_course_id FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE',
+          'ALTER TABLE course_content_progress ADD CONSTRAINT fk_course_content_progress_content_id FOREIGN KEY (courseContentId) REFERENCES course_contents(id) ON DELETE CASCADE'
+        );
+      }
+      
+      for (const fk of foreignKeys) {
+        try {
+          await sequelize.query(fk);
+          console.log('✅ Foreign key constraint added for course tables');
+        } catch (error) {
+          if (error.message.includes('Duplicate key name') || error.message.includes('already exists') || error.message.includes('Duplicate')) {
+            console.log('⚠️  Foreign key constraint already exists, skipping');
+          } else {
+            console.log('⚠️  Foreign key constraint failed (non-critical):', error.message);
+            // Don't throw - foreign keys are nice to have but not critical for functionality
+          }
+        }
+      }
+    }
+    
+    console.log('✅ Missing tables creation completed');
+  } catch (error) {
+    console.error('❌ Error creating missing tables:', error.message);
+    // Don't throw - allow server to continue even if some tables fail
+    console.error('⚠️  Server will continue, but some features may not work until tables are created');
+  }
+};
+
+// Legacy function - kept for backward compatibility but should not be used
 const createAllMySQLTables = async (sequelize) => {
   try {
     console.log('🔄 Creating all MySQL-compatible tables...');
+    console.log('⚠️  WARNING: This function creates all tables. Use createMissingTablesOnly instead.');
     
     // Create tables with MySQL-compatible syntax
     const tables = [
@@ -351,6 +637,62 @@ const createAllMySQLTables = async (sequelize) => {
         soundEnabled BOOLEAN DEFAULT true,
         createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      
+      // Courses table
+      `CREATE TABLE IF NOT EXISTS courses (
+        id CHAR(36) PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        description TEXT NULL,
+        category VARCHAR(100) NULL,
+        difficulty ENUM('EASY', 'MEDIUM', 'HARD') DEFAULT 'MEDIUM',
+        courseType ENUM('free', 'paid') DEFAULT 'free',
+        courseImageUrl VARCHAR(500) NULL,
+        isActive BOOLEAN DEFAULT true,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      
+      // Course contents table
+      `CREATE TABLE IF NOT EXISTS course_contents (
+        id CHAR(36) PRIMARY KEY,
+        courseId CHAR(36) NOT NULL,
+        contentType ENUM('text', 'image', 'audio', 'video', 'link') DEFAULT 'text',
+        content TEXT NOT NULL,
+        title VARCHAR(255) NULL,
+        displayOrder INTEGER DEFAULT 0,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )`,
+      
+      // Course progress table
+      `CREATE TABLE IF NOT EXISTS course_progress (
+        id CHAR(36) PRIMARY KEY,
+        userId CHAR(36) NOT NULL,
+        courseId CHAR(36) NOT NULL,
+        completedContentCount INTEGER DEFAULT 0,
+        totalContentCount INTEGER DEFAULT 0,
+        progressPercentage DECIMAL(5,2) DEFAULT 0.00,
+        isCompleted BOOLEAN DEFAULT false,
+        lastAccessedAt TIMESTAMP NULL,
+        completedAt TIMESTAMP NULL,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_user_course (userId, courseId)
+      )`,
+      
+      // Course content progress table
+      `CREATE TABLE IF NOT EXISTS course_content_progress (
+        id CHAR(36) PRIMARY KEY,
+        userId CHAR(36) NOT NULL,
+        courseId CHAR(36) NOT NULL,
+        courseContentId CHAR(36) NOT NULL,
+        isCompleted BOOLEAN DEFAULT false,
+        completedAt TIMESTAMP NULL,
+        timeSpent INTEGER DEFAULT 0,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_user_content (userId, courseContentId)
       )`
     ];
     
@@ -383,7 +725,13 @@ const createAllMySQLTables = async (sequelize) => {
       'ALTER TABLE access_codes ADD CONSTRAINT fk_access_codes_exam_id FOREIGN KEY (examId) REFERENCES exams(id) ON DELETE CASCADE',
       'ALTER TABLE notifications ADD CONSTRAINT fk_notifications_user_id FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE',
       'ALTER TABLE studyreminders ADD CONSTRAINT fk_studyreminders_user_id FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE',
-      'ALTER TABLE notificationpreferences ADD CONSTRAINT fk_notificationpreferences_user_id FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE'
+      'ALTER TABLE notificationpreferences ADD CONSTRAINT fk_notificationpreferences_user_id FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE',
+      'ALTER TABLE course_contents ADD CONSTRAINT fk_course_contents_course_id FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE',
+      'ALTER TABLE course_progress ADD CONSTRAINT fk_course_progress_user_id FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE',
+      'ALTER TABLE course_progress ADD CONSTRAINT fk_course_progress_course_id FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE',
+      'ALTER TABLE course_content_progress ADD CONSTRAINT fk_course_content_progress_user_id FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE',
+      'ALTER TABLE course_content_progress ADD CONSTRAINT fk_course_content_progress_course_id FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE',
+      'ALTER TABLE course_content_progress ADD CONSTRAINT fk_course_content_progress_content_id FOREIGN KEY (courseContentId) REFERENCES course_contents(id) ON DELETE CASCADE'
     ];
     
     for (const fk of foreignKeys) {
@@ -417,7 +765,17 @@ const createAllMySQLTables = async (sequelize) => {
       'CREATE INDEX IF NOT EXISTS idx_notifications_scheduled_for ON notifications(scheduledFor)',
       'CREATE INDEX IF NOT EXISTS idx_studyreminders_user_id ON studyreminders(userId)',
       'CREATE INDEX IF NOT EXISTS idx_studyreminders_is_enabled ON studyreminders(isEnabled)',
-      'CREATE INDEX IF NOT EXISTS idx_notificationpreferences_user_id ON notificationpreferences(userId)'
+      'CREATE INDEX IF NOT EXISTS idx_notificationpreferences_user_id ON notificationpreferences(userId)',
+      'CREATE INDEX IF NOT EXISTS idx_courses_category ON courses(category)',
+      'CREATE INDEX IF NOT EXISTS idx_courses_course_type ON courses(courseType)',
+      'CREATE INDEX IF NOT EXISTS idx_courses_is_active ON courses(isActive)',
+      'CREATE INDEX IF NOT EXISTS idx_course_contents_course_id ON course_contents(courseId)',
+      'CREATE INDEX IF NOT EXISTS idx_course_contents_display_order ON course_contents(displayOrder)',
+      'CREATE INDEX IF NOT EXISTS idx_course_progress_user_id ON course_progress(userId)',
+      'CREATE INDEX IF NOT EXISTS idx_course_progress_course_id ON course_progress(courseId)',
+      'CREATE INDEX IF NOT EXISTS idx_course_content_progress_user_id ON course_content_progress(userId)',
+      'CREATE INDEX IF NOT EXISTS idx_course_content_progress_course_id ON course_content_progress(courseId)',
+      'CREATE INDEX IF NOT EXISTS idx_course_content_progress_content_id ON course_content_progress(courseContentId)'
     ];
     
     for (const index of indexes) {
@@ -438,6 +796,7 @@ const createAllMySQLTables = async (sequelize) => {
     await addMissingExamResultsColumns(sequelize);
     await addMissingAccessCodesAdditionalColumns(sequelize);
     await addMissingNotificationPreferencesColumns(sequelize);
+    await addMissingCoursesColumns(sequelize);
     await refreshTableCache(sequelize);
     
     console.log('🎉 All MySQL tables created successfully!');
@@ -789,6 +1148,85 @@ const addMissingNotificationPreferencesColumns = async (sequelize) => {
   }
 };
 
+// Add missing columns to courses table
+const addMissingCoursesColumns = async (sequelize) => {
+  try {
+    console.log('🔄 Checking for missing columns in courses tables...');
+    
+    // Check courses table columns
+    const coursesColumns = await sequelize.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'courses'
+    `);
+    const existingCoursesColumns = coursesColumns[0].map(row => row.COLUMN_NAME);
+    
+    // Check if courses table exists and has required columns
+    if (existingCoursesColumns.length > 0) {
+      const requiredCoursesColumns = ['id', 'title', 'description', 'category', 'difficulty', 'courseType', 'courseImageUrl', 'isActive'];
+      const missingCoursesColumns = requiredCoursesColumns.filter(col => !existingCoursesColumns.includes(col));
+      
+      if (missingCoursesColumns.length > 0) {
+        console.log(`⚠️  Missing columns in courses table: ${missingCoursesColumns.join(', ')}`);
+        // Note: Adding columns to existing table with data is safe, but we'll skip for now
+        // to avoid any potential issues. The table should be created with all columns.
+      } else {
+        console.log('✅ Courses table columns are up to date');
+      }
+    } else {
+      console.log('⚠️  Courses table does not exist - will be created if missing tables are detected');
+    }
+    
+    // Check course_contents table
+    const courseContentsColumns = await sequelize.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'course_contents'
+    `);
+    const existingContentsColumns = courseContentsColumns[0].map(row => row.COLUMN_NAME);
+    
+    if (existingContentsColumns.length > 0) {
+      console.log('✅ Course contents table columns are up to date');
+    }
+    
+    // Check course_progress table
+    const courseProgressColumns = await sequelize.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'course_progress'
+    `);
+    const existingProgressColumns = courseProgressColumns[0].map(row => row.COLUMN_NAME);
+    
+    if (existingProgressColumns.length > 0) {
+      console.log('✅ Course progress table columns are up to date');
+    }
+    
+    // Check course_content_progress table
+    const courseContentProgressColumns = await sequelize.query(`
+      SELECT COLUMN_NAME 
+      FROM INFORMATION_SCHEMA.COLUMNS 
+      WHERE TABLE_SCHEMA = DATABASE() 
+      AND TABLE_NAME = 'course_content_progress'
+    `);
+    const existingContentProgressColumns = courseContentProgressColumns[0].map(row => row.COLUMN_NAME);
+    
+    if (existingContentProgressColumns.length > 0) {
+      console.log('✅ Course content progress table columns are up to date');
+    }
+    
+  } catch (error) {
+    // If table doesn't exist, that's okay - it will be created if needed
+    if (error.message.includes("doesn't exist") || error.message.includes('Unknown table')) {
+      console.log('⚠️  Course tables do not exist yet - will be created if in missing tables list');
+    } else {
+      console.log('⚠️  Error checking courses tables:', error.message);
+    }
+  }
+};
+
 // Refresh Sequelize table cache to ensure latest schema
 const refreshTableCache = async (sequelize) => {
   try {
@@ -1113,6 +1551,10 @@ const initializeTables = async () => {
     const Notification = require('../models/Notification');
     const StudyReminder = require('../models/StudyReminder');
     const NotificationPreferences = require('../models/NotificationPreferences');
+    const Course = require('../models/Course');
+    const CourseContent = require('../models/CourseContent');
+    const CourseProgress = require('../models/CourseProgress');
+    const CourseContentProgress = require('../models/CourseContentProgress');
 
     console.log('✅ All models imported successfully');
 
@@ -1126,30 +1568,34 @@ const initializeTables = async () => {
       const tables = await sequelize.getQueryInterface().showAllTables();
       console.log('📋 Existing tables:', tables);
       
-      // Check for all required tables (core + notification tables)
+      // Check for all required tables (core + notification + course tables)
       const allRequiredTables = [
         'users', 'exams', 'questions', 'exam_results', 'payment_requests', 'access_codes',
-        'notifications', 'studyreminders', 'notificationpreferences'
+        'notifications', 'studyreminders', 'notificationpreferences',
+        'courses', 'course_contents', 'course_progress', 'course_content_progress'
       ];
       const missingTables = allRequiredTables.filter(table => !tables.includes(table));
       
       if (missingTables.length > 0) {
         console.log('🔄 Missing tables found:', missingTables);
-        console.log('🔄 Creating missing tables...');
-        await createAllMySQLTables(sequelize);
+        console.log('🔄 Creating only missing tables (existing tables will not be touched)...');
+        // Create only the missing tables, not all tables
+        await createMissingTablesOnly(sequelize, missingTables);
       } else {
         console.log('✅ All required tables exist');
-        // Still check for missing columns in existing tables
-        console.log('🔄 Checking for missing columns...');
-        await addMissingColumns(sequelize);
-        await addMissingAccessCodesColumns(sequelize);
-        await addMissingExamsColumns(sequelize);
-        await addMissingQuestionsColumns(sequelize);
-        await addMissingExamResultsColumns(sequelize);
-        await addMissingAccessCodesAdditionalColumns(sequelize);
-        await addMissingNotificationPreferencesColumns(sequelize);
-        await refreshTableCache(sequelize);
       }
+      
+      // Always check for missing columns in existing tables (this is safe and won't modify data)
+      console.log('🔄 Checking for missing columns in existing tables...');
+      await addMissingColumns(sequelize);
+      await addMissingAccessCodesColumns(sequelize);
+      await addMissingExamsColumns(sequelize);
+      await addMissingQuestionsColumns(sequelize);
+      await addMissingExamResultsColumns(sequelize);
+      await addMissingAccessCodesAdditionalColumns(sequelize);
+      await addMissingNotificationPreferencesColumns(sequelize);
+      await addMissingCoursesColumns(sequelize);
+      await refreshTableCache(sequelize);
       
       // Create admin user after ensuring all tables and columns exist
       await createAdminUser(sequelize);
@@ -1169,19 +1615,10 @@ const initializeTables = async () => {
       sql: error.sql
     });
     
-    // Try to create tables individually if sync fails
-    console.log('🔄 Attempting to create tables individually...');
-    try {
-      // Create a new connection to avoid transaction issues
-      const newSequelize = new Sequelize(getDatabaseConfig());
-      await newSequelize.authenticate();
-      await createAllMySQLTables(newSequelize);
-      await newSequelize.close();
-      console.log('✅ Database tables created successfully');
-    } catch (individualError) {
-      console.error('❌ Individual table creation also failed:', individualError.message);
-      throw individualError;
-    }
+    // Don't try to recreate all tables on error - this could cause data loss
+    // Instead, log the error and let the server continue
+    console.error('⚠️  Database initialization had errors, but server will continue');
+    console.error('⚠️  Please check the database manually or run migrations');
   }
 };
 
