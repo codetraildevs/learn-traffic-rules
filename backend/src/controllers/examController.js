@@ -1191,14 +1191,20 @@ class ExamController {
         });
       }
 
-      // Handle question image upload
+      // Handle question image upload - check both file upload and URL from body
       let questionImgUrl = existingQuestion.questionImgUrl;
       if (req.file) {
+        // Image uploaded via multipart form
         const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
         questionImgUrl = `${baseUrl}/uploads/question-images/${req.file.filename}`;
-        console.log('📸 QUESTION IMAGE UPDATE: Image uploaded');
+        console.log('📸 QUESTION IMAGE UPDATE: Image uploaded via multipart');
         console.log('   Filename:', req.file.filename);
         console.log('   Image URL:', questionImgUrl);
+      } else if (req.body.questionImgUrl !== undefined) {
+        // Image URL provided in body (or null to remove image)
+        questionImgUrl = req.body.questionImgUrl || null;
+        console.log('📸 QUESTION IMAGE UPDATE: Image URL provided in body');
+        console.log('   Image URL:', questionImgUrl || '(removed)');
       }
 
       // Update question
