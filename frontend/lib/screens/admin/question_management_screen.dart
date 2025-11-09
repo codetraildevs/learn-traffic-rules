@@ -210,12 +210,12 @@ class _QuestionManagementScreenState
       itemCount: _questions.length,
       itemBuilder: (context, index) {
         final question = _questions[index];
-        return _buildQuestionCard(question);
+        return _buildQuestionCard(question, index);
       },
     );
   }
 
-  Widget _buildQuestionCard(Question question) {
+  Widget _buildQuestionCard(Question question, int index) {
     return Card(
       margin: EdgeInsets.only(bottom: 12.h),
       elevation: 2,
@@ -225,14 +225,38 @@ class _QuestionManagementScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Question text
-            Text(
-              question.question,
-              style: AppTextStyles.bodyLarge.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            // Question number and text
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 32.w,
+                  height: 32.h,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '${index + 1}',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Text(
+                    question.question,
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: 12.h),
 
@@ -300,16 +324,22 @@ class _QuestionManagementScreenState
 
   Widget _buildOptionsList(Question question) {
     final options = [
-      'A) ${question.option1}',
-      'B) ${question.option2}',
-      if (question.option3.isNotEmpty) 'C) ${question.option3}',
-      if (question.option4.isNotEmpty) 'D) ${question.option4}',
+      question.option1,
+      question.option2,
+      if (question.option3.isNotEmpty) question.option3,
+      if (question.option4.isNotEmpty) question.option4,
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: options.map((option) {
-        final isCorrect = option.contains(question.correctAnswer);
+      children: options.map((optionText) {
+        // Check if this is the correct answer
+        // Compare the option text directly with the correct answer
+        final isCorrect =
+            optionText.trim() == question.correctAnswer.trim() ||
+            optionText.trim().contains(question.correctAnswer.trim()) ||
+            question.correctAnswer.trim().contains(optionText.trim());
+
         return Container(
           margin: EdgeInsets.only(bottom: 4.h),
           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
@@ -324,7 +354,7 @@ class _QuestionManagementScreenState
             ),
           ),
           child: Text(
-            option,
+            optionText,
             style: AppTextStyles.bodySmall.copyWith(
               color: isCorrect ? AppColors.success : AppColors.grey700,
               fontWeight: isCorrect ? FontWeight.w600 : FontWeight.normal,

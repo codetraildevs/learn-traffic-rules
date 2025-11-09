@@ -157,20 +157,46 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
               ],
             ),
 
-            // Stats Cards
+            // Exam Statistics Section
             SliverToBoxAdapter(
               child: FadeTransition(
                 opacity: _fadeAnimation,
                 child: SlideTransition(
                   position: _slideAnimation,
                   child: Padding(
-                    padding: EdgeInsets.all(16.w),
+                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Exam Statistics',
+                          style: AppTextStyles.heading3.copyWith(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Stats Cards (Show all exams, not filtered)
+            SliverToBoxAdapter(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
                     child: Row(
                       children: [
                         Expanded(
                           child: _buildStatCard(
                             'Total Exams',
-                            '${_getFilteredExams(examState.exams).length}',
+                            '${examState.exams.length}',
                             Icons.quiz,
                             AppColors.primary,
                           ),
@@ -179,7 +205,7 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
                         Expanded(
                           child: _buildStatCard(
                             'Active',
-                            '${_getFilteredExams(examState.exams).where((e) => e.isActive).length}',
+                            '${examState.exams.where((e) => e.isActive).length}',
                             Icons.check_circle,
                             AppColors.success,
                           ),
@@ -188,7 +214,7 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
                         Expanded(
                           child: _buildStatCard(
                             'Inactive',
-                            '${_getFilteredExams(examState.exams).where((e) => !e.isActive).length}',
+                            '${examState.exams.where((e) => !e.isActive).length}',
                             Icons.pause_circle,
                             AppColors.warning,
                           ),
@@ -200,7 +226,21 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
               ),
             ),
 
-            // Exam Type Filter
+            // Exam Type Breakdown Stats (Show all exams, not filtered)
+            // SliverToBoxAdapter(
+            //   child: FadeTransition(
+            //     opacity: _fadeAnimation,
+            //     child: SlideTransition(
+            //       position: _slideAnimation,
+            //       child: Padding(
+            //         padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+            //         child: _buildExamTypeStats(examState.exams),
+            //       ),
+            //     ),
+            //   ),
+            // ),
+
+            // Exam Type Filter Section
             SliverToBoxAdapter(
               child: FadeTransition(
                 opacity: _fadeAnimation,
@@ -213,6 +253,41 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
                 ),
               ),
             ),
+
+            // Exams List Section Header
+            if (_getFilteredExams(examState.exams).isNotEmpty &&
+                !examState.isLoading &&
+                examState.error == null)
+              SliverToBoxAdapter(
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 12.h),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Exams List',
+                            style: AppTextStyles.heading3.copyWith(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '${_getFilteredExams(examState.exams).length} ${_getFilteredExams(examState.exams).length == 1 ? 'exam' : 'exams'}',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.grey600,
+                              fontSize: 14.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
 
             // Loading State
             if (examState.isLoading)
@@ -792,6 +867,135 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
         .toList();
   }
 
+  // /// Build exam type breakdown stats widget
+  // Widget _buildExamTypeStats(List<Exam> exams) {
+  //   // Get unique exam types from exams
+  //   final examTypes = exams
+  //       .map((e) => e.examType?.toLowerCase())
+  //       .where((type) => type != null && type.isNotEmpty)
+  //       .toSet()
+  //       .toList();
+
+  //   // Order: kinyarwanda, english, french
+  //   final orderedTypes = ['kinyarwanda', 'english', 'french'];
+  //   final availableTypes = orderedTypes
+  //       .where((type) => examTypes.contains(type))
+  //       .toList();
+
+  //   if (availableTypes.isEmpty) {
+  //     return const SizedBox.shrink();
+  //   }
+
+  //   return Container(
+  //     padding: EdgeInsets.all(12.w),
+  //     decoration: BoxDecoration(
+  //       color: AppColors.white,
+  //       borderRadius: BorderRadius.circular(12.r),
+  //       border: Border.all(color: AppColors.grey200, width: 1),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: AppColors.black.withValues(alpha: 0.03),
+  //           blurRadius: 8,
+  //           offset: const Offset(0, 2),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Text(
+  //           'By Language',
+  //           style: AppTextStyles.bodyMedium.copyWith(
+  //             fontWeight: FontWeight.w600,
+  //             fontSize: 13.sp,
+  //           ),
+  //         ),
+  //         SizedBox(height: 12.h),
+  //         Wrap(
+  //           spacing: 8.w,
+  //           runSpacing: 8.h,
+  //           children: availableTypes.map((type) {
+  //             final count = exams
+  //                 .where(
+  //                   (exam) =>
+  //                       exam.examType?.toLowerCase() == type.toLowerCase(),
+  //                 )
+  //                 .length;
+  //             final displayName = type[0].toUpperCase() + type.substring(1);
+
+  //             // Get color for each type
+  //             Color typeColor;
+  //             IconData typeIcon;
+  //             switch (type.toLowerCase()) {
+  //               case 'kinyarwanda':
+  //                 typeColor = AppColors.secondary;
+  //                 typeIcon = Icons.translate;
+  //                 break;
+  //               case 'english':
+  //                 typeColor = AppColors.primary;
+  //                 typeIcon = Icons.language;
+  //                 break;
+  //               case 'french':
+  //                 typeColor = Colors.blue;
+  //                 typeIcon = Icons.public;
+  //                 break;
+  //               default:
+  //                 typeColor = AppColors.grey600;
+  //                 typeIcon = Icons.quiz;
+  //             }
+
+  //             return Container(
+  //               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+  //               decoration: BoxDecoration(
+  //                 color: typeColor.withValues(alpha: 0.1),
+  //                 borderRadius: BorderRadius.circular(8.r),
+  //                 border: Border.all(
+  //                   color: typeColor.withValues(alpha: 0.3),
+  //                   width: 1,
+  //                 ),
+  //               ),
+  //               child: Row(
+  //                 mainAxisSize: MainAxisSize.min,
+  //                 children: [
+  //                   Icon(typeIcon, size: 16.sp, color: typeColor),
+  //                   SizedBox(width: 6.w),
+  //                   Text(
+  //                     displayName,
+  //                     style: AppTextStyles.bodySmall.copyWith(
+  //                       color: typeColor,
+  //                       fontWeight: FontWeight.w600,
+  //                       fontSize: 12.sp,
+  //                     ),
+  //                   ),
+  //                   SizedBox(width: 6.w),
+  //                   Container(
+  //                     padding: EdgeInsets.symmetric(
+  //                       horizontal: 6.w,
+  //                       vertical: 2.h,
+  //                     ),
+  //                     decoration: BoxDecoration(
+  //                       color: typeColor,
+  //                       borderRadius: BorderRadius.circular(10.r),
+  //                     ),
+  //                     child: Text(
+  //                       '$count',
+  //                       style: TextStyle(
+  //                         color: AppColors.white,
+  //                         fontSize: 11.sp,
+  //                         fontWeight: FontWeight.bold,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             );
+  //           }).toList(),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
   /// Build exam type filter widget
   Widget _buildExamTypeFilter(List<Exam> exams) {
     // Get unique exam types from exams
@@ -811,28 +1015,45 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
       return const SizedBox.shrink();
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Filter by Language',
-          style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
-        ),
-        SizedBox(height: 12.h),
-        Wrap(
-          spacing: 8.w,
-          runSpacing: 8.h,
-          children: [
-            // All option
-            _buildFilterChip(null, 'All', exams),
-            // Type options
-            ...availableTypes.map((type) {
-              final displayName = type[0].toUpperCase() + type.substring(1);
-              return _buildFilterChip(type, displayName, exams);
-            }).toList(),
-          ],
-        ),
-      ],
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: AppColors.grey50,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.grey200, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.filter_list, size: 18.sp, color: AppColors.primary),
+              SizedBox(width: 8.w),
+              Text(
+                'Filter by Language',
+                style: AppTextStyles.bodyLarge.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14.sp,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: [
+              // All option
+              _buildFilterChip(null, 'All', exams),
+              // Type options
+              ...availableTypes.map((type) {
+                final displayName = type[0].toUpperCase() + type.substring(1);
+                return _buildFilterChip(type, displayName, exams);
+              }).toList(),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

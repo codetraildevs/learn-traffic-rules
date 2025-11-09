@@ -14,11 +14,16 @@ import '../../services/exam_service.dart';
 import '../../services/user_management_service.dart';
 import '../../models/exam_result_model.dart';
 import '../../models/exam_model.dart';
+import '../../models/course_model.dart';
 import '../admin/exam_management_screen.dart';
 import '../admin/user_management_screen.dart';
 import '../admin/access_code_management_screen.dart';
 import '../user/available_exams_screen.dart';
+import '../user/course_list_screen.dart';
+import '../user/course_detail_screen.dart';
 import '../../services/notification_polling_service.dart';
+import '../../providers/course_provider.dart';
+import '../../core/constants/app_constants.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -60,6 +65,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadDashboardData();
+    // Load courses
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(courseProvider.notifier).loadCourses();
+    });
   }
 
   @override
@@ -440,6 +449,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         // Exams grouped by type (for users)
                         if (user?.role == 'USER') ...[
                           _buildExamsByType(),
+                          SizedBox(height: 24.h),
+                          _buildCoursesSection(),
+                          SizedBox(height: 24.h),
+                          // Quick Stats for users
+                          _buildQuickStats(user),
                           SizedBox(height: 24.h),
                         ],
 
@@ -946,6 +960,191 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildCoursesSection() {
+    final courseState = ref.watch(courseProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Courses',
+              style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CourseListScreen(),
+                  ),
+                );
+              },
+              child: const Text('View All'),
+            ),
+          ],
+        ),
+        SizedBox(height: 16.h),
+        if (courseState.isLoading)
+          const Center(child: CircularProgressIndicator())
+        else if (courseState.error != null)
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+            child: Text(
+              'Error loading courses: ${courseState.error}',
+              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
+            ),
+          )
+        else if (courseState.courses.isEmpty)
+          Container(
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(16.r),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.school_outlined,
+                  size: 48.sp,
+                  color: AppColors.grey400,
+                ),
+                SizedBox(height: 16.h),
+                Text(
+                  'No courses available',
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: AppColors.grey600,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          SizedBox(
+            height: 200.h,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: courseState.courses.take(5).length,
+              itemBuilder: (context, index) {
+                final course = courseState.courses[index];
+                return Container(
+                  width: 280.w,
+                  margin: EdgeInsets.only(right: 12.w),
+                  child: _buildCourseCard(course),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCourseCard(Course course) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CourseDetailScreen(course: course),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(16.r),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (course.courseImageUrl != null &&
+                course.courseImageUrl!.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16.r),
+                  topRight: Radius.circular(16.r),
+                ),
+                child: Image.network(
+                  course.courseImageUrl!.startsWith('http')
+                      ? course.courseImageUrl!
+                      : '${AppConstants.baseUrlImage}${course.courseImageUrl}',
+                  height: 120.h,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 120.h,
+                      color: AppColors.grey200,
+                      child: Icon(
+                        Icons.school,
+                        size: 32.sp,
+                        color: AppColors.grey400,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            Padding(
+              padding: EdgeInsets.all(12.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    course.title,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 8.h),
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 6.w,
+                          vertical: 2.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: course.isFree
+                              ? AppColors.success.withValues(alpha: 0.1)
+                              : AppColors.warning.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: Text(
+                          course.courseType.displayName,
+                          style: AppTextStyles.caption.copyWith(
+                            color: course.isFree
+                                ? AppColors.success
+                                : AppColors.warning,
+                            fontSize: 10.sp,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        '${course.contentCount ?? 0} lessons',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.grey600,
+                          fontSize: 10.sp,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

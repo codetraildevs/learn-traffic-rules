@@ -73,6 +73,7 @@ dependencies:
   intl: ^0.19.0
   # uuid: ^4.2.1  # Removed - not used
   url_launcher: ^6.2.2
+  video_player: ^2.8.2
   flash_message: ^0.0.2  # Required for flash messages
   
   # Security

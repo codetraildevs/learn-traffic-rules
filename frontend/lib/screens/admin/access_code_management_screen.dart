@@ -29,6 +29,9 @@ class _AccessCodeManagementScreenState
   String _selectedSort = 'createdAt';
   bool _sortAscending = false;
   Timer? _refreshTimer;
+  DateTime? _startDate;
+  DateTime? _endDate;
+  bool _filterByToday = false;
 
   @override
   void initState() {
@@ -110,6 +113,68 @@ class _AccessCodeManagementScreenState
       }
     }
 
+    // Apply date filters
+    if (_filterByToday) {
+      final today = DateTime.now();
+      final todayStart = DateTime(today.year, today.month, today.day);
+      final todayEnd = todayStart.add(const Duration(days: 1));
+
+      filtered = filtered.where((code) {
+        final codeDate = DateTime(
+          code.createdAt.year,
+          code.createdAt.month,
+          code.createdAt.day,
+        );
+        return codeDate.isAfter(
+              todayStart.subtract(const Duration(microseconds: 1)),
+            ) &&
+            codeDate.isBefore(todayEnd);
+      }).toList();
+    } else if (_startDate != null || _endDate != null) {
+      filtered = filtered.where((code) {
+        final codeDate = DateTime(
+          code.createdAt.year,
+          code.createdAt.month,
+          code.createdAt.day,
+        );
+
+        if (_startDate != null && _endDate != null) {
+          final rangeStart = DateTime(
+            _startDate!.year,
+            _startDate!.month,
+            _startDate!.day,
+          );
+          final rangeEnd = DateTime(
+            _endDate!.year,
+            _endDate!.month,
+            _endDate!.day,
+          ).add(const Duration(days: 1));
+
+          return codeDate.isAfter(
+                rangeStart.subtract(const Duration(microseconds: 1)),
+              ) &&
+              codeDate.isBefore(rangeEnd);
+        } else if (_startDate != null) {
+          final rangeStart = DateTime(
+            _startDate!.year,
+            _startDate!.month,
+            _startDate!.day,
+          );
+          return codeDate.isAfter(
+            rangeStart.subtract(const Duration(microseconds: 1)),
+          );
+        } else if (_endDate != null) {
+          final rangeEnd = DateTime(
+            _endDate!.year,
+            _endDate!.month,
+            _endDate!.day,
+          ).add(const Duration(days: 1));
+          return codeDate.isBefore(rangeEnd);
+        }
+        return true;
+      }).toList();
+    }
+
     // Apply sorting
     filtered.sort((a, b) {
       int comparison = 0;
@@ -164,6 +229,226 @@ class _AccessCodeManagementScreenState
       _sortAscending = !_sortAscending;
     });
     _applyFiltersAndSort();
+  }
+
+  Future<void> _selectStartDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _startDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _startDate = picked;
+        _filterByToday = false;
+      });
+      _applyFiltersAndSort();
+    }
+  }
+
+  Future<void> _selectEndDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _endDate ?? (_startDate ?? DateTime.now()),
+      firstDate: _startDate ?? DateTime(2020),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _endDate = picked;
+        _filterByToday = false;
+      });
+      _applyFiltersAndSort();
+    }
+  }
+
+  void _toggleTodayFilter() {
+    setState(() {
+      _filterByToday = !_filterByToday;
+      if (_filterByToday) {
+        _startDate = null;
+        _endDate = null;
+      }
+    });
+    _applyFiltersAndSort();
+  }
+
+  void _clearDateFilters() {
+    setState(() {
+      _startDate = null;
+      _endDate = null;
+      _filterByToday = false;
+    });
+    _applyFiltersAndSort();
+  }
+
+  Widget _buildDateFilters() {
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: AppColors.grey50,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.grey200, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.calendar_today, size: 16.sp, color: AppColors.primary),
+              SizedBox(width: 8.w),
+              Text(
+                'Date Filter',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13.sp,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: [
+              // Today Filter Button
+              FilterChip(
+                label: const Text('Today'),
+                selected: _filterByToday,
+                onSelected: (selected) => _toggleTodayFilter(),
+                selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                checkmarkColor: AppColors.primary,
+              ),
+              // Start Date
+              InkWell(
+                onTap: _selectStartDate,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 8.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _startDate != null
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : AppColors.white,
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(
+                      color: _startDate != null
+                          ? AppColors.primary
+                          : AppColors.grey300,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        size: 16.sp,
+                        color: _startDate != null
+                            ? AppColors.primary
+                            : AppColors.grey600,
+                      ),
+                      SizedBox(width: 6.w),
+                      Text(
+                        _startDate != null
+                            ? DateFormat('MMM dd, yyyy').format(_startDate!)
+                            : 'Start Date',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: _startDate != null
+                              ? AppColors.primary
+                              : AppColors.grey600,
+                          fontWeight: _startDate != null
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // End Date
+              InkWell(
+                onTap: _selectEndDate,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 8.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _endDate != null
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : AppColors.white,
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(
+                      color: _endDate != null
+                          ? AppColors.primary
+                          : AppColors.grey300,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        size: 16.sp,
+                        color: _endDate != null
+                            ? AppColors.primary
+                            : AppColors.grey600,
+                      ),
+                      SizedBox(width: 6.w),
+                      Text(
+                        _endDate != null
+                            ? DateFormat('MMM dd, yyyy').format(_endDate!)
+                            : 'End Date',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: _endDate != null
+                              ? AppColors.primary
+                              : AppColors.grey600,
+                          fontWeight: _endDate != null
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Clear Button
+              if (_startDate != null || _endDate != null || _filterByToday)
+                InkWell(
+                  onTap: _clearDateFilters,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 8.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(color: AppColors.error),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.clear, size: 16.sp, color: AppColors.error),
+                        SizedBox(width: 6.w),
+                        Text(
+                          'Clear',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.error,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _toggleBlockStatus(AccessCode code) async {
@@ -442,6 +727,10 @@ class _AccessCodeManagementScreenState
                     ),
                   ],
                 ),
+
+                // Date Filters
+                SizedBox(height: 12.h),
+                _buildDateFilters(),
               ],
             ),
           ),
