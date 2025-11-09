@@ -9,9 +9,8 @@ const CourseContent = require('../models/CourseContent');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
-// Setup associations
-const setupAssociations = require('./associations');
-setupAssociations();
+// Note: Associations are set up in database.js during initialization
+// Don't call setupAssociations here to avoid duplicate association errors
 
 class DatabaseSeeder {
   /**

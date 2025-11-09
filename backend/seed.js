@@ -11,7 +11,7 @@
  */
 
 const DatabaseSeeder = require('./src/config/seeders');
-const { testConnection } = require('./src/config/database');
+const { testConnection, initializeTables } = require('./src/config/database');
 
 async function main() {
   try {
@@ -23,6 +23,11 @@ async function main() {
       console.error('❌ Database connection failed. Please check your database configuration.');
       process.exit(1);
     }
+    
+    // Initialize tables first (ensures all tables exist before seeding)
+    console.log('🔄 Ensuring database tables exist...');
+    await initializeTables();
+    console.log('✅ Database tables verified');
     
     // Parse command line arguments
     const args = process.argv.slice(2);
@@ -41,6 +46,12 @@ async function main() {
     process.exit(0);
   } catch (error) {
     console.error('❌ Seeding failed:', error);
+    console.error('🔍 Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code || error.parent?.code,
+      sql: error.sql || error.parent?.sql
+    });
     process.exit(1);
   }
 }
