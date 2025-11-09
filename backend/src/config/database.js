@@ -579,6 +579,19 @@ const addMissingExamsColumns = async (sequelize) => {
       }
     } else {
       console.log('✅ Column examType already exists, skipping');
+      
+      // Update existing exams with NULL examType to default 'english'
+      try {
+        console.log('🔄 Updating existing exams with NULL examType to default...');
+        const updateResult = await sequelize.query(`
+          UPDATE exams 
+          SET examType = 'english' 
+          WHERE examType IS NULL
+        `);
+        console.log(`✅ Updated ${updateResult[0].affectedRows || 0} exams with NULL examType`);
+      } catch (updateError) {
+        console.log('⚠️  Failed to update NULL examType values:', updateError.message);
+      }
     }
   } catch (error) {
     console.log('⚠️  Error checking/adding missing columns in exams:', error.message);

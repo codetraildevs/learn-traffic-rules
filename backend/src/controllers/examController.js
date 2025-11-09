@@ -38,6 +38,11 @@ class ExamController {
           const examData = exam.toJSON();
           examData.questionCount = questionCount;
           
+          // Ensure examType is never null - default to 'english' if missing
+          if (!examData.examType) {
+            examData.examType = 'english';
+          }
+          
           return examData;
         })
       );
@@ -460,7 +465,18 @@ class ExamController {
       }
 
       const { id } = req.params;
-      const updateData = req.body;
+      const {
+        title,
+        description,
+        category,
+        difficulty,
+        duration,
+        questionCount,
+        passingScore,
+        examImgUrl,
+        examType,
+        isActive
+      } = req.body;
 
       const exam = await Exam.findByPk(id);
       if (!exam) {
@@ -470,7 +486,47 @@ class ExamController {
         });
       }
 
+      // Validate examType if provided
+      const validExamTypes = ['kinyarwanda', 'english', 'french'];
+      let finalExamType = exam.examType; // Keep existing if not provided
+      
+      if (examType !== undefined && examType !== null) {
+        if (validExamTypes.includes(examType.toLowerCase())) {
+          finalExamType = examType.toLowerCase();
+        } else {
+          // Invalid examType provided, use default
+          finalExamType = 'english';
+        }
+      } else if (!finalExamType) {
+        // No examType in request and exam doesn't have one, set default
+        finalExamType = 'english';
+      }
+
+      // Build update data
+      const updateData = {
+        title,
+        description,
+        category,
+        difficulty,
+        duration,
+        questionCount,
+        passingScore,
+        examImgUrl,
+        examType: finalExamType,
+        isActive
+      };
+
+      // Remove undefined fields
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined) {
+          delete updateData[key];
+        }
+      });
+
       await exam.update(updateData);
+
+      // Reload exam to get updated data
+      await exam.reload();
 
       res.json({
         success: true,
