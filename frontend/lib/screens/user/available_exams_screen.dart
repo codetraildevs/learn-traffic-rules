@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:intl/intl.dart';
 import 'package:learn_traffic_rules/screens/user/payment_instructions_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
@@ -9,6 +8,9 @@ import '../../models/exam_model.dart';
 import '../../services/flash_message_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../services/user_management_service.dart';
+import '../../services/offline_exam_service.dart';
+import '../../services/exam_sync_service.dart';
+import '../../services/network_service.dart';
 import '../../models/free_exam_model.dart';
 import 'exam_taking_screen.dart';
 import 'exam_progress_screen.dart';
@@ -24,18 +26,25 @@ class AvailableExamsScreen extends ConsumerStatefulWidget {
 }
 
 class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   final UserManagementService _userManagementService = UserManagementService();
+  final OfflineExamService _offlineService = OfflineExamService();
+  final ExamSyncService _syncService = ExamSyncService();
+  final NetworkService _networkService = NetworkService();
   FreeExamData? _freeExamData;
+  List<Exam> _allExams = []; // Cache all exams
   bool _isLoadingFreeExams = true;
+  bool _isOffline = false;
+  bool _isSyncing = false;
   String? _selectedExamType;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Initialize selected exam type from widget parameter
     _selectedExamType = widget.initialExamType?.toLowerCase();
 
@@ -58,35 +67,131 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Reload exams when app comes to foreground
+    if (state == AppLifecycleState.resumed) {
+      _loadFreeExams(forceReload: true);
+    }
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Load free exams after the widget tree is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadFreeExams();
+      _setupConnectivityListener();
     });
   }
 
-  Future<void> _loadFreeExams() async {
+  void _setupConnectivityListener() {
+    // Listen for connectivity changes
+    _networkService.connectivityStream.listen((connectivityResult) async {
+      final hasInternet = await _networkService.hasInternetConnection();
+
+      if (hasInternet && _isOffline) {
+        // Internet came back - sync data
+        debugPrint('🌐 Internet connection restored, syncing...');
+        setState(() {
+          _isOffline = false;
+          _isSyncing = true;
+        });
+
+        // Sync results first, then download exams
+        await _syncService.fullSync();
+
+        // Reload exams after sync
+        await _loadFreeExams(forceReload: true);
+
+        setState(() {
+          _isSyncing = false;
+        });
+      } else if (!hasInternet && !_isOffline) {
+        // Internet lost
+        debugPrint('🌐 Internet connection lost, using offline data');
+        setState(() {
+          _isOffline = true;
+        });
+      }
+    });
+  }
+
+  Future<void> _loadFreeExams({bool forceReload = false}) async {
+    // If we already have exams and not forcing reload, just filter client-side
+    if (!forceReload && _allExams.isNotEmpty && _freeExamData != null) {
+      debugPrint('🔄 Using cached exams, filtering client-side');
+      _filterExamsClientSide();
+      return;
+    }
+
     try {
       setState(() {
         _isLoadingFreeExams = true;
       });
 
-      debugPrint('🔄 Loading free exams...');
-      final response = await _userManagementService.getFreeExams();
-      debugPrint('🔄 Free exams response: $response');
+      // Check internet connection
+      final hasInternet = await _networkService.hasInternetConnection();
+      setState(() {
+        _isOffline = !hasInternet;
+      });
 
-      if (response.success) {
-        debugPrint('🔄 Free exams data: ${response.data.exams.length} exams');
-        setState(() {
-          _freeExamData = response.data;
-          _isLoadingFreeExams = false;
-        });
+      if (hasInternet) {
+        // Online: Try to load from API and download for offline
+        debugPrint('🌐 Online: Loading exams from API...');
+        try {
+          final response = await _userManagementService.getFreeExams();
+          debugPrint('🔄 Free exams response: $response');
+
+          if (response.success) {
+            debugPrint(
+              '🔄 Free exams data: ${response.data.exams.length} exams',
+            );
+            // Mark free exams by type before caching
+            final examsWithFreeMarked = _markFreeExamsByType(
+              response.data.exams,
+            );
+
+            setState(() {
+              _allExams =
+                  examsWithFreeMarked; // Cache all exams with free marked
+              _freeExamData = FreeExamData(
+                exams: examsWithFreeMarked,
+                isFreeUser: response.data.isFreeUser,
+                freeExamsRemaining: response.data.freeExamsRemaining,
+                paymentInstructions: response.data.paymentInstructions,
+              );
+              _isLoadingFreeExams = false;
+            });
+
+            // Download exams for offline use in background
+            _syncService.downloadAllExams().catchError((e) {
+              debugPrint('⚠️ Failed to download exams offline: $e');
+            });
+
+            // Filter after loading
+            _filterExamsClientSide();
+          } else {
+            debugPrint('❌ Failed to load free exams: ${response.message}');
+            // Fallback to offline data
+            await _loadOfflineExams();
+          }
+        } catch (e) {
+          debugPrint('❌ Error loading from API: $e');
+          // Fallback to offline data
+          await _loadOfflineExams();
+        }
       } else {
-        debugPrint('❌ Failed to load free exams: ${response.message}');
-        setState(() {
-          _isLoadingFreeExams = false;
-        });
+        // Offline: Load from local database
+        debugPrint('📱 Offline: Loading exams from local storage...');
+        await _loadOfflineExams();
       }
     } catch (e) {
       debugPrint('❌ Error loading free exams: $e');
@@ -96,21 +201,193 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     }
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
+  Future<void> _loadOfflineExams() async {
+    try {
+      final offlineExams = await _offlineService.getAllExams();
+
+      if (offlineExams.isNotEmpty) {
+        debugPrint(
+          '📱 Loaded ${offlineExams.length} exams from offline storage',
+        );
+        // Mark free exams by type before setting state
+        final examsWithFreeMarked = _markFreeExamsByType(offlineExams);
+
+        setState(() {
+          _allExams = examsWithFreeMarked;
+          _freeExamData = FreeExamData(
+            exams: examsWithFreeMarked,
+            isFreeUser: true, // Assume free user for offline
+            freeExamsRemaining: 0,
+          );
+          _isLoadingFreeExams = false;
+        });
+        // Filter after loading
+        _filterExamsClientSide();
+      } else {
+        debugPrint('📱 No offline exams available');
+        setState(() {
+          _isLoadingFreeExams = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('❌ Error loading offline exams: $e');
+      setState(() {
+        _isLoadingFreeExams = false;
+      });
+    }
+  }
+
+  /// Marks the first 2 exams of each type as free
+  List<Exam> _markFreeExamsByType(List<Exam> exams) {
+    if (exams.isEmpty) return exams;
+
+    // Group exams by type
+    final Map<String, List<Exam>> examsByType = {};
+    for (final exam in exams) {
+      // Handle null examType: default to 'english' if null
+      // Also try to infer from title if it contains language keywords
+      String type = exam.examType?.toLowerCase() ?? 'english';
+      
+      // If examType is null, try to infer from title
+      if (exam.examType == null) {
+        final titleLower = exam.title.toLowerCase();
+        if (titleLower.contains('kiny') || titleLower.contains('kinyarwanda')) {
+          type = 'kinyarwanda';
+        } else if (titleLower.contains('french') || titleLower.contains('français')) {
+          type = 'french';
+        } else {
+          type = 'english'; // Default to english
+        }
+      }
+      
+      examsByType.putIfAbsent(type, () => []).add(exam);
+    }
+
+    // Sort exams within each type by createdAt (oldest first)
+    // If createdAt is null, use a very early date to push them to the end
+    for (final type in examsByType.keys) {
+      examsByType[type]!.sort((a, b) {
+        final aDate = a.createdAt ?? DateTime(1970);
+        final bDate = b.createdAt ?? DateTime(1970);
+        return aDate.compareTo(bDate);
+      });
+    }
+
+    // Create a set of free exam IDs (first 2 of each type)
+    final Set<String> freeExamIds = {};
+    for (final type in ['kinyarwanda', 'english', 'french']) {
+      final examsOfType = examsByType[type.toLowerCase()] ?? [];
+      // Get first 2 exams of this type
+      for (int i = 0; i < examsOfType.length && i < 2; i++) {
+        freeExamIds.add(examsOfType[i].id);
+      }
+    }
+
+    // Mark first 2 exams of each type as free
+    final List<Exam> updatedExams = exams.map((exam) {
+      final isFree = freeExamIds.contains(exam.id);
+      // Use copyWith, but ensure we set isFirstTwo explicitly
+      // Since copyWith uses ?? operator, we need to be careful with false values
+      return Exam(
+        id: exam.id,
+        title: exam.title,
+        description: exam.description,
+        category: exam.category,
+        difficulty: exam.difficulty,
+        duration: exam.duration,
+        passingScore: exam.passingScore,
+        isActive: exam.isActive,
+        examImgUrl: exam.examImgUrl,
+        questionCount: exam.questionCount,
+        isFirstTwo: isFree, // Explicitly set free status
+        examType: exam.examType,
+        createdAt: exam.createdAt,
+        updatedAt: exam.updatedAt,
+      );
+    }).toList();
+
+    debugPrint('🆓 Marked free exams by type:');
+    for (final type in ['kinyarwanda', 'english', 'french']) {
+      final examsOfType =
+          updatedExams
+              .where((e) => e.examType?.toLowerCase() == type.toLowerCase())
+              .toList()
+            ..sort((a, b) {
+              final aDate = a.createdAt ?? DateTime(1970);
+              final bDate = b.createdAt ?? DateTime(1970);
+              return aDate.compareTo(bDate);
+            });
+      final freeExams = examsOfType.where((e) => e.isFirstTwo == true).toList();
+      if (freeExams.isNotEmpty) {
+        debugPrint(
+          '   $type: ${freeExams.length} free exams (${freeExams.map((e) => e.title).join(", ")})',
+        );
+      }
+    }
+
+    return updatedExams;
+  }
+
+  void _filterExamsClientSide() {
+    debugPrint('🔍 _filterExamsClientSide called');
+    debugPrint('   _freeExamData is null: ${_freeExamData == null}');
+    debugPrint('   _allExams.isEmpty: ${_allExams.isEmpty}');
+    debugPrint('   _allExams.length: ${_allExams.length}');
+    debugPrint('   _selectedExamType: $_selectedExamType');
+
+    if (_freeExamData == null) {
+      debugPrint('❌ Cannot filter: _freeExamData is null');
+      return;
+    }
+
+    if (_allExams.isEmpty) {
+      debugPrint('❌ Cannot filter: _allExams is empty');
+      return;
+    }
+
+    // Free exams are already marked in _allExams, just filter by type
+    List<Exam> filteredExams;
+    if (_selectedExamType != null && _selectedExamType!.isNotEmpty) {
+      filteredExams = _allExams
+          .where(
+            (exam) =>
+                exam.examType?.toLowerCase() ==
+                _selectedExamType?.toLowerCase(),
+          )
+          .toList();
+      debugPrint(
+        '✅ Filtered by type: ${filteredExams.length} exams match $_selectedExamType',
+      );
+    } else {
+      filteredExams = List.from(_allExams);
+      debugPrint('✅ Showing all exams: ${filteredExams.length} exams');
+    }
+
+    setState(() {
+      _freeExamData = FreeExamData(
+        exams: filteredExams,
+        isFreeUser: _freeExamData!.isFreeUser,
+        freeExamsRemaining: _freeExamData!.freeExamsRemaining,
+        paymentInstructions: _freeExamData!.paymentInstructions,
+      );
+    });
+    debugPrint(
+      '🔄 Filtered to ${filteredExams.length} exams for type: $_selectedExamType',
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.grey50,
-      body: _isLoadingFreeExams
-          ? const Center(child: CircularProgressIndicator())
-          : _freeExamData == null
-          ? _buildErrorWidget()
-          : _buildContent(),
+      body: RefreshIndicator(
+        onRefresh: () => _loadFreeExams(forceReload: true),
+        child: _isLoadingFreeExams
+            ? const Center(child: CircularProgressIndicator())
+            : _freeExamData == null
+            ? _buildErrorWidget()
+            : _buildContent(),
+      ),
     );
   }
 
@@ -138,6 +415,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
 
   Widget _buildContent() {
     return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
         // Custom App Bar
         SliverAppBar(
@@ -146,12 +424,38 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           pinned: true,
           backgroundColor: AppColors.primary,
           flexibleSpace: FlexibleSpaceBar(
-            title: Text(
-              _freeExamData!.isFreeUser ? 'Free Exams' : 'All Exams',
-              style: AppTextStyles.heading2.copyWith(
-                color: AppColors.white,
-                fontSize: 20.sp,
-              ),
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _freeExamData!.isFreeUser ? 'Free Exams' : 'All Exams',
+                  style: AppTextStyles.heading2.copyWith(
+                    color: AppColors.white,
+                    fontSize: 20.sp,
+                  ),
+                ),
+                if (_isOffline) ...[
+                  SizedBox(width: 8.w),
+                  Icon(
+                    Icons.cloud_off,
+                    size: 18.sp,
+                    color: AppColors.white.withValues(alpha: 0.9),
+                  ),
+                ],
+                if (_isSyncing) ...[
+                  SizedBox(width: 8.w),
+                  SizedBox(
+                    width: 16.w,
+                    height: 16.h,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
             background: Container(
               decoration: const BoxDecoration(
@@ -291,9 +595,46 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       label: Text(label),
       selected: isSelected,
       onSelected: (selected) {
+        debugPrint(
+          '🔍 Filter chip tapped: $label, selected: $selected, type: $type',
+        );
+        final newSelectedType = selected ? type : null;
+        debugPrint('🔍 Will update _selectedExamType to: $newSelectedType');
+
+        // Update state and filter in one setState call
         setState(() {
-          _selectedExamType = selected ? type : null;
+          _selectedExamType = newSelectedType;
+          // Filter client-side without API call
+          // Free exams are already marked in _allExams
+          if (_freeExamData != null && _allExams.isNotEmpty) {
+            List<Exam> filteredExams;
+            if (newSelectedType != null && newSelectedType.isNotEmpty) {
+              filteredExams = _allExams
+                  .where(
+                    (exam) =>
+                        exam.examType?.toLowerCase() ==
+                        newSelectedType.toLowerCase(),
+                  )
+                  .toList();
+              debugPrint(
+                '✅ Filtered by type: ${filteredExams.length} exams match $newSelectedType',
+              );
+            } else {
+              filteredExams = List.from(_allExams);
+              debugPrint('✅ Showing all exams: ${filteredExams.length} exams');
+            }
+
+            _freeExamData = FreeExamData(
+              exams: filteredExams,
+              isFreeUser: _freeExamData!.isFreeUser,
+              freeExamsRemaining: _freeExamData!.freeExamsRemaining,
+              paymentInstructions: _freeExamData!.paymentInstructions,
+            );
+          }
         });
+        debugPrint(
+          '🔄 Filtered to ${_freeExamData?.exams.length ?? 0} exams for type: $_selectedExamType',
+        );
       },
       selectedColor: AppColors.primary,
       checkmarkColor: AppColors.white,
@@ -305,20 +646,9 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   List<Widget> _buildExamsByType() {
-    // Filter exams by selected type
-    List<Exam> filteredExams = _freeExamData!.exams;
+    // If filtering by type, show filtered list from API
     if (_selectedExamType != null) {
-      filteredExams = _freeExamData!.exams
-          .where(
-            (exam) =>
-                exam.examType?.toLowerCase() ==
-                _selectedExamType?.toLowerCase(),
-          )
-          .toList();
-    }
-
-    // If filtering by type, show filtered list
-    if (_selectedExamType != null) {
+      final filteredExams = _freeExamData!.exams;
       if (filteredExams.isEmpty) {
         return [
           SliverToBoxAdapter(
@@ -358,13 +688,13 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           sliver: SliverGrid(
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 1,
-              childAspectRatio: 1.9,
-              crossAxisSpacing: 16.w,
-              mainAxisSpacing: 16.h,
+              crossAxisCount: 2,
+              childAspectRatio: 0.75,
+              crossAxisSpacing: 12.w,
+              mainAxisSpacing: 12.h,
             ),
             delegate: SliverChildBuilderDelegate((context, index) {
-              final exam = filteredExams[index];
+              final exam = _freeExamData!.exams[index];
               return FadeTransition(
                 opacity: _fadeAnimation,
                 child: SlideTransition(
@@ -372,7 +702,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                   child: _buildExamCard(exam, index),
                 ),
               );
-            }, childCount: filteredExams.length),
+            }, childCount: _freeExamData!.exams.length),
           ),
         ),
       ];
@@ -381,7 +711,22 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     // Group exams by type
     final Map<String, List<Exam>> examsByType = {};
     for (final exam in _freeExamData!.exams) {
-      final type = exam.examType?.toLowerCase() ?? 'unknown';
+      // Handle null examType: default to 'english' if null
+      // Also try to infer from title if it contains language keywords
+      String type = exam.examType?.toLowerCase() ?? 'english';
+      
+      // If examType is null, try to infer from title
+      if (exam.examType == null) {
+        final titleLower = exam.title.toLowerCase();
+        if (titleLower.contains('kiny') || titleLower.contains('kinyarwanda')) {
+          type = 'kinyarwanda';
+        } else if (titleLower.contains('french') || titleLower.contains('français')) {
+          type = 'french';
+        } else {
+          type = 'english'; // Default to english
+        }
+      }
+      
       examsByType.putIfAbsent(type, () => []).add(exam);
     }
 
@@ -496,227 +841,143 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   Widget _buildExamCard(Exam exam, int index) {
+    // Extract exam number from title (e.g., "exam 21" -> "21")
+    final examNumber = exam.title.replaceAll(RegExp(r'[^0-9]'), '');
+    final displayTitle = examNumber.isNotEmpty
+        ? 'exam $examNumber'
+        : exam.title;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.circular(10.r),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: Colors.amber.withValues(alpha: 0.2),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.amber.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10.r),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with gradient
-            Container(
-              height: 50.h,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: _getDifficultyColors(exam.difficulty),
-                ),
-              ),
-              child: Stack(
-                children: [
-                  // Content
-                  Padding(
-                    padding: EdgeInsets.all(12.w),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Traffic Rules Exam ${index + 1}',
-                                style: AppTextStyles.heading3.copyWith(
-                                  color: AppColors.white,
-                                  fontSize: 14.sp,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Free exam indicator
-                        if (exam.isFirstTwo == true) // First 2 exams are free
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8.w,
-                              vertical: 4.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.success,
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                            child: Text(
-                              'FREE',
-                              style: TextStyle(
-                                color: AppColors.white,
-                                fontSize: 10.sp,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          )
-                        else
-                          Container(
-                            width: 12.w,
-                            height: 12.w,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.grey400,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
+            // Exam Title
+            Text(
+              displayTitle,
+              style: AppTextStyles.heading3.copyWith(
+                fontSize: 18.sp,
+                color: AppColors.grey800,
+                fontWeight: FontWeight.bold,
               ),
             ),
+            SizedBox(height: 12.h),
 
-            // Content
-            Padding(
-              padding: EdgeInsets.fromLTRB(12.w, 8.h, 12.w, 4.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // if (exam.description != null) ...[
-                  //   Text(
-                  //     exam.description!,
-                  //     style: AppTextStyles.bodySmall.copyWith(
-                  //       color: AppColors.grey600,
-                  //     ),
-                  //     maxLines: 2,
-                  //     overflow: TextOverflow.ellipsis,
-                  //   ),
-                  //   SizedBox(height: 8.h),
-                  // ],
+            // Questions Count
+            Row(
+              children: [
+                Icon(
+                  Icons.quiz_outlined,
+                  size: 16.sp,
+                  color: AppColors.grey600,
+                ),
+                SizedBox(width: 6.w),
+                Text(
+                  '${exam.questionCount ?? 0} Questions',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.grey700,
+                    fontSize: 14.sp,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
 
-                  // Creation date (for debugging)
-                  if (exam.createdAt != null) ...[
+            // Duration
+            Row(
+              children: [
+                Icon(
+                  Icons.timer_outlined,
+                  size: 16.sp,
+                  color: AppColors.grey600,
+                ),
+                SizedBox(width: 6.w),
+                Text(
+                  '${exam.duration}m',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.grey700,
+                    fontSize: 14.sp,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+
+            // Passing Score
+            Row(
+              children: [
+                Icon(
+                  Icons.trending_up_outlined,
+                  size: 16.sp,
+                  color: AppColors.grey600,
+                ),
+                SizedBox(width: 6.w),
+                Flexible(
+                  child: Text(
+                    'Passing Score: ${exam.passingScore}%',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.grey700,
+                      fontSize: 14.sp,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+
+            // Start Exam Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => _startExam(exam),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.grey800,
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  elevation: 0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.play_arrow, size: 25.sp),
+                    SizedBox(width: 8.w),
                     Text(
-                      'Created: ${DateFormat('MMM dd, yyyy').format(exam.createdAt!)}',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.grey500,
-                        fontSize: 10.sp,
+                      'Start Exam',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15.sp,
+                        color: AppColors.white,
                       ),
                     ),
-                    SizedBox(height: 4.h),
                   ],
-
-                  // Stats row
-                  Wrap(
-                    spacing: 6.w,
-                    runSpacing: 6.h,
-                    children: [
-                      _buildModernStatChip(
-                        Icons.timer_outlined,
-                        '${exam.duration}min',
-                        AppColors.primary,
-                      ),
-                      _buildModernStatChip(
-                        Icons.trending_up_outlined,
-                        '${exam.passingScore}%',
-                        AppColors.success,
-                      ),
-                      _buildModernStatChip(
-                        Icons.quiz_outlined,
-                        '${exam.questionCount} Q',
-                        AppColors.warning,
-                      ),
-                      // if (exam.category != null)
-                      //   _buildModernStatChip(
-                      //     Icons.category_outlined,
-                      //     exam.category!,
-                      //     AppColors.info,
-                      //   ),
-                    ],
-                  ),
-
-                  SizedBox(height: 4.h),
-
-                  // Action button
-                  ElevatedButton(
-                    onPressed: () => _startExam(exam),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.white,
-                      padding: EdgeInsets.symmetric(vertical: 4.h),
-                      // shape: RoundedRectangleBorder(
-                      //   borderRadius: BorderRadius.circular(12.r),
-                      // ),
-                      elevation: 0,
-                      minimumSize: const Size(double.infinity, 0),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.play_arrow, size: 18.sp),
-                        SizedBox(width: 6.w),
-                        Text(
-                          'Start Exam',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  Widget _buildModernStatChip(IconData icon, String text, Color color) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14.sp, color: color),
-          SizedBox(width: 6.w),
-          Text(
-            text,
-            style: AppTextStyles.caption.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
-              fontSize: 11.sp,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Color> _getDifficultyColors(String difficulty) {
-    switch (difficulty.toUpperCase()) {
-      case 'EASY':
-        return [AppColors.success, AppColors.success.withValues(alpha: 0.8)];
-      case 'MEDIUM':
-        return [AppColors.warning, AppColors.warning.withValues(alpha: 0.8)];
-      case 'HARD':
-        return [AppColors.error, AppColors.error.withValues(alpha: 0.8)];
-      default:
-        return [AppColors.primary, AppColors.secondary];
-    }
   }
 
   Widget _buildFreeUserBanner() {
@@ -797,7 +1058,8 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   void _startExam(Exam exam) {
-    // Check if this exam is marked as free in the backend response
+    // Check if this exam is marked as free (first 2 exams of each type)
+    // Free status is determined per exam type (English, French, Kinyarwanda)
     final isFreeExam = exam.isFirstTwo ?? false;
 
     // Check if user is free user and trying to access a paid exam

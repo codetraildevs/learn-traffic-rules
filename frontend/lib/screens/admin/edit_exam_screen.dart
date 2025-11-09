@@ -29,6 +29,7 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen>
   late TextEditingController _passingScoreController;
 
   late String _selectedDifficulty;
+  late String _selectedExamType;
   late bool _isActive;
   File? _selectedImage;
   String? _uploadedImageUrl;
@@ -61,6 +62,7 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen>
     _uploadedImageUrl = widget.exam.examImgUrl;
 
     _selectedDifficulty = widget.exam.difficulty;
+    _selectedExamType = widget.exam.examType?.toLowerCase() ?? 'english';
     _isActive = widget.exam.isActive;
 
     _animationController = AnimationController(
@@ -257,6 +259,32 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen>
 
                   SizedBox(height: 24.h),
 
+                  // Exam Type Selection
+                  Text(
+                    'Exam Type',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildExamTypeOption('kinyarwanda', 'Kinyarwanda'),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: _buildExamTypeOption('english', 'English'),
+                      ),
+                      SizedBox(width: 12.w),
+                      Expanded(
+                        child: _buildExamTypeOption('french', 'French'),
+                      ),
+                    ],
+                  ),
+
+                  SizedBox(height: 24.h),
+
                   _buildSectionTitle('Additional Settings'),
                   SizedBox(height: 16.h),
 
@@ -439,6 +467,36 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen>
     );
   }
 
+  Widget _buildExamTypeOption(String value, String label) {
+    final isSelected = _selectedExamType == value;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedExamType = value;
+        });
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : AppColors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.grey300,
+            width: 2,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: isSelected ? AppColors.white : AppColors.grey700,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
   void _updateExam() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -455,6 +513,7 @@ class _EditExamScreenState extends ConsumerState<EditExamScreen>
       passingScore: int.parse(_passingScoreController.text),
       isActive: _isActive,
       examImgUrl: _uploadedImageUrl,
+      examType: _selectedExamType,
     );
 
     final success = await ref

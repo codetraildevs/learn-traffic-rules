@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:learn_traffic_rules/screens/user/progress_screen.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/exam_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../services/exam_service.dart';
 import '../../services/user_management_service.dart';
@@ -26,7 +27,8 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with WidgetsBindingObserver {
   int _currentIndex = 0;
 
   // Dashboard data
@@ -49,10 +51,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final ExamService _examService = ExamService();
   final UserManagementService _userManagementService = UserManagementService();
 
+  // Track app lifecycle to prevent unnecessary refreshes
+  DateTime? _lastBackgroundTime;
+  static const _minBackgroundDuration = Duration(seconds: 3);
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadDashboardData();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // Only reload if app was in background for a meaningful duration
+    // This prevents refresh when taking screenshots (which briefly triggers inactive/resumed)
+    // Screenshots trigger: inactive -> resumed (very quickly, < 1 second)
+    // Real background: paused -> resumed (usually > 3 seconds)
+    if (state == AppLifecycleState.paused) {
+      // Only track paused state, not inactive (screenshots trigger inactive)
+      _lastBackgroundTime = DateTime.now();
+      debugPrint('🔄 App paused, tracking background time');
+    } else if (state == AppLifecycleState.resumed) {
+      // Only reload if app was paused (in background) for at least 3 seconds
+      // Ignore inactive->resumed transitions (screenshots)
+      if (_lastBackgroundTime != null) {
+        final backgroundDuration = DateTime.now().difference(
+          _lastBackgroundTime!,
+        );
+        if (backgroundDuration >= _minBackgroundDuration) {
+          debugPrint(
+            '🔄 App resumed after ${backgroundDuration.inSeconds}s, reloading data',
+          );
+          _loadDashboardData();
+        } else {
+          debugPrint(
+            '🔄 App resumed quickly (${backgroundDuration.inSeconds}s), skipping reload (likely screenshot)',
+          );
+        }
+        _lastBackgroundTime = null;
+      }
+    } else if (state == AppLifecycleState.inactive) {
+      // Screenshots trigger inactive state - don't track this
+      // Only track if we were already paused
+      if (_lastBackgroundTime == null) {
+        debugPrint('🔄 App inactive (likely screenshot), ignoring');
+      }
+    }
   }
 
   void _clearShownNotifications() {
@@ -98,8 +151,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       // Load user's exam results
       _examResults = await _examService.getUserExamResults();
       // Load available exams to display grouped by type
-      _exams = await _examService.getAvailableExams();
-      _calculateUserStats();
+      // Force reload from API to get latest exams
+      final freshExams = await _examService.getAvailableExams();
+      if (mounted) {
+        setState(() {
+          _exams = freshExams;
+        });
+        _calculateUserStats();
+        debugPrint('✅ Loaded ${freshExams.length} exams for user dashboard');
+      }
     } catch (e) {
       debugPrint('Error loading user dashboard data: $e');
     }
@@ -238,6 +298,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
+    // Watch exam provider to reload when exams change (for admin)
+    // This ensures exam cards update when new exams are created
+    final examState = ref.watch(examProvider);
+
+    // Track previous exam count to detect changes
+    final previousExamCount = _exams.length;
+
+    // Reload exams when exam provider state changes (for admin creating/updating exams)
+    // For admin: examProvider is populated when they access exam management screen
+    // For users: examProvider might be empty, so we rely on tab switching and pull-to-refresh
+    if (user?.role == 'ADMIN' && examState.exams.isNotEmpty) {
+      // Use a post-frame callback to avoid setState during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Only reload if exams count changed or if we don't have exams loaded
+        if (previousExamCount != examState.exams.length || _exams.isEmpty) {
+          debugPrint(
+            '🔄 Exam provider changed (${previousExamCount} -> ${examState.exams.length}), reloading dashboard data',
+          );
+          _loadDashboardData();
+        }
+      });
+    }
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -258,6 +341,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           // Clear shown notifications when user opens exams tab
           if (index == 1) {
             _clearShownNotifications();
+          }
+
+          // Reload data when switching to dashboard or exams tab
+          if (index == 0 || index == 1) {
+            // Small delay to ensure state is updated
+            Future.delayed(const Duration(milliseconds: 100), () {
+              if (mounted && _currentIndex == index) {
+                _loadDashboardData();
+              }
+            });
           }
         },
         type: BottomNavigationBarType.fixed,
@@ -307,51 +400,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [AppColors.grey50, AppColors.white],
+      body: RefreshIndicator(
+        onRefresh: _loadDashboardData,
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [AppColors.grey50, AppColors.white],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _error.isNotEmpty
-              ? _buildErrorView()
-              : SingleChildScrollView(
-                  padding: EdgeInsets.all(16.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Welcome Card
-                      _buildWelcomeCard(user),
-                      SizedBox(height: 24.h),
-
-                      // Admin Quick ActionsR
-                      if (user?.role == 'ADMIN') ...[
-                        _buildAdminSection(),
+          child: SafeArea(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _error.isNotEmpty
+                ? _buildErrorView()
+                : SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.all(16.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Welcome Card
+                        _buildWelcomeCard(user),
                         SizedBox(height: 24.h),
-                      ],
 
-                      // Quick Stats (for admin only)
-                      if (user?.role == 'ADMIN') ...[
-                        _buildQuickStats(user),
-                        SizedBox(height: 24.h),
-                      ],
+                        // Admin Quick ActionsR
+                        if (user?.role == 'ADMIN') ...[
+                          _buildAdminSection(),
+                          SizedBox(height: 24.h),
+                        ],
 
-                      // Exams grouped by type (for users)
-                      if (user?.role == 'USER') ...[
-                        _buildExamsByType(),
-                        SizedBox(height: 24.h),
-                      ],
+                        // Quick Stats (for admin only)
+                        if (user?.role == 'ADMIN') ...[
+                          _buildQuickStats(user),
+                          SizedBox(height: 24.h),
+                        ],
 
-                      // Recent Activity
-                      _buildRecentActivity(user),
-                    ],
+                        // Exams grouped by type (for users)
+                        if (user?.role == 'USER') ...[
+                          _buildExamsByType(),
+                          SizedBox(height: 24.h),
+                        ],
+
+                        // Recent Activity
+                        _buildRecentActivity(user),
+                      ],
+                    ),
                   ),
-                ),
+          ),
         ),
       ),
     );
@@ -770,7 +867,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final activeExams = _exams.where((exam) => exam.isActive).toList();
 
     for (final exam in activeExams) {
-      final type = exam.examType?.toLowerCase() ?? 'unknown';
+      // Handle null examType: default to 'english' if null
+      // Also try to infer from title if it contains language keywords
+      String type = exam.examType?.toLowerCase() ?? 'english';
+      
+      // If examType is null or 'unknown', try to infer from title
+      if (type == 'unknown' || exam.examType == null) {
+        final titleLower = exam.title.toLowerCase();
+        if (titleLower.contains('kiny') || titleLower.contains('kinyarwanda')) {
+          type = 'kinyarwanda';
+        } else if (titleLower.contains('french') || titleLower.contains('français')) {
+          type = 'french';
+        } else {
+          type = 'english'; // Default to english
+        }
+      }
+      
       examsByType.putIfAbsent(type, () => []).add(exam);
     }
 
@@ -815,116 +927,76 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
         ),
         SizedBox(height: 16.h),
-        ...availableTypes.map((type) {
-          final exams = examsByType[type]!;
-          final displayName = type[0].toUpperCase() + type.substring(1);
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Section header (clickable to view all exams of this type)
-              GestureDetector(
-                onTap: () {
-                  // Navigate to available exams screen filtered by this type
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          AvailableExamsScreen(initialExamType: type),
-                    ),
-                  );
-                },
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8.h),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.language,
-                        size: 20.sp,
-                        color: AppColors.primary,
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: Text(
-                          '$displayName Exams',
-                          style: AppTextStyles.heading3.copyWith(
-                            fontSize: 18.sp,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8.w,
-                          vertical: 4.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Text(
-                          '${exams.length}',
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16.sp,
-                        color: AppColors.primary,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // Exams grid
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 1.5,
-                  crossAxisSpacing: 12.w,
-                  mainAxisSpacing: 12.h,
-                ),
-                itemCount: exams.length,
-                itemBuilder: (context, index) {
-                  final exam = exams[index];
-                  return _buildExamTypeCard(exam);
-                },
-              ),
-              SizedBox(height: 24.h),
-            ],
-          );
-        }).toList(),
+        // Show exam type cards in a grid
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 1.6,
+            crossAxisSpacing: 12.w,
+            mainAxisSpacing: 12.h,
+          ),
+          itemCount: availableTypes.length,
+          itemBuilder: (context, index) {
+            final type = availableTypes[index];
+            final exams = examsByType[type]!;
+            return _buildExamTypeCard(type, exams);
+          },
+        ),
       ],
     );
   }
 
-  Widget _buildExamTypeCard(Exam exam) {
+  Widget _buildExamTypeCard(String examType, List<Exam> exams) {
+    // Get display name and icon for each exam type
+    String displayName;
+    IconData icon;
+    Color cardColor;
+
+    switch (examType.toLowerCase()) {
+      case 'english':
+        displayName = 'English';
+        icon = Icons.language;
+        cardColor = AppColors.primary;
+        break;
+      case 'kinyarwanda':
+        displayName = 'Kinyarwanda';
+        icon = Icons.translate;
+        cardColor = AppColors.secondary;
+        break;
+      case 'french':
+        displayName = 'French';
+        icon = Icons.public;
+        cardColor = Colors.blue;
+        break;
+      default:
+        displayName = examType[0].toUpperCase() + examType.substring(1);
+        icon = Icons.quiz;
+        cardColor = AppColors.primary;
+    }
+
     return GestureDetector(
       onTap: () {
-        // Navigate to available exams screen filtered by this exam's type
+        // Navigate to available exams screen filtered by this exam type
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) =>
-                AvailableExamsScreen(initialExamType: exam.examType),
+                AvailableExamsScreen(initialExamType: examType),
           ),
         );
       },
       child: Container(
-        padding: EdgeInsets.all(12.w),
+        padding: EdgeInsets.all(8.w),
         decoration: BoxDecoration(
           color: AppColors.white,
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: cardColor.withValues(alpha: 0.2), width: 1),
           boxShadow: [
             BoxShadow(
-              color: AppColors.black.withValues(alpha: 0.08),
-              blurRadius: 8,
+              color: cardColor.withValues(alpha: 0.1),
+              blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
@@ -932,46 +1004,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  exam.title,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13.sp,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+            Flexible(
+              fit: FlexFit.loose,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(5.w),
+                      decoration: BoxDecoration(
+                        color: cardColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Icon(icon, size: 20.sp, color: cardColor),
+                    ),
+                    // SizedBox(height: 4.h),
+                    Text(
+                      displayName,
+                      style: AppTextStyles.heading3.copyWith(
+                        fontSize: 14.sp,
+                        color: AppColors.grey800,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      '${exams.length} ${exams.length == 1 ? 'Exam' : 'Exams'}',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.grey600,
+                        fontSize: 12.sp,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 4.h),
-                Text(
-                  '${exam.questionCount ?? 0} Questions',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.grey600,
-                    fontSize: 11.sp,
-                  ),
-                ),
-              ],
+              ),
             ),
-            Row(
-              children: [
-                Icon(
-                  Icons.timer_outlined,
-                  size: 14.sp,
-                  color: AppColors.grey600,
-                ),
-                SizedBox(width: 4.w),
-                Text(
-                  '${exam.duration}m',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.grey600,
-                    fontSize: 11.sp,
-                  ),
-                ),
-              ],
-            ),
+            SizedBox(height: 4.h),
           ],
         ),
       ),
