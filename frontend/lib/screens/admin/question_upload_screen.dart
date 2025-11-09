@@ -8,7 +8,6 @@ import '../../core/theme/app_theme.dart';
 import '../../models/exam_model.dart';
 import '../../services/flash_message_service.dart';
 import '../../services/api_service.dart';
-import '../../services/image_upload_service.dart';
 import '../../widgets/custom_button.dart';
 
 class QuestionUploadScreen extends ConsumerStatefulWidget {
@@ -35,11 +34,10 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
   final _optionCController = TextEditingController();
   final _optionDController = TextEditingController();
   final _correctAnswerController = TextEditingController();
+  final _imageUrlController = TextEditingController();
   bool _isUploadingSingle = false;
   bool _isUploadingBulk = false;
   File? _selectedFile;
-  File? _selectedQuestionImage;
-  final ImageUploadService _imageUploadService = ImageUploadService();
 
   @override
   void initState() {
@@ -71,7 +69,24 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
     _optionCController.dispose();
     _optionDController.dispose();
     _correctAnswerController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
+  }
+
+  /// Builds the full image path from user input
+  /// If input already starts with '/uploads/', returns as is
+  /// Otherwise, prepends the default path
+  String _buildImagePath(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) return '';
+
+    // If it already starts with '/uploads/', return as is
+    if (trimmed.startsWith('/uploads/')) {
+      return trimmed;
+    }
+
+    // Otherwise, prepend the default path
+    return '${AppConstants.defaultQuestionImagePath}${trimmed}';
   }
 
   @override
@@ -430,8 +445,8 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
             ),
             SizedBox(height: 16.h),
 
-            // Question Image Upload
-            _buildQuestionImagePicker(),
+            // Question Image URL Field
+            _buildImageUrlField(),
             SizedBox(height: 24.h),
 
             // Submit Button
@@ -638,14 +653,10 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
         'points': 1,
       };
 
-      // Upload question image if selected
-      if (_selectedQuestionImage != null) {
-        final imageUrl = await _imageUploadService.uploadQuestionImage(
-          _selectedQuestionImage!,
-        );
-        if (imageUrl != null) {
-          formData['questionImgUrl'] = imageUrl;
-        }
+      // Add image URL if provided (build full path)
+      final imageUrl = _imageUrlController.text.trim();
+      if (imageUrl.isNotEmpty) {
+        formData['questionImgUrl'] = _buildImagePath(imageUrl);
       }
 
       final apiService = ApiService();
@@ -762,7 +773,7 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
                 ? int.tryParse(fields[7].trim()) ?? 1
                 : 1,
             if (fields.length > 6 && fields[6].trim().isNotEmpty)
-              'questionImgUrl': fields[6].trim(),
+              'questionImgUrl': _buildImagePath(fields[6].trim()),
           };
 
           // Upload individual question
@@ -848,12 +859,10 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
     _optionCController.clear();
     _optionDController.clear();
     _correctAnswerController.clear();
-    setState(() {
-      _selectedQuestionImage = null;
-    });
+    _imageUrlController.clear();
   }
 
-  Widget _buildQuestionImagePicker() {
+  Widget _buildImageUrlField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -865,100 +874,63 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
           ),
         ),
         SizedBox(height: 8.h),
-        Container(
-          width: double.infinity,
-          height: 120.h,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: _selectedQuestionImage != null
-                  ? AppColors.primary
-                  : AppColors.grey300,
-              width: 2,
-            ),
-            borderRadius: BorderRadius.circular(12.r),
-            color: AppColors.grey50,
-          ),
-          child: _selectedQuestionImage != null
-              ? _buildSelectedQuestionImage()
-              : _buildQuestionImagePlaceholder(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSelectedQuestionImage() {
-    return Stack(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10.r),
-          child: Image.file(
-            _selectedQuestionImage!,
-            width: double.infinity,
-            height: double.infinity,
-            fit: BoxFit.cover,
-          ),
-        ),
-        Positioned(
-          top: 8.h,
-          right: 8.w,
-          child: GestureDetector(
-            onTap: _removeQuestionImage,
-            child: Container(
-              padding: EdgeInsets.all(4.w),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Prefix showing the base path
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 16.h),
               decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(20.r),
+                color: AppColors.grey100,
+                border: Border(
+                  right: BorderSide.none,
+                  top: BorderSide(color: AppColors.grey300),
+                  bottom: BorderSide(color: AppColors.grey300),
+                  left: BorderSide(color: AppColors.grey300),
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(8.r),
+                  bottomLeft: Radius.circular(8.r),
+                ),
               ),
-              child: Icon(Icons.close, color: Colors.white, size: 16.sp),
+              child: Text(
+                AppConstants.defaultQuestionImagePath,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.grey600,
+                ),
+              ),
             ),
+            // Text field for filename only
+            Expanded(
+              child: TextFormField(
+                controller: _imageUrlController,
+                decoration: InputDecoration(
+                  hintText: 'q432.png (filename only)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.only(
+                      topRight: Radius.circular(8.r),
+                      bottomRight: Radius.circular(8.r),
+                    ),
+                    borderSide: BorderSide(color: AppColors.grey300),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 8.h,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 4.h),
+        Text(
+          'Only enter the filename (e.g., q432.png). Full path will be added automatically.',
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.grey500,
+            fontSize: 11.sp,
           ),
         ),
       ],
     );
-  }
-
-  Widget _buildQuestionImagePlaceholder() {
-    return GestureDetector(
-      onTap: _pickQuestionImage,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.add_photo_alternate_outlined,
-            size: 32.sp,
-            color: AppColors.grey400,
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Tap to add question image',
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.grey500),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _pickQuestionImage() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        allowMultiple: false,
-      );
-
-      if (result != null && result.files.isNotEmpty) {
-        setState(() {
-          _selectedQuestionImage = File(result.files.first.path!);
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      AppFlashMessage.showError(context, 'Error picking image: $e');
-    }
-  }
-
-  void _removeQuestionImage() {
-    setState(() {
-      _selectedQuestionImage = null;
-    });
   }
 }

@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:learn_traffic_rules/core/constants/app_constants.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/constants/app_constants.dart';
 import '../../models/exam_model.dart';
 import '../../models/question_model.dart' as question_model;
 import '../../services/exam_service.dart';
 import '../../services/offline_exam_service.dart';
 import '../../services/exam_sync_service.dart';
 import '../../services/network_service.dart';
+import '../../services/image_cache_service.dart';
 import '../../services/flash_message_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../models/exam_result_model.dart';
@@ -50,6 +51,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   bool _isLoading = true;
   bool _isSubmitting = false;
   String? _error;
+  bool _isOffline = false; // Track offline status
 
   // Security variables
   bool _isAppInBackground = false;
@@ -352,6 +354,11 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
 
       // Check internet connection
       final hasInternet = await _networkService.hasInternetConnection();
+
+      // Update offline status
+      setState(() {
+        _isOffline = !hasInternet;
+      });
 
       List<question_model.Question> questions;
 
@@ -1184,43 +1191,98 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                 if (question.questionImgUrl != null &&
                     question.questionImgUrl!.isNotEmpty) ...[
                   SizedBox(height: 4.h),
+                  FutureBuilder<String>(
+                    future: ImageCacheService.instance
+                        .getImagePath(question.questionImgUrl)
+                        .catchError((e) {
+                          // If cache fails, return empty string to show error widget
+                          debugPrint('⚠️ Error getting image path: $e');
+                          return '';
+                        }),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        // If offline and no cached image, show error widget
+                        if (_isOffline) {
+                          return _buildImageErrorWidget();
+                        }
+                        return const SizedBox.shrink();
+                      }
 
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12.r),
-                    child: Image.network(
-                      "${AppConstants.baseUrlImage}${question.questionImgUrl}",
-                      width: double.infinity,
-                      height: 100.h,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          height: 100.h,
-                          decoration: BoxDecoration(
-                            color: AppColors.grey100,
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.image_not_supported,
-                                  size: 32.sp,
-                                  color: AppColors.grey400,
-                                ),
-                                SizedBox(height: 4.h),
-                                Text(
-                                  'Image not available',
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.grey500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                      final imagePath = snapshot.data!;
+                      // Check if it's a local file path (not a URL)
+                      final isLocalFile =
+                          !imagePath.startsWith('http') &&
+                          !imagePath.startsWith('https') &&
+                          imagePath.isNotEmpty;
+
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(12.r),
+                        child: isLocalFile
+                            ? FutureBuilder<bool>(
+                                future: File(
+                                  imagePath,
+                                ).exists().catchError((e) => false),
+                                builder: (context, fileSnapshot) {
+                                  if (fileSnapshot.hasData &&
+                                      fileSnapshot.data == true) {
+                                    // Image is cached, load from file
+                                    return Image.file(
+                                      File(imagePath),
+                                      width: double.infinity,
+                                      height: 200.h,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        debugPrint(
+                                          '❌ Error loading cached image: $error',
+                                        );
+                                        return _buildImageErrorWidget();
+                                      },
+                                    );
+                                  } else {
+                                    // File doesn't exist
+                                    // If offline, show error widget
+                                    // If online, try network (might be a new image)
+                                    if (_isOffline) {
+                                      return _buildImageErrorWidget();
+                                    }
+                                    return Image.network(
+                                      question.questionImgUrl!.startsWith(
+                                            'http',
+                                          )
+                                          ? question.questionImgUrl!
+                                          : '${AppConstants.baseUrlImage}${question.questionImgUrl}',
+                                      width: double.infinity,
+                                      height: 200.h,
+                                      fit: BoxFit.contain,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            return _buildImageErrorWidget();
+                                          },
+                                    );
+                                  }
+                                },
+                              )
+                            : Builder(
+                                // Network URL - only try if online
+                                builder: (context) {
+                                  if (_isOffline) {
+                                    // Offline and image not cached, show error widget
+                                    return _buildImageErrorWidget();
+                                  }
+                                  // Online, try to load from network
+                                  return Image.network(
+                                    imagePath,
+                                    width: double.infinity,
+                                    height: 200.h,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return _buildImageErrorWidget();
+                                    },
+                                  );
+                                },
+                              ),
+                      );
+                    },
                   ),
                 ],
               ],
@@ -1232,6 +1294,33 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
           // Answer options
           _buildAnswerOptions(question),
         ],
+      ),
+    );
+  }
+
+  Widget _buildImageErrorWidget() {
+    return Container(
+      height: 200.h,
+      decoration: BoxDecoration(
+        color: AppColors.grey100,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.image_not_supported,
+              size: 32.sp,
+              color: AppColors.grey400,
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              'Image not available',
+              style: AppTextStyles.caption.copyWith(color: AppColors.grey500),
+            ),
+          ],
+        ),
       ),
     );
   }

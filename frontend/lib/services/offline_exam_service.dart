@@ -236,14 +236,14 @@ class OfflineExamService {
   // Get all offline exams
   Future<List<Exam>> getAllExams() async {
     final db = await database;
+    // Get all exams without ordering, we'll sort them properly after loading
     final examMaps = await db.query(
       _examsTable,
       where: 'isActive = ?',
       whereArgs: [1],
-      orderBy: 'title ASC',
     );
 
-    return examMaps.map((examMap) {
+    final exams = examMaps.map((examMap) {
       return Exam(
         id: examMap['id'] as String,
         title: examMap['title'] as String,
@@ -265,6 +265,57 @@ class OfflineExamService {
             : null,
       );
     }).toList();
+
+    // Remove duplicates by ID
+    final uniqueExams = <String, Exam>{};
+    for (final exam in exams) {
+      if (!uniqueExams.containsKey(exam.id)) {
+        uniqueExams[exam.id] = exam;
+      }
+    }
+
+    // Sort exams by extracting number from title (e.g., "exam 1" -> 1, "exam 10" -> 10)
+    // If no number found, sort by createdAt or title
+    final sortedExams = uniqueExams.values.toList();
+    sortedExams.sort((a, b) {
+      // Extract numbers from titles
+      final aNumber = _extractExamNumber(a.title);
+      final bNumber = _extractExamNumber(b.title);
+
+      if (aNumber != null && bNumber != null) {
+        // Both have numbers, sort numerically
+        return aNumber.compareTo(bNumber);
+      } else if (aNumber != null) {
+        // Only a has number, put it first
+        return -1;
+      } else if (bNumber != null) {
+        // Only b has number, put it first
+        return 1;
+      } else {
+        // Neither has number, sort by createdAt or title
+        if (a.createdAt != null && b.createdAt != null) {
+          return a.createdAt!.compareTo(b.createdAt!);
+        } else if (a.createdAt != null) {
+          return -1;
+        } else if (b.createdAt != null) {
+          return 1;
+        } else {
+          return a.title.compareTo(b.title);
+        }
+      }
+    });
+
+    return sortedExams;
+  }
+
+  // Extract exam number from title (e.g., "exam 1" -> 1, "exam 10" -> 10)
+  int? _extractExamNumber(String title) {
+    final regex = RegExp(r'\d+');
+    final match = regex.firstMatch(title.toLowerCase());
+    if (match != null) {
+      return int.tryParse(match.group(0)!);
+    }
+    return null;
   }
 
   // Save exam result for later sync
@@ -318,6 +369,31 @@ class OfflineExamService {
         'passed': (r['passed'] as int) == 1,
         'isFreeExam': (r['isFreeExam'] as int) == 1,
         'completedAt': r['completedAt'] as String,
+      };
+    }).toList();
+  }
+
+  // Get all results (synced and unsynced) for offline display
+  Future<List<Map<String, dynamic>>> getAllResults() async {
+    final db = await database;
+    final resultMaps = await db.query(
+      _resultsTable,
+      orderBy: 'completedAt DESC',
+    );
+
+    return resultMaps.map((r) {
+      return {
+        'id': r['id'] as int,
+        'examId': r['examId'] as String,
+        'score': r['score'] as double,
+        'totalQuestions': r['totalQuestions'] as int,
+        'correctAnswers': r['correctAnswers'] as int,
+        'timeSpent': r['timeSpent'] as int,
+        'answers': jsonDecode(r['answers'] as String) as Map<String, dynamic>,
+        'passed': (r['passed'] as int) == 1,
+        'isFreeExam': (r['isFreeExam'] as int) == 1,
+        'completedAt': r['completedAt'] as String,
+        'synced': (r['synced'] as int) == 1,
       };
     }).toList();
   }

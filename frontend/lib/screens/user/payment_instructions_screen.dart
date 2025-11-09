@@ -3,14 +3,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:learn_traffic_rules/screens/user/available_exams_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../../core/theme/app_theme.dart';
 import '../../models/free_exam_model.dart';
 import '../../services/user_management_service.dart';
+import '../../services/network_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/loading_widget.dart';
 
 class PaymentInstructionsScreen extends StatefulWidget {
-  const PaymentInstructionsScreen({super.key});
+  final PaymentInstructions? cachedInstructions;
+
+  const PaymentInstructionsScreen({super.key, this.cachedInstructions});
 
   @override
   State<PaymentInstructionsScreen> createState() =>
@@ -19,6 +24,7 @@ class PaymentInstructionsScreen extends StatefulWidget {
 
 class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   final UserManagementService _userManagementService = UserManagementService();
+  final NetworkService _networkService = NetworkService();
   PaymentInstructionsData? _paymentData;
   bool _isLoading = true;
   String? _error;
@@ -36,36 +42,140 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         _error = null;
       });
 
-      debugPrint('🔍 DEBUG: Loading payment instructions...');
+      // First, try to use cached instructions if provided
+      if (widget.cachedInstructions != null) {
+        debugPrint('🔍 Using cached payment instructions');
+        _paymentData = _convertPaymentInstructionsToData(
+          widget.cachedInstructions!,
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        // Still try to load from API in background if online (for updates)
+        _loadPaymentInstructionsFromAPI();
+        return;
+      }
+
+      // Try to load from offline storage first
+      final offlineData = await _loadPaymentInstructionsOffline();
+      if (offlineData != null) {
+        debugPrint('🔍 Using offline payment instructions');
+        setState(() {
+          _paymentData = offlineData;
+          _isLoading = false;
+        });
+        // Still try to load from API in background if online (for updates)
+        _loadPaymentInstructionsFromAPI();
+        return;
+      }
+
+      // If no cached/offline data, load from API
+      await _loadPaymentInstructionsFromAPI();
+    } catch (e, stackTrace) {
+      debugPrint('🔍 DEBUG: Payment instructions error: $e');
+      debugPrint('🔍 DEBUG: Stack trace: $stackTrace');
+
+      // If API fails, try to use offline data as fallback
+      final offlineData = await _loadPaymentInstructionsOffline();
+      if (offlineData != null) {
+        debugPrint('🔍 Using offline payment instructions as fallback');
+        setState(() {
+          _paymentData = offlineData;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _error = 'Failed to load payment instructions: $e';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadPaymentInstructionsFromAPI() async {
+    try {
+      final hasInternet = await _networkService.hasInternetConnection();
+      if (!hasInternet) {
+        debugPrint('🔍 No internet, skipping API load');
+        return;
+      }
+
+      debugPrint('🔍 Loading payment instructions from API...');
       final response = await _userManagementService.getPaymentInstructions();
-      debugPrint(
-        '🔍 DEBUG: Payment instructions response: ${response.success}',
-      );
-      debugPrint('🔍 DEBUG: Payment instructions data: ${response.data}');
+      debugPrint('🔍 Payment instructions response: ${response.success}');
 
       if (response.success) {
+        // Store for offline use
+        await _storePaymentInstructionsOffline(response.data);
+
         setState(() {
           _paymentData = response.data;
           _isLoading = false;
         });
-        debugPrint('🔍 DEBUG: Payment data loaded successfully');
+        debugPrint('🔍 Payment data loaded successfully from API');
       } else {
+        // Don't show error if we have offline data
+        if (_paymentData == null) {
+          setState(() {
+            _error = response.message;
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('🔍 Error loading from API: $e');
+      // Don't show error if we have offline data
+      if (_paymentData == null && _error == null) {
         setState(() {
-          _error = response.message;
+          _error = 'Failed to load payment instructions: $e';
           _isLoading = false;
         });
-        debugPrint(
-          '🔍 DEBUG: Payment instructions failed: ${response.message}',
-        );
       }
-    } catch (e, stackTrace) {
-      debugPrint('🔍 DEBUG: Payment instructions error: $e');
-      debugPrint('🔍 DEBUG: Stack trace: $stackTrace');
-      setState(() {
-        _error = 'Failed to load payment instructions: $e';
-        _isLoading = false;
-      });
     }
+  }
+
+  /// Store payment instructions in SharedPreferences for offline access
+  Future<void> _storePaymentInstructionsOffline(
+    PaymentInstructionsData data,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final dataJson = jsonEncode(data.toJson());
+      await prefs.setString('payment_instructions_data', dataJson);
+      debugPrint('💾 Stored payment instructions offline');
+    } catch (e) {
+      debugPrint('❌ Error storing payment instructions: $e');
+    }
+  }
+
+  /// Load payment instructions from SharedPreferences
+  Future<PaymentInstructionsData?> _loadPaymentInstructionsOffline() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final dataJson = prefs.getString('payment_instructions_data');
+      if (dataJson != null) {
+        final data = jsonDecode(dataJson) as Map<String, dynamic>;
+        return PaymentInstructionsData.fromJson(data);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('❌ Error loading payment instructions offline: $e');
+      return null;
+    }
+  }
+
+  /// Convert PaymentInstructions to PaymentInstructionsData
+  PaymentInstructionsData _convertPaymentInstructionsToData(
+    PaymentInstructions instructions,
+  ) {
+    return PaymentInstructionsData(
+      title: instructions.title,
+      description: instructions.description,
+      steps: instructions.steps,
+      contactInfo: instructions.contactInfo,
+      paymentMethods: [], // PaymentInstructions doesn't have paymentMethods
+      paymentTiers: instructions.paymentTiers,
+    );
   }
 
   @override
@@ -93,33 +203,52 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildErrorWidget() {
+    // Check if error is due to no internet
+    final isNetworkError =
+        _error != null &&
+        (_error!.toLowerCase().contains('internet') ||
+            _error!.toLowerCase().contains('network') ||
+            _error!.toLowerCase().contains('connection') ||
+            _error!.toLowerCase().contains('status: 0'));
+
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 64.w, color: Colors.red),
-          SizedBox(height: 16.h),
-          Text(
-            'Error Loading Payment Plans',
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
+      child: Padding(
+        padding: EdgeInsets.all(24.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isNetworkError ? Icons.wifi_off : Icons.error_outline,
+              size: 64.w,
               color: Colors.red,
             ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            _error!,
-            style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 24.h),
-          CustomButton(
-            text: 'Retry',
-            onPressed: _loadPaymentInstructions,
-            width: 120.w,
-          ),
-        ],
+            SizedBox(height: 16.h),
+            Text(
+              isNetworkError
+                  ? 'No Internet Connection'
+                  : 'Error Loading Payment Plans',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              isNetworkError
+                  ? 'Payment instructions are not available offline. Please connect to the internet to view payment plans.'
+                  : _error ?? 'Unknown error occurred',
+              style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 24.h),
+            CustomButton(
+              text: 'Retry',
+              onPressed: _loadPaymentInstructions,
+              width: 120.w,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -422,10 +551,20 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           ),
         ),
         SizedBox(height: 16.h),
-        // Show only the first 3 payment tiers in a simplified format
-        ..._paymentData!.paymentTiers
-            .take(3)
-            .map((tier) => _buildSimplePaymentTierCard(tier)),
+        // Show payment tiers (up to 3) in a simplified format
+        if (_paymentData!.paymentTiers.isNotEmpty)
+          ..._paymentData!.paymentTiers
+              .take(3)
+              .map((tier) => _buildSimplePaymentTierCard(tier))
+        else
+          Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Text(
+              'No payment plans available at the moment.',
+              style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+          ),
       ],
     );
   }

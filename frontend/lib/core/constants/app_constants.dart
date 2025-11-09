@@ -5,6 +5,9 @@ class AppConstants {
   //static const String baseUrlImage = 'http://10.102.183.116:3000';
   static const String baseUrlImage = 'https://traffic.cyangugudims.com';
 
+  // Image Paths
+  static const String defaultQuestionImagePath = '/uploads/question-images/';
+
   static const String apiVersion = 'v1';
   static const int connectionTimeout = 30000;
   static const int receiveTimeout = 30000;

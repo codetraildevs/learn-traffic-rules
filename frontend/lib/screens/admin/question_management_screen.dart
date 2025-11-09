@@ -1,16 +1,15 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:learn_traffic_rules/core/constants/app_constants.dart';
 import 'package:learn_traffic_rules/services/flash_message_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/exam_model.dart';
 import '../../services/api_service.dart';
-import '../../services/image_upload_service.dart';
 import '../../widgets/custom_button.dart';
 import 'question_upload_screen.dart';
+import 'add_question_screen.dart';
+import 'edit_question_screen.dart';
 
 class QuestionManagementScreen extends ConsumerStatefulWidget {
   final Exam exam;
@@ -115,23 +114,27 @@ class _QuestionManagementScreenState
     }
   }
 
-  void _showEditQuestionDialog(Question question) {
-    showDialog(
-      context: context,
-      builder: (context) => _EditQuestionDialog(
-        exam: widget.exam,
-        question: question,
-        onQuestionUpdated: _loadQuestions,
+  void _showEditQuestionScreen(Question question) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditQuestionScreen(
+          exam: widget.exam,
+          question: question,
+          onQuestionUpdated: _loadQuestions,
+        ),
       ),
     );
   }
 
-  void _showAddQuestionDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => _AddQuestionDialog(
-        exam: widget.exam,
-        onQuestionAdded: _loadQuestions,
+  void _showAddQuestionScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddQuestionScreen(
+          exam: widget.exam,
+          onQuestionAdded: _loadQuestions,
+        ),
       ),
     );
   }
@@ -145,7 +148,7 @@ class _QuestionManagementScreenState
         foregroundColor: AppColors.white,
         actions: [
           IconButton(
-            onPressed: _showAddQuestionDialog,
+            onPressed: _showAddQuestionScreen,
             icon: const Icon(Icons.add),
             tooltip: 'Add Question',
           ),
@@ -191,7 +194,7 @@ class _QuestionManagementScreenState
           SizedBox(height: 24.h),
           CustomButton(
             text: 'Add First Question',
-            onPressed: _showAddQuestionDialog,
+            onPressed: _showAddQuestionScreen,
             backgroundColor: AppColors.primary,
             textColor: AppColors.white,
             width: 200.w,
@@ -273,7 +276,7 @@ class _QuestionManagementScreenState
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton.icon(
-                  onPressed: () => _showEditQuestionDialog(question),
+                  onPressed: () => _showEditQuestionScreen(question),
                   icon: Icon(Icons.edit, size: 18.sp),
                   label: const Text('Edit'),
                   style: TextButton.styleFrom(
@@ -330,594 +333,5 @@ class _QuestionManagementScreenState
         );
       }).toList(),
     );
-  }
-}
-
-class _AddQuestionDialog extends StatefulWidget {
-  final Exam exam;
-  final VoidCallback onQuestionAdded;
-
-  const _AddQuestionDialog({required this.exam, required this.onQuestionAdded});
-
-  @override
-  State<_AddQuestionDialog> createState() => _AddQuestionDialogState();
-}
-
-class _AddQuestionDialogState extends State<_AddQuestionDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _questionController = TextEditingController();
-  final _optionAController = TextEditingController();
-  final _optionBController = TextEditingController();
-  final _optionCController = TextEditingController();
-  final _optionDController = TextEditingController();
-  final _correctAnswerController = TextEditingController();
-
-  File? _selectedQuestionImage;
-  bool _isUploading = false;
-  final ImageUploadService _imageUploadService = ImageUploadService();
-
-  @override
-  void dispose() {
-    _questionController.dispose();
-    _optionAController.dispose();
-    _optionBController.dispose();
-    _optionCController.dispose();
-    _optionDController.dispose();
-    _correctAnswerController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _addQuestion() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isUploading = true;
-    });
-
-    try {
-      Map<String, dynamic> formData = {
-        'question': _questionController.text.trim(),
-        'option1': _optionAController.text.trim(),
-        'option2': _optionBController.text.trim(),
-        'option3': _optionCController.text.trim(),
-        'option4': _optionDController.text.trim(),
-        'correctAnswer': _correctAnswerController.text.trim(),
-        'points': 1,
-      };
-
-      if (_selectedQuestionImage != null) {
-        final imageUrl = await _imageUploadService.uploadQuestionImage(
-          _selectedQuestionImage!,
-        );
-        if (imageUrl != null) {
-          formData['questionImgUrl'] = imageUrl;
-        }
-      }
-
-      final response = await ApiService().makeRequest(
-        'POST',
-        '/exams/${widget.exam.id}/upload-single-question',
-        body: formData,
-      );
-
-      if (response['success'] == true) {
-        if (!mounted) return;
-        AppFlashMessage.showSuccess(context, 'Question added successfully!');
-        widget.onQuestionAdded();
-        Navigator.of(context).pop();
-      } else {
-        if (!mounted) return;
-        AppFlashMessage.showError(
-          context,
-          response['message'] ?? 'Failed to add question',
-        );
-      }
-    } catch (e) {
-      AppFlashMessage.showError(context, 'Error adding question: $e');
-    } finally {
-      setState(() {
-        _isUploading = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Add Question'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildTextField(
-                controller: _questionController,
-                label: 'Question *',
-                hint: 'Enter the question',
-                maxLines: 3,
-              ),
-              SizedBox(height: 16.h),
-              _buildTextField(
-                controller: _optionAController,
-                label: 'Option A *',
-                hint: 'First option',
-              ),
-              SizedBox(height: 12.h),
-              _buildTextField(
-                controller: _optionBController,
-                label: 'Option B *',
-                hint: 'Second option',
-              ),
-              SizedBox(height: 12.h),
-              _buildTextField(
-                controller: _optionCController,
-                label: 'Option C',
-                hint: 'Third option (optional)',
-              ),
-              SizedBox(height: 12.h),
-              _buildTextField(
-                controller: _optionDController,
-                label: 'Option D',
-                hint: 'Fourth option (optional)',
-              ),
-              SizedBox(height: 12.h),
-              _buildTextField(
-                controller: _correctAnswerController,
-                label: 'Correct Answer *',
-                hint: 'Enter the correct answer text',
-              ),
-              SizedBox(height: 16.h),
-              _buildQuestionImagePicker(),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isUploading ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _isUploading ? null : _addQuestion,
-          child: _isUploading
-              ? SizedBox(
-                  width: 16.w,
-                  height: 16.h,
-                  child: const CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Add Question'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    int maxLines = 1,
-  }) {
-    return TextFormField(
-      controller: controller,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-      ),
-      validator: (value) {
-        if (label.contains('*') && (value == null || value.trim().isEmpty)) {
-          return 'This field is required';
-        }
-        return null;
-      },
-    );
-  }
-
-  Widget _buildQuestionImagePicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Question Image (Optional)',
-          style: AppTextStyles.bodyMedium.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppColors.grey800,
-          ),
-        ),
-        SizedBox(height: 8.h),
-        GestureDetector(
-          onTap: _pickQuestionImage,
-          child: Container(
-            width: double.infinity,
-            height: 80.h,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: _selectedQuestionImage != null
-                    ? AppColors.primary
-                    : AppColors.grey300,
-                width: 2,
-              ),
-              borderRadius: BorderRadius.circular(8.r),
-              color: AppColors.grey50,
-            ),
-            child: _selectedQuestionImage != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(6.r),
-                    child: Image.file(
-                      _selectedQuestionImage!,
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.add_photo_alternate_outlined,
-                        size: 24.sp,
-                        color: AppColors.grey400,
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        'Tap to add image',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.grey500,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _pickQuestionImage() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        allowMultiple: false,
-      );
-
-      if (result != null && result.files.isNotEmpty) {
-        setState(() {
-          _selectedQuestionImage = File(result.files.first.path!);
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      AppFlashMessage.showError(context, 'Error picking image: $e');
-    }
-  }
-}
-
-class _EditQuestionDialog extends StatefulWidget {
-  final Exam exam;
-  final Question question;
-  final VoidCallback onQuestionUpdated;
-
-  const _EditQuestionDialog({
-    required this.exam,
-    required this.question,
-    required this.onQuestionUpdated,
-  });
-
-  @override
-  State<_EditQuestionDialog> createState() => _EditQuestionDialogState();
-}
-
-class _EditQuestionDialogState extends State<_EditQuestionDialog> {
-  final _formKey = GlobalKey<FormState>();
-  late TextEditingController _questionController;
-  late TextEditingController _optionAController;
-  late TextEditingController _optionBController;
-  late TextEditingController _optionCController;
-  late TextEditingController _optionDController;
-  late TextEditingController _correctAnswerController;
-
-  File? _selectedQuestionImage;
-  bool _isUploading = false;
-  final ImageUploadService _imageUploadService = ImageUploadService();
-
-  @override
-  void initState() {
-    super.initState();
-    _questionController = TextEditingController(text: widget.question.question);
-    _optionAController = TextEditingController(text: widget.question.option1);
-    _optionBController = TextEditingController(text: widget.question.option2);
-    _optionCController = TextEditingController(text: widget.question.option3);
-    _optionDController = TextEditingController(text: widget.question.option4);
-    _correctAnswerController = TextEditingController(
-      text: widget.question.correctAnswer,
-    );
-  }
-
-  @override
-  void dispose() {
-    _questionController.dispose();
-    _optionAController.dispose();
-    _optionBController.dispose();
-    _optionCController.dispose();
-    _optionDController.dispose();
-    _correctAnswerController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _updateQuestion() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isUploading = true;
-    });
-
-    try {
-      Map<String, dynamic> formData = {
-        'question': _questionController.text.trim(),
-        'option1': _optionAController.text.trim(),
-        'option2': _optionBController.text.trim(),
-        'option3': _optionCController.text.trim(),
-        'option4': _optionDController.text.trim(),
-        'correctAnswer': _correctAnswerController.text.trim(),
-        'points': widget.question.points,
-      };
-
-      if (_selectedQuestionImage != null) {
-        final imageUrl = await _imageUploadService.uploadQuestionImage(
-          _selectedQuestionImage!,
-        );
-        if (imageUrl != null) {
-          formData['questionImgUrl'] = imageUrl;
-        }
-      }
-
-      final response = await ApiService().makeRequest(
-        'PUT',
-        '/exams/${widget.exam.id}/questions/${widget.question.id}',
-        body: formData,
-      );
-
-      if (response['success'] == true) {
-        if (!mounted) return;
-        AppFlashMessage.showSuccess(context, 'Question updated successfully!');
-        widget.onQuestionUpdated();
-        Navigator.of(context).pop();
-      } else {
-        if (!mounted) return;
-        AppFlashMessage.showError(
-          context,
-          response['message'] ?? 'Failed to update question',
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      AppFlashMessage.showError(context, 'Error updating question: $e');
-    } finally {
-      setState(() {
-        _isUploading = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Edit Question'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildTextField(
-                controller: _questionController,
-                label: 'Question *',
-                hint: 'Enter the question',
-                maxLines: 3,
-              ),
-              SizedBox(height: 16.h),
-              _buildTextField(
-                controller: _optionAController,
-                label: 'Option A *',
-                hint: 'First option',
-              ),
-              SizedBox(height: 12.h),
-              _buildTextField(
-                controller: _optionBController,
-                label: 'Option B *',
-                hint: 'Second option',
-              ),
-              SizedBox(height: 12.h),
-              _buildTextField(
-                controller: _optionCController,
-                label: 'Option C',
-                hint: 'Third option (optional)',
-              ),
-              SizedBox(height: 12.h),
-              _buildTextField(
-                controller: _optionDController,
-                label: 'Option D',
-                hint: 'Fourth option (optional)',
-              ),
-              SizedBox(height: 12.h),
-              _buildTextField(
-                controller: _correctAnswerController,
-                label: 'Correct Answer *',
-                hint: 'Enter the correct answer text',
-              ),
-              SizedBox(height: 16.h),
-              _buildQuestionImagePicker(),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isUploading ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _isUploading ? null : _updateQuestion,
-          child: _isUploading
-              ? SizedBox(
-                  width: 16.w,
-                  height: 16.h,
-                  child: const CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Update Question'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    int maxLines = 1,
-  }) {
-    return TextFormField(
-      controller: controller,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-      ),
-      validator: (value) {
-        if (label.contains('*') && (value == null || value.trim().isEmpty)) {
-          return 'This field is required';
-        }
-        return null;
-      },
-    );
-  }
-
-  Widget _buildQuestionImagePicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Question Image (Optional)',
-          style: AppTextStyles.bodyMedium.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppColors.grey800,
-          ),
-        ),
-        SizedBox(height: 8.h),
-
-        // Current image if exists
-        if (widget.question.questionImgUrl != null &&
-            widget.question.questionImgUrl!.isNotEmpty)
-          Container(
-            margin: EdgeInsets.only(bottom: 8.h),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Current Image:',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.grey600,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Container(
-                  height: 80.h,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(color: AppColors.grey300),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.r),
-                    child: Image.network(
-                      '${AppConstants.baseUrlImage}${widget.question.questionImgUrl!}',
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: AppColors.grey100,
-                          child: Icon(
-                            Icons.broken_image,
-                            color: AppColors.grey400,
-                            size: 24.sp,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-        // New image picker
-        GestureDetector(
-          onTap: _pickQuestionImage,
-          child: Container(
-            width: double.infinity,
-            height: 80.h,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: _selectedQuestionImage != null
-                    ? AppColors.primary
-                    : AppColors.grey300,
-                width: 2,
-              ),
-              borderRadius: BorderRadius.circular(8.r),
-              color: AppColors.grey50,
-            ),
-            child: _selectedQuestionImage != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(6.r),
-                    child: Image.file(
-                      _selectedQuestionImage!,
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.add_photo_alternate_outlined,
-                        size: 24.sp,
-                        color: AppColors.grey400,
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        'Tap to change image',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.grey500,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _pickQuestionImage() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        allowMultiple: false,
-      );
-
-      if (result != null && result.files.isNotEmpty) {
-        setState(() {
-          _selectedQuestionImage = File(result.files.first.path!);
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-      AppFlashMessage.showError(context, 'Error picking image: $e');
-    }
   }
 }

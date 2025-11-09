@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:learn_traffic_rules/screens/user/payment_instructions_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../../core/theme/app_theme.dart';
 import '../../models/exam_model.dart';
 import '../../services/flash_message_service.dart';
@@ -12,6 +14,7 @@ import '../../services/offline_exam_service.dart';
 import '../../services/exam_sync_service.dart';
 import '../../services/network_service.dart';
 import '../../models/free_exam_model.dart';
+import '../../providers/auth_provider.dart';
 import 'exam_taking_screen.dart';
 import 'exam_progress_screen.dart';
 
@@ -73,12 +76,42 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     super.dispose();
   }
 
+  DateTime? _lastBackgroundTime;
+  static const Duration _minBackgroundDuration = Duration(seconds: 3);
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    // Reload exams when app comes to foreground
-    if (state == AppLifecycleState.resumed) {
-      _loadFreeExams(forceReload: true);
+    // Only reload if app was in background for a meaningful duration
+    // This prevents refresh when taking screenshots (which briefly triggers inactive/resumed)
+    // Screenshots trigger: inactive -> resumed (very quickly, < 1 second)
+    // Real background: paused -> resumed (usually > 3 seconds)
+    if (state == AppLifecycleState.paused) {
+      // Only track paused state, not inactive (screenshots trigger inactive)
+      _lastBackgroundTime = DateTime.now();
+      debugPrint('🔄 App paused, tracking background time');
+    } else if (state == AppLifecycleState.resumed) {
+      // Only reload if app was paused (in background) for at least 3 seconds
+      // Ignore inactive->resumed transitions (screenshots)
+      if (_lastBackgroundTime != null) {
+        final backgroundDuration = DateTime.now().difference(
+          _lastBackgroundTime!,
+        );
+        if (backgroundDuration >= _minBackgroundDuration) {
+          debugPrint(
+            '🔄 App resumed after ${backgroundDuration.inSeconds}s, reloading data',
+          );
+          _loadFreeExams(forceReload: true);
+        } else {
+          debugPrint(
+            '🔄 App resumed quickly (${backgroundDuration.inSeconds}s), skipping reload (likely screenshot)',
+          );
+        }
+        _lastBackgroundTime = null;
+      }
+    } else if (state == AppLifecycleState.inactive) {
+      // Screenshots trigger inactive state - don't track this
+      debugPrint('🔄 App inactive (likely screenshot), ignoring');
     }
   }
 
@@ -159,6 +192,13 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               response.data.exams,
             );
 
+            // Store payment instructions for offline use
+            if (response.data.paymentInstructions != null) {
+              await _storePaymentInstructionsOffline(
+                response.data.paymentInstructions!,
+              );
+            }
+
             setState(() {
               _allExams =
                   examsWithFreeMarked; // Cache all exams with free marked
@@ -171,9 +211,21 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               _isLoadingFreeExams = false;
             });
 
-            // Download exams for offline use in background
-            _syncService.downloadAllExams().catchError((e) {
-              debugPrint('⚠️ Failed to download exams offline: $e');
+            // Download ALL exams for offline use in background (not just free exams)
+            // Only start download if we still have internet
+            // Use forceDownload=false to only download new/updated exams
+            _networkService.hasInternetConnection().then((stillOnline) {
+              if (stillOnline) {
+                _syncService.downloadAllExams(forceDownload: false).catchError((
+                  e,
+                ) {
+                  debugPrint('⚠️ Failed to download exams offline: $e');
+                });
+              } else {
+                debugPrint(
+                  '🌐 Internet connection lost, skipping exam download',
+                );
+              }
             });
 
             // Filter after loading
@@ -209,15 +261,41 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         debugPrint(
           '📱 Loaded ${offlineExams.length} exams from offline storage',
         );
+
+        // Remove duplicates by ID (additional safety check)
+        final uniqueExams = <String, Exam>{};
+        for (final exam in offlineExams) {
+          if (!uniqueExams.containsKey(exam.id)) {
+            uniqueExams[exam.id] = exam;
+          }
+        }
+        final distinctExams = uniqueExams.values.toList();
+
+        debugPrint(
+          '📱 After removing duplicates: ${distinctExams.length} unique exams',
+        );
+
         // Mark free exams by type before setting state
-        final examsWithFreeMarked = _markFreeExamsByType(offlineExams);
+        final examsWithFreeMarked = _markFreeExamsByType(distinctExams);
+
+        // Check user access from authProvider (stored in SharedPreferences)
+        final authState = ref.read(authProvider);
+        final hasAccess = authState.accessPeriod?.hasAccess ?? false;
+        final isFreeUser = !hasAccess; // User is free if they don't have access
+
+        // Load payment instructions from offline storage if available
+        PaymentInstructions? offlinePaymentInstructions;
+        if (isFreeUser) {
+          offlinePaymentInstructions = await _loadPaymentInstructionsOffline();
+        }
 
         setState(() {
           _allExams = examsWithFreeMarked;
           _freeExamData = FreeExamData(
             exams: examsWithFreeMarked,
-            isFreeUser: true, // Assume free user for offline
+            isFreeUser: isFreeUser,
             freeExamsRemaining: 0,
+            paymentInstructions: offlinePaymentInstructions,
           );
           _isLoadingFreeExams = false;
         });
@@ -247,19 +325,20 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       // Handle null examType: default to 'english' if null
       // Also try to infer from title if it contains language keywords
       String type = exam.examType?.toLowerCase() ?? 'english';
-      
+
       // If examType is null, try to infer from title
       if (exam.examType == null) {
         final titleLower = exam.title.toLowerCase();
         if (titleLower.contains('kiny') || titleLower.contains('kinyarwanda')) {
           type = 'kinyarwanda';
-        } else if (titleLower.contains('french') || titleLower.contains('français')) {
+        } else if (titleLower.contains('french') ||
+            titleLower.contains('français')) {
           type = 'french';
         } else {
           type = 'english'; // Default to english
         }
       }
-      
+
       examsByType.putIfAbsent(type, () => []).add(exam);
     }
 
@@ -346,15 +425,30 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     }
 
     // Free exams are already marked in _allExams, just filter by type
+    // Use the same type inference logic as _markFreeExamsByType
     List<Exam> filteredExams;
     if (_selectedExamType != null && _selectedExamType!.isNotEmpty) {
-      filteredExams = _allExams
-          .where(
-            (exam) =>
-                exam.examType?.toLowerCase() ==
-                _selectedExamType?.toLowerCase(),
-          )
-          .toList();
+      filteredExams = _allExams.where((exam) {
+        // Get exam type using same logic as _markFreeExamsByType
+        String type = exam.examType?.toLowerCase() ?? 'english';
+
+        // If examType is null, try to infer from title
+        if (exam.examType == null) {
+          final titleLower = exam.title.toLowerCase();
+          if (titleLower.contains('kiny') ||
+              titleLower.contains('kinyarwanda')) {
+            type = 'kinyarwanda';
+          } else if (titleLower.contains('french') ||
+              titleLower.contains('français')) {
+            type = 'french';
+          } else {
+            type = 'english'; // Default to english
+          }
+        }
+
+        // Match against selected type
+        return type == _selectedExamType!.toLowerCase();
+      }).toList();
       debugPrint(
         '✅ Filtered by type: ${filteredExams.length} exams match $_selectedExamType',
       );
@@ -609,13 +703,28 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           if (_freeExamData != null && _allExams.isNotEmpty) {
             List<Exam> filteredExams;
             if (newSelectedType != null && newSelectedType.isNotEmpty) {
-              filteredExams = _allExams
-                  .where(
-                    (exam) =>
-                        exam.examType?.toLowerCase() ==
-                        newSelectedType.toLowerCase(),
-                  )
-                  .toList();
+              // Use same type inference logic as _markFreeExamsByType
+              filteredExams = _allExams.where((exam) {
+                // Get exam type using same logic as _markFreeExamsByType
+                String type = exam.examType?.toLowerCase() ?? 'english';
+
+                // If examType is null, try to infer from title
+                if (exam.examType == null) {
+                  final titleLower = exam.title.toLowerCase();
+                  if (titleLower.contains('kiny') ||
+                      titleLower.contains('kinyarwanda')) {
+                    type = 'kinyarwanda';
+                  } else if (titleLower.contains('french') ||
+                      titleLower.contains('français')) {
+                    type = 'french';
+                  } else {
+                    type = 'english'; // Default to english
+                  }
+                }
+
+                // Match against selected type
+                return type == newSelectedType.toLowerCase();
+              }).toList();
               debugPrint(
                 '✅ Filtered by type: ${filteredExams.length} exams match $newSelectedType',
               );
@@ -708,26 +817,63 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       ];
     }
 
-    // Group exams by type
+    // Group exams by type - always show all sections, even if filtered
+    // If a filter is selected, show empty state for non-matching sections
     final Map<String, List<Exam>> examsByType = {};
-    for (final exam in _freeExamData!.exams) {
+
+    // Use _allExams instead of _freeExamData!.exams to ensure all exams are considered
+    // This ensures all exam type sections are visible even when filtering
+    final examsToGroup = _selectedExamType != null
+        ? _allExams // When filtering, use all exams to show all sections
+        : _freeExamData!.exams; // When not filtering, use filtered exams
+
+    for (final exam in examsToGroup) {
       // Handle null examType: default to 'english' if null
       // Also try to infer from title if it contains language keywords
       String type = exam.examType?.toLowerCase() ?? 'english';
-      
+
       // If examType is null, try to infer from title
       if (exam.examType == null) {
         final titleLower = exam.title.toLowerCase();
         if (titleLower.contains('kiny') || titleLower.contains('kinyarwanda')) {
           type = 'kinyarwanda';
-        } else if (titleLower.contains('french') || titleLower.contains('français')) {
+        } else if (titleLower.contains('french') ||
+            titleLower.contains('français')) {
           type = 'french';
         } else {
           type = 'english'; // Default to english
         }
       }
-      
+
       examsByType.putIfAbsent(type, () => []).add(exam);
+    }
+
+    // If filtering, only show exams that match the selected type
+    if (_selectedExamType != null) {
+      for (final type in examsByType.keys.toList()) {
+        if (type != _selectedExamType!.toLowerCase()) {
+          // Keep the section but mark it as empty (will show empty state)
+          examsByType[type] = [];
+        } else {
+          // Filter exams to only show those matching the selected type
+          examsByType[type] = examsByType[type]!.where((exam) {
+            String examType = exam.examType?.toLowerCase() ?? 'english';
+            if (exam.examType == null) {
+              final titleLower = exam.title.toLowerCase();
+              if (titleLower.contains('kiny') ||
+                  titleLower.contains('kinyarwanda')) {
+                examType = 'kinyarwanda';
+              } else if (titleLower.contains('french') ||
+                  titleLower.contains('français')) {
+                examType = 'french';
+              } else {
+                examType = 'english';
+              }
+            }
+            return examType == _selectedExamType!.toLowerCase();
+          }).toList();
+        }
+      }
     }
 
     // Order: kinyarwanda, english, french
@@ -815,26 +961,61 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       );
 
       // Exams for this type
-      slivers.add(
-        SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final exam = exams[index];
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: 16.h),
-                    child: _buildExamCard(exam, index),
+      if (exams.isEmpty) {
+        // Show empty state for this type when filtering
+        slivers.add(
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(32.w),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.quiz_outlined,
+                    size: 48.sp,
+                    color: AppColors.grey400,
                   ),
-                ),
-              );
-            }, childCount: exams.length),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'No $displayName Exams',
+                    style: AppTextStyles.heading3.copyWith(
+                      color: AppColors.grey600,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'No exams available for this language',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.grey500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        slivers.add(
+          SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final exam = exams[index];
+                return FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 16.h),
+                      child: _buildExamCard(exam, index),
+                    ),
+                  ),
+                );
+              }, childCount: exams.length),
+            ),
+          ),
+        );
+      }
     }
 
     return slivers;
@@ -1062,19 +1243,30 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     // Free status is determined per exam type (English, French, Kinyarwanda)
     final isFreeExam = exam.isFirstTwo ?? false;
 
-    // Check if user is free user and trying to access a paid exam
-    if (_freeExamData!.isFreeUser && !isFreeExam) {
+    // Check user access from authProvider (more reliable than _freeExamData.isFreeUser)
+    final authState = ref.read(authProvider);
+    final hasAccess = authState.accessPeriod?.hasAccess ?? false;
+
+    // Only show payment instructions if:
+    // 1. User has NO access (isFreeUser = true)
+    // 2. AND they're trying to access a paid exam (not free)
+    // If user has access, allow them to take any exam even offline
+    if (!hasAccess && !isFreeExam) {
       _showPaymentInstructions();
       return;
     }
 
     // Navigate to exam taking screen
+    // Use hasAccess to determine if it's a free exam (free exam = hasAccess && isFreeExam)
+    // If user has access, all exams are accessible, so isFreeExam should be false
+    final isFreeExamForUser = !hasAccess && isFreeExam;
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ExamTakingScreen(
           exam: exam,
-          isFreeExam: _freeExamData!.isFreeUser && isFreeExam,
+          isFreeExam: isFreeExamForUser,
           onExamCompleted: (result) {
             // Navigate to progress screen after exam completion
             Navigator.pushReplacement(
@@ -1083,7 +1275,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 builder: (context) => ExamProgressScreen(
                   exam: exam,
                   examResult: result,
-                  isFreeExam: _freeExamData!.isFreeUser && isFreeExam,
+                  isFreeExam: isFreeExamForUser,
                 ),
               ),
             );
@@ -1093,11 +1285,60 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     );
   }
 
+  /// Store payment instructions in SharedPreferences for offline access
+  Future<void> _storePaymentInstructionsOffline(
+    PaymentInstructions instructions,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Convert PaymentInstructions to JSON and store
+      // Store both as PaymentInstructions (for FreeExamData) and as PaymentInstructionsData (for PaymentInstructionsScreen)
+      final instructionsJson = jsonEncode(instructions.toJson());
+      await prefs.setString('payment_instructions', instructionsJson);
+
+      // Also store as PaymentInstructionsData format for PaymentInstructionsScreen
+      final dataJson = jsonEncode({
+        'title': instructions.title,
+        'description': instructions.description,
+        'steps': instructions.steps,
+        'contactInfo': instructions.contactInfo.toJson(),
+        'paymentMethods': <Map<String, dynamic>>[], // Empty list
+        'paymentTiers': instructions.paymentTiers
+            .map((tier) => tier.toJson())
+            .toList(),
+      });
+      await prefs.setString('payment_instructions_data', dataJson);
+      debugPrint('💾 Stored payment instructions offline');
+    } catch (e) {
+      debugPrint('❌ Error storing payment instructions: $e');
+    }
+  }
+
+  /// Load payment instructions from SharedPreferences
+  Future<PaymentInstructions?> _loadPaymentInstructionsOffline() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Try loading as PaymentInstructions first
+      final instructionsJson = prefs.getString('payment_instructions');
+      if (instructionsJson != null) {
+        final data = jsonDecode(instructionsJson) as Map<String, dynamic>;
+        return PaymentInstructions.fromJson(data);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('❌ Error loading payment instructions offline: $e');
+      return null;
+    }
+  }
+
   void _showPaymentInstructions() {
+    // Pass payment instructions if available (for offline support)
+    final paymentInstructions = _freeExamData?.paymentInstructions;
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const PaymentInstructionsScreen(),
+        builder: (context) =>
+            PaymentInstructionsScreen(cachedInstructions: paymentInstructions),
       ),
     );
   }

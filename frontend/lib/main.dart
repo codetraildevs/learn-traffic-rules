@@ -14,6 +14,7 @@ import 'services/notification_service.dart';
 import 'services/simple_notification_service.dart';
 import 'services/notification_polling_service.dart';
 import 'services/exam_sync_service.dart';
+import 'services/image_cache_service.dart';
 import 'services/network_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/app_provider.dart';
@@ -66,24 +67,36 @@ void main() async {
     debugPrint('⚠️ Failed to start notification polling service: $e');
   }
 
-  // Initialize offline exam sync
-  try {
-    final networkService = NetworkService();
-    final hasInternet = await networkService.hasInternetConnection();
+  // Initialize image cache service (non-blocking, will retry when needed)
+  // Don't wait for it to complete, as it might fail and we want the app to start
+  ImageCacheService.instance.initialize().catchError((e) {
+    debugPrint('⚠️ Image cache initialization failed (will retry later): $e');
+  });
+  debugPrint('📁 Image cache service initialization started');
 
-    if (hasInternet) {
-      // Download exams for offline use in background
-      final syncService = ExamSyncService();
-      syncService.downloadAllExams().catchError((e) {
-        debugPrint('⚠️ Failed to download exams on startup: $e');
-      });
-      debugPrint('✅ Offline exam sync initialized');
-    } else {
-      debugPrint('📱 No internet on startup, will use offline data');
+  // Initialize offline exam sync (only if internet is available)
+  // Don't block app startup - run in background
+  Future.delayed(const Duration(seconds: 2), () async {
+    try {
+      final networkService = NetworkService();
+      final hasInternet = await networkService.hasInternetConnection();
+
+      if (hasInternet) {
+        // Download exams for offline use in background
+        // Use forceDownload=false to only download new/updated exams
+        // This is more efficient and avoids unnecessary downloads
+        final syncService = ExamSyncService();
+        syncService.downloadAllExams(forceDownload: false).catchError((e) {
+          debugPrint('⚠️ Failed to download exams on startup: $e');
+        });
+        debugPrint('✅ Offline exam sync started in background');
+      } else {
+        debugPrint('📱 No internet on startup, will use offline data');
+      }
+    } catch (e) {
+      debugPrint('⚠️ Failed to initialize offline sync: $e');
     }
-  } catch (e) {
-    debugPrint('⚠️ Failed to initialize offline sync: $e');
-  }
+  });
 
   runApp(const ProviderScope(child: MyApp()));
 }

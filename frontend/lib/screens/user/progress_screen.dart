@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:learn_traffic_rules/core/constants/app_constants.dart';
 import 'package:learn_traffic_rules/core/theme/app_theme.dart';
 import 'package:learn_traffic_rules/screens/user/available_exams_screen.dart';
@@ -9,20 +12,30 @@ import 'package:learn_traffic_rules/screens/user/exam_progress_screen.dart';
 import '../../models/exam_result_model.dart';
 import '../../models/exam_model.dart';
 import '../../services/exam_service.dart';
+import '../../services/offline_exam_service.dart';
+import '../../services/network_service.dart';
+import '../../services/exam_sync_service.dart';
+import '../../providers/auth_provider.dart';
 import 'exam_taking_screen.dart';
 
-class ProgressScreen extends StatefulWidget {
+class ProgressScreen extends ConsumerStatefulWidget {
   const ProgressScreen({super.key});
 
   @override
-  State<ProgressScreen> createState() => _ProgressScreenState();
+  ConsumerState<ProgressScreen> createState() => _ProgressScreenState();
 }
 
-class _ProgressScreenState extends State<ProgressScreen> {
+class _ProgressScreenState extends ConsumerState<ProgressScreen>
+    with WidgetsBindingObserver {
   final ExamService _examService = ExamService();
+  final OfflineExamService _offlineService = OfflineExamService();
+  final NetworkService _networkService = NetworkService();
+  final ExamSyncService _syncService = ExamSyncService();
   List<ExamResultData> _examResults = [];
   bool _isLoading = true;
   String? _error;
+  bool _isOffline = false;
+  StreamSubscription<ConnectivityResult>? _connectivitySubscription;
   static const MethodChannel _securityChannel = MethodChannel(
     'com.trafficrules.master/security',
   );
@@ -52,7 +65,79 @@ class _ProgressScreenState extends State<ProgressScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadExamResults();
+    _setupConnectivityListener();
+  }
+
+  void _setupConnectivityListener() {
+    // Listen for connectivity changes
+    _connectivitySubscription = _networkService.connectivityStream.listen((
+      ConnectivityResult result,
+    ) async {
+      if (result != ConnectivityResult.none) {
+        // Internet is back, check if we have unsynced results
+        final hasInternet = await _networkService.hasInternetConnection();
+        if (hasInternet && mounted) {
+          debugPrint('🌐 Internet connection restored, syncing results...');
+          // Sync unsynced results
+          _syncService
+              .syncExamResults()
+              .then((_) {
+                debugPrint('✅ Results synced successfully');
+                // Reload results to show updated data
+                if (mounted) {
+                  _loadExamResults();
+                }
+              })
+              .catchError((e) {
+                debugPrint('⚠️ Failed to sync results: $e');
+              });
+        }
+      } else {
+        debugPrint('🌐 Internet connection lost');
+        if (mounted) {
+          setState(() {
+            _isOffline = true;
+          });
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _connectivitySubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // When app resumes, check connectivity and sync if needed
+      _networkService.hasInternetConnection().then((hasInternet) {
+        if (hasInternet && mounted) {
+          debugPrint(
+            '🔄 App resumed with internet, checking for unsynced results...',
+          );
+          // Sync unsynced results
+          _syncService
+              .syncExamResults()
+              .then((_) {
+                debugPrint('✅ Results synced after app resume');
+                // Reload results to show updated data
+                if (mounted) {
+                  _loadExamResults();
+                }
+              })
+              .catchError((e) {
+                debugPrint('⚠️ Failed to sync results on resume: $e');
+              });
+        }
+      });
+    }
   }
 
   Future<void> _loadExamResults() async {
@@ -63,8 +148,89 @@ class _ProgressScreenState extends State<ProgressScreen> {
         _error = null;
       });
 
-      final results = await _examService.getUserExamResults();
-      debugPrint('📊 Exam results loaded: ${results.length} results');
+      // Check internet connection
+      final hasInternet = await _networkService.hasInternetConnection();
+
+      setState(() {
+        _isOffline = !hasInternet;
+      });
+
+      List<ExamResultData> results = [];
+
+      if (hasInternet) {
+        // Online: Try to load from API first
+        try {
+          debugPrint('🌐 Online: Loading results from API...');
+          results = await _examService.getUserExamResults();
+          debugPrint(
+            '📊 Exam results loaded from API: ${results.length} results',
+          );
+
+          // Also get offline results to merge (unsynced results)
+          final offlineResults = await _offlineService.getAllResults();
+          final unsyncedResults = offlineResults
+              .where((r) => r['synced'] == false)
+              .toList();
+
+          if (unsyncedResults.isNotEmpty) {
+            debugPrint(
+              '📱 Found ${unsyncedResults.length} unsynced results, syncing...',
+            );
+            // Try to sync unsynced results in background
+            _syncService.syncExamResults().catchError((e) {
+              debugPrint('⚠️ Failed to sync results: $e');
+            });
+          }
+
+          // Merge offline unsynced results with online results
+          // Convert offline results to ExamResultData
+          final authState = ref.read(authProvider);
+          final userId = authState.user?.id ?? 'offline-user';
+
+          for (final offlineResult in unsyncedResults) {
+            // Check if this result is already in the online results
+            final existsOnline = results.any(
+              (r) =>
+                  r.examId == offlineResult['examId'] as String &&
+                  r.submittedAt.toIso8601String() ==
+                      offlineResult['completedAt'] as String,
+            );
+
+            if (!existsOnline) {
+              // Add offline result to the list
+              results.add(
+                ExamResultData(
+                  id: offlineResult['id'].toString(),
+                  examId: offlineResult['examId'] as String,
+                  userId: userId,
+                  score: (offlineResult['score'] as double).toInt(),
+                  totalQuestions: offlineResult['totalQuestions'] as int,
+                  correctAnswers: offlineResult['correctAnswers'] as int,
+                  timeSpent: offlineResult['timeSpent'] as int,
+                  passed: offlineResult['passed'] as bool,
+                  isFreeExam: offlineResult['isFreeExam'] as bool,
+                  submittedAt: DateTime.parse(
+                    offlineResult['completedAt'] as String,
+                  ),
+                ),
+              );
+            }
+          }
+
+          // Sort by submission time (newest first)
+          results.sort((a, b) => b.submittedAt.compareTo(a.submittedAt));
+        } catch (e) {
+          debugPrint('❌ Failed to load from API: $e');
+          // Fallback to offline data
+          results = await _loadOfflineResults();
+        }
+      } else {
+        // Offline: Load from local database
+        debugPrint('📱 Offline: Loading results from local storage...');
+        results = await _loadOfflineResults();
+      }
+
+      debugPrint('📊 Total exam results loaded: ${results.length} results');
       debugPrint(
         '   Results: ${results.map((r) => '${r.examId}: ${r.score}%').join(', ')}',
       );
@@ -79,6 +245,38 @@ class _ProgressScreenState extends State<ProgressScreen> {
         _error = e.toString();
         _isLoading = false;
       });
+    }
+  }
+
+  Future<List<ExamResultData>> _loadOfflineResults() async {
+    try {
+      final offlineResults = await _offlineService.getAllResults();
+      final authState = ref.read(authProvider);
+      final userId = authState.user?.id ?? 'offline-user';
+
+      final results = offlineResults.map((r) {
+        return ExamResultData(
+          id: r['id'].toString(),
+          examId: r['examId'] as String,
+          userId: userId,
+          score: (r['score'] as double).toInt(),
+          totalQuestions: r['totalQuestions'] as int,
+          correctAnswers: r['correctAnswers'] as int,
+          timeSpent: r['timeSpent'] as int,
+          passed: r['passed'] as bool,
+          isFreeExam: r['isFreeExam'] as bool,
+          submittedAt: DateTime.parse(r['completedAt'] as String),
+        );
+      }).toList();
+
+      // Sort by submission time (newest first)
+      results.sort((a, b) => b.submittedAt.compareTo(a.submittedAt));
+
+      debugPrint('📱 Loaded ${results.length} results from offline storage');
+      return results;
+    } catch (e) {
+      debugPrint('❌ Error loading offline results: $e');
+      return [];
     }
   }
 
@@ -101,7 +299,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
       ),
       body: _isLoading
           ? _buildLoadingView()
-          : _error != null
+          : _error != null && _examResults.isEmpty
           ? _buildErrorView()
           : _examResults.isEmpty
           ? _buildEmptyView()
@@ -147,6 +345,38 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
                     textAlign: TextAlign.center,
                   ),
+                  if (_isOffline) ...[
+                    SizedBox(height: 12.h),
+                    Container(
+                      padding: EdgeInsets.all(12.w),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(color: Colors.orange[200]!),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.wifi_off,
+                            color: Colors.orange[700],
+                            size: 16.w,
+                          ),
+                          SizedBox(width: 8.w),
+                          Flexible(
+                            child: Text(
+                              'Offline mode - Showing cached results only',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: Colors.orange[700],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   SizedBox(height: 24.h),
 
                   // Action buttons
@@ -363,6 +593,42 @@ class _ProgressScreenState extends State<ProgressScreen> {
     );
   }
 
+  Widget _buildOfflineBanner() {
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: Colors.orange[50],
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: Colors.orange[200]!),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.wifi_off, color: Colors.orange[700], size: 20.w),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Offline Mode',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange[700],
+                  ),
+                ),
+                Text(
+                  'Showing cached results. Results will sync when internet is available.',
+                  style: TextStyle(fontSize: 12.sp, color: Colors.orange[600]),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFeaturePreview({
     required IconData icon,
     required String title,
@@ -405,6 +671,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Offline/Sync Status Banner
+            if (_isOffline) _buildOfflineBanner(),
+            SizedBox(height: _isOffline ? 16.h : 0),
             // Performance Overview
             _buildPerformanceOverview(),
             SizedBox(height: 24.h),

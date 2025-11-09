@@ -870,19 +870,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       // Handle null examType: default to 'english' if null
       // Also try to infer from title if it contains language keywords
       String type = exam.examType?.toLowerCase() ?? 'english';
-      
+
       // If examType is null or 'unknown', try to infer from title
       if (type == 'unknown' || exam.examType == null) {
         final titleLower = exam.title.toLowerCase();
         if (titleLower.contains('kiny') || titleLower.contains('kinyarwanda')) {
           type = 'kinyarwanda';
-        } else if (titleLower.contains('french') || titleLower.contains('français')) {
+        } else if (titleLower.contains('french') ||
+            titleLower.contains('français')) {
           type = 'french';
         } else {
           type = 'english'; // Default to english
         }
       }
-      
+
       examsByType.putIfAbsent(type, () => []).add(exam);
     }
 
@@ -1305,6 +1306,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
+    //disble back button when user are on dashboard screen
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),

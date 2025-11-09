@@ -31,7 +31,6 @@ dependencies:
   flutter_screenutil: ^5.9.0
   
   # State Management
-  # provider: ^6.1.1  # Removed - using Riverpod only
   riverpod: ^2.4.9
   flutter_riverpod: ^2.4.9
   
@@ -52,20 +51,13 @@ dependencies:
   connectivity_plus: ^5.0.2
   
   # File Operations
-  # path_provider: ^2.1.1  # Removed - not used
+  path_provider: ^2.1.1
   file_picker: ^8.0.0+1
   
-  # UI Components
-  # cached_network_image: ^3.3.0  # Removed - not used
-  # shimmer: ^3.0.0  # Removed - not used
-  # lottie: ^2.7.0  # Removed - heavy animations
+  
   flutter_svg: ^2.0.9  # Required for SVG icons
   
-  # Phone & Communication
-  # flutter_phone_direct_caller: ^2.2.1  # Removed due to build issues
-  
-  # Charts & Analytics
-  # fl_chart: ^0.66.0  # Removed - heavy charts library
+
   
   # Notifications
   flutter_local_notifications: ^17.2.3
@@ -85,12 +77,7 @@ dependencies:
   
   # Security
   crypto: ^3.0.3
-  
-  # Image Handling
-  # image_picker: ^1.2.0  # Removed - using file_picker instead
-  
-  # Animations
-  # animations: ^2.0.8  # Removed - heavy animations
+
 
 dev_dependencies:
   flutter_test:

@@ -23,8 +23,8 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen>
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _categoryController = TextEditingController();
-  final _durationController = TextEditingController(text: '30');
-  final _passingScoreController = TextEditingController(text: '70');
+  final _durationController = TextEditingController(text: '20');
+  final _passingScoreController = TextEditingController(text: '60');
   String _selectedDifficulty = 'MEDIUM';
   String _selectedExamType = 'kinyarwanda';
   bool _isActive = true;
