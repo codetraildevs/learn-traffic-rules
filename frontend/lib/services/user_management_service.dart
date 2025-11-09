@@ -179,11 +179,13 @@ class UserManagementService {
   }
 
   // Get free exams for users without access codes
-  Future<FreeExamResponse> getFreeExams() async {
-    final response = await _apiService.makeRequest(
-      'GET',
-      '${AppConstants.userManagementEndpoint}/free-exams',
-    );
+  Future<FreeExamResponse> getFreeExams({String? examType}) async {
+    String url = '${AppConstants.userManagementEndpoint}/free-exams';
+    if (examType != null && examType.isNotEmpty) {
+      url += '?examType=$examType';
+    }
+
+    final response = await _apiService.makeRequest('GET', url);
 
     return FreeExamResponse.fromJson(response);
   }

@@ -446,7 +446,10 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
   }
 
   String _formatDateTime(DateTime dateTime) {
-    return '${dateTime.month}/${dateTime.day}/${dateTime.year} at ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    // Format: "MM/DD/YYYY at HH:MM"
+    // Ensure we're using the local timezone for correct display
+    final localTime = dateTime.toLocal();
+    return '${localTime.month}/${localTime.day}/${localTime.year} at ${localTime.hour.toString().padLeft(2, '0')}:${localTime.minute.toString().padLeft(2, '0')}';
   }
 
   void _showDetailedAnswers() async {
@@ -606,8 +609,10 @@ class _SecureDetailedAnswersModalState
             Padding(
               padding: EdgeInsets.all(20.w),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Icon(Icons.security, color: Colors.red[600], size: 20.w),
                       SizedBox(width: 8.w),
@@ -620,30 +625,25 @@ class _SecureDetailedAnswersModalState
                           letterSpacing: 1.0,
                         ),
                       ),
-                      const Spacer(),
-                      Icon(
-                        Icons.quiz,
-                        color: const Color(0xFF1976D2),
-                        size: 24.w,
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Text(
-                          'Detailed Answers',
-                          style: TextStyle(
-                            fontSize: 20.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[800],
-                          ),
-                        ),
-                      ),
+
                       IconButton(
                         onPressed: () => Navigator.pop(context),
                         icon: Icon(Icons.close, color: Colors.grey[600]),
                       ),
                     ],
                   ),
+
+                  SizedBox(height: 12.h),
+                  Text(
+                    'Detailed Answers for ${widget.examResult.exam?.title ?? 'Exam'}',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                  ),
                   SizedBox(height: 8.h),
+
                   Container(
                     padding: EdgeInsets.all(12.w),
                     decoration: BoxDecoration(
@@ -757,7 +757,7 @@ class _SecureDetailedAnswersModalState
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
           color: isCorrect ? Colors.green : Colors.red,
-          width: 2,
+          width: 1.w,
         ),
       ),
       child: Column(
@@ -899,8 +899,8 @@ class _SecureDetailedAnswersModalState
                           width:
                               isCorrectAnswer ||
                                   (isUserAnswer && !isCorrectAnswer)
-                              ? 2
-                              : 1,
+                              ? 1.w
+                              : 1.w,
                         ),
                       ),
                       child: Row(

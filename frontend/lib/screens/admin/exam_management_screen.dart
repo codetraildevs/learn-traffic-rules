@@ -23,6 +23,7 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  String? _selectedExamType; // Filter by exam type
 
   @override
   void initState() {
@@ -50,7 +51,9 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
     super.didChangeDependencies();
     // Load exams after the widget tree is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(examProvider.notifier).loadExams();
+      if (mounted) {
+        ref.read(examProvider.notifier).loadExams();
+      }
     });
   }
 
@@ -66,212 +69,129 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
 
     return Scaffold(
       backgroundColor: AppColors.grey50,
-      body: CustomScrollView(
-        slivers: [
-          // Custom App Bar
-          SliverAppBar(
-            expandedHeight: 200.h,
-            floating: false,
-            pinned: true,
-            backgroundColor: AppColors.primary,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                'Exam Management',
-                style: AppTextStyles.heading2.copyWith(
-                  color: AppColors.white,
-                  fontSize: 20.sp,
-                ),
-              ),
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.primary, AppColors.secondary],
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await ref.read(examProvider.notifier).loadExams();
+        },
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            // Custom App Bar
+            SliverAppBar(
+              expandedHeight: 200.h,
+              floating: false,
+              pinned: true,
+              backgroundColor: AppColors.primary,
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text(
+                  'Exam Management',
+                  style: AppTextStyles.heading2.copyWith(
+                    color: AppColors.white,
+                    fontSize: 20.sp,
                   ),
                 ),
-                child: Stack(
-                  children: [
-                    // Background Pattern
-                    Positioned(
-                      top: -50.h,
-                      right: -50.w,
-                      child: Container(
-                        width: 200.w,
-                        height: 200.h,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.white.withValues(alpha: 0.1),
+                background: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppColors.primary, AppColors.secondary],
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      // Background Pattern
+                      Positioned(
+                        top: -50.h,
+                        right: -50.w,
+                        child: Container(
+                          width: 200.w,
+                          height: 200.h,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.white.withValues(alpha: 0.1),
+                          ),
                         ),
                       ),
-                    ),
-                    Positioned(
-                      bottom: -30.h,
-                      left: -30.w,
-                      child: Container(
-                        width: 150.w,
-                        height: 150.h,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.white.withValues(alpha: 0.05),
+                      Positioned(
+                        bottom: -30.h,
+                        left: -30.w,
+                        child: Container(
+                          width: 150.w,
+                          height: 150.h,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.white.withValues(alpha: 0.05),
+                          ),
                         ),
                       ),
-                    ),
-                    // Content
-                    Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.quiz, size: 48.sp, color: AppColors.white),
-                          SizedBox(height: 6.h),
-                          Text(
-                            'Manage Traffic Rules Exams',
-                            style: AppTextStyles.bodyLarge.copyWith(
-                              color: AppColors.white.withValues(alpha: 0.9),
+                      // Content
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.quiz,
+                              size: 48.sp,
+                              color: AppColors.white,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.add, color: AppColors.white),
-                onPressed: () => _navigateToCreateExam(),
-              ),
-            ],
-          ),
-
-          // Stats Cards
-          SliverToBoxAdapter(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: Padding(
-                  padding: EdgeInsets.all(16.w),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatCard(
-                          'Total Exams',
-                          '${examState.exams.length}',
-                          Icons.quiz,
-                          AppColors.primary,
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: _buildStatCard(
-                          'Active',
-                          '${examState.exams.where((e) => e.isActive).length}',
-                          Icons.check_circle,
-                          AppColors.success,
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: _buildStatCard(
-                          'Inactive',
-                          '${examState.exams.where((e) => !e.isActive).length}',
-                          Icons.pause_circle,
-                          AppColors.warning,
+                            SizedBox(height: 6.h),
+                            Text(
+                              'Manage Traffic Rules Exams',
+                              style: AppTextStyles.bodyLarge.copyWith(
+                                color: AppColors.white.withValues(alpha: 0.9),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-            ),
-          ),
-
-          // Loading State
-          if (examState.isLoading)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(32.w),
-                child: const Center(child: CircularProgressIndicator()),
-              ),
-            ),
-
-          // Error State
-          if (examState.error != null)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(16.w),
-                child: Container(
-                  padding: EdgeInsets.all(16.w),
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(
-                      color: AppColors.error.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error, color: AppColors.error),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Text(
-                          examState.error!,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.error,
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () =>
-                            ref.read(examProvider.notifier).loadExams(),
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.add, color: AppColors.white),
+                  onPressed: () => _navigateToCreateExam(),
                 ),
-              ),
+              ],
             ),
 
-          // Exams List
-          if (examState.exams.isEmpty &&
-              !examState.isLoading &&
-              examState.error == null)
+            // Stats Cards
             SliverToBoxAdapter(
               child: FadeTransition(
                 opacity: _fadeAnimation,
                 child: SlideTransition(
                   position: _slideAnimation,
                   child: Padding(
-                    padding: EdgeInsets.all(32.w),
-                    child: Column(
+                    padding: EdgeInsets.all(16.w),
+                    child: Row(
                       children: [
-                        Icon(
-                          Icons.quiz_outlined,
-                          size: 80.sp,
-                          color: AppColors.grey400,
-                        ),
-                        SizedBox(height: 16.h),
-                        Text(
-                          'No Exams Yet',
-                          style: AppTextStyles.heading3.copyWith(
-                            color: AppColors.grey600,
+                        Expanded(
+                          child: _buildStatCard(
+                            'Total Exams',
+                            '${_getFilteredExams(examState.exams).length}',
+                            Icons.quiz,
+                            AppColors.primary,
                           ),
                         ),
-                        SizedBox(height: 6.h),
-                        Text(
-                          'Create your first exam to get started',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.grey500,
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Active',
+                            '${_getFilteredExams(examState.exams).where((e) => e.isActive).length}',
+                            Icons.check_circle,
+                            AppColors.success,
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: 24.h),
-                        CustomButton(
-                          text: 'Create First Exam',
-                          onPressed: () => _navigateToCreateExam(),
-                          width: 200.w,
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Inactive',
+                            '${_getFilteredExams(examState.exams).where((e) => !e.isActive).length}',
+                            Icons.pause_circle,
+                            AppColors.warning,
+                          ),
                         ),
                       ],
                     ),
@@ -280,33 +200,158 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
               ),
             ),
 
-          // Exams Grid
-          SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            sliver: SliverGrid(
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 1,
-                childAspectRatio:
-                    1.15, // Slightly more space to prevent overflow
-                crossAxisSpacing: 16.w,
-                mainAxisSpacing: 16.h,
+            // Exam Type Filter
+            SliverToBoxAdapter(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+                    child: _buildExamTypeFilter(examState.exams),
+                  ),
+                ),
               ),
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final exam = examState.exams[index];
-                return FadeTransition(
+            ),
+
+            // Loading State
+            if (examState.isLoading)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(32.w),
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+              ),
+
+            // Error State
+            if (examState.error != null)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error, color: AppColors.error),
+                        SizedBox(width: 12.w),
+                        Expanded(
+                          child: Text(
+                            examState.error!,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.error,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () =>
+                              ref.read(examProvider.notifier).loadExams(),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+            // Exams List (Empty State)
+            if (_getFilteredExams(examState.exams).isEmpty &&
+                !examState.isLoading &&
+                examState.error == null)
+              SliverToBoxAdapter(
+                child: FadeTransition(
                   opacity: _fadeAnimation,
                   child: SlideTransition(
                     position: _slideAnimation,
-                    child: _buildExamCard(exam, index),
+                    child: Padding(
+                      padding: EdgeInsets.all(32.w),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.quiz_outlined,
+                            size: 80.sp,
+                            color: AppColors.grey400,
+                          ),
+                          SizedBox(height: 16.h),
+                          Text(
+                            _selectedExamType != null
+                                ? 'No ${_selectedExamType!.toUpperCase()} Exams'
+                                : 'No Exams Yet',
+                            style: AppTextStyles.heading3.copyWith(
+                              color: AppColors.grey600,
+                            ),
+                          ),
+                          SizedBox(height: 6.h),
+                          Text(
+                            _selectedExamType != null
+                                ? 'No exams found for this language. Create a new exam or change the filter.'
+                                : 'Create your first exam to get started',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.grey500,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 24.h),
+                          if (_selectedExamType != null)
+                            Padding(
+                              padding: EdgeInsets.only(bottom: 12.h),
+                              child: CustomButton(
+                                text: 'Clear Filter',
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedExamType = null;
+                                  });
+                                },
+                                width: 200.w,
+                              ),
+                            ),
+                          CustomButton(
+                            text: 'Create Exam',
+                            onPressed: () => _navigateToCreateExam(),
+                            width: 200.w,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                );
-              }, childCount: examState.exams.length),
-            ),
-          ),
+                ),
+              ),
 
-          // Bottom Padding
-          SliverToBoxAdapter(child: SizedBox(height: 100.h)),
-        ],
+            // Exams Grid
+            SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              sliver: SliverGrid(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 1,
+                  childAspectRatio:
+                      1.15, // Slightly more space to prevent overflow
+                  crossAxisSpacing: 16.w,
+                  mainAxisSpacing: 16.h,
+                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final filteredExams = _getFilteredExams(examState.exams);
+                  final exam = filteredExams[index];
+                  return FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: _buildExamCard(exam, index),
+                    ),
+                  );
+                }, childCount: _getFilteredExams(examState.exams).length),
+              ),
+            ),
+
+            // Bottom Padding
+            SliverToBoxAdapter(child: SizedBox(height: 100.h)),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToCreateExam(),
@@ -727,6 +772,116 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
       context,
       MaterialPageRoute(
         builder: (context) => QuestionManagementScreen(exam: exam),
+      ),
+    ).then((_) {
+      // Reload exams after returning from question upload
+      ref.read(examProvider.notifier).loadExams();
+    });
+  }
+
+  /// Get filtered exams based on selected exam type
+  List<Exam> _getFilteredExams(List<Exam> exams) {
+    if (_selectedExamType == null || _selectedExamType!.isEmpty) {
+      return exams;
+    }
+    return exams
+        .where(
+          (exam) =>
+              exam.examType?.toLowerCase() == _selectedExamType?.toLowerCase(),
+        )
+        .toList();
+  }
+
+  /// Build exam type filter widget
+  Widget _buildExamTypeFilter(List<Exam> exams) {
+    // Get unique exam types from exams
+    final examTypes = exams
+        .map((e) => e.examType?.toLowerCase())
+        .where((type) => type != null && type.isNotEmpty)
+        .toSet()
+        .toList();
+
+    // Order: kinyarwanda, english, french
+    final orderedTypes = ['kinyarwanda', 'english', 'french'];
+    final availableTypes = orderedTypes
+        .where((type) => examTypes.contains(type))
+        .toList();
+
+    if (availableTypes.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Filter by Language',
+          style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+        ),
+        SizedBox(height: 12.h),
+        Wrap(
+          spacing: 8.w,
+          runSpacing: 8.h,
+          children: [
+            // All option
+            _buildFilterChip(null, 'All', exams),
+            // Type options
+            ...availableTypes.map((type) {
+              final displayName = type[0].toUpperCase() + type.substring(1);
+              return _buildFilterChip(type, displayName, exams);
+            }).toList(),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilterChip(String? type, String label, List<Exam> exams) {
+    final isSelected = _selectedExamType == type;
+    final count = type == null
+        ? exams.length
+        : exams
+              .where(
+                (exam) => exam.examType?.toLowerCase() == type.toLowerCase(),
+              )
+              .length;
+
+    return FilterChip(
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label),
+          SizedBox(width: 4.w),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.white.withValues(alpha: 0.3)
+                  : AppColors.grey300,
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Text(
+              '$count',
+              style: TextStyle(
+                color: isSelected ? AppColors.white : AppColors.grey700,
+                fontSize: 10.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() {
+          _selectedExamType = selected ? type : null;
+        });
+      },
+      selectedColor: AppColors.primary,
+      checkmarkColor: AppColors.white,
+      labelStyle: TextStyle(
+        color: isSelected ? AppColors.white : AppColors.grey700,
+        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       ),
     );
   }

@@ -28,55 +28,57 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
               // App Logo and Title
               Expanded(
                 flex: 2,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // App Icon
-                    Container(
-                      width: 120.w,
-                      height: 120.w,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF4F46E5),
-                        borderRadius: BorderRadius.circular(24.r),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(
-                              0xFF4F46E5,
-                            ).withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // App Icon
+                      Container(
+                        width: 120.w,
+                        height: 120.w,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4F46E5),
+                          borderRadius: BorderRadius.circular(24.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(
+                                0xFF4F46E5,
+                              ).withValues(alpha: 0.3),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.school,
+                          size: 60.w,
+                          color: Colors.white,
+                        ),
                       ),
-                      child: Icon(
-                        Icons.school,
-                        size: 60.w,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 24.h),
+                      SizedBox(height: 24.h),
 
-                    // App Title
-                    Text(
-                      'Learn Traffic Rules',
-                      style: TextStyle(
-                        fontSize: 28.sp,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF1F2937),
+                      // App Title
+                      Text(
+                        'Learn Traffic Rules',
+                        style: TextStyle(
+                          fontSize: 28.sp,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF1F2937),
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 8.h),
+                      SizedBox(height: 8.h),
 
-                    // Subtitle
-                    Text(
-                      'Provisional Driving License Preparation',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        color: const Color(0xFF6B7280),
-                        fontWeight: FontWeight.w500,
+                      // Subtitle
+                      Text(
+                        'Provisional Driving License Preparation',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          color: const Color(0xFF6B7280),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 

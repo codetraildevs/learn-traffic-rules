@@ -13,6 +13,8 @@ import 'services/api_service.dart';
 import 'services/notification_service.dart';
 import 'services/simple_notification_service.dart';
 import 'services/notification_polling_service.dart';
+import 'services/exam_sync_service.dart';
+import 'services/network_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/app_provider.dart';
 import 'screens/auth/login_screen.dart';
@@ -62,6 +64,25 @@ void main() async {
     debugPrint('✅ Notification polling service started');
   } catch (e) {
     debugPrint('⚠️ Failed to start notification polling service: $e');
+  }
+
+  // Initialize offline exam sync
+  try {
+    final networkService = NetworkService();
+    final hasInternet = await networkService.hasInternetConnection();
+
+    if (hasInternet) {
+      // Download exams for offline use in background
+      final syncService = ExamSyncService();
+      syncService.downloadAllExams().catchError((e) {
+        debugPrint('⚠️ Failed to download exams on startup: $e');
+      });
+      debugPrint('✅ Offline exam sync initialized');
+    } else {
+      debugPrint('📱 No internet on startup, will use offline data');
+    }
+  } catch (e) {
+    debugPrint('⚠️ Failed to initialize offline sync: $e');
   }
 
   runApp(const ProviderScope(child: MyApp()));

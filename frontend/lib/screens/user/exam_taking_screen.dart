@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:learn_traffic_rules/core/constants/app_constants.dart';
 import 'dart:async';
@@ -8,12 +9,16 @@ import '../../core/theme/app_theme.dart';
 import '../../models/exam_model.dart';
 import '../../models/question_model.dart' as question_model;
 import '../../services/exam_service.dart';
+import '../../services/offline_exam_service.dart';
+import '../../services/exam_sync_service.dart';
+import '../../services/network_service.dart';
 import '../../services/flash_message_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../models/exam_result_model.dart';
+import '../../providers/auth_provider.dart';
 import 'exam_progress_screen.dart';
 
-class ExamTakingScreen extends StatefulWidget {
+class ExamTakingScreen extends ConsumerStatefulWidget {
   final Exam exam;
   final bool isFreeExam;
   final Function(ExamResultData)? onExamCompleted;
@@ -26,12 +31,15 @@ class ExamTakingScreen extends StatefulWidget {
   });
 
   @override
-  State<ExamTakingScreen> createState() => _ExamTakingScreenState();
+  ConsumerState<ExamTakingScreen> createState() => _ExamTakingScreenState();
 }
 
-class _ExamTakingScreenState extends State<ExamTakingScreen>
+class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
     with TickerProviderStateMixin {
   final ExamService _examService = ExamService();
+  final OfflineExamService _offlineService = OfflineExamService();
+  final ExamSyncService _syncService = ExamSyncService();
+  final NetworkService _networkService = NetworkService();
 
   // State variables
   List<question_model.Question> _questions = [];
@@ -342,14 +350,38 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
         _error = null;
       });
 
-      debugPrint('   Calling _examService.getQuestionsByExamId...');
-      final questions = await _examService.getQuestionsByExamId(widget.exam.id);
-      debugPrint('   Questions received: ${questions.length}');
+      // Check internet connection
+      final hasInternet = await _networkService.hasInternetConnection();
+
+      List<question_model.Question> questions;
+
+      if (hasInternet) {
+        // Online: Try to load from API
+        try {
+          debugPrint('🌐 Online: Loading questions from API...');
+          questions = await _examService.getQuestionsByExamId(widget.exam.id);
+          debugPrint('   Questions received: ${questions.length}');
+
+          // Save to offline storage for future use
+          await _offlineService.saveExam(widget.exam, questions);
+          debugPrint('💾 Saved exam and questions offline');
+        } catch (e) {
+          debugPrint('❌ Failed to load from API: $e');
+          // Fallback to offline data
+          questions = await _loadOfflineQuestions();
+        }
+      } else {
+        // Offline: Load from local database
+        debugPrint('📱 Offline: Loading questions from local storage...');
+        questions = await _loadOfflineQuestions();
+      }
 
       if (questions.isEmpty) {
-        debugPrint('❌ No questions received');
+        debugPrint('❌ No questions available');
         setState(() {
-          _error = 'No questions available for this exam';
+          _error = hasInternet
+              ? 'No questions available for this exam'
+              : 'No offline questions available. Please connect to internet to download exams.';
           _isLoading = false;
         });
         return;
@@ -363,7 +395,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
         _isLoading = false;
       });
 
-      debugPrint('✅ Successfully loaded questions');
+      debugPrint('✅ Successfully loaded ${questions.length} questions');
       debugPrint('   Timer set to: ${widget.exam.duration * 60} seconds');
 
       _startTimer();
@@ -376,6 +408,22 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
         _error = 'Failed to load questions: $e';
         _isLoading = false;
       });
+    }
+  }
+
+  Future<List<question_model.Question>> _loadOfflineQuestions() async {
+    try {
+      final examData = await _offlineService.getExam(widget.exam.id);
+      if (examData != null) {
+        debugPrint(
+          '📱 Loaded ${examData['questions'].length} questions from offline storage',
+        );
+        return examData['questions'] as List<question_model.Question>;
+      }
+      return [];
+    } catch (e) {
+      debugPrint('❌ Error loading offline questions: $e');
+      return [];
     }
   }
 
@@ -436,6 +484,18 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
     return ((correctAnswers / _questions.length) * 100).round();
   }
 
+  int _calculateCorrectAnswers() {
+    if (_questions.isEmpty) return 0;
+    int correctAnswers = 0;
+    for (final question in _questions) {
+      final userAnswer = _userAnswers[question.id];
+      if (userAnswer == question.correctAnswer) {
+        correctAnswers++;
+      }
+    }
+    return correctAnswers;
+  }
+
   Color _getTimerColor() {
     final percentage = _timeRemaining / (widget.exam.duration * 60);
     if (percentage > 0.5) return AppColors.success;
@@ -491,47 +551,182 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
       await _enableScreenshots();
     }
 
+    // Show loading dialog during submission
+    if (mounted) {
+      _showSubmissionLoadingDialog();
+    }
+
     try {
-      final result = await _examService.submitExamResult(
-        examId: widget.exam.id,
-        answers: _userAnswers,
-        timeSpent: (widget.exam.duration * 60) - _timeRemaining,
-        isFreeExam: widget.isFreeExam,
-      );
+      // Check internet connection
+      final hasInternet = await _networkService.hasInternetConnection();
+      final timeSpent = (widget.exam.duration * 60) - _timeRemaining;
+      final score = _calculateScore();
+      final passed = score >= widget.exam.passingScore;
+      final submissionTime = DateTime.now(); // Capture submission time
 
-      if (result.success && result.data != null) {
-        if (!mounted) return;
-        AppFlashMessage.showSuccess(
-          context,
-          'Exam Submitted Successfully!',
-          description: 'Your score: ${_calculateScore()}%',
-        );
+      ExamResultData resultData;
 
-        // Use callback if provided, otherwise navigate to progress screen
-        if (widget.onExamCompleted != null) {
-          widget.onExamCompleted!(result.data!);
-        } else {
-          // Navigate to progress screen
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ExamProgressScreen(
-                exam: widget.exam,
-                examResult: result.data!,
-                isFreeExam: widget.isFreeExam,
-              ),
-            ),
+      if (hasInternet) {
+        // Online: Submit to server
+        try {
+          debugPrint('📤 Submitting exam to server...');
+          final result = await _examService.submitExamResult(
+            examId: widget.exam.id,
+            answers: _userAnswers,
+            timeSpent: timeSpent,
+            isFreeExam: widget.isFreeExam,
           );
+
+          if (result.success && result.data != null) {
+            // Use server's submittedAt if available and valid
+            resultData = result.data!;
+
+            // Validate server timestamp - compare in UTC to avoid timezone issues
+            final nowUtc = DateTime.now().toUtc();
+            final serverTimeUtc = resultData.submittedAt.toUtc();
+            final timeDiff = serverTimeUtc.difference(nowUtc).abs();
+
+            // Server time should be within 1 hour of current time
+            // This accounts for network delay, processing time, and minor timezone differences
+            if (timeDiff > const Duration(hours: 1)) {
+              debugPrint(
+                '⚠️ Server timestamp seems incorrect, using submission time',
+              );
+              debugPrint('   Server time (UTC): $serverTimeUtc');
+              debugPrint('   Current time (UTC): $nowUtc');
+              debugPrint('   Difference: ${timeDiff.inMinutes} minutes');
+
+              resultData = ExamResultData(
+                id: resultData.id,
+                examId: resultData.examId,
+                userId: resultData.userId,
+                score: resultData.score,
+                totalQuestions: resultData.totalQuestions,
+                correctAnswers: resultData.correctAnswers,
+                timeSpent: resultData.timeSpent,
+                passed: resultData.passed,
+                isFreeExam: resultData.isFreeExam,
+                submittedAt: submissionTime,
+                questionResults: resultData.questionResults,
+                exam: resultData.exam,
+              );
+            } else {
+              debugPrint(
+                '✅ Using server timestamp: ${resultData.submittedAt} (local: ${resultData.submittedAt.toLocal()})',
+              );
+            }
+            debugPrint('✅ Exam submitted successfully to server');
+          } else {
+            // Server returned error, save offline
+            throw Exception('Server submission failed');
+          }
+        } catch (e) {
+          debugPrint('❌ Failed to submit online: $e');
+          // Fallback to offline save
+          await _offlineService.saveExamResult(
+            examId: widget.exam.id,
+            score: score.toDouble(),
+            totalQuestions: _questions.length,
+            correctAnswers: _calculateCorrectAnswers(),
+            timeSpent: timeSpent,
+            answers: _userAnswers,
+            passed: passed,
+            isFreeExam: widget.isFreeExam,
+          );
+
+          // Create result data from offline save with correct submission time
+          final authState = ref.read(authProvider);
+          final userId = authState.user?.id ?? 'offline-user';
+
+          resultData = ExamResultData(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            examId: widget.exam.id,
+            userId: userId,
+            score: score,
+            totalQuestions: _questions.length,
+            correctAnswers: _calculateCorrectAnswers(),
+            timeSpent: timeSpent,
+            passed: passed,
+            isFreeExam: widget.isFreeExam,
+            submittedAt: submissionTime, // Use captured submission time
+          );
+
+          // Try to sync in background
+          _syncService.syncExamResults().catchError((e) {
+            debugPrint('⚠️ Failed to sync results: $e');
+          });
         }
       } else {
-        if (!mounted) return;
-        AppFlashMessage.showError(
+        // Offline: Save offline
+        debugPrint('💾 Saving exam result offline...');
+        await _offlineService.saveExamResult(
+          examId: widget.exam.id,
+          score: score.toDouble(),
+          totalQuestions: _questions.length,
+          correctAnswers: _calculateCorrectAnswers(),
+          timeSpent: timeSpent,
+          answers: _userAnswers,
+          passed: passed,
+          isFreeExam: widget.isFreeExam,
+        );
+
+        // Create result data from offline save with correct submission time
+        final authState = ref.read(authProvider);
+        final userId = authState.user?.id ?? 'offline-user';
+
+        resultData = ExamResultData(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          examId: widget.exam.id,
+          userId: userId,
+          score: score,
+          totalQuestions: _questions.length,
+          correctAnswers: _calculateCorrectAnswers(),
+          timeSpent: timeSpent,
+          passed: passed,
+          isFreeExam: widget.isFreeExam,
+          submittedAt: submissionTime, // Use captured submission time
+        );
+      }
+
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+
+      if (!mounted) return;
+
+      final message = hasInternet
+          ? 'Exam Submitted Successfully!'
+          : 'Exam saved offline! Will sync when internet is available.';
+
+      AppFlashMessage.showSuccess(
+        context,
+        message,
+        description: 'Your score: $score%',
+      );
+
+      // Use callback if provided, otherwise navigate to progress screen
+      if (widget.onExamCompleted != null) {
+        widget.onExamCompleted!(resultData);
+      } else {
+        // Navigate to progress screen
+        Navigator.pushReplacement(
           context,
-          'Failed to submit exam',
-          description: result.message,
+          MaterialPageRoute(
+            builder: (context) => ExamProgressScreen(
+              exam: widget.exam,
+              examResult: resultData,
+              isFreeExam: widget.isFreeExam,
+            ),
+          ),
         );
       }
     } catch (e) {
+      // Close loading dialog if still open
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+
       if (!mounted) return;
       AppFlashMessage.showError(
         context,
@@ -543,6 +738,47 @@ class _ExamTakingScreenState extends State<ExamTakingScreen>
         _isSubmitting = false;
       });
     }
+  }
+
+  void _showSubmissionLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => PopScope(
+        canPop: false, // Prevent back button from closing
+        child: AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+              SizedBox(height: 24.h),
+              Text(
+                'Submitting Exam...',
+                style: AppTextStyles.heading3.copyWith(
+                  color: AppColors.grey800,
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                'Please wait while we process your answers.',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.grey600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                'This may take a few seconds.',
+                style: AppTextStyles.caption.copyWith(color: AppColors.grey500),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
