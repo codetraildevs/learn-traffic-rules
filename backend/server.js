@@ -364,6 +364,7 @@ app.use('/api/offline', require('./src/routes/offline'));
 app.use('/api/analytics', require('./src/routes/analytics'));
 app.use('/api/notifications', require('./src/routes/notifications'));
 app.use('/api/achievements', require('./src/routes/achievements'));
+app.use('/api/courses', require('./src/routes/courses'));
 console.log('✅ All API routes loaded');
 
 // Error handling middleware - must be after routes

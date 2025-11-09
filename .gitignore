@@ -26,11 +26,14 @@ Thumbs.db
 *.log
 logs/
 
-# Documentation (keep README files)
+# Documentation (keep README files and deployment guides)
 docs/
 documentation/
 *.md
 !README.md
+!backend/*DEPLOYMENT*.md
+!backend/*PRODUCTION*.md
+!backend/README_SEEDING.md
 
 # Backup files
 backup/
