@@ -53,30 +53,29 @@ class _EditCourseScreenState extends ConsumerState<EditCourseScreen> {
     _loadCourseContents();
   }
 
-  Future<void> _loadCourseContents() async {
-    setState(() => _isLoading = true);
-    try {
-      // Load course with contents
-      final courseService = ref.read(courseProvider.notifier);
-      // Note: This will be implemented when backend is ready
-      // For now, convert existing contents if available
-      if (widget.course.contents != null &&
-          widget.course.contents!.isNotEmpty) {
-        _courseContents = widget.course.contents!.map((content) {
-          return CourseContentItem(
-            type: content.contentType,
-            title: content.title,
-            content: content.content,
-            displayOrder: content.displayOrder,
-          );
-        }).toList();
+      Future<void> _loadCourseContents() async {
+        setState(() => _isLoading = true);
+        try {
+          // Load course with contents
+          // Note: Contents are loaded from the course model
+          // For now, convert existing contents if available
+          if (widget.course.contents != null &&
+              widget.course.contents!.isNotEmpty) {
+            _courseContents = widget.course.contents!.map((content) {
+              return CourseContentItem(
+                type: content.contentType,
+                title: content.title,
+                content: content.content,
+                displayOrder: content.displayOrder,
+              );
+            }).toList();
+          }
+        } catch (e) {
+          debugPrint('Error loading course contents: $e');
+        } finally {
+          setState(() => _isLoading = false);
+        }
       }
-    } catch (e) {
-      debugPrint('Error loading course contents: $e');
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
 
   @override
   void dispose() {

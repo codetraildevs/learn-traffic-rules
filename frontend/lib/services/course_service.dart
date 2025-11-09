@@ -22,7 +22,7 @@ class CourseService {
         throw Exception('User not authenticated');
       }
 
-      var url = Uri.parse('${AppConstants.baseUrl}/api/courses');
+      var url = Uri.parse('${AppConstants.baseUrl}/courses');
       final queryParams = <String, String>{};
 
       if (category != null) queryParams['category'] = category;
@@ -70,7 +70,7 @@ class CourseService {
         throw Exception('User not authenticated');
       }
 
-      var url = Uri.parse('${AppConstants.baseUrl}/api/courses/$courseId');
+      var url = Uri.parse('${AppConstants.baseUrl}/courses/$courseId');
       if (includeContents) {
         url = url.replace(queryParameters: {'includeContents': 'true'});
       }
@@ -109,7 +109,7 @@ class CourseService {
       }
 
       final response = await http.post(
-        Uri.parse('${AppConstants.baseUrl}/api/courses'),
+        Uri.parse('${AppConstants.baseUrl}/courses'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -146,7 +146,7 @@ class CourseService {
       }
 
       final response = await http.put(
-        Uri.parse('${AppConstants.baseUrl}/api/courses/$courseId'),
+        Uri.parse('${AppConstants.baseUrl}/courses/$courseId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -180,7 +180,7 @@ class CourseService {
       }
 
       final response = await http.delete(
-        Uri.parse('${AppConstants.baseUrl}/api/courses/$courseId'),
+        Uri.parse('${AppConstants.baseUrl}/courses/$courseId'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -201,7 +201,7 @@ class CourseService {
       }
 
       final response = await http.get(
-        Uri.parse('${AppConstants.baseUrl}/api/users/courses'),
+        Uri.parse('${AppConstants.baseUrl}/users/courses'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -234,7 +234,7 @@ class CourseService {
       }
 
       final response = await http.get(
-        Uri.parse('${AppConstants.baseUrl}/api/courses/$courseId/progress'),
+        Uri.parse('${AppConstants.baseUrl}/courses/$courseId/progress'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -271,7 +271,7 @@ class CourseService {
       }
 
       final response = await http.put(
-        Uri.parse('${AppConstants.baseUrl}/api/courses/$courseId/progress'),
+        Uri.parse('${AppConstants.baseUrl}/courses/$courseId/progress'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -293,7 +293,7 @@ class CourseService {
       }
 
       final response = await http.post(
-        Uri.parse('${AppConstants.baseUrl}/api/courses/$courseId/enroll'),
+        Uri.parse('${AppConstants.baseUrl}/courses/$courseId/enroll'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

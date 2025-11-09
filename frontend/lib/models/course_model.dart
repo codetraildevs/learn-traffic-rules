@@ -410,8 +410,9 @@ class UpdateCourseRequest {
     if (courseType != null) map['courseType'] = courseType!.name;
     if (isActive != null) map['isActive'] = isActive;
     if (courseImageUrl != null) map['courseImageUrl'] = courseImageUrl;
-    if (contents != null)
+    if (contents != null) {
       map['contents'] = contents!.map((e) => e.toJson()).toList();
+    }
     return map;
   }
 }
