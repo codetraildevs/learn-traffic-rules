@@ -40,7 +40,7 @@ class ExamController {
           
           // Ensure examType is never null - default to 'english' if missing
           if (!examData.examType) {
-            examData.examType = 'english';
+            examData.examType = 'kinyarwanda';
           }
           
           return examData;

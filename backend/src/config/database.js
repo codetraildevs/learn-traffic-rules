@@ -585,7 +585,7 @@ const addMissingExamsColumns = async (sequelize) => {
         console.log('🔄 Updating existing exams with NULL examType to default...');
         const updateResult = await sequelize.query(`
           UPDATE exams 
-          SET examType = 'english' 
+          SET examType = 'kinyarwanda' 
           WHERE examType IS NULL
         `);
         console.log(`✅ Updated ${updateResult[0].affectedRows || 0} exams with NULL examType`);
