@@ -57,14 +57,27 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
     });
 
     try {
+      print('🔄 Loading course contents for course: ${widget.course.id}');
+      print('📊 Course contentCount: ${widget.course.contentCount}');
+      
       final response = await _courseService.getCourseById(
         widget.course.id,
         includeContents: true,
       );
 
+      print('✅ API Response Success: ${response.success}');
+      print('📦 Response Data: ${response.data != null}');
+
       if (response.success && response.data != null) {
         final course = response.data!;
-        if (course.contents != null && course.contents!.isNotEmpty) {
+        print('📚 Course contents: ${course.contents != null ? course.contents!.length : 'null'}');
+        print('📊 Course contentCount: ${course.contentCount}');
+        
+        // Check if contents exist (could be empty list or null)
+        final hasContents = course.contents != null && course.contents!.isNotEmpty;
+        
+        if (hasContents) {
+          print('✅ Found ${course.contents!.length} contents, displaying...');
           setState(() {
             _contents = List<CourseContent>.from(course.contents!)
               ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
@@ -72,20 +85,32 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
           });
           _initializeVideo();
         } else {
+          // Check if contentCount indicates contents should exist
+          final expectedContents = course.contentCount != null && course.contentCount! > 0;
+          print('⚠️ No contents in response');
+          print('   - contentCount: ${course.contentCount}');
+          print('   - contents is null: ${course.contents == null}');
+          print('   - contents is empty: ${course.contents != null && course.contents!.isEmpty}');
+          
           setState(() {
             _contents = [];
             _isLoading = false;
-            _error = 'No content available for this course';
+            _error = expectedContents
+                ? 'Content exists (${course.contentCount} items) but failed to load. Please check your connection and try again.'
+                : 'No content available for this course';
           });
         }
       } else {
+        print('❌ API Error: ${response.message}');
         setState(() {
           _contents = [];
           _isLoading = false;
           _error = response.message ?? 'Failed to load course content';
         });
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ Exception loading course contents: $e');
+      print('Stack trace: $stackTrace');
       setState(() {
         _contents = [];
         _isLoading = false;

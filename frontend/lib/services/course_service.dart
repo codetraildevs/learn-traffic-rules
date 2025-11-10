@@ -85,9 +85,18 @@ class CourseService {
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
+        // Debug logging
+        print('✅ Course API Response: ${jsonData['success']}');
+        print('📦 Course Data: ${jsonData['data'] != null ? 'Present' : 'Missing'}');
+        if (jsonData['data'] != null && jsonData['data']['contents'] != null) {
+          print('📚 Contents Count: ${(jsonData['data']['contents'] as List).length}');
+        } else {
+          print('⚠️ Contents: ${jsonData['data']?['contents']}');
+        }
         return CourseResponse.fromJson(jsonData);
       } else {
         final errorData = json.decode(response.body);
+        print('❌ Course API Error: ${response.statusCode} - ${errorData['message']}');
         return CourseResponse(
           success: false,
           message: errorData['message'] ?? 'Failed to load course',
