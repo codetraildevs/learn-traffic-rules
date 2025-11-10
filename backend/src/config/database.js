@@ -419,50 +419,90 @@ const createMissingTablesOnly = async (sequelize, missingTables) => {
       }
     }
     
-    // Add foreign key constraints for course tables if they were created
-    const courseTablesCreated = missingTables.filter(table => 
-      ['courses', 'course_contents', 'course_progress', 'course_content_progress'].includes(table)
-    );
-    
-    if (courseTablesCreated.length > 0) {
-      console.log('🔄 Adding foreign key constraints for course tables...');
-      const foreignKeys = [];
+      // Add foreign key constraints for course tables if they were created
+      // Also check and add foreign keys for existing course tables
+      const courseTablesToCheck = ['courses', 'course_contents', 'course_progress', 'course_content_progress'];
+      const courseTablesExist = courseTablesToCheck.filter(table => !missingTables.includes(table));
       
-      if (missingTables.includes('course_contents')) {
-        foreignKeys.push(
-          'ALTER TABLE course_contents ADD CONSTRAINT fk_course_contents_course_id FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE'
-        );
-      }
-      
-      if (missingTables.includes('course_progress')) {
-        foreignKeys.push(
-          'ALTER TABLE course_progress ADD CONSTRAINT fk_course_progress_user_id FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE',
-          'ALTER TABLE course_progress ADD CONSTRAINT fk_course_progress_course_id FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE'
-        );
-      }
-      
-      if (missingTables.includes('course_content_progress')) {
-        foreignKeys.push(
-          'ALTER TABLE course_content_progress ADD CONSTRAINT fk_course_content_progress_user_id FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE',
-          'ALTER TABLE course_content_progress ADD CONSTRAINT fk_course_content_progress_course_id FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE',
-          'ALTER TABLE course_content_progress ADD CONSTRAINT fk_course_content_progress_content_id FOREIGN KEY (courseContentId) REFERENCES course_contents(id) ON DELETE CASCADE'
-        );
-      }
-      
-      for (const fk of foreignKeys) {
-        try {
-          await sequelize.query(fk);
-          console.log('✅ Foreign key constraint added for course tables');
-        } catch (error) {
-          if (error.message.includes('Duplicate key name') || error.message.includes('already exists') || error.message.includes('Duplicate')) {
-            console.log('⚠️  Foreign key constraint already exists, skipping');
-          } else {
-            console.log('⚠️  Foreign key constraint failed (non-critical):', error.message);
-            // Don't throw - foreign keys are nice to have but not critical for functionality
+      if (missingTables.some(table => courseTablesToCheck.includes(table)) || courseTablesExist.length > 0) {
+        console.log('🔄 Ensuring foreign key constraints exist for course tables...');
+        const foreignKeys = [];
+        
+        // Check if course_contents table exists (newly created or existing)
+        if (missingTables.includes('course_contents') || courseTablesExist.includes('course_contents')) {
+          foreignKeys.push({
+            name: 'fk_course_contents_course_id',
+            sql: 'ALTER TABLE course_contents ADD CONSTRAINT fk_course_contents_course_id FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE',
+            table: 'course_contents'
+          });
+        }
+        
+        // Check if course_progress table exists (newly created or existing)
+        if (missingTables.includes('course_progress') || courseTablesExist.includes('course_progress')) {
+          foreignKeys.push(
+            {
+              name: 'fk_course_progress_user_id',
+              sql: 'ALTER TABLE course_progress ADD CONSTRAINT fk_course_progress_user_id FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE',
+              table: 'course_progress'
+            },
+            {
+              name: 'fk_course_progress_course_id',
+              sql: 'ALTER TABLE course_progress ADD CONSTRAINT fk_course_progress_course_id FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE',
+              table: 'course_progress'
+            }
+          );
+        }
+        
+        // Check if course_content_progress table exists (newly created or existing)
+        if (missingTables.includes('course_content_progress') || courseTablesExist.includes('course_content_progress')) {
+          foreignKeys.push(
+            {
+              name: 'fk_course_content_progress_user_id',
+              sql: 'ALTER TABLE course_content_progress ADD CONSTRAINT fk_course_content_progress_user_id FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE',
+              table: 'course_content_progress'
+            },
+            {
+              name: 'fk_course_content_progress_course_id',
+              sql: 'ALTER TABLE course_content_progress ADD CONSTRAINT fk_course_content_progress_course_id FOREIGN KEY (courseId) REFERENCES courses(id) ON DELETE CASCADE',
+              table: 'course_content_progress'
+            },
+            {
+              name: 'fk_course_content_progress_content_id',
+              sql: 'ALTER TABLE course_content_progress ADD CONSTRAINT fk_course_content_progress_content_id FOREIGN KEY (courseContentId) REFERENCES course_contents(id) ON DELETE CASCADE',
+              table: 'course_content_progress'
+            }
+          );
+        }
+        
+        // Check if foreign keys exist before adding them
+        for (const fk of foreignKeys) {
+          try {
+            // Check if constraint already exists
+            const [constraints] = await sequelize.query(`
+              SELECT CONSTRAINT_NAME 
+              FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS 
+              WHERE TABLE_SCHEMA = DATABASE() 
+              AND TABLE_NAME = '${fk.table}' 
+              AND CONSTRAINT_NAME = '${fk.name}'
+            `);
+            
+            if (constraints.length === 0) {
+              // Constraint doesn't exist, add it
+              await sequelize.query(fk.sql);
+              console.log(`✅ Foreign key constraint ${fk.name} added for ${fk.table}`);
+            } else {
+              console.log(`✅ Foreign key constraint ${fk.name} already exists for ${fk.table}`);
+            }
+          } catch (error) {
+            if (error.message.includes('Duplicate key name') || error.message.includes('already exists') || error.message.includes('Duplicate')) {
+              console.log(`⚠️  Foreign key constraint ${fk.name} already exists, skipping`);
+            } else {
+              console.log(`⚠️  Foreign key constraint ${fk.name} failed (non-critical):`, error.message);
+              // Don't throw - foreign keys are nice to have but not critical for functionality
+            }
           }
         }
       }
-    }
     
     console.log('✅ Missing tables creation completed');
   } catch (error) {
