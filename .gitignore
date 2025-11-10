@@ -34,6 +34,7 @@ documentation/
 !backend/*DEPLOYMENT*.md
 !backend/*PRODUCTION*.md
 !backend/README_SEEDING.md
+!backend/README_COURSE_CONTENT_SEEDING.md
 
 # Backup files
 backup/
