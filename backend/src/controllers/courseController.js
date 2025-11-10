@@ -25,21 +25,9 @@ class CourseController {
       if (courseType) whereClause.courseType = courseType.toLowerCase();
       if (isActive !== undefined) whereClause.isActive = isActive === 'true';
 
-      // Only include contents if explicitly requested (to reduce payload size)
-      const includeOptions = includeContents === 'true' ? [
-        {
-          model: CourseContent,
-          as: 'contents',
-          required: false,
-          separate: true,
-          order: [['displayOrder', 'ASC']]
-        }
-      ] : [];
-
       const courses = await Course.findAll({
         where: whereClause,
-        order: [['createdAt', 'DESC']],
-        include: includeOptions
+        order: [['createdAt', 'DESC']]
       });
 
       // Get content counts and format courses
@@ -66,33 +54,45 @@ class CourseController {
             }
           }
 
-          // Sort contents by displayOrder
-          if (courseData.contents) {
-            courseData.contents.sort((a, b) => a.displayOrder - b.displayOrder);
-          }
+          // Fetch contents if explicitly requested
+          if (includeContents === 'true') {
+            try {
+              const contents = await CourseContent.findAll({
+                where: { courseId: course.id },
+                order: [['displayOrder', 'ASC']]
+              });
 
-          // Convert content URLs to full URLs
-          if (courseData.contents) {
-            courseData.contents = courseData.contents.map(content => {
-              if (content.contentType !== 'text' && content.contentType !== 'link') {
-                if (content.content && !content.content.startsWith('http')) {
-                  if (content.content.startsWith('/uploads/')) {
-                    content.content = `${baseUrl}${content.content}`;
-                  } else if (content.content.startsWith('uploads/')) {
-                    content.content = `${baseUrl}/${content.content}`;
-                  } else if (!content.content.includes('/')) {
-                    // If it's just a filename, prepend the default upload path based on content type
-                    const uploadPath = content.contentType === 'image' 
-                      ? '/uploads/course-images/' 
-                      : content.contentType === 'video' 
-                        ? '/uploads/course-videos/' 
-                        : '/uploads/course-audio/';
-                    content.content = `${baseUrl}${uploadPath}${content.content}`;
+              // Convert contents to JSON and process URLs
+              courseData.contents = contents.map(content => {
+                const contentData = content.toJSON();
+                
+                // Convert content URLs to full URLs for images, videos, and audio
+                if (contentData.contentType !== 'text' && contentData.contentType !== 'link') {
+                  if (contentData.content && !contentData.content.startsWith('http')) {
+                    if (contentData.content.startsWith('/uploads/')) {
+                      contentData.content = `${baseUrl}${contentData.content}`;
+                    } else if (contentData.content.startsWith('uploads/')) {
+                      contentData.content = `${baseUrl}/${contentData.content}`;
+                    } else if (!contentData.content.includes('/')) {
+                      // If it's just a filename, prepend the default upload path based on content type
+                      const uploadPath = contentData.contentType === 'image' 
+                        ? '/uploads/course-images/' 
+                        : contentData.contentType === 'video' 
+                          ? '/uploads/course-videos/' 
+                          : '/uploads/course-audio/';
+                      contentData.content = `${baseUrl}${uploadPath}${contentData.content}`;
+                    }
                   }
                 }
-              }
-              return content;
-            });
+                return contentData;
+              });
+            } catch (contentError) {
+              console.error(`Error fetching contents for course ${course.id}:`, contentError);
+              courseData.contents = [];
+            }
+          } else {
+            // If contents were not requested, set to empty array
+            courseData.contents = [];
           }
 
           return courseData;
@@ -125,20 +125,7 @@ class CourseController {
       const { includeContents } = req.query;
       const userId = req.user?.userId;
 
-      // Only include contents if explicitly requested
-      const includeOptions = includeContents === 'true' ? [
-        {
-          model: CourseContent,
-          as: 'contents',
-          required: false,
-          separate: true,
-          order: [['displayOrder', 'ASC']]
-        }
-      ] : [];
-
-      const course = await Course.findByPk(id, {
-        include: includeOptions
-      });
+      const course = await Course.findByPk(id);
 
       if (!course) {
         return res.status(404).json({
@@ -168,34 +155,48 @@ class CourseController {
         }
       }
 
-      // Only process contents if they were included
-      if (courseData.contents && courseData.contents.length > 0) {
-        // Sort contents by displayOrder
-        courseData.contents.sort((a, b) => a.displayOrder - b.displayOrder);
+      // Fetch contents if explicitly requested
+      if (includeContents === 'true') {
+        try {
+          // Manually fetch contents to ensure they're always included
+          const contents = await CourseContent.findAll({
+            where: { courseId: course.id },
+            order: [['displayOrder', 'ASC']]
+          });
 
-        // Convert content URLs to full URLs
-        courseData.contents = courseData.contents.map(content => {
-          if (content.contentType !== 'text' && content.contentType !== 'link') {
-            if (content.content && !content.content.startsWith('http')) {
-              if (content.content.startsWith('/uploads/')) {
-                content.content = `${baseUrl}${content.content}`;
-              } else if (content.content.startsWith('uploads/')) {
-                content.content = `${baseUrl}/${content.content}`;
-              } else if (!content.content.includes('/')) {
-                // If it's just a filename, prepend the default upload path based on content type
-                const uploadPath = content.contentType === 'image' 
-                  ? '/uploads/course-images/' 
-                  : content.contentType === 'video' 
-                    ? '/uploads/course-videos/' 
-                    : '/uploads/course-audio/';
-                content.content = `${baseUrl}${uploadPath}${content.content}`;
+          // Convert contents to JSON and process URLs
+          courseData.contents = contents.map(content => {
+            const contentData = content.toJSON();
+            
+            // Convert content URLs to full URLs for images, videos, and audio
+            if (contentData.contentType !== 'text' && contentData.contentType !== 'link') {
+              if (contentData.content && !contentData.content.startsWith('http')) {
+                if (contentData.content.startsWith('/uploads/')) {
+                  contentData.content = `${baseUrl}${contentData.content}`;
+                } else if (contentData.content.startsWith('uploads/')) {
+                  contentData.content = `${baseUrl}/${contentData.content}`;
+                } else if (!contentData.content.includes('/')) {
+                  // If it's just a filename, prepend the default upload path based on content type
+                  const uploadPath = contentData.contentType === 'image' 
+                    ? '/uploads/course-images/' 
+                    : contentData.contentType === 'video' 
+                      ? '/uploads/course-videos/' 
+                      : '/uploads/course-audio/';
+                  contentData.content = `${baseUrl}${uploadPath}${contentData.content}`;
+                }
               }
             }
-          }
-          return content;
-        });
+            return contentData;
+          });
+
+          console.log(`✅ Fetched ${courseData.contents.length} contents for course ${id}`);
+        } catch (contentError) {
+          console.error('Error fetching course contents:', contentError);
+          // If contents fetch fails, set to empty array but don't fail the request
+          courseData.contents = [];
+        }
       } else {
-        // If contents were not included, set to empty array
+        // If contents were not requested, set to empty array
         courseData.contents = [];
       }
 
