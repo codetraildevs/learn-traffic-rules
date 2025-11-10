@@ -3,6 +3,7 @@ const router = express.Router();
 const { body } = require('express-validator');
 const courseController = require('../controllers/courseController');
 const { authenticateToken } = require('../middleware/authMiddleware');
+const { uploadCourseContentFile, uploadCourseImage } = require('../middleware/upload');
 
 /**
  * @swagger
@@ -283,6 +284,226 @@ router.post(
   '/:courseId/content/:contentId/complete',
   authenticateToken,
   (req, res) => courseController.markContentComplete(req, res)
+);
+
+/**
+ * @swagger
+ * /api/courses/{courseId}/contents:
+ *   post:
+ *     summary: Create course content (Admin only)
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Course ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - contentType
+ *               - content
+ *             properties:
+ *               contentType:
+ *                 type: string
+ *                 enum: [text, image, audio, video, link]
+ *               content:
+ *                 type: string
+ *               title:
+ *                 type: string
+ *               displayOrder:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Course content created successfully
+ *       400:
+ *         description: Validation failed
+ *       404:
+ *         description: Course not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post(
+  '/:courseId/contents',
+  authenticateToken,
+  [
+    body('contentType').isIn(['text', 'image', 'audio', 'video', 'link']).withMessage('Invalid content type'),
+    body('content').notEmpty().withMessage('Content is required')
+  ],
+  (req, res) => courseController.createCourseContent(req, res)
+);
+
+/**
+ * @swagger
+ * /api/courses/{courseId}/contents/{contentId}:
+ *   put:
+ *     summary: Update course content (Admin only)
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Course ID
+ *       - in: path
+ *         name: contentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Content ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               contentType:
+ *                 type: string
+ *                 enum: [text, image, audio, video, link]
+ *               content:
+ *                 type: string
+ *               title:
+ *                 type: string
+ *               displayOrder:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Course content updated successfully
+ *       404:
+ *         description: Course or content not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put(
+  '/:courseId/contents/:contentId',
+  authenticateToken,
+  [
+    body('contentType').optional().isIn(['text', 'image', 'audio', 'video', 'link']).withMessage('Invalid content type')
+  ],
+  (req, res) => courseController.updateCourseContent(req, res)
+);
+
+/**
+ * @swagger
+ * /api/courses/{courseId}/contents/{contentId}:
+ *   delete:
+ *     summary: Delete course content (Admin only)
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Course ID
+ *       - in: path
+ *         name: contentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Content ID
+ *     responses:
+ *       200:
+ *         description: Course content deleted successfully
+ *       404:
+ *         description: Course or content not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete(
+  '/:courseId/contents/:contentId',
+  authenticateToken,
+  (req, res) => courseController.deleteCourseContent(req, res)
+);
+
+/**
+ * @swagger
+ * /api/courses/upload-content-file:
+ *   post:
+ *     summary: Upload course content file (image, audio, video) (Admin only)
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *               - contentType
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: File to upload
+ *               contentType:
+ *                 type: string
+ *                 enum: [image, audio, video]
+ *                 description: Type of content file
+ *     responses:
+ *       200:
+ *         description: File uploaded successfully
+ *       400:
+ *         description: No file uploaded or invalid contentType
+ *       500:
+ *         description: Internal server error
+ */
+router.post(
+  '/upload-content-file',
+  authenticateToken,
+  uploadCourseContentFile,
+  (req, res) => courseController.uploadCourseContentFile(req, res)
+);
+
+/**
+ * @swagger
+ * /api/courses/upload-image:
+ *   post:
+ *     summary: Upload course image (Admin only)
+ *     tags: [Courses]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - image
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Course image to upload
+ *     responses:
+ *       200:
+ *         description: Image uploaded successfully
+ *       400:
+ *         description: No file uploaded
+ *       500:
+ *         description: Internal server error
+ */
+router.post(
+  '/upload-image',
+  authenticateToken,
+  uploadCourseImage,
+  (req, res) => courseController.uploadCourseImage(req, res)
 );
 
 module.exports = router;

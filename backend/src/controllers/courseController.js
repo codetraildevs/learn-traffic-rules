@@ -822,6 +822,251 @@ class CourseController {
       });
     }
   }
+
+  /**
+   * Create course content
+   */
+  async createCourseContent(req, res) {
+    try {
+      const { courseId } = req.params;
+      const { contentType, content, title, displayOrder } = req.body;
+
+      // Validate required fields
+      if (!contentType || !content) {
+        return res.status(400).json({
+          success: false,
+          message: 'contentType and content are required'
+        });
+      }
+
+      // Check if course exists
+      const course = await Course.findByPk(courseId);
+      if (!course) {
+        return res.status(404).json({
+          success: false,
+          message: 'Course not found'
+        });
+      }
+
+      // Create course content
+      const courseContent = await CourseContent.create({
+        id: uuidv4(),
+        courseId,
+        contentType,
+        content,
+        title: title || null,
+        displayOrder: displayOrder !== undefined ? displayOrder : 0
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Course content created successfully',
+        data: courseContent.toJSON()
+      });
+    } catch (error) {
+      console.error('Create course content error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  /**
+   * Update course content
+   */
+  async updateCourseContent(req, res) {
+    try {
+      const { courseId, contentId } = req.params;
+      const { contentType, content, title, displayOrder } = req.body;
+
+      // Check if course exists
+      const course = await Course.findByPk(courseId);
+      if (!course) {
+        return res.status(404).json({
+          success: false,
+          message: 'Course not found'
+        });
+      }
+
+      // Find course content
+      const courseContent = await CourseContent.findOne({
+        where: { id: contentId, courseId }
+      });
+
+      if (!courseContent) {
+        return res.status(404).json({
+          success: false,
+          message: 'Course content not found'
+        });
+      }
+
+      // Update course content
+      if (contentType !== undefined) courseContent.contentType = contentType;
+      if (content !== undefined) courseContent.content = content;
+      if (title !== undefined) courseContent.title = title || null;
+      if (displayOrder !== undefined) courseContent.displayOrder = displayOrder;
+
+      await courseContent.save();
+
+      res.json({
+        success: true,
+        message: 'Course content updated successfully',
+        data: courseContent.toJSON()
+      });
+    } catch (error) {
+      console.error('Update course content error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  /**
+   * Delete course content
+   */
+  async deleteCourseContent(req, res) {
+    try {
+      const { courseId, contentId } = req.params;
+
+      // Check if course exists
+      const course = await Course.findByPk(courseId);
+      if (!course) {
+        return res.status(404).json({
+          success: false,
+          message: 'Course not found'
+        });
+      }
+
+      // Find and delete course content
+      const courseContent = await CourseContent.findOne({
+        where: { id: contentId, courseId }
+      });
+
+      if (!courseContent) {
+        return res.status(404).json({
+          success: false,
+          message: 'Course content not found'
+        });
+      }
+
+      await courseContent.destroy();
+
+      res.json({
+        success: true,
+        message: 'Course content deleted successfully'
+      });
+    } catch (error) {
+      console.error('Delete course content error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  /**
+   * Upload course content file (image, audio, video)
+   */
+  async uploadCourseContentFile(req, res) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: 'No file uploaded'
+        });
+      }
+
+      const { contentType } = req.body;
+      if (!contentType) {
+        return res.status(400).json({
+          success: false,
+          message: 'contentType is required (image, audio, or video)'
+        });
+      }
+
+      // Determine upload directory based on contentType
+      let uploadDir = 'uploads/courses/';
+      if (contentType === 'image') {
+        uploadDir = 'uploads/courses/images/';
+      } else if (contentType === 'audio') {
+        uploadDir = 'uploads/courses/audio/';
+      } else if (contentType === 'video') {
+        uploadDir = 'uploads/courses/video/';
+      }
+
+      // Build file URL
+      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+      const fileUrl = `${baseUrl}/${uploadDir}${req.file.filename}`;
+
+      // Return relative path for storage in database
+      const relativePath = `/${uploadDir}${req.file.filename}`;
+
+      console.log('📤 COURSE CONTENT FILE UPLOAD: File uploaded successfully');
+      console.log('   Content type:', contentType);
+      console.log('   Filename:', req.file.filename);
+      console.log('   File URL:', fileUrl);
+      console.log('   Relative path:', relativePath);
+
+      res.json({
+        success: true,
+        message: 'File uploaded successfully',
+        fileUrl: relativePath, // Return relative path so frontend can use it with baseUrl
+        fullUrl: fileUrl
+      });
+    } catch (error) {
+      console.error('Upload course content file error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error uploading file',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  /**
+   * Upload course image
+   */
+  async uploadCourseImage(req, res) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: 'No file uploaded'
+        });
+      }
+
+      // Build file URL
+      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+      const fileUrl = `${baseUrl}/uploads/courses/images/${req.file.filename}`;
+
+      // Return relative path for storage in database
+      const relativePath = `/uploads/courses/images/${req.file.filename}`;
+
+      console.log('📤 COURSE IMAGE UPLOAD: Image uploaded successfully');
+      console.log('   Filename:', req.file.filename);
+      console.log('   Image URL:', fileUrl);
+      console.log('   Relative path:', relativePath);
+
+      res.json({
+        success: true,
+        message: 'Course image uploaded successfully',
+        imageUrl: relativePath, // Return relative path so frontend can use it with baseUrl
+        fullUrl: fileUrl
+      });
+    } catch (error) {
+      console.error('Upload course image error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error uploading image',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
 }
 
 module.exports = new CourseController();
