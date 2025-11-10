@@ -19,8 +19,8 @@ const storage = multer.diskStorage({
       } else {
         cb(null, 'uploads/courses/');
       }
-    } else if (file.fieldname === 'image' && req.route?.path?.includes('course')) {
-      // Course image upload
+    } else if (file.fieldname === 'image' && req.originalUrl && req.originalUrl.includes('/courses/upload-image')) {
+      // Course image upload (from /api/courses/upload-image route)
       cb(null, 'uploads/courses/images/');
     } else {
       cb(null, 'uploads/');
