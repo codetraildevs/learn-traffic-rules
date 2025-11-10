@@ -18,6 +18,7 @@ import '../../models/course_model.dart';
 import '../admin/exam_management_screen.dart';
 import '../admin/user_management_screen.dart';
 import '../admin/access_code_management_screen.dart';
+import '../admin/course_management_screen.dart';
 import '../user/available_exams_screen.dart';
 import '../user/course_list_screen.dart';
 import '../user/course_detail_screen.dart';
@@ -758,7 +759,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
             SizedBox(width: 12.w),
             Expanded(
-              child: Container(), // Empty space for alignment
+              child: _buildAdminActionCard(
+                'Manage Courses',
+                'Create, edit, and manage courses',
+                Icons.school,
+                AppColors.secondary,
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CourseManagementScreen(),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -974,18 +986,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           children: [
             Text(
               'Courses',
-              style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+              style: AppTextStyles.heading3.copyWith(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CourseListScreen(),
-                  ),
-                );
-              },
-              child: const Text('View All'),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Text(
+                'View All',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.white,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
@@ -1037,7 +1056,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               itemBuilder: (context, index) {
                 final course = courseState.courses[index];
                 return Container(
-                  width: 280.w,
+                  width: 200.w,
                   margin: EdgeInsets.only(right: 12.w),
                   child: _buildCourseCard(course),
                 );
@@ -1049,9 +1068,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildCourseCard(Course course) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.grey200, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -1064,49 +1093,73 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         borderRadius: BorderRadius.circular(16.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            if (course.courseImageUrl != null &&
-                course.courseImageUrl!.isNotEmpty)
-              ClipRRect(
+            // Course Image or Placeholder
+            Container(
+              height: 100.h,
+              width: double.infinity,
+              decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(16.r),
                   topRight: Radius.circular(16.r),
                 ),
-                child: Image.network(
-                  course.courseImageUrl!.startsWith('http')
-                      ? course.courseImageUrl!
-                      : '${AppConstants.baseUrlImage}${course.courseImageUrl}',
-                  height: 120.h,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 120.h,
-                      color: AppColors.grey200,
+                color: AppColors.grey100,
+              ),
+              child:
+                  course.courseImageUrl != null &&
+                      course.courseImageUrl!.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(16.r),
+                        topRight: Radius.circular(16.r),
+                      ),
+                      child: Image.network(
+                        course.courseImageUrl!.startsWith('http')
+                            ? course.courseImageUrl!
+                            : '${AppConstants.baseUrlImage}${course.courseImageUrl}',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: AppColors.grey100,
+                            child: Center(
+                              child: Icon(
+                                Icons.school_outlined,
+                                size: 32.sp,
+                                color: AppColors.grey400,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  : Center(
                       child: Icon(
-                        Icons.school,
+                        Icons.school_outlined,
                         size: 32.sp,
                         color: AppColors.grey400,
                       ),
-                    );
-                  },
-                ),
-              ),
+                    ),
+            ),
             Padding(
               padding: EdgeInsets.all(12.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     course.title,
                     style: AppTextStyles.bodyMedium.copyWith(
                       fontWeight: FontWeight.bold,
+                      fontSize: 14.sp,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 8.h),
-                  Row(
+                  SizedBox(height: 6.h),
+                  Wrap(
+                    spacing: 6.w,
+                    runSpacing: 4.h,
                     children: [
                       Container(
                         padding: EdgeInsets.symmetric(
@@ -1129,7 +1182,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           ),
                         ),
                       ),
-                      SizedBox(width: 8.w),
                       Text(
                         '${course.contentCount ?? 0} lessons',
                         style: AppTextStyles.caption.copyWith(

@@ -8,6 +8,7 @@ import '../../services/course_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
 import 'course_detail_screen.dart';
+import 'payment_instructions_screen.dart';
 
 class CourseListScreen extends ConsumerStatefulWidget {
   const CourseListScreen({super.key});
@@ -85,7 +86,9 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
         title: const Text('Courses'),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
-        elevation: 0,
+        actions: [
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadCourses),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _loadCourses,
@@ -95,31 +98,24 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
             ? _buildErrorView()
             : _filteredCourses.isEmpty
             ? _buildEmptyView()
-            : CustomScrollView(
+            : SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  // Filter Section
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.all(16.w),
-                      child: _buildFilterSection(),
+                padding: EdgeInsets.all(16.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Filter Section
+                    _buildFilterSection(),
+                    SizedBox(height: 16.h),
+                    // Courses List
+                    ..._filteredCourses.map(
+                      (course) => Padding(
+                        padding: EdgeInsets.only(bottom: 16.h),
+                        child: _buildCourseCard(course, hasAccess),
+                      ),
                     ),
-                  ),
-
-                  // Courses List
-                  SliverPadding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        final course = _filteredCourses[index];
-                        return _buildCourseCard(course, hasAccess);
-                      }, childCount: _filteredCourses.length),
-                    ),
-                  ),
-
-                  // Bottom Padding
-                  SliverToBoxAdapter(child: SizedBox(height: 24.h)),
-                ],
+                  ],
+                ),
               ),
       ),
     );
@@ -131,7 +127,13 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: AppColors.grey200, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -141,11 +143,12 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
               selected: _selectedCourseType == null,
               onSelected: (selected) {
                 setState(() {
-                  _selectedCourseType = selected ? null : null;
+                  _selectedCourseType = null;
                 });
                 _applyFilter();
               },
               selectedColor: AppColors.primary.withValues(alpha: 0.2),
+              checkmarkColor: AppColors.primary,
             ),
           ),
           SizedBox(width: 8.w),
@@ -160,6 +163,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
                 _applyFilter();
               },
               selectedColor: AppColors.success.withValues(alpha: 0.2),
+              checkmarkColor: AppColors.success,
             ),
           ),
           SizedBox(width: 8.w),
@@ -174,6 +178,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
                 _applyFilter();
               },
               selectedColor: AppColors.warning.withValues(alpha: 0.2),
+              checkmarkColor: AppColors.warning,
             ),
           ),
         ],
@@ -182,12 +187,21 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
   }
 
   Widget _buildCourseCard(Course course, bool hasAccess) {
+    // Global payment: if user has access, they can access all paid courses
     final canAccess = course.isFree || hasAccess;
 
-    return Card(
-      margin: EdgeInsets.only(bottom: 16.h),
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -201,34 +215,52 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Course Image
-            if (course.courseImageUrl != null &&
-                course.courseImageUrl!.isNotEmpty)
-              ClipRRect(
+            // Course Image or Placeholder
+            Container(
+              height: 180.h,
+              width: double.infinity,
+              decoration: BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(16.r),
                   topRight: Radius.circular(16.r),
                 ),
-                child: Image.network(
-                  course.courseImageUrl!.startsWith('http')
-                      ? course.courseImageUrl!
-                      : '${AppConstants.baseUrlImage}${course.courseImageUrl}',
-                  height: 200.h,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 200.h,
-                      color: AppColors.grey200,
+                color: AppColors.grey100,
+              ),
+              child:
+                  course.courseImageUrl != null &&
+                      course.courseImageUrl!.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(16.r),
+                        topRight: Radius.circular(16.r),
+                      ),
+                      child: Image.network(
+                        course.courseImageUrl!.startsWith('http')
+                            ? course.courseImageUrl!
+                            : '${AppConstants.baseUrlImage}${course.courseImageUrl}',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: AppColors.grey100,
+                            child: Center(
+                              child: Icon(
+                                Icons.school_outlined,
+                                size: 48.sp,
+                                color: AppColors.grey400,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  : Center(
                       child: Icon(
-                        Icons.school,
+                        Icons.school_outlined,
                         size: 48.sp,
                         color: AppColors.grey400,
                       ),
-                    );
-                  },
-                ),
-              ),
+                    ),
+            ),
 
             // Course Info
             Padding(
@@ -242,11 +274,12 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
                         child: Text(
                           course.title,
                           style: AppTextStyles.heading3.copyWith(
-                            fontSize: 20.sp,
+                            fontSize: 18.sp,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
+                      SizedBox(width: 8.w),
                       Container(
                         padding: EdgeInsets.symmetric(
                           horizontal: 8.w,
@@ -270,6 +303,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
                                 ? AppColors.success
                                 : AppColors.warning,
                             fontWeight: FontWeight.bold,
+                            fontSize: 11.sp,
                           ),
                         ),
                       ),
@@ -322,8 +356,15 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
                           ),
                         );
                       } else {
-                        // Show payment instructions
-                        // Navigator.push to payment screen
+                        // Navigate to payment instructions for global access
+                        // Once user pays, they get access to ALL paid courses
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const PaymentInstructionsScreen(),
+                          ),
+                        );
                       }
                     },
                     backgroundColor: canAccess
