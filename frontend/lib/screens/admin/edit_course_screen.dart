@@ -1,13 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../../models/course_model.dart';
 import '../../providers/course_provider.dart';
 import '../../services/flash_message_service.dart';
+import '../../services/course_file_upload_service.dart';
 import '../../widgets/custom_button.dart';
-import 'create_course_screen.dart' show CourseContentItem;
 
 class EditCourseScreen extends ConsumerStatefulWidget {
   final Course course;
@@ -28,8 +30,9 @@ class _EditCourseScreenState extends ConsumerState<EditCourseScreen> {
   late String _selectedDifficulty;
   late CourseType _selectedCourseType;
   late bool _isActive;
+  File? _selectedImageFile;
+  bool _isUploadingImage = false;
 
-  List<CourseContentItem> _courseContents = [];
   bool _isSubmitting = false;
   bool _isLoading = true;
 
@@ -49,33 +52,68 @@ class _EditCourseScreenState extends ConsumerState<EditCourseScreen> {
     _selectedDifficulty = widget.course.difficulty;
     _selectedCourseType = widget.course.courseType;
     _isActive = widget.course.isActive;
-
-    _loadCourseContents();
   }
 
-      Future<void> _loadCourseContents() async {
-        setState(() => _isLoading = true);
-        try {
-          // Load course with contents
-          // Note: Contents are loaded from the course model
-          // For now, convert existing contents if available
-          if (widget.course.contents != null &&
-              widget.course.contents!.isNotEmpty) {
-            _courseContents = widget.course.contents!.map((content) {
-              return CourseContentItem(
-                type: content.contentType,
-                title: content.title,
-                content: content.content,
-                displayOrder: content.displayOrder,
-              );
-            }).toList();
-          }
-        } catch (e) {
-          debugPrint('Error loading course contents: $e');
-        } finally {
-          setState(() => _isLoading = false);
+  Future<void> _pickCourseImage() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+
+      if (result != null &&
+          result.files.isNotEmpty &&
+          result.files.single.path != null) {
+        setState(() {
+          _selectedImageFile = File(result.files.single.path!);
+        });
+        await _uploadCourseImage();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppFlashMessage.showError(context, 'Error picking image: $e');
+      }
+    }
+  }
+
+  Future<void> _uploadCourseImage() async {
+    if (_selectedImageFile == null) return;
+
+    setState(() => _isUploadingImage = true);
+
+    try {
+      final uploadService = CourseFileUploadService();
+      final fileUrl = await uploadService.uploadCourseImage(
+        _selectedImageFile!,
+      );
+
+      if (fileUrl != null) {
+        // Extract relative path from full URL if needed
+        if (fileUrl.startsWith(AppConstants.baseUrlImage)) {
+          setState(() {
+            _courseImageUrlController.text = fileUrl.replaceFirst(
+              AppConstants.baseUrlImage,
+              '',
+            );
+          });
+        } else {
+          setState(() {
+            _courseImageUrlController.text = fileUrl;
+          });
+        }
+      } else {
+        if (mounted) {
+          AppFlashMessage.showError(context, 'Failed to upload image');
         }
       }
+    } catch (e) {
+      if (mounted) {
+        AppFlashMessage.showError(context, 'Error uploading image: $e');
+      }
+    } finally {
+      setState(() => _isUploadingImage = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -184,13 +222,10 @@ class _EditCourseScreenState extends ConsumerState<EditCourseScreen> {
 
               SizedBox(height: 16.h),
 
-              // Course Image URL
-              _buildTextField(
-                controller: _courseImageUrlController,
-                label: 'Course Image URL',
-                hint: 'course1.png',
-                prefixText: AppConstants.baseUrlImage,
-              ),
+              // Course Image (Optional)
+              _buildSectionTitle('Course Image (Optional)'),
+              SizedBox(height: 12.h),
+              _buildCourseImageField(),
 
               SizedBox(height: 24.h),
 
@@ -248,37 +283,6 @@ class _EditCourseScreenState extends ConsumerState<EditCourseScreen> {
                 activeColor: AppColors.primary,
               ),
 
-              SizedBox(height: 24.h),
-
-              // Course Content
-              _buildSectionTitle('Course Content'),
-              SizedBox(height: 12.h),
-              Text(
-                'Add or edit content. Text is required, other types are optional.',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.grey600,
-                ),
-              ),
-              SizedBox(height: 16.h),
-
-              // Content List
-              ..._courseContents.asMap().entries.map((entry) {
-                final index = entry.key;
-                final content = entry.value;
-                return _buildContentItemCard(content, index);
-              }),
-
-              SizedBox(height: 16.h),
-
-              // Add Content Button
-              CustomButton(
-                text: 'Add Content',
-                onPressed: _showAddContentDialog,
-                backgroundColor: AppColors.primary,
-                textColor: AppColors.white,
-                width: double.infinity,
-              ),
-
               SizedBox(height: 32.h),
 
               // Update Button
@@ -328,6 +332,117 @@ class _EditCourseScreenState extends ConsumerState<EditCourseScreen> {
         filled: true,
         fillColor: AppColors.white,
       ),
+    );
+  }
+
+  Widget _buildCourseImageField() {
+    final currentImageUrl = _courseImageUrlController.text;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: AppColors.grey200),
+          ),
+          child: Column(
+            children: [
+              if (_selectedImageFile != null) ...[
+                Container(
+                  height: 200.h,
+                  decoration: BoxDecoration(
+                    color: AppColors.grey100,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(color: AppColors.grey200),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12.r),
+                    child: Image.file(_selectedImageFile!, fit: BoxFit.cover),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+              ] else if (currentImageUrl.isNotEmpty) ...[
+                Container(
+                  height: 200.h,
+                  decoration: BoxDecoration(
+                    color: AppColors.grey100,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(color: AppColors.grey200),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12.r),
+                    child: Image.network(
+                      '${AppConstants.baseUrlImage}$currentImageUrl',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Icon(
+                            Icons.broken_image,
+                            size: 48.sp,
+                            color: AppColors.grey400,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12.h),
+              ],
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomButton(
+                      text: _isUploadingImage
+                          ? 'Uploading...'
+                          : _selectedImageFile != null
+                          ? 'Change Image'
+                          : 'Pick Image',
+                      onPressed: _isUploadingImage ? null : _pickCourseImage,
+                      backgroundColor: AppColors.secondary,
+                      textColor: AppColors.white,
+                      icon: Icons.image,
+                    ),
+                  ),
+                  if ((_selectedImageFile != null ||
+                          currentImageUrl.isNotEmpty) &&
+                      !_isUploadingImage) ...[
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: CustomButton(
+                        text: 'Remove',
+                        onPressed: () {
+                          setState(() {
+                            _selectedImageFile = null;
+                            _courseImageUrlController.clear();
+                          });
+                        },
+                        backgroundColor: AppColors.grey400,
+                        textColor: AppColors.white,
+                        icon: Icons.delete,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              SizedBox(height: 12.h),
+              TextFormField(
+                controller: _courseImageUrlController,
+                decoration: InputDecoration(
+                  labelText: 'Or enter image URL/path',
+                  hintText: '/uploads/courses/images/course1.png',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  filled: true,
+                  fillColor: AppColors.grey50,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -395,273 +510,14 @@ class _EditCourseScreenState extends ConsumerState<EditCourseScreen> {
     );
   }
 
-  Widget _buildContentItemCard(CourseContentItem content, int index) {
-    return Card(
-      margin: EdgeInsets.only(bottom: 12.h),
-      child: ListTile(
-        leading: Icon(
-          _getContentTypeIcon(content.type),
-          color: _getContentTypeColor(content.type),
-        ),
-        title: Text(
-          content.title ?? content.type.displayName,
-          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          _getContentPreview(content),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () => _editContentItem(index),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete, color: AppColors.error),
-              onPressed: () => _removeContentItem(index),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  IconData _getContentTypeIcon(CourseContentType type) {
-    switch (type) {
-      case CourseContentType.text:
-        return Icons.article;
-      case CourseContentType.image:
-        return Icons.image;
-      case CourseContentType.audio:
-        return Icons.audiotrack;
-      case CourseContentType.video:
-        return Icons.video_library;
-      case CourseContentType.link:
-        return Icons.link;
-    }
-  }
-
-  Color _getContentTypeColor(CourseContentType type) {
-    switch (type) {
-      case CourseContentType.text:
-        return AppColors.primary;
-      case CourseContentType.image:
-        return AppColors.secondary;
-      case CourseContentType.audio:
-        return AppColors.warning;
-      case CourseContentType.video:
-        return AppColors.error;
-      case CourseContentType.link:
-        return AppColors.info;
-    }
-  }
-
-  String _getContentPreview(CourseContentItem content) {
-    if (content.type == CourseContentType.text) {
-      return content.content.length > 50
-          ? '${content.content.substring(0, 50)}...'
-          : content.content;
-    }
-    return content.content;
-  }
-
-  void _showAddContentDialog() {
-    _showContentDialog();
-  }
-
-  void _editContentItem(int index) {
-    _showContentDialog(editIndex: index);
-  }
-
-  void _showContentDialog({int? editIndex}) {
-    final isEditing = editIndex != null;
-    final content = isEditing ? _courseContents[editIndex] : null;
-
-    final titleController = TextEditingController(text: content?.title ?? '');
-    final contentController = TextEditingController(
-      text: content?.content ?? '',
-    );
-    CourseContentType selectedType = content?.type ?? CourseContentType.text;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(isEditing ? 'Edit Content' : 'Add Content'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Content Type
-                DropdownButtonFormField<CourseContentType>(
-                  value: selectedType,
-                  decoration: InputDecoration(
-                    labelText: 'Content Type',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                  ),
-                  items: CourseContentType.values.map((type) {
-                    return DropdownMenuItem(
-                      value: type,
-                      child: Text(type.displayName),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setDialogState(() => selectedType = value!);
-                  },
-                ),
-                SizedBox(height: 16.h),
-
-                // Title (Optional)
-                TextField(
-                  controller: titleController,
-                  decoration: InputDecoration(
-                    labelText: 'Title (Optional)',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16.h),
-
-                // Content
-                TextField(
-                  controller: contentController,
-                  decoration: InputDecoration(
-                    labelText: selectedType == CourseContentType.text
-                        ? 'Text Content *'
-                        : selectedType == CourseContentType.link
-                        ? 'URL *'
-                        : 'URL (e.g., image.png) *',
-                    hintText: _getContentHint(selectedType),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                  ),
-                  maxLines: selectedType == CourseContentType.text ? 5 : 2,
-                ),
-                if (selectedType != CourseContentType.text &&
-                    selectedType != CourseContentType.link)
-                  Padding(
-                    padding: EdgeInsets.only(top: 8.h),
-                    child: Text(
-                      'Prefix: ${AppConstants.baseUrlImage}',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.grey600,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (contentController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Content is required')),
-                  );
-                  return;
-                }
-
-                final contentItem = CourseContentItem(
-                  type: selectedType,
-                  title: titleController.text.isEmpty
-                      ? null
-                      : titleController.text,
-                  content: contentController.text,
-                  displayOrder: isEditing
-                      ? content!.displayOrder
-                      : _courseContents.length,
-                );
-
-                if (isEditing) {
-                  setState(() {
-                    _courseContents[editIndex] = contentItem;
-                  });
-                } else {
-                  setState(() {
-                    _courseContents.add(contentItem);
-                  });
-                }
-
-                Navigator.pop(context);
-              },
-              child: Text(isEditing ? 'Update' : 'Add'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _getContentHint(CourseContentType type) {
-    switch (type) {
-      case CourseContentType.text:
-        return 'Enter text content';
-      case CourseContentType.image:
-        return 'image.png';
-      case CourseContentType.audio:
-        return 'audio.mp3';
-      case CourseContentType.video:
-        return 'video.mp4';
-      case CourseContentType.link:
-        return 'https://example.com';
-    }
-  }
-
-  void _removeContentItem(int index) {
-    setState(() {
-      _courseContents.removeAt(index);
-      // Reorder remaining items
-      for (int i = 0; i < _courseContents.length; i++) {
-        _courseContents[i] = CourseContentItem(
-          type: _courseContents[i].type,
-          title: _courseContents[i].title,
-          content: _courseContents[i].content,
-          displayOrder: i,
-        );
-      }
-    });
-  }
-
   Future<void> _handleUpdateCourse() async {
     if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    // Validate that at least one text content exists
-    final hasTextContent = _courseContents.any(
-      (content) => content.type == CourseContentType.text,
-    );
-    if (!hasTextContent) {
-      AppFlashMessage.showError(
-        context,
-        'Course must have at least one text content item',
-      );
       return;
     }
 
     setState(() => _isSubmitting = true);
 
     try {
-      final contents = _courseContents.map((item) {
-        return CreateCourseContentRequest(
-          contentType: item.type,
-          content: item.content,
-          title: item.title,
-          displayOrder: item.displayOrder,
-        );
-      }).toList();
-
       final request = UpdateCourseRequest(
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim().isEmpty
@@ -676,7 +532,8 @@ class _EditCourseScreenState extends ConsumerState<EditCourseScreen> {
         courseImageUrl: _courseImageUrlController.text.trim().isEmpty
             ? null
             : _courseImageUrlController.text.trim(),
-        contents: contents,
+        contents:
+            [], // Content is managed separately via CourseDetailManagementScreen
       );
 
       final success = await ref

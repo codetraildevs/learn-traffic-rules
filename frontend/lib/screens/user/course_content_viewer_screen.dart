@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
+import 'package:just_audio/just_audio.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../../models/course_model.dart';
@@ -27,8 +28,12 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
   int _currentIndex = 0;
   List<CourseContent> _contents = [];
   VideoPlayerController? _videoController;
+  AudioPlayer? _audioPlayer;
   bool _isLoading = true;
   String? _error;
+  bool _isAudioPlaying = false;
+  Duration _audioDuration = Duration.zero;
+  Duration _audioPosition = Duration.zero;
   final CourseService _courseService = CourseService();
 
   @override
@@ -47,6 +52,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         _isLoading = false;
       });
       _initializeVideo();
+      _initializeAudio();
       return;
     }
 
@@ -59,7 +65,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
     try {
       print('🔄 Loading course contents for course: ${widget.course.id}');
       print('📊 Course contentCount: ${widget.course.contentCount}');
-      
+
       final response = await _courseService.getCourseById(
         widget.course.id,
         includeContents: true,
@@ -70,12 +76,15 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
 
       if (response.success && response.data != null) {
         final course = response.data!;
-        print('📚 Course contents: ${course.contents != null ? course.contents!.length : 'null'}');
+        print(
+          '📚 Course contents: ${course.contents != null ? course.contents!.length : 'null'}',
+        );
         print('📊 Course contentCount: ${course.contentCount}');
-        
+
         // Check if contents exist (could be empty list or null)
-        final hasContents = course.contents != null && course.contents!.isNotEmpty;
-        
+        final hasContents =
+            course.contents != null && course.contents!.isNotEmpty;
+
         if (hasContents) {
           print('✅ Found ${course.contents!.length} contents, displaying...');
           setState(() {
@@ -84,14 +93,18 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             _isLoading = false;
           });
           _initializeVideo();
+          _initializeAudio();
         } else {
           // Check if contentCount indicates contents should exist
-          final expectedContents = course.contentCount != null && course.contentCount! > 0;
+          final expectedContents =
+              course.contentCount != null && course.contentCount! > 0;
           print('⚠️ No contents in response');
           print('   - contentCount: ${course.contentCount}');
           print('   - contents is null: ${course.contents == null}');
-          print('   - contents is empty: ${course.contents != null && course.contents!.isEmpty}');
-          
+          print(
+            '   - contents is empty: ${course.contents != null && course.contents!.isEmpty}',
+          );
+
           setState(() {
             _contents = [];
             _isLoading = false;
@@ -123,6 +136,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
     if (_contents.isNotEmpty &&
         _contents[_currentIndex].contentType == CourseContentType.video) {
       final videoUrl = _getFullUrl(_contents[_currentIndex].content);
+      _videoController?.dispose();
       _videoController = VideoPlayerController.networkUrl(Uri.parse(videoUrl))
         ..initialize().then((_) {
           if (mounted) {
@@ -130,6 +144,75 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
           }
         });
     }
+  }
+
+  Future<void> _initializeAudio() async {
+    if (_contents.isNotEmpty &&
+        _contents[_currentIndex].contentType == CourseContentType.audio) {
+      try {
+        _audioPlayer?.dispose();
+        _audioPlayer = AudioPlayer();
+        final audioUrl = _getFullUrl(_contents[_currentIndex].content);
+
+        // Listen to player state changes
+        _audioPlayer!.playerStateStream.listen((state) {
+          if (mounted) {
+            setState(() {
+              _isAudioPlaying = state.playing;
+            });
+          }
+        });
+
+        // Listen to duration changes
+        _audioPlayer!.durationStream.listen((duration) {
+          if (mounted && duration != null) {
+            setState(() {
+              _audioDuration = duration;
+            });
+          }
+        });
+
+        // Listen to position changes
+        _audioPlayer!.positionStream.listen((position) {
+          if (mounted) {
+            setState(() {
+              _audioPosition = position;
+            });
+          }
+        });
+
+        await _audioPlayer!.setUrl(audioUrl);
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _error = 'Error loading audio: $e';
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> _toggleAudio() async {
+    if (_audioPlayer == null) return;
+
+    try {
+      if (_isAudioPlaying) {
+        await _audioPlayer!.pause();
+      } else {
+        await _audioPlayer!.play();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error playing audio: $e')));
+      }
+    }
+  }
+
+  Future<void> _seekAudio(Duration position) async {
+    if (_audioPlayer == null) return;
+    await _audioPlayer!.seek(position);
   }
 
   String _getFullUrl(String url) {
@@ -142,6 +225,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
   @override
   void dispose() {
     _videoController?.dispose();
+    _audioPlayer?.dispose();
     super.dispose();
   }
 
@@ -150,8 +234,14 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
       setState(() {
         _videoController?.dispose();
         _videoController = null;
+        _audioPlayer?.dispose();
+        _audioPlayer = null;
+        _isAudioPlaying = false;
+        _audioDuration = Duration.zero;
+        _audioPosition = Duration.zero;
         _currentIndex++;
         _initializeVideo();
+        _initializeAudio();
       });
     }
   }
@@ -161,8 +251,14 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
       setState(() {
         _videoController?.dispose();
         _videoController = null;
+        _audioPlayer?.dispose();
+        _audioPlayer = null;
+        _isAudioPlaying = false;
+        _audioDuration = Duration.zero;
+        _audioPosition = Duration.zero;
         _currentIndex--;
         _initializeVideo();
+        _initializeAudio();
       });
     }
   }
@@ -433,15 +529,92 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         children: [
           Icon(Icons.audiotrack, size: 64.sp, color: AppColors.primary),
           SizedBox(height: 16.h),
-          Text(content.title ?? 'Audio Content', style: AppTextStyles.heading3),
-          SizedBox(height: 8.h),
           Text(
-            'Audio player will be implemented here',
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey600),
+            content.title ?? 'Audio Content',
+            style: AppTextStyles.heading3,
+            textAlign: TextAlign.center,
           ),
+          SizedBox(height: 24.h),
+
+          // Audio Player Controls
+          if (_audioPlayer != null) ...[
+            // Progress Bar
+            Column(
+              children: [
+                Slider(
+                  value: _audioDuration.inMilliseconds > 0
+                      ? _audioPosition.inMilliseconds.toDouble()
+                      : 0.0,
+                  max: _audioDuration.inMilliseconds > 0
+                      ? _audioDuration.inMilliseconds.toDouble()
+                      : 1.0,
+                  onChanged: (value) {
+                    _seekAudio(Duration(milliseconds: value.toInt()));
+                  },
+                  activeColor: AppColors.primary,
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _formatDuration(_audioPosition),
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.grey600,
+                        ),
+                      ),
+                      Text(
+                        _formatDuration(_audioDuration),
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.grey600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 24.h),
+
+            // Play/Pause Button
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary,
+              ),
+              child: IconButton(
+                icon: Icon(
+                  _isAudioPlaying ? Icons.pause : Icons.play_arrow,
+                  color: AppColors.white,
+                  size: 48.sp,
+                ),
+                onPressed: _toggleAudio,
+                iconSize: 48.sp,
+                padding: EdgeInsets.all(16.w),
+              ),
+            ),
+          ] else ...[
+            // Loading state
+            const CircularProgressIndicator(),
+            SizedBox(height: 16.h),
+            Text(
+              'Loading audio...',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.grey600,
+              ),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
   }
 
   Widget _buildVideoContent(CourseContent content) {
