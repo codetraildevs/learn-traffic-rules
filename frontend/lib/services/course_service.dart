@@ -87,16 +87,22 @@ class CourseService {
         final jsonData = json.decode(response.body);
         // Debug logging
         print('✅ Course API Response: ${jsonData['success']}');
-        print('📦 Course Data: ${jsonData['data'] != null ? 'Present' : 'Missing'}');
+        print(
+          '📦 Course Data: ${jsonData['data'] != null ? 'Present' : 'Missing'}',
+        );
         if (jsonData['data'] != null && jsonData['data']['contents'] != null) {
-          print('📚 Contents Count: ${(jsonData['data']['contents'] as List).length}');
+          print(
+            '📚 Contents Count: ${(jsonData['data']['contents'] as List).length}',
+          );
         } else {
           print('⚠️ Contents: ${jsonData['data']?['contents']}');
         }
         return CourseResponse.fromJson(jsonData);
       } else {
         final errorData = json.decode(response.body);
-        print('❌ Course API Error: ${response.statusCode} - ${errorData['message']}');
+        print(
+          '❌ Course API Error: ${response.statusCode} - ${errorData['message']}',
+        );
         return CourseResponse(
           success: false,
           message: errorData['message'] ?? 'Failed to load course',
@@ -316,7 +322,7 @@ class CourseService {
   }
 
   /// Create course content
-  Future<CourseResponse> createCourseContent(
+  Future<Map<String, dynamic>> createCourseContent(
     String courseId,
     CreateCourseContentRequest request,
   ) async {
@@ -335,26 +341,30 @@ class CourseService {
         body: json.encode(request.toJson()),
       );
 
+      final jsonData = json.decode(response.body);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final jsonData = json.decode(response.body);
-        return CourseResponse.fromJson(jsonData);
+        return {
+          'success': true,
+          'message':
+              jsonData['message'] as String? ??
+              'Course content created successfully',
+          'data': jsonData['data'],
+        };
       } else {
-        final errorData = json.decode(response.body);
-        return CourseResponse(
-          success: false,
-          message: errorData['message'] ?? 'Failed to create course content',
-        );
+        return {
+          'success': false,
+          'message':
+              jsonData['message'] as String? ??
+              'Failed to create course content',
+        };
       }
     } catch (e) {
-      return CourseResponse(
-        success: false,
-        message: 'Error creating course content: $e',
-      );
+      return {'success': false, 'message': 'Error creating course content: $e'};
     }
   }
 
   /// Update course content
-  Future<CourseResponse> updateCourseContent(
+  Future<Map<String, dynamic>> updateCourseContent(
     String courseId,
     String contentId,
     CreateCourseContentRequest request,
@@ -366,7 +376,9 @@ class CourseService {
       }
 
       final response = await http.put(
-        Uri.parse('${AppConstants.baseUrl}/courses/$courseId/contents/$contentId'),
+        Uri.parse(
+          '${AppConstants.baseUrl}/courses/$courseId/contents/$contentId',
+        ),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -374,21 +386,25 @@ class CourseService {
         body: json.encode(request.toJson()),
       );
 
+      final jsonData = json.decode(response.body);
       if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        return CourseResponse.fromJson(jsonData);
+        return {
+          'success': true,
+          'message':
+              jsonData['message'] as String? ??
+              'Course content updated successfully',
+          'data': jsonData['data'],
+        };
       } else {
-        final errorData = json.decode(response.body);
-        return CourseResponse(
-          success: false,
-          message: errorData['message'] ?? 'Failed to update course content',
-        );
+        return {
+          'success': false,
+          'message':
+              jsonData['message'] as String? ??
+              'Failed to update course content',
+        };
       }
     } catch (e) {
-      return CourseResponse(
-        success: false,
-        message: 'Error updating course content: $e',
-      );
+      return {'success': false, 'message': 'Error updating course content: $e'};
     }
   }
 
@@ -401,7 +417,9 @@ class CourseService {
       }
 
       final response = await http.delete(
-        Uri.parse('${AppConstants.baseUrl}/courses/$courseId/contents/$contentId'),
+        Uri.parse(
+          '${AppConstants.baseUrl}/courses/$courseId/contents/$contentId',
+        ),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
