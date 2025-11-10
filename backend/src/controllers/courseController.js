@@ -10,10 +10,12 @@ const { Op } = require('sequelize');
 class CourseController {
   /**
    * Get all courses (with filters)
+   * Note: Access control is handled by the frontend based on global access period
+   * Backend returns all courses; frontend determines which ones user can access
    */
   async getAllCourses(req, res) {
     try {
-      const { category, difficulty, courseType, isActive } = req.query;
+      const { category, difficulty, courseType, isActive, includeContents } = req.query;
       const userId = req.user?.userId;
 
       // Build where clause
@@ -23,24 +25,28 @@ class CourseController {
       if (courseType) whereClause.courseType = courseType.toLowerCase();
       if (isActive !== undefined) whereClause.isActive = isActive === 'true';
 
+      // Only include contents if explicitly requested (to reduce payload size)
+      const includeOptions = includeContents === 'true' ? [
+        {
+          model: CourseContent,
+          as: 'contents',
+          required: false,
+          separate: true,
+          order: [['displayOrder', 'ASC']]
+        }
+      ] : [];
+
       const courses = await Course.findAll({
         where: whereClause,
         order: [['createdAt', 'DESC']],
-        include: [
-          {
-            model: CourseContent,
-            as: 'contents',
-            required: false,
-            separate: true,
-            order: [['displayOrder', 'ASC']]
-          }
-        ]
+        include: includeOptions
       });
 
       // Get content counts and format courses
       const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
       const coursesWithCounts = await Promise.all(
         courses.map(async (course) => {
+          // Always get content count (even if contents are not included)
           const contentCount = await CourseContent.count({
             where: { courseId: course.id }
           });
@@ -109,23 +115,29 @@ class CourseController {
   }
 
   /**
-   * Get course by ID (with contents)
+   * Get course by ID (with contents if requested)
+   * Note: Access control is handled by the frontend based on global access period
+   * Backend returns course data; frontend determines if user can access it
    */
   async getCourseById(req, res) {
     try {
       const { id } = req.params;
+      const { includeContents } = req.query;
       const userId = req.user?.userId;
 
+      // Only include contents if explicitly requested
+      const includeOptions = includeContents === 'true' ? [
+        {
+          model: CourseContent,
+          as: 'contents',
+          required: false,
+          separate: true,
+          order: [['displayOrder', 'ASC']]
+        }
+      ] : [];
+
       const course = await Course.findByPk(id, {
-        include: [
-          {
-            model: CourseContent,
-            as: 'contents',
-            required: false,
-            separate: true,
-            order: [['displayOrder', 'ASC']]
-          }
-        ]
+        include: includeOptions
       });
 
       if (!course) {
@@ -135,6 +147,7 @@ class CourseController {
         });
       }
 
+      // Always get content count (even if contents are not included)
       const contentCount = await CourseContent.count({
         where: { courseId: course.id }
       });
@@ -155,8 +168,9 @@ class CourseController {
         }
       }
 
-      // Sort contents by displayOrder
-      if (courseData.contents) {
+      // Only process contents if they were included
+      if (courseData.contents && courseData.contents.length > 0) {
+        // Sort contents by displayOrder
         courseData.contents.sort((a, b) => a.displayOrder - b.displayOrder);
 
         // Convert content URLs to full URLs
@@ -180,6 +194,9 @@ class CourseController {
           }
           return content;
         });
+      } else {
+        // If contents were not included, set to empty array
+        courseData.contents = [];
       }
 
       // Get user progress if userId is available
@@ -644,24 +661,29 @@ class CourseController {
         });
       }
 
-      // Check if user has access (for paid courses)
+      // Check if user has GLOBAL access (for paid courses)
+      // Global access: If user has paid once, they get access to ALL paid courses
       if (course.courseType === 'paid') {
-        const hasAccess = await AccessCode.findOne({
+        // Check for active access code (not expired) - this provides global access to all paid courses
+        const activeAccessCode = await AccessCode.findOne({
           where: {
             userId: userId,
-            isUsed: false,
             expiresAt: {
-              [Op.gt]: new Date()
+              [Op.gt]: new Date() // Access code must not be expired
             }
-          }
+          },
+          order: [['expiresAt', 'DESC']] // Get the most recent access code
         });
 
-        if (!hasAccess) {
+        if (!activeAccessCode) {
           return res.status(403).json({
             success: false,
-            message: 'Access denied. Please purchase access to enroll in paid courses.'
+            message: 'Access denied. Please purchase access to unlock all paid courses. Once you pay, you will have access to all paid courses.'
           });
         }
+        
+        // User has global access - they can enroll in any paid course
+        console.log(`✅ GLOBAL ACCESS: User ${userId} has active access code, granting access to paid course ${courseId}`);
       }
 
       // Check if user is already enrolled

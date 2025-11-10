@@ -10,6 +10,8 @@
     "seed": "node seed.js",
     "seed:force": "node seed.js --force",
     "seed:courses": "node seed.js --courses-only",
+    "seed:course-contents": "node seed-course-contents.js",
+    "seed:course-contents:all": "node seed-course-contents.js --all",
     "migrate": "NODE_ENV=production npx sequelize-cli db:migrate",
     "migrate:undo": "NODE_ENV=production npx sequelize-cli db:migrate:undo",
     "migrate:status": "NODE_ENV=production npx sequelize-cli db:migrate:status"

@@ -659,6 +659,8 @@ class DatabaseSeeder {
 
   /**
    * Seed courses table
+   * This will create courses and their contents if they don't exist
+   * If a course exists but has no contents, contents will be added
    */
   static async seedCourses() {
     console.log('📚 Seeding courses...');
@@ -1112,8 +1114,8 @@ class DatabaseSeeder {
         defaults: courseFields
       });
       
-      // Only create contents if course was just created
-      if (created && contents && contents.length > 0) {
+      // Create contents if course was just created OR if course exists but has no contents
+      if (contents && contents.length > 0) {
         // Check if contents already exist
         const existingContentCount = await CourseContent.count({
           where: { courseId: course.id }
@@ -1139,9 +1141,17 @@ class DatabaseSeeder {
               }
             });
           }
-          console.log(`✅ Course "${courseFields.title}" created with ${contents.length} content items`);
+          if (created) {
+            console.log(`✅ Course "${courseFields.title}" created with ${contents.length} content items`);
+          } else {
+            console.log(`✅ Added ${contents.length} content items to existing course "${courseFields.title}"`);
+          }
         } else {
-          console.log(`⚠️  Course "${courseFields.title}" already has ${existingContentCount} content items, skipping content creation`);
+          if (created) {
+            console.log(`⚠️  Course "${courseFields.title}" already has ${existingContentCount} content items, skipping content creation`);
+          } else {
+            console.log(`⚠️  Course "${courseFields.title}" already exists with ${existingContentCount} content items, skipping`);
+          }
         }
       } else if (!created) {
         console.log(`⚠️  Course "${courseFields.title}" already exists, skipping`);
