@@ -314,4 +314,103 @@ class CourseService {
       return false;
     }
   }
+
+  /// Create course content
+  Future<CourseResponse> createCourseContent(
+    String courseId,
+    CreateCourseContentRequest request,
+  ) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final response = await http.post(
+        Uri.parse('${AppConstants.baseUrl}/courses/$courseId/contents'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(request.toJson()),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final jsonData = json.decode(response.body);
+        return CourseResponse.fromJson(jsonData);
+      } else {
+        final errorData = json.decode(response.body);
+        return CourseResponse(
+          success: false,
+          message: errorData['message'] ?? 'Failed to create course content',
+        );
+      }
+    } catch (e) {
+      return CourseResponse(
+        success: false,
+        message: 'Error creating course content: $e',
+      );
+    }
+  }
+
+  /// Update course content
+  Future<CourseResponse> updateCourseContent(
+    String courseId,
+    String contentId,
+    CreateCourseContentRequest request,
+  ) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final response = await http.put(
+        Uri.parse('${AppConstants.baseUrl}/courses/$courseId/contents/$contentId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(request.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        return CourseResponse.fromJson(jsonData);
+      } else {
+        final errorData = json.decode(response.body);
+        return CourseResponse(
+          success: false,
+          message: errorData['message'] ?? 'Failed to update course content',
+        );
+      }
+    } catch (e) {
+      return CourseResponse(
+        success: false,
+        message: 'Error updating course content: $e',
+      );
+    }
+  }
+
+  /// Delete course content
+  Future<bool> deleteCourseContent(String courseId, String contentId) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final response = await http.delete(
+        Uri.parse('${AppConstants.baseUrl}/courses/$courseId/contents/$contentId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      return false;
+    }
+  }
 }

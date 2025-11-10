@@ -8,6 +8,7 @@ import '../../services/flash_message_service.dart';
 import '../../widgets/custom_button.dart';
 import 'create_course_screen.dart';
 import 'edit_course_screen.dart';
+import 'course_detail_management_screen.dart';
 
 class CourseManagementScreen extends ConsumerStatefulWidget {
   const CourseManagementScreen({super.key});
@@ -593,7 +594,9 @@ class _CourseManagementScreenState
   void _navigateToEditCourse(Course course) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => EditCourseScreen(course: course)),
+      MaterialPageRoute(
+        builder: (context) => CourseDetailManagementScreen(course: course),
+      ),
     ).then((_) {
       ref.read(courseProvider.notifier).loadCourses();
     });
