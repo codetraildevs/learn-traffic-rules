@@ -8,11 +8,15 @@ class ExamService {
   final ApiService _apiService = ApiService();
 
   Future<List<question_model.Question>> getQuestionsByExamId(
-    String examId,
-  ) async {
+    String examId, {
+    bool isFreeExam = false,
+    String? examType,
+  }) async {
     try {
       debugPrint('🔍 FRONTEND DEBUG - Getting questions for exam: $examId');
       debugPrint('   API endpoint: /exams/$examId/take-exam');
+      debugPrint('   Is Free Exam: $isFreeExam');
+      debugPrint('   Exam Type: $examType');
 
       // Initialize ApiService to load stored tokens
       await _apiService.initialize();

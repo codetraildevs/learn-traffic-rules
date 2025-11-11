@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:http/http.dart' as http;
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../../models/course_model.dart';
@@ -146,13 +147,117 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
     }
   }
 
+  Future<bool> _validateAudioUrl(String url) async {
+    try {
+      print('🔍 AUDIO: Validating URL: $url');
+
+      // Try HEAD request first (lighter, faster)
+      try {
+        final headResponse = await http
+            .head(Uri.parse(url))
+            .timeout(const Duration(seconds: 5));
+
+        print('🔍 AUDIO: HEAD Response status: ${headResponse.statusCode}');
+        print(
+          '🔍 AUDIO: Content-Type: ${headResponse.headers['content-type']}',
+        );
+        print(
+          '🔍 AUDIO: Content-Length: ${headResponse.headers['content-length']}',
+        );
+
+        if (headResponse.statusCode != 200) {
+          print('❌ AUDIO: File not found (HTTP ${headResponse.statusCode})');
+          return false;
+        }
+
+        final contentType =
+            headResponse.headers['content-type']?.toLowerCase() ?? '';
+        // Check if it's HTML/text (likely an error page)
+        if (contentType.contains('text/html') ||
+            contentType.contains('text/plain') ||
+            contentType.contains('application/json')) {
+          print('❌ AUDIO: Server returned $contentType instead of audio file');
+          return false;
+        }
+
+        // If we get here, the file seems to exist and has a valid content type
+        print('✅ AUDIO: URL validation passed');
+        return true;
+      } catch (headError) {
+        // HEAD request failed, try GET request with range header (just first bytes)
+        print(
+          '⚠️ AUDIO: HEAD request failed, trying GET with range header: $headError',
+        );
+        try {
+          final getResponse = await http
+              .get(
+                Uri.parse(url),
+                headers: {'Range': 'bytes=0-1023'}, // Request first 1KB only
+              )
+              .timeout(const Duration(seconds: 5));
+
+          print('🔍 AUDIO: GET Response status: ${getResponse.statusCode}');
+          print(
+            '🔍 AUDIO: Content-Type: ${getResponse.headers['content-type']}',
+          );
+
+          if (getResponse.statusCode == 200 || getResponse.statusCode == 206) {
+            final contentType =
+                getResponse.headers['content-type']?.toLowerCase() ?? '';
+            if (contentType.contains('text/html') ||
+                contentType.contains('text/plain') ||
+                contentType.contains('application/json')) {
+              print(
+                '❌ AUDIO: Server returned $contentType instead of audio file',
+              );
+              return false;
+            }
+            print('✅ AUDIO: URL validation passed (via GET)');
+            return true;
+          } else {
+            print('❌ AUDIO: File not found (HTTP ${getResponse.statusCode})');
+            return false;
+          }
+        } catch (getError) {
+          print('❌ AUDIO: GET request also failed: $getError');
+          // Don't fail completely - let the player try to load it
+          // Some servers might block HEAD/GET but allow streaming
+          return true;
+        }
+      }
+    } catch (e) {
+      print('❌ AUDIO URL VALIDATION ERROR: $e');
+      // Don't block playback - let the player try and show its own error
+      return true;
+    }
+  }
+
   Future<void> _initializeAudio() async {
     if (_contents.isNotEmpty &&
         _contents[_currentIndex].contentType == CourseContentType.audio) {
       try {
         _audioPlayer?.dispose();
         _audioPlayer = AudioPlayer();
-        final audioUrl = _getFullUrl(_contents[_currentIndex].content);
+        final content = _contents[_currentIndex].content;
+        final audioUrl = _getFullUrl(content);
+
+        print('🎵 AUDIO: Initializing audio player');
+        print('   Content path: $content');
+        print('   Full URL: $audioUrl');
+
+        // Validate URL format
+        if (!audioUrl.startsWith('http://') &&
+            !audioUrl.startsWith('https://')) {
+          throw Exception('Invalid audio URL: $audioUrl');
+        }
+
+        // Validate URL exists and is accessible (non-blocking)
+        final isValid = await _validateAudioUrl(audioUrl);
+        if (!isValid) {
+          throw Exception(
+            'Audio file not found or invalid. Please verify the file exists on the server.',
+          );
+        }
 
         // Listen to player state changes
         _audioPlayer!.playerStateStream.listen((state) {
@@ -160,15 +265,41 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             setState(() {
               _isAudioPlaying = state.playing;
             });
+
+            // Check for loading errors
+            if (state.processingState == ProcessingState.idle &&
+                state.playing == false &&
+                _audioDuration == Duration.zero) {
+              // If we're idle and duration is still zero, there might be an error
+              Future.delayed(const Duration(seconds: 3), () {
+                if (mounted &&
+                    _audioPlayer != null &&
+                    _audioPlayer!.duration == null &&
+                    _audioPlayer!.playerState.processingState ==
+                        ProcessingState.idle) {
+                  setState(() {
+                    _error =
+                        'Unable to load audio file. The file may not exist or is in an unsupported format.';
+                    _audioPlayer?.dispose();
+                    _audioPlayer = null;
+                  });
+                }
+              });
+            }
+
+            print(
+              '🎵 AUDIO: Player state - playing: ${state.playing}, processingState: ${state.processingState}',
+            );
           }
         });
 
         // Listen to duration changes
         _audioPlayer!.durationStream.listen((duration) {
-          if (mounted && duration != null) {
+          if (mounted && duration != null && duration != Duration.zero) {
             setState(() {
               _audioDuration = duration;
             });
+            print('✅ AUDIO: Duration loaded: ${duration.inSeconds}s');
           }
         });
 
@@ -181,11 +312,108 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
           }
         });
 
-        await _audioPlayer!.setUrl(audioUrl);
-      } catch (e) {
+        // Listen to player errors using error stream
+        _audioPlayer!.playbackEventStream.listen(
+          (event) {
+            // Check for errors in the event - playback events don't directly provide errors
+            // Errors are caught in the catch block below
+          },
+          onError: (error) {
+            print('❌ AUDIO PLAYBACK ERROR: $error');
+            if (mounted) {
+              setState(() {
+                _error = 'Error playing audio: ${error.toString()}';
+                _audioPlayer?.dispose();
+                _audioPlayer = null;
+              });
+            }
+          },
+        );
+
+        // Set audio source with timeout
+        try {
+          await _audioPlayer!
+              .setUrl(audioUrl)
+              .timeout(
+                const Duration(seconds: 15),
+                onTimeout: () {
+                  throw Exception(
+                    'Timeout loading audio file. Please check your internet connection.',
+                  );
+                },
+              );
+          print('🎵 AUDIO: Audio URL set successfully');
+
+          // Wait a bit and check if duration was loaded (indicates file is valid)
+          await Future.delayed(const Duration(seconds: 2));
+          if (_audioPlayer != null && mounted) {
+            final duration = _audioPlayer!.duration;
+            if (duration == null || duration == Duration.zero) {
+              print('⚠️ AUDIO: Duration is still null after 2 seconds');
+              // Check player state
+              final state = _audioPlayer!.playerState;
+              if (state.processingState == ProcessingState.idle) {
+                throw Exception(
+                  'Audio file could not be loaded. The file may not exist or is in an unsupported format.',
+                );
+              }
+            } else {
+              print('✅ AUDIO: Duration loaded: ${duration.inSeconds}s');
+            }
+          }
+        } catch (e) {
+          print('❌ AUDIO SET URL ERROR: $e');
+          rethrow;
+        }
+      } catch (e, stackTrace) {
+        print('❌ AUDIO ERROR: $e');
+        print('   Stack trace: $stackTrace');
         if (mounted) {
+          String errorMessage = 'Error loading audio';
+          final errorStr = e.toString().toLowerCase();
+
+          if (errorStr.contains('unrecognizedinputformatexception') ||
+              errorStr.contains('could read the stream') ||
+              errorStr.contains('none of the available extractors')) {
+            errorMessage =
+                'Audio file format not supported or file may be corrupted/invalid. Please verify the audio file exists and is in a supported format (MP3, WAV, M4A, OGG).';
+          } else if (errorStr.contains('source error') ||
+              errorStr.contains('socketexception') ||
+              errorStr.contains('failed host lookup')) {
+            errorMessage =
+                'Cannot load audio file. Please check your internet connection.';
+          } else if (errorStr.contains('timeout')) {
+            errorMessage =
+                'Timeout loading audio file. The file may be too large or the connection is slow.';
+          } else if (errorStr.contains('404') ||
+              errorStr.contains('not found')) {
+            errorMessage =
+                'Audio file not found. The file may have been deleted or moved.';
+          } else if (errorStr.contains('403') ||
+              errorStr.contains('forbidden')) {
+            errorMessage =
+                'Access denied to audio file. Please check permissions.';
+          } else if (errorStr.contains('html') ||
+              errorStr.contains('text/html')) {
+            errorMessage =
+                'Server returned an error page instead of audio file. The file may not exist at the specified URL.';
+          } else if (errorStr.contains('could not be loaded')) {
+            errorMessage = errorStr;
+          } else {
+            // Extract meaningful error message
+            final cleanError = e
+                .toString()
+                .replaceAll('Exception: ', '')
+                .replaceAll('Error: ', '')
+                .split('\n')
+                .first;
+            errorMessage = 'Error loading audio: $cleanError';
+          }
+
           setState(() {
-            _error = 'Error loading audio: $e';
+            _error = errorMessage;
+            _audioPlayer?.dispose();
+            _audioPlayer = null;
           });
         }
       }
@@ -216,10 +444,16 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
   }
 
   String _getFullUrl(String url) {
-    if (url.startsWith('http')) {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
-    return '${AppConstants.baseUrlImage}$url';
+    // Ensure URL starts with / if it doesn't already
+    if (!url.startsWith('/')) {
+      url = '/$url';
+    }
+    // Remove duplicate slashes
+    final baseUrl = AppConstants.baseUrlImage.replaceAll(RegExp(r'/+$'), '');
+    return '$baseUrl$url';
   }
 
   @override
@@ -239,6 +473,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         _isAudioPlaying = false;
         _audioDuration = Duration.zero;
         _audioPosition = Duration.zero;
+        _error = null; // Clear error when navigating
         _currentIndex++;
         _initializeVideo();
         _initializeAudio();
@@ -256,6 +491,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         _isAudioPlaying = false;
         _audioDuration = Duration.zero;
         _audioPosition = Duration.zero;
+        _error = null; // Clear error when navigating
         _currentIndex--;
         _initializeVideo();
         _initializeAudio();
@@ -512,6 +748,14 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
   }
 
   Widget _buildAudioContent(CourseContent content) {
+    // Check if there's an error for this specific content
+    final hasError =
+        _error != null &&
+        _contents.isNotEmpty &&
+        _contents[_currentIndex].contentType == CourseContentType.audio;
+
+    final audioUrl = _getFullUrl(content.content);
+
     return Container(
       padding: EdgeInsets.all(32.w),
       decoration: BoxDecoration(
@@ -534,10 +778,72 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             style: AppTextStyles.heading3,
             textAlign: TextAlign.center,
           ),
+          SizedBox(height: 8.h),
+          // Show file path for debugging (can be removed in production)
+          Text(
+            content.content,
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.grey500,
+              fontSize: 10.sp,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
           SizedBox(height: 24.h),
 
+          // Error State
+          if (hasError) ...[
+            Icon(Icons.error_outline, size: 48.sp, color: AppColors.error),
+            SizedBox(height: 16.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: Text(
+                _error!,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.error,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            // Show URL for debugging
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: Text(
+                'URL: $audioUrl',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.grey500,
+                  fontSize: 9.sp,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CustomButton(
+                  text: 'Retry',
+                  onPressed: () {
+                    setState(() {
+                      _error = null;
+                      _audioPlayer?.dispose();
+                      _audioPlayer = null;
+                    });
+                    _initializeAudio();
+                  },
+                  backgroundColor: AppColors.primary,
+                  textColor: AppColors.white,
+                  width: 120.w,
+                ),
+              ],
+            ),
+          ]
           // Audio Player Controls
-          if (_audioPlayer != null) ...[
+          else if (_audioPlayer != null && _error == null) ...[
             // Progress Bar
             Column(
               children: [
@@ -603,6 +909,15 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.grey600,
               ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Please wait while we load the audio file',
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.grey500,
+                fontSize: 11.sp,
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ],

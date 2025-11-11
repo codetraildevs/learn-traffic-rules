@@ -991,23 +991,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 fontWeight: FontWeight.w600,
               ),
             ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Text(
-                'View All',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.white,
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CourseListScreen(),
+                  ),
+                );
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Text(
+                  'View All',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.white,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
           ],
         ),
+
         SizedBox(height: 16.h),
         if (courseState.isLoading)
           const Center(child: CircularProgressIndicator())

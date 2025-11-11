@@ -7,7 +7,6 @@ import '../../providers/course_provider.dart';
 import '../../services/flash_message_service.dart';
 import '../../widgets/custom_button.dart';
 import 'create_course_screen.dart';
-import 'edit_course_screen.dart';
 import 'course_detail_management_screen.dart';
 
 class CourseManagementScreen extends ConsumerStatefulWidget {
@@ -444,7 +443,7 @@ class _CourseManagementScreenState
               children: [
                 Expanded(
                   child: CustomButton(
-                    text: 'Edit',
+                    text: 'View',
                     onPressed: () => _navigateToEditCourse(course),
                     backgroundColor: AppColors.primary,
                     textColor: AppColors.white,

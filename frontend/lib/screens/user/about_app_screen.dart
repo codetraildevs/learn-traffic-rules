@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/constants/app_constants.dart';
 
 class AboutAppScreen extends StatelessWidget {
   const AboutAppScreen({super.key});
@@ -54,9 +55,16 @@ class AboutAppScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    'Version 1.0.0',
+                    'Version ${AppConstants.appVersion}',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey600,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    'Build ${AppConstants.appBuildNumber}',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.grey500,
                     ),
                   ),
                 ],
@@ -89,7 +97,7 @@ class AboutAppScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    'Learn Traffic Rules is an educational mobile application designed to help individuals prepare for their provisional driving license examination. This app provides interactive practice tests and study materials to support safe driving knowledge development.',
+                    'Learn Traffic Rules is a comprehensive educational mobile application designed to help individuals prepare for their provisional driving license examination. This app provides interactive practice tests, comprehensive courses, and study materials with multi-language support to enhance safe driving knowledge development.',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey700,
                       height: 1.5,
@@ -132,32 +140,39 @@ class AboutAppScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 8.h),
                   _buildFeatureItem('• Interactive practice exams'),
+                  _buildFeatureItem(
+                    '• Multi-language support for exams only (English, French, Kinyarwanda)',
+                  ),
+                  _buildFeatureItem(
+                    '• Comprehensive course content with text, images, audio, and video',
+                  ),
+                  _buildFeatureItem(
+                    '• Audio and video playback for enhanced learning',
+                  ),
                   _buildFeatureItem('• Progress tracking and analytics'),
                   _buildFeatureItem(
                     '• Detailed explanations for each question',
                   ),
-                  _buildFeatureItem('• Offline study mode'),
-                  _buildFeatureItem('• Achievement system'),
-                  _buildFeatureItem('• Regular updates with new questions'),
-                  SizedBox(height: 16.h),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/disclaimer');
-                      },
-                      icon: Icon(Icons.info_outline, size: 20.sp),
-                      label: const Text('View Educational Disclaimer'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.info,
-                        foregroundColor: AppColors.white,
-                        padding: EdgeInsets.symmetric(vertical: 12.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                      ),
-                    ),
+                  _buildFeatureItem(
+                    '• Offline study mode - download exams and courses',
                   ),
+                  _buildFeatureItem(
+                    '• Offline exam taking with automatic sync',
+                  ),
+                  _buildFeatureItem(
+                    '• Achievement system and progress tracking',
+                  ),
+                  _buildFeatureItem(
+                    '• Course management with structured learning paths',
+                  ),
+                  _buildFeatureItem('• Payment system with access codes'),
+                  _buildFeatureItem(
+                    '• Global course access (pay once, unlock all)',
+                  ),
+                  _buildFeatureItem(
+                    '• Regular updates with new questions and courses',
+                  ),
+                  SizedBox(height: 16.h),
                 ],
               ),
             ),
@@ -187,10 +202,12 @@ class AboutAppScreen extends StatelessWidget {
                     style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
                   ),
                   SizedBox(height: 16.h),
+                  _buildInfoRow('App Name', AppConstants.appName),
+                  _buildInfoRow('Description', AppConstants.appDescription),
                   _buildInfoRow('Developer', 'Traffic Rules Learning Team'),
                   _buildInfoRow('Contact', 'engineers.devs@gmail.com'),
                   _buildInfoRow('Website', 'www.learntrafficrules.com'),
-                  _buildInfoRow('Last Updated', 'October 2025'),
+                  _buildInfoRow('Last Updated', 'November 2024'),
                 ],
               ),
             ),
@@ -227,6 +244,35 @@ class AboutAppScreen extends StatelessWidget {
                       height: 1.5,
                     ),
                   ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'Privacy & Data:',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    'Your data is securely stored and synchronized. Exam results and progress are saved locally and synced to the server when connected. We respect your privacy and do not share your personal information with third parties.',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.grey700,
+                      height: 1.5,
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'Technical Features:',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  _buildFeatureItem('• Offline-first architecture'),
+                  _buildFeatureItem('• Automatic data synchronization'),
+                  _buildFeatureItem('• Multi-language exam support'),
+                  _buildFeatureItem('• Rich media course content'),
+                  _buildFeatureItem('• Secure payment processing'),
+                  _buildFeatureItem('• Real-time progress tracking'),
                 ],
               ),
             ),

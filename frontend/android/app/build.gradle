@@ -123,4 +123,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
     // Play Core removed - not needed for this app and incompatible with SDK 34
+    
+    // AndroidX Core for edge-to-edge support
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.activity:activity-ktx:1.9.2'
 }

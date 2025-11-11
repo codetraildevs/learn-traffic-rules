@@ -345,6 +345,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
       debugPrint('🔍 EXAM TAKING SCREEN DEBUG - Loading questions:');
       debugPrint('   Exam ID: ${widget.exam.id}');
       debugPrint('   Exam Title: ${widget.exam.title}');
+      debugPrint('   Exam Type: ${widget.exam.examType}');
       debugPrint('   Is Free Exam: ${widget.exam.isFirstTwo}');
 
       setState(() {
@@ -360,35 +361,143 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
         _isOffline = !hasInternet;
       });
 
-      List<question_model.Question> questions;
+      List<question_model.Question> questions = [];
 
       if (hasInternet) {
         // Online: Try to load from API
         try {
           debugPrint('🌐 Online: Loading questions from API...');
-          questions = await _examService.getQuestionsByExamId(widget.exam.id);
+          debugPrint('   API endpoint: /exams/${widget.exam.id}/take-exam');
+
+          questions = await _examService.getQuestionsByExamId(
+            widget.exam.id,
+            isFreeExam: widget.exam.isFirstTwo ?? false,
+            examType: widget.exam.examType,
+          );
           debugPrint('   Questions received: ${questions.length}');
 
           // Save to offline storage for future use
-          await _offlineService.saveExam(widget.exam, questions);
-          debugPrint('💾 Saved exam and questions offline');
+          if (questions.isNotEmpty) {
+            await _offlineService.saveExam(widget.exam, questions);
+            debugPrint('💾 Saved exam and questions offline');
+          }
         } catch (e) {
           debugPrint('❌ Failed to load from API: $e');
-          // Fallback to offline data
-          questions = await _loadOfflineQuestions();
+          debugPrint('   Error details: ${e.toString()}');
+
+          // Check if it's a 403 payment error
+          final errorString = e.toString().toLowerCase();
+          final isPaymentError =
+              errorString.contains('403') ||
+              errorString.contains('requires payment') ||
+              errorString.contains('payment');
+
+          if (isPaymentError) {
+            debugPrint('🔒 Payment error detected (403)');
+            debugPrint('   Checking if this is a free exam...');
+            debugPrint('   Exam isFirstTwo: ${widget.exam.isFirstTwo}');
+            debugPrint('   Exam Type: ${widget.exam.examType}');
+
+            // Check if this exam is marked as free in the frontend
+            final isFreeExam = widget.exam.isFirstTwo ?? false;
+            final authState = ref.read(authProvider);
+            final hasAccess = authState.accessPeriod?.hasAccess ?? false;
+
+            // If exam is marked as free but backend rejects it, try offline first
+            // This handles the case where backend logic doesn't match frontend
+            if (isFreeExam && !hasAccess) {
+              debugPrint(
+                '⚠️ Backend rejected free exam, checking offline storage...',
+              );
+              questions = await _loadOfflineQuestions();
+              debugPrint('   Offline questions found: ${questions.length}');
+
+              // If no offline questions, this is a backend issue
+              // The exam should be accessible but backend is blocking it
+              if (questions.isEmpty) {
+                debugPrint('❌ No offline questions available for free exam');
+                debugPrint('   This indicates a backend/frontend mismatch');
+                debugPrint('   Backend is not recognizing this exam as free');
+                // Don't throw here, let it show the error below
+              } else {
+                debugPrint('✅ Using offline questions for free exam');
+              }
+            } else {
+              // Not a free exam, show payment error
+              debugPrint('❌ This exam requires payment');
+              setState(() {
+                _error =
+                    'This exam requires payment. Please upgrade to access all exams.';
+                _isLoading = false;
+              });
+              return;
+            }
+          } else {
+            // Other error (network, server, etc.) - try offline
+            debugPrint('🔄 Non-payment error, trying offline storage...');
+            questions = await _loadOfflineQuestions();
+            debugPrint('   Offline questions found: ${questions.length}');
+          }
+        }
+
+        // If still no questions after API call and offline check
+        if (questions.isEmpty) {
+          // Try to download the exam if it's marked as free
+          final isFreeExam = widget.exam.isFirstTwo ?? false;
+          final authState = ref.read(authProvider);
+          final hasAccess = authState.accessPeriod?.hasAccess ?? false;
+
+          if (isFreeExam && !hasAccess) {
+            debugPrint('🔄 Attempting to download free exam...');
+            try {
+              // For free exams, try to get questions using admin endpoint or different method
+              // But since we don't have admin access, we'll rely on offline storage
+              // The issue is that backend is blocking free exams incorrectly
+              debugPrint(
+                '⚠️ Cannot download free exam - backend is blocking it',
+              );
+              debugPrint('   This is a backend issue that needs to be fixed');
+            } catch (downloadError) {
+              debugPrint('❌ Failed to download exam: $downloadError');
+            }
+          }
         }
       } else {
         // Offline: Load from local database
         debugPrint('📱 Offline: Loading questions from local storage...');
         questions = await _loadOfflineQuestions();
+        debugPrint('   Offline questions found: ${questions.length}');
       }
 
       if (questions.isEmpty) {
-        debugPrint('❌ No questions available');
+        debugPrint('❌ No questions available after all attempts');
+        debugPrint('   Exam ID: ${widget.exam.id}');
+        debugPrint('   Exam Type: ${widget.exam.examType}');
+        debugPrint('   Has Internet: $hasInternet');
+        debugPrint('   Is Free Exam: ${widget.exam.isFirstTwo}');
+
+        // Check if this is a free exam that was blocked by backend
+        final isFreeExam = widget.exam.isFirstTwo ?? false;
+        final authState = ref.read(authProvider);
+        final hasAccess = authState.accessPeriod?.hasAccess ?? false;
+
+        String errorMessage;
+        if (hasInternet && isFreeExam && !hasAccess) {
+          // Free exam blocked by backend - this is a backend issue
+          errorMessage =
+              'Unable to load this free exam. This appears to be a backend issue. '
+              'Please try again later or contact support. '
+              'The first 2 exams of each language should be free.';
+        } else if (hasInternet) {
+          errorMessage =
+              'No questions available for this exam. Please contact support if this issue persists.';
+        } else {
+          errorMessage =
+              'No offline questions available. Please connect to internet to download this exam.';
+        }
+
         setState(() {
-          _error = hasInternet
-              ? 'No questions available for this exam'
-              : 'No offline questions available. Please connect to internet to download exams.';
+          _error = errorMessage;
           _isLoading = false;
         });
         return;

@@ -142,10 +142,35 @@ class ExamSyncService {
 
           List<question_model.Question> questions;
           try {
-            questions = await _examService.getQuestionsByExamId(exam.id);
+            // Pass exam type and free status to help with backend logic
+            questions = await _examService.getQuestionsByExamId(
+              exam.id,
+              isFreeExam: exam.isFirstTwo ?? false,
+              examType: exam.examType,
+            );
           } catch (e) {
-            // Check if it's a "no questions" error
+            // Check if it's a payment error (403) for a free exam
             final errorString = e.toString().toLowerCase();
+            final isPaymentError =
+                errorString.contains('403') ||
+                errorString.contains('requires payment') ||
+                errorString.contains('payment');
+            final isFreeExam = exam.isFirstTwo ?? false;
+
+            if (isPaymentError && isFreeExam) {
+              // Free exam blocked by backend - this is a backend issue
+              // Skip it but log it as a backend problem, not a user error
+              debugPrint(
+                '⚠️ Backend blocking free exam ${exam.id} (${exam.title}, type: ${exam.examType}): $e',
+              );
+              debugPrint(
+                '   This is a backend issue - free exams should be accessible',
+              );
+              skippedCount++;
+              continue; // Skip this exam and continue with next
+            }
+
+            // Check if it's a "no questions" error
             final isNoQuestionsError =
                 errorString.contains('no questions') ||
                 errorString.contains('questions available');
@@ -296,6 +321,108 @@ class ExamSyncService {
       debugPrint('❌ Error downloading exams: $e');
     } finally {
       _isSyncing = false;
+    }
+  }
+
+  /// Download a single exam with its questions
+  /// Useful when user tries to start an exam that hasn't been downloaded yet
+  Future<void> downloadSingleExam(Exam exam) async {
+    try {
+      debugPrint('📥 Downloading single exam: ${exam.id} (${exam.title})');
+      debugPrint('   Exam Type: ${exam.examType}');
+
+      // Check internet connectivity
+      final hasInternet = await _networkService.hasInternetConnection();
+      if (!hasInternet) {
+        throw Exception('No internet connection');
+      }
+
+      // Get questions for this exam
+      List<question_model.Question> questions;
+      try {
+        questions = await _examService.getQuestionsByExamId(
+          exam.id,
+          isFreeExam: exam.isFirstTwo ?? false,
+          examType: exam.examType,
+        );
+        debugPrint('   Questions fetched: ${questions.length}');
+      } catch (e) {
+        // Check if it's a payment error (403) for a free exam
+        final errorString = e.toString().toLowerCase();
+        final isPaymentError =
+            errorString.contains('403') ||
+            errorString.contains('requires payment') ||
+            errorString.contains('payment');
+        final isFreeExam = exam.isFirstTwo ?? false;
+
+        if (isPaymentError && isFreeExam) {
+          // Free exam blocked by backend - this is a backend issue
+          debugPrint(
+            '⚠️ Backend blocking free exam ${exam.id} (${exam.title}, type: ${exam.examType})',
+          );
+          debugPrint(
+            '   This is a backend issue - free exams should be accessible',
+          );
+          throw Exception(
+            'Backend is blocking this free exam. This is a backend configuration issue.',
+          );
+        }
+
+        debugPrint('❌ Failed to fetch questions for exam ${exam.id}: $e');
+        rethrow;
+      }
+
+      if (questions.isEmpty) {
+        debugPrint('⚠️ Exam ${exam.id} has no questions');
+        throw Exception('No questions available for this exam');
+      }
+
+      // Download and cache images for questions (if internet available)
+      if (hasInternet) {
+        int imageCacheSuccess = 0;
+        int imageCacheFail = 0;
+        for (final question in questions) {
+          if (question.questionImgUrl != null &&
+              question.questionImgUrl!.isNotEmpty) {
+            try {
+              final cachedPath = await ImageCacheService.instance.cacheImage(
+                question.questionImgUrl!,
+              );
+              if (cachedPath != null) {
+                imageCacheSuccess++;
+              } else {
+                imageCacheFail++;
+              }
+            } catch (e) {
+              imageCacheFail++;
+              // Continue even if image caching fails
+            }
+          }
+        }
+        if (imageCacheSuccess > 0 || imageCacheFail > 0) {
+          debugPrint(
+            '🖼️ Image caching: $imageCacheSuccess successful, $imageCacheFail failed',
+          );
+        }
+
+        // Download and cache exam image if available
+        if (exam.examImgUrl != null && exam.examImgUrl!.isNotEmpty) {
+          try {
+            await ImageCacheService.instance.cacheImage(exam.examImgUrl!);
+          } catch (e) {
+            // Continue even if image caching fails
+          }
+        }
+      }
+
+      // Save exam and questions offline
+      await _offlineService.saveExam(exam, questions);
+      debugPrint(
+        '✅ Successfully downloaded exam ${exam.id} with ${questions.length} questions',
+      );
+    } catch (e) {
+      debugPrint('❌ Error downloading single exam: $e');
+      rethrow;
     }
   }
 
