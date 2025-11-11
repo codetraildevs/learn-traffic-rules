@@ -651,24 +651,68 @@ const getFreeExams = async (req, res) => {
       });
     }
 
-    // For free users, first 2 exams (oldest by creation date) are completely free with unlimited attempts
-    // Get the first 2 exams (by creation date ASC - oldest first)
-    const firstTwoExams = examsWithQuestions.slice(0, 2);
-    const remainingExams = examsWithQuestions.slice(2);
+    // For free users, first 2 exams of EACH TYPE (oldest by creation date) are completely free with unlimited attempts
+    // Group exams by type and identify the first 2 of each type
+    const examsByType = {
+      kinyarwanda: [],
+      english: [],
+      french: []
+    };
 
-    // Debug: Log exam creation dates and which are marked as free
-    console.log('📅 Exam Creation Dates (ordered ASC):');
-    examsWithQuestions.forEach((exam, index) => {
-      console.log(`   ${index + 1}. ${exam.title} - Created: ${exam.createdAt} - Free: ${index < 2}`);
+    // Group exams by type (default to 'english' if examType is null)
+    examsWithQuestions.forEach(exam => {
+      const examType = exam.examType || 'english';
+      if (examsByType[examType]) {
+        examsByType[examType].push(exam);
+      }
     });
 
-    // Mark which exams are free (first 2 exams in the ordered list)
-    const examsWithFreeStatus = examsWithQuestions.map((exam, index) => ({
+    // Sort exams within each type by createdAt ASC (oldest first) to ensure correct free exam identification
+    Object.keys(examsByType).forEach(type => {
+      examsByType[type].sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        return dateA - dateB; // ASC order (oldest first)
+      });
+    });
+
+    // Create a set of free exam IDs (first 2 of each type)
+    const freeExamIds = new Set();
+    Object.keys(examsByType).forEach(type => {
+      const examsOfType = examsByType[type];
+      // Get first 2 exams of this type (ordered by createdAt ASC)
+      const firstTwoOfType = examsOfType.slice(0, 2);
+      firstTwoOfType.forEach(exam => {
+        freeExamIds.add(exam.id);
+        console.log(`🆓 Free exam (${type}): ${exam.title} (ID: ${exam.id})`);
+      });
+    });
+
+    // Debug: Log exam creation dates and which are marked as free
+    console.log('📅 Exam Creation Dates by Type:');
+    Object.keys(examsByType).forEach(type => {
+      console.log(`   ${type.toUpperCase()} exams:`);
+      examsByType[type].forEach((exam, index) => {
+        const isFree = freeExamIds.has(exam.id);
+        console.log(`     ${index + 1}. ${exam.title} - Created: ${exam.createdAt} - Free: ${isFree}`);
+      });
+    });
+
+    // Mark which exams are free (first 2 of each type)
+    const examsWithFreeStatus = examsWithQuestions.map(exam => ({
       ...exam.toJSON(),
       questionCount: exam.dataValues.questionCount,
-      isFree: index < 2, // First 2 exams are free
-      isFirstTwo: index < 2
+      isFree: freeExamIds.has(exam.id),
+      isFirstTwo: freeExamIds.has(exam.id)
     }));
+
+    // Count free exams by type
+    const freeExamsByType = {
+      kinyarwanda: examsWithFreeStatus.filter(e => e.isFirstTwo && (e.examType || 'english') === 'kinyarwanda').length,
+      english: examsWithFreeStatus.filter(e => e.isFirstTwo && (e.examType || 'english') === 'english').length,
+      french: examsWithFreeStatus.filter(e => e.isFirstTwo && (e.examType || 'english') === 'french').length
+    };
+    console.log('🆓 Free exams by type:', freeExamsByType);
 
     res.json({
       success: true,
@@ -676,11 +720,11 @@ const getFreeExams = async (req, res) => {
       data: {
         exams: examsWithFreeStatus,
         isFreeUser: true,
-        freeExamsRemaining: 2, // Always 2 free exams
-        freeExamIds: firstTwoExams.map(exam => exam.id),
+        freeExamsRemaining: freeExamIds.size, // Total free exams (2 per type)
+        freeExamIds: Array.from(freeExamIds),
         paymentInstructions: {
           title: 'Get Full Access',
-          description: 'First 2 exams are free with unlimited attempts. For more exams:',
+          description: 'First 2 exams of each language (Kinyarwanda, English, French) are free with unlimited attempts. For more exams:',
           steps: [
             'Choose a payment plan below',
             'Make payment via mobile money (MoMo: 808085) or bank transfer',

@@ -228,37 +228,57 @@ class ExamController {
         console.log('   Access code expires at:', hasAccess.expiresAt);
       }
 
-      // Check if this is one of the first 2 exams (free with unlimited attempts)
-      const allExams = await Exam.findAll({
-        where: { isActive: true },
+      // Check if this is one of the first 2 exams of the same type (free with unlimited attempts)
+      // Get the exam type, default to 'english' if null
+      const examType = exam.examType || 'english';
+      console.log('   Exam type:', examType);
+
+      // Get all active exams of the same type, ordered by creation date (oldest first)
+      // Handle NULL examType by using a more flexible query
+      const { Op } = require('sequelize');
+      const examsOfSameType = await Exam.findAll({
+        where: { 
+          isActive: true,
+          [Op.or]: [
+            { examType: examType },
+            // Also include exams with NULL examType if we're looking for 'english' (default)
+            ...(examType === 'english' ? [{ examType: null }] : [])
+          ]
+        },
         order: [['createdAt', 'ASC']],
-        attributes: ['id', 'title', 'createdAt']
+        attributes: ['id', 'title', 'createdAt', 'examType']
       });
 
-      console.log('   All active exams:', allExams.map(exam => ({ id: exam.id, title: exam.title, createdAt: exam.createdAt })));
-      console.log('   First 2 exam IDs:', allExams.slice(0, 2).map(exam => exam.id));
+      console.log(`   All active ${examType} exams:`, examsOfSameType.map(e => ({ id: e.id, title: e.title, createdAt: e.createdAt })));
+      console.log(`   First 2 ${examType} exam IDs:`, examsOfSameType.slice(0, 2).map(e => e.id));
       console.log('   Current exam ID:', id);
 
-      const isFirstTwoExam = allExams.slice(0, 2).some(exam => exam.id === id);
-      console.log('   Is first 2 exam:', isFirstTwoExam);
+      // Check if current exam is one of the first 2 exams of this type
+      const isFirstTwoExam = examsOfSameType.slice(0, 2).some(e => e.id === id);
+      console.log('   Is first 2 exam of this type:', isFirstTwoExam);
       
       // Additional debugging for exam access
-      if (allExams.length >= 2) {
-        console.log('   First exam:', { id: allExams[0].id, title: allExams[0].title });
-        console.log('   Second exam:', { id: allExams[1].id, title: allExams[1].title });
+      if (examsOfSameType.length >= 2) {
+        console.log(`   First ${examType} exam:`, { id: examsOfSameType[0].id, title: examsOfSameType[0].title });
+        console.log(`   Second ${examType} exam:`, { id: examsOfSameType[1].id, title: examsOfSameType[1].title });
+      } else if (examsOfSameType.length === 1) {
+        console.log(`   Only one ${examType} exam found:`, { id: examsOfSameType[0].id, title: examsOfSameType[0].title });
+      } else {
+        console.log(`   No ${examType} exams found`);
       }
 
-      // Allow access if user has paid access OR if it's one of the first 2 exams
+      // Allow access if user has paid access OR if it's one of the first 2 exams of this type
       if (!hasAccess && !isFirstTwoExam) {
         console.log('❌ No access to this exam');
+        console.log(`   User doesn't have access code and exam is not one of the first 2 ${examType} exams`);
         return res.status(403).json({
           success: false,
-          message: 'This exam requires payment. First 2 exams are free with unlimited attempts.'
+          message: `This exam requires payment. First 2 ${examType} exams are free with unlimited attempts.`
         });
       }
 
       if (isFirstTwoExam) {
-        console.log('✅ First 2 exam - allowing unlimited attempts');
+        console.log(`✅ First 2 ${examType} exam - allowing unlimited attempts`);
       } else if (hasAccess) {
         console.log('✅ Paid user - allowing access');
       }
