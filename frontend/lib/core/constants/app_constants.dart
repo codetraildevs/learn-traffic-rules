@@ -26,8 +26,8 @@ class AppConstants {
   static const String appSubtitle = 'Provisional Driving License Preparation';
   static const String appDescription =
       'Educational app for provisional driving license preparation and traffic safety learning';
-  static const String appVersion = '1.0.0';
-  static const String appBuildNumber = '1';
+  static const String appVersion = '1.1.1';
+  static const String appBuildNumber = '16';
 
   // Exam Configuration
   static const int defaultExamDuration = 30; // minutes

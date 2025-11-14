@@ -17,17 +17,24 @@ class MainActivity : FlutterActivity() {
         
         // Enable edge-to-edge display for Android 15+ (API 35+)
         // This is required for apps targeting SDK 35 and addresses Play Store warnings
-        // By enabling edge-to-edge, we avoid using deprecated APIs like setStatusBarColor
+        // FlutterActivity doesn't extend ComponentActivity, so we manually configure edge-to-edge
         WindowCompat.setDecorFitsSystemWindows(window, false)
         
-        // Handle system bars appropriately for different Android versions
-        val decorView = window.decorView
-        val windowInsetsController = ViewCompat.getWindowInsetsController(decorView)
+        // Handle system bars using ONLY modern WindowInsetsController API
+        // DO NOT use deprecated APIs: setStatusBarColor, setNavigationBarColor, 
+        // setNavigationBarDividerColor - these are deprecated in Android 15 (API 35)
+        val windowInsetsController = ViewCompat.getWindowInsetsController(window.decorView)
         windowInsetsController?.let { controller ->
-            // Make navigation bar transparent and use light appearance
+            // Configure system bars appearance using modern API only
+            controller.isAppearanceLightStatusBars = true
             controller.isAppearanceLightNavigationBars = true
-            // Show system bars (status and navigation bars)
+            
+            // Ensure system bars are visible
             controller.show(WindowInsetsCompat.Type.systemBars())
+            
+            // Note: We intentionally do NOT set window.statusBarColor or window.navigationBarColor
+            // as these are deprecated in Android 15. The WindowInsetsController handles
+            // all system bar styling through the modern API.
         }
     }
 

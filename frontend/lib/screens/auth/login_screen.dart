@@ -133,7 +133,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     Icon(Icons.phone, color: AppColors.primary, size: 20.sp),
                     SizedBox(width: 8.w),
                     Text(
-                      '+250 780 494 000',
+                      '+250 788 659 575',
                       style: AppTextStyles.bodyLarge.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,
@@ -165,7 +165,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               onPressed: () async {
                 Navigator.of(context).pop();
                 try {
-                  const phoneNumber = '+250780494000';
+                  const phoneNumber = '+250 788 659 575';
                   debugPrint('📞 Attempting to call: $phoneNumber');
 
                   // Try multiple URL schemes for better Android compatibility
@@ -212,7 +212,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           ScaffoldMessenger.of(this.context).showSnackBar(
                             SnackBar(
                               content: const Text(
-                                'Phone number: +250 780 494 000',
+                                'Phone number: +250 788 659 575',
                               ),
                               backgroundColor: AppColors.primary,
                               action: SnackBarAction(
@@ -233,7 +233,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   if (mounted) {
                     ScaffoldMessenger.of(this.context).showSnackBar(
                       const SnackBar(
-                        content: Text('Phone number: +250 780 494 000'),
+                        content: Text('Phone number: +250 788 659 575'),
                         backgroundColor: AppColors.primary,
                       ),
                     );
@@ -529,7 +529,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      'New user? Tap "Create Account" below. Already have an account? Tap "Sign In" to continue.',
+                      'Already have account? Tap "Sign In" below. New User? Tap "Create Account" to continue.',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.grey700,
                         fontSize: 13.sp,
@@ -537,7 +537,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       ),
                     ),
                     SizedBox(height: 8.h),
+
+                    // Help section with two phone numbers
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Icon(
                           Icons.phone_outlined,
@@ -552,10 +555,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             fontSize: 13.sp,
                           ),
                         ),
+                        // First phone number
                         GestureDetector(
                           onTap: () async {
                             try {
-                              const phoneNumber = '+250780494000';
+                              const phoneNumber = '+250788659575';
                               final Uri phoneUri = Uri(
                                 scheme: 'tel',
                                 path: phoneNumber,
@@ -573,9 +577,48 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             }
                           },
                           child: Text(
-                            '+250 780 494 000',
+                            '0788 659 575',
                             style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.primary,
+                              color: AppColors.secondary,
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          ' / ',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.grey600,
+                            fontSize: 13.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        // Second phone number
+                        GestureDetector(
+                          onTap: () async {
+                            try {
+                              const phoneNumber = '+250728877442';
+                              final Uri phoneUri = Uri(
+                                scheme: 'tel',
+                                path: phoneNumber,
+                              );
+                              if (await canLaunchUrl(phoneUri)) {
+                                await launchUrl(
+                                  phoneUri,
+                                  mode: LaunchMode.externalApplication,
+                                );
+                              } else {
+                                _showPhoneNumberDialog();
+                              }
+                            } catch (e) {
+                              _showPhoneNumberDialog();
+                            }
+                          },
+                          child: Text(
+                            '0728 877 442',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.secondary,
                               fontSize: 13.sp,
                               fontWeight: FontWeight.w600,
                               decoration: TextDecoration.underline,

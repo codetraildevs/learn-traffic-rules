@@ -169,21 +169,21 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
 
                   _buildContactItem(
                     'Email Support',
-                    'support.learntrafficrules@gmail.com',
+                    'engineers.devs@gmail.com',
                     Icons.email,
                     () => _launchEmail(),
                   ),
 
                   _buildContactItem(
                     'Phone Support',
-                    '+250780494000',
+                    '+250 788 659 575',
                     Icons.phone,
                     () => _launchPhone(),
                   ),
 
                   _buildContactItem(
                     'WhatsApp',
-                    '+250780494000',
+                    '+250 788 659 575',
                     Icons.chat,
                     () => _launchWhatsApp(),
                   ),
@@ -509,8 +509,8 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
               children: [
                 const Text('Email not available. Try these alternatives:'),
                 SizedBox(height: 4.h),
-                const Text('• Call: +250780494000'),
-                const Text('• WhatsApp: +250780494000'),
+                const Text('• Call: +250 788 659 575'),
+                const Text('• WhatsApp: +250 788 659 575'),
                 const Text('• Manual: engineers.devs@gmail.com'),
               ],
             ),
@@ -528,7 +528,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
   }
 
   void _launchPhone() async {
-    final Uri phoneUri = Uri(scheme: 'tel', path: '+250780494000');
+    final Uri phoneUri = Uri(scheme: 'tel', path: '+250788659575');
     if (await canLaunchUrl(phoneUri)) {
       await launchUrl(phoneUri);
     }
@@ -536,7 +536,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
 
   void _launchWhatsApp() async {
     // Use the specific admin WhatsApp number
-    const cleanNumber = '250780494000';
+    const cleanNumber = '250788659575';
     final Uri whatsappUri = Uri.parse('https://wa.me/$cleanNumber');
 
     debugPrint('🔍 WhatsApp URL: $whatsappUri');
@@ -578,7 +578,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                 children: [
                   const Text('WhatsApp not available. Try these alternatives:'),
                   SizedBox(height: 4.h),
-                  const Text('• Call: +250780494000'),
+                  const Text('• Call: +250 788 659 575'),
                   const Text('• WhatsApp Web: web.whatsapp.com'),
                 ],
               ),
@@ -652,7 +652,7 @@ To purchase:
 5. Enter the code to unlock exams
 
 Free Exams:
-- First 2 exams are always free
+- First 2 exams are always free for users without access codes
 - Unlimited attempts on free exams
 ''';
   }

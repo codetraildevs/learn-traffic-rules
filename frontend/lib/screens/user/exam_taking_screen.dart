@@ -1035,7 +1035,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
         // Header with timer and progress
         _buildExamHeader(progress),
 
-        // Question content
+        // Question content - takes remaining space and scrolls if needed
         Expanded(
           child: SlideTransition(
             position: _questionAnimation,
@@ -1043,7 +1043,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
           ),
         ),
 
-        // Navigation buttons
+        // Navigation buttons - always visible at bottom
         _buildNavigationButtons(),
       ],
     );
@@ -1181,7 +1181,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   Widget _buildQuestionContent(question_model.Question question) {
     debugPrint("question.questionImgUrl: ${question.questionImgUrl}");
     return SingleChildScrollView(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1589,85 +1589,161 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
     final isLastQuestion = _currentQuestionIndex == _questions.length - 1;
     final answeredCount = _userAnswers.length;
     final totalQuestions = _questions.length;
+    final canGoPrevious = _currentQuestionIndex > 0;
 
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Progress summary
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Answered: $answeredCount/$totalQuestions',
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.grey600,
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.bold,
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: EdgeInsets.fromLTRB(
+          16.w,
+          16.h,
+          16.w,
+          MediaQuery.of(context).padding.bottom + 0.h,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Progress summary
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Answered: $answeredCount/$totalQuestions',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.grey600,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              Text(
-                'Time: ${_formatTime(_timeRemaining)}',
-                style: AppTextStyles.caption.copyWith(
-                  color: _getTimerColor(),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12.sp,
+                Text(
+                  'Time: ${_formatTime(_timeRemaining)}',
+                  style: AppTextStyles.caption.copyWith(
+                    color: _getTimerColor(),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.sp,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
 
-          SizedBox(height: 8.h),
+            SizedBox(height: 30.h),
 
-          // Navigation buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Previous button
-              Expanded(
-                child: CustomButton(
-                  text: 'Previous',
-                  fontSize: 12.sp,
-                  onPressed: _currentQuestionIndex > 0
-                      ? _previousQuestion
-                      : null,
-                  backgroundColor: AppColors.grey200,
-                  textColor: AppColors.grey700,
-                  width: 30,
+            // Navigation buttons
+            Row(
+              children: [
+                // Previous button
+                Expanded(
+                  child: SizedBox(
+                    height: 50.h,
+                    child: ElevatedButton.icon(
+                      onPressed: canGoPrevious ? _previousQuestion : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: canGoPrevious
+                            ? AppColors.grey100
+                            : AppColors.grey200,
+                        foregroundColor: canGoPrevious
+                            ? AppColors.grey800
+                            : AppColors.grey400,
+                        elevation: canGoPrevious ? 2 : 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          side: BorderSide(
+                            color: canGoPrevious
+                                ? AppColors.grey300
+                                : AppColors.grey200,
+                            width: 1,
+                          ),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 12.h,
+                        ),
+                      ),
+                      icon: Icon(
+                        Icons.arrow_back_ios,
+                        size: 16.sp,
+                        color: canGoPrevious
+                            ? AppColors.grey800
+                            : AppColors.grey400,
+                      ),
+                      label: Text(
+                        'Previous',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          color: canGoPrevious
+                              ? AppColors.grey800
+                              : AppColors.grey400,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
 
-              SizedBox(width: 48.w),
+                SizedBox(width: 12.w),
 
-              // Next/Submit button
-              Expanded(
-                flex: 2,
-                child: CustomButton(
-                  text: isLastQuestion ? 'Submit Exam' : 'Next',
-                  fontSize: 12.sp,
-                  onPressed: hasAnswer
-                      ? (isLastQuestion ? _showFinishExamDialog : _nextQuestion)
-                      : null,
-                  backgroundColor: isLastQuestion
-                      ? AppColors.success
-                      : AppColors.primary,
-                  width: double.infinity,
+                // Next/Submit button
+                Expanded(
+                  flex: 1,
+                  child: SizedBox(
+                    height: 50.h,
+                    child: ElevatedButton.icon(
+                      onPressed: hasAnswer
+                          ? (isLastQuestion
+                                ? _showFinishExamDialog
+                                : _nextQuestion)
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: hasAnswer
+                            ? (isLastQuestion
+                                  ? AppColors.success
+                                  : AppColors.primary)
+                            : AppColors.grey300,
+                        foregroundColor: hasAnswer
+                            ? AppColors.white
+                            : AppColors.grey500,
+                        elevation: hasAnswer ? 4 : 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 20.w,
+                          vertical: 12.h,
+                        ),
+                      ),
+                      icon: Icon(
+                        isLastQuestion
+                            ? Icons.check_circle
+                            : Icons.arrow_forward_ios,
+                        size: 18.sp,
+                        color: hasAnswer ? AppColors.white : AppColors.grey500,
+                      ),
+                      label: Text(
+                        isLastQuestion ? 'Submit Exam' : 'Next',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.bold,
+                          color: hasAnswer
+                              ? AppColors.white
+                              : AppColors.grey500,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1678,7 +1754,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
     final allAnswered = answeredCount == totalQuestions;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: 62.h),
+      padding: EdgeInsets.only(bottom: 78.h),
       child: FloatingActionButton.extended(
         onPressed: _showFinishExamDialog,
         backgroundColor: allAnswered ? AppColors.success : AppColors.warning,

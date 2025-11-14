@@ -147,8 +147,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     '9. Contact Us',
                     'If you have any questions about this Privacy Policy or our data practices, please contact us at:\n\n'
                         'Email: engineers.devs@gmail.com\n\n'
-                        'Phone: +250791347174\n\n'
-                        'WhatsApp: +250791347174\n\n'
+                        'Phone: +250780494000\n\n'
+                        'WhatsApp: +250780494000\n\n'
                         'Live Chat: Available 24/7',
                   ),
                 ],

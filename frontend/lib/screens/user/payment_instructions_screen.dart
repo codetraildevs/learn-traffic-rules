@@ -444,21 +444,21 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         _buildSimpleStepItem(
           '1',
           'Choose a Plan',
-          'Select from 1 Month =30 days, 3 Months = 90 days, or 6 Months = 180 days',
+          'Select from 1 Month =31 days, 3 Months = 93 days, or 6 Months = 186 days',
           Icons.credit_card,
         ),
         SizedBox(height: 8.h),
         _buildSimpleStepItem(
           '2',
           'Make Payment',
-          'Send money via MoMo using the payment code provided after selecting a plan',
+          'Send money via MoMo using the payment code:329494  after selecting a plan by dialing *182*8*1*329494*FRW#',
           Icons.payment,
         ),
         SizedBox(height: 8.h),
         _buildSimpleStepItem(
           '3',
           'Get Access Code',
-          'Contact admin if exams access is not granted after payment in 5-10 minutes',
+          'Contact admin (Alexis:0788659575) or whatsapp (Alexis:0788659575) if exams access is not granted after payment in 5-10 minutes',
           Icons.vpn_key,
         ),
       ],
@@ -678,7 +678,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           ),
           SizedBox(height: 12.h),
           Text(
-            'After making payment, contact admin to verify and get your access code:',
+            'After making payment, contact admin (Alexis:0788659575) or whatsapp (Alexis:0788659575) to verify and get your access code:',
             style: TextStyle(
               fontSize: 12.sp,
               color: Colors.grey[700],
@@ -742,7 +742,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
             ),
             SizedBox(height: 16.h),
             Text(
-              'To pay via MoMo, dial this code *182*8*1*888085*${tier.amount}#:',
+              'To pay via MoMo, dial this code *182*8*1*329494*${tier.amount}#:',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 8.h),
@@ -757,7 +757,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      '*182*8*1*888085*${tier.amount}#',
+                      '*182*8*1*329494*${tier.amount}#',
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.bold,
@@ -768,7 +768,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                   ),
                   IconButton(
                     onPressed: () =>
-                        _copyToClipboard('*182*8*1*888085*${tier.amount}#'),
+                        _copyToClipboard('*182*8*1*329494*${tier.amount}#'),
                     icon: Icon(Icons.copy, color: Colors.blue[600]),
                     tooltip: 'Copy  Code',
                   ),
@@ -803,7 +803,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
               Navigator.pop(context);
               _contactAdmin();
             },
-            child: const Text('Contact Admin'),
+            child: const Text('Contact Alexis'),
           ),
         ],
       ),
@@ -819,7 +819,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
 
   void _openWhatsApp(String phoneNumber) async {
     // Use the specific admin WhatsApp number
-    const cleanNumber = '250780494000';
+    const cleanNumber = '250788659575';
     final Uri whatsappUri = Uri.parse('https://wa.me/$cleanNumber');
 
     debugPrint('🔍 WhatsApp URL: $whatsappUri');
@@ -862,7 +862,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                 children: [
                   const Text('WhatsApp not available. Try these alternatives:'),
                   SizedBox(height: 4.h),
-                  const Text('• Call: +250780494000'),
+                  const Text('• Call: +250788659575'),
                   const Text('• WhatsApp Web: web.whatsapp.com'),
                 ],
               ),
@@ -871,7 +871,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
               action: SnackBarAction(
                 label: 'Call Instead',
                 textColor: Colors.white,
-                onPressed: () => _makeCall('+250780494000'),
+                onPressed: () => _makeCall('+250788659575'),
               ),
             ),
           );
@@ -881,7 +881,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   void _contactAdmin() async {
-    const phoneNumber = '+250788123456';
+    const phoneNumber = '+250788659575';
     final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
 
     if (await canLaunchUrl(phoneUri)) {
@@ -910,7 +910,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   void _dialMoMoPayment(int amount) async {
-    final usdCode = '*182*8*1*888085*$amount#';
+    final usdCode = '*182*8*1*329494*$amount#';
     final Uri usdUri = Uri(scheme: 'tel', path: usdCode);
 
     if (await canLaunchUrl(usdUri)) {

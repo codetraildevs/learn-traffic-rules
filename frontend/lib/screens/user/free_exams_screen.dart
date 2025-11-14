@@ -488,7 +488,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   }
 
   void _contactAdmin() async {
-    const phoneNumber = '+250788123456';
+    const phoneNumber = '+250788659575';
     final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
 
     if (await canLaunchUrl(phoneUri)) {

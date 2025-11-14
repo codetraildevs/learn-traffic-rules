@@ -42,7 +42,7 @@ class TermsConditionsScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    'Last updated: September 2024',
+                    'Last updated: November 2025',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey600,
                     ),
@@ -165,15 +165,15 @@ class TermsConditionsScreen extends StatelessWidget {
 
                   _buildSection(
                     '12. Governing Law',
-                    'These terms are governed by and construed in accordance with the laws of [Your Jurisdiction], without regard to conflict of law principles.',
+                    'These terms are governed by and construed in accordance with the laws of Rwanda, without regard to conflict of law principles.',
                   ),
 
                   _buildSection(
                     '13. Contact Information',
                     'If you have any questions about these Terms and Conditions, please contact us at:\n\n'
                         'Email: engineers.devs@gmail.com\n\n'
-                        'Phone: +250791347174\n\n'
-                        'WhatsApp: +250791347174\n\n'
+                        'Phone: +250788659575\n\n'
+                        'WhatsApp: +250788659575\n\n'
                         'Live Chat: Available 24/7',
                   ),
                 ],

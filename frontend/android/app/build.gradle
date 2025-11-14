@@ -125,6 +125,7 @@ dependencies {
     // Play Core removed - not needed for this app and incompatible with SDK 34
     
     // AndroidX Core for edge-to-edge support
-    implementation 'androidx.core:core-ktx:1.13.1'
-    implementation 'androidx.activity:activity-ktx:1.9.2'
+    // Updated to latest versions for Android 15 (API 35) compatibility
+    implementation 'androidx.core:core-ktx:1.15.0'
+    implementation 'androidx.activity:activity-ktx:1.9.3'
 }
