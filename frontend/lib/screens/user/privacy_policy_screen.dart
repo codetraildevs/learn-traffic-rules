@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/app_localizations.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Privacy Policy'),
+        title: Text(l10n.privacyPolicy),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
       ),
@@ -37,12 +39,12 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Privacy Policy',
+                    l10n.privacyPolicy,
                     style: AppTextStyles.heading2.copyWith(fontSize: 24.sp),
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    'Last updated: October 2025',
+                    l10n.lastUpdated('October 2025'),
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey600,
                     ),
@@ -72,84 +74,48 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSection(
-                    '1. Information We Collect',
-                    'We collect the following information when you use our app:\n\n'
-                        '• Personal Information: Your name and phone number for account creation and identification.\n\n'
-                        '• Device Information: Device ID for security and authentication purposes.\n\n'
-                        '• Usage Data: Your exam results, progress, and app usage patterns to improve our services.\n\n'
-                        '• Technical Data: App performance data, crash reports, and device specifications.',
+                    l10n.privacyPolicySection1Title,
+                    l10n.privacyPolicySection1Content,
                   ),
 
                   _buildSection(
-                    '2. How We Use Your Information',
-                    'We use your information to:\n\n'
-                        '• Provide and maintain our educational services\n\n'
-                        '• Track your learning progress and exam results\n\n'
-                        '• Improve app functionality and user experience\n\n'
-                        '• Send important updates and notifications\n\n'
-                        '• Ensure app security and prevent fraud\n\n'
-                        '• Provide customer support when needed',
+                    l10n.privacyPolicySection2Title,
+                    l10n.privacyPolicySection2Content,
                   ),
 
                   _buildSection(
-                    '3. Information Sharing',
-                    'We do not sell, trade, or rent your personal information to third parties. We may share your information only in the following circumstances:\n\n'
-                        '• With your explicit consent\n\n'
-                        '• To comply with legal obligations\n\n'
-                        '• To protect our rights and prevent fraud\n\n'
-                        '• With service providers who assist in app operations (under strict confidentiality agreements)',
+                    l10n.privacyPolicySection3Title,
+                    l10n.privacyPolicySection3Content,
                   ),
 
                   _buildSection(
-                    '4. Data Security',
-                    'We implement appropriate security measures to protect your personal information:\n\n'
-                        '• Data encryption during transmission and storage\n\n'
-                        '• Secure authentication using device ID\n\n'
-                        '• Regular security audits and updates\n\n'
-                        '• Limited access to personal data by authorized personnel only',
+                    l10n.privacyPolicySection4Title,
+                    l10n.privacyPolicySection4Content,
                   ),
 
                   _buildSection(
-                    '5. Data Retention',
-                    'We retain your information for as long as necessary to:\n\n'
-                        '• Provide our services to you\n\n'
-                        '• Comply with legal obligations\n\n'
-                        '• Resolve disputes and enforce agreements\n\n'
-                        'You can request deletion of your account and associated data at any time.',
+                    l10n.privacyPolicySection5Title,
+                    l10n.privacyPolicySection5Content,
                   ),
 
                   _buildSection(
-                    '6. Your Rights',
-                    'You have the right to:\n\n'
-                        '• Access your personal information\n\n'
-                        '• Correct inaccurate information\n\n'
-                        '• Delete your account and data\n\n'
-                        '• Withdraw consent for data processing\n\n'
-                        '• Export your data in a portable format\n\n'
-                        '• Object to certain data processing activities',
+                    l10n.privacyPolicySection6Title,
+                    l10n.privacyPolicySection6Content,
                   ),
 
                   _buildSection(
-                    '7. Children\'s Privacy',
-                    'Our app is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided us with personal information, please contact us immediately.',
+                    l10n.privacyPolicySection7Title,
+                    l10n.privacyPolicySection7Content,
                   ),
 
                   _buildSection(
-                    '8. Changes to This Policy',
-                    'We may update this Privacy Policy from time to time. We will notify you of any changes by:\n\n'
-                        '• Posting the new Privacy Policy in the app\n\n'
-                        '• Sending you a notification\n\n'
-                        '• Updating the "Last updated" date\n\n'
-                        'Your continued use of the app after changes constitutes acceptance of the new policy.',
+                    l10n.privacyPolicySection8Title,
+                    l10n.privacyPolicySection8Content,
                   ),
 
                   _buildSection(
-                    '9. Contact Us',
-                    'If you have any questions about this Privacy Policy or our data practices, please contact us at:\n\n'
-                        'Email: engineers.devs@gmail.com\n\n'
-                        'Phone: +250780494000\n\n'
-                        'WhatsApp: +250780494000\n\n'
-                        'Live Chat: Available 24/7',
+                    l10n.privacyPolicySection9Title,
+                    l10n.privacyPolicySection9Content,
                   ),
                 ],
               ),

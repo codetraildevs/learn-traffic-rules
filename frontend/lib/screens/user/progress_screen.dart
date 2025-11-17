@@ -16,6 +16,7 @@ import '../../services/offline_exam_service.dart';
 import '../../services/network_service.dart';
 import '../../services/exam_sync_service.dart';
 import '../../providers/auth_provider.dart';
+import '../../l10n/app_localizations.dart';
 import 'exam_taking_screen.dart';
 
 class ProgressScreen extends ConsumerStatefulWidget {
@@ -282,11 +283,12 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: Text(
-          'My Progress',
+          l10n.myProgress,
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
@@ -316,6 +318,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   Widget _buildErrorView() {
+    final l10n = AppLocalizations.of(context)!;
     return RefreshIndicator(
       onRefresh: _loadExamResults,
       color: const Color(0xFF2E7D32),
@@ -332,7 +335,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                   Icon(Icons.error_outline, size: 80.w, color: Colors.red),
                   SizedBox(height: 24.h),
                   Text(
-                    'Error Loading Progress',
+                    l10n.errorLoadingProgress,
                     style: TextStyle(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.bold,
@@ -341,7 +344,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                   ),
                   SizedBox(height: 12.h),
                   Text(
-                    _error ?? 'Unknown error occurred',
+                    _error ?? l10n.unknownErrorOccurred,
                     style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
                     textAlign: TextAlign.center,
                   ),
@@ -365,7 +368,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                           SizedBox(width: 8.w),
                           Flexible(
                             child: Text(
-                              'Offline mode - Showing cached results only',
+                              l10n.offlineModeShowingCachedResultsOnly,
                               style: TextStyle(
                                 fontSize: 12.sp,
                                 color: Colors.orange[700],
@@ -386,7 +389,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                         child: ElevatedButton.icon(
                           onPressed: _loadExamResults,
                           icon: const Icon(Icons.refresh),
-                          label: const Text('Retry'),
+                          label: Text(l10n.retry),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF2E7D32),
                             foregroundColor: Colors.white,
@@ -411,7 +414,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                             );
                           },
                           icon: const Icon(Icons.quiz),
-                          label: const Text('Take Exam'),
+                          label: Text(l10n.startExam),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.primary,
                             side: const BorderSide(color: AppColors.primary),
@@ -434,6 +437,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   Widget _buildEmptyView() {
+    final l10n = AppLocalizations.of(context)!;
     return RefreshIndicator(
       onRefresh: _loadExamResults,
       color: const Color(0xFF2E7D32),
@@ -465,7 +469,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                     SizedBox(height: 32.h),
 
                     Text(
-                      'Progress Tracking',
+                      l10n.progressTracking,
                       style: TextStyle(
                         fontSize: 24.sp,
                         fontWeight: FontWeight.bold,
@@ -475,7 +479,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                     SizedBox(height: 12.h),
 
                     Text(
-                      'Your progress and analytics will appear here',
+                      l10n.yourProgressAndAnalyticsWillAppearHere,
                       style: TextStyle(
                         fontSize: 16.sp,
                         color: Colors.grey[600],
@@ -485,7 +489,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                     SizedBox(height: 8.h),
 
                     Text(
-                      'Take your first exam to start tracking your performance',
+                      l10n.takeYourFirstExamToStartTrackingYourPerformance,
                       style: TextStyle(
                         fontSize: 14.sp,
                         color: Colors.grey[500],
@@ -505,7 +509,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                       child: Column(
                         children: [
                           Text(
-                            'What you\'ll see here:',
+                            l10n.whatYouWillSeeHere,
                             style: TextStyle(
                               fontSize: 16.sp,
                               fontWeight: FontWeight.bold,
@@ -516,22 +520,22 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
 
                           _buildFeaturePreview(
                             icon: Icons.trending_up,
-                            title: 'Performance Trends',
-                            description: 'Track your improvement over time',
+                            title: l10n.performanceTrends,
+                            description: l10n.trackYourImprovementOverTime,
                           ),
                           SizedBox(height: 12.h),
 
                           _buildFeaturePreview(
                             icon: Icons.analytics,
-                            title: 'Detailed Analytics',
-                            description: 'See your strengths and weaknesses',
+                            title: l10n.detailedAnalytics,
+                            description: l10n.seeYourStrengthsAndWeaknesses,
                           ),
                           SizedBox(height: 12.h),
 
                           _buildFeaturePreview(
                             icon: Icons.lightbulb,
-                            title: 'Study Recommendations',
-                            description: 'Get personalized study tips',
+                            title: l10n.studyRecommendations,
+                            description: l10n.getPersonalizedStudyTips,
                           ),
                         ],
                       ),
@@ -554,7 +558,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                               );
                             },
                             icon: const Icon(Icons.quiz),
-                            label: const Text('Take Exam'),
+                            label: Text(l10n.startExam),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
@@ -570,7 +574,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                           child: OutlinedButton.icon(
                             onPressed: _loadExamResults,
                             icon: const Icon(Icons.refresh),
-                            label: const Text('Refresh'),
+                            label: Text(l10n.retry),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.primary,
                               side: const BorderSide(color: AppColors.primary),
@@ -594,6 +598,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   Widget _buildOfflineBanner() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
@@ -610,7 +615,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Offline Mode',
+                  l10n.offlineMode,
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
@@ -618,7 +623,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                   ),
                 ),
                 Text(
-                  'Showing cached results. Results will sync when internet is available.',
+                  l10n.showingCachedResultsResultsWillSyncWhenInternetIsAvailable,
                   style: TextStyle(fontSize: 12.sp, color: Colors.orange[600]),
                 ),
               ],
@@ -703,6 +708,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   Widget _buildPerformanceOverview() {
+    final l10n = AppLocalizations.of(context)!;
     // Count unique exams (not total attempts)
     final uniqueExamIds = _examResults.map((result) => result.examId).toSet();
     final totalExams = uniqueExamIds.length;
@@ -740,7 +746,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your Statistics',
+            l10n.yourStatistics,
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
@@ -754,7 +760,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
               Expanded(
                 child: _buildStatCard(
                   icon: Icons.quiz,
-                  label: 'Total Exams',
+                  label: l10n.totalExams,
                   value: '$totalExams',
                   color: const Color(0xFF2196F3),
                 ),
@@ -763,7 +769,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
               Expanded(
                 child: _buildStatCard(
                   icon: Icons.check_circle,
-                  label: 'Passed',
+                  label: l10n.passed,
                   value: '$passedExams',
                   color: const Color(0xFF4CAF50),
                 ),
@@ -777,7 +783,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
               Expanded(
                 child: _buildStatCard(
                   icon: Icons.trending_up,
-                  label: 'Average Score',
+                  label: l10n.averageScore,
                   value: '${_calculateAverageScore().toStringAsFixed(1)}%',
                   color: const Color(0xFFFF9800),
                 ),
@@ -786,7 +792,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
               Expanded(
                 child: _buildStatCard(
                   icon: Icons.timer,
-                  label: 'Total Time',
+                  label: l10n.totalTime,
                   value: _formatTime(totalTimeSpent),
                   color: const Color(0xFF9C27B0),
                 ),
@@ -839,11 +845,12 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   Widget _buildRecentResults() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Recent Results',
+          l10n.recentResults,
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.bold,
@@ -858,6 +865,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   Widget _buildResultCard(ExamResultData result) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
@@ -915,7 +923,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      result.exam?.title ?? 'Exam Result',
+                      result.exam?.title ?? l10n.examResult,
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.bold,
@@ -924,7 +932,10 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      '${result.correctAnswers}/${result.questionResults?.length ?? 0} correct',
+                      l10n.correctAnswersCount(
+                        result.correctAnswers,
+                        result.questionResults?.length ?? 0,
+                      ),
                       style: TextStyle(
                         fontSize: 12.sp,
                         color: Colors.grey[600],
@@ -957,7 +968,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Text(
-                      result.passed ? 'PASSED' : 'FAILED',
+                      result.passed ? l10n.passed : l10n.failed,
                       style: TextStyle(
                         fontSize: 10.sp,
                         fontWeight: FontWeight.bold,
@@ -1019,6 +1030,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   // ==================== NEW COMPREHENSIVE ANALYTICS METHODS ====================
 
   Widget _buildAreasOfImprovement() {
+    final l10n = AppLocalizations.of(context)!;
     if (_examResults.isEmpty) return const SizedBox.shrink();
 
     // Get unique failed results (most recent attempt for each exam)
@@ -1067,7 +1079,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
               Icon(Icons.trending_down, color: Colors.red[600], size: 24.w),
               SizedBox(width: 8.w),
               Text(
-                'Areas of Improvement',
+                l10n.areasOfImprovement,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
@@ -1081,11 +1093,13 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
           if (uniqueFailedResults.isNotEmpty) ...[
             _buildImprovementCard(
               icon: Icons.warning,
-              title: 'Failed Exams',
-              description:
-                  'You have ${uniqueFailedResults.length} failed exam${uniqueFailedResults.length == 1 ? '' : 's'}. Focus on retaking these exams.',
+              title: l10n.failedExamsTitle,
+              description: l10n.youHaveFailedExams(
+                uniqueFailedResults.length,
+                uniqueFailedResults.length == 1 ? '' : 's',
+              ),
               color: Colors.red,
-              action: 'Retake Failed Exams',
+              action: l10n.retakeFailedExams,
               onTap: () => _showFailedExams(uniqueFailedResults),
             ),
             SizedBox(height: 12.h),
@@ -1094,11 +1108,13 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
           if (uniqueLowScoreResults.isNotEmpty) ...[
             _buildImprovementCard(
               icon: Icons.speed,
-              title: 'Low Performance',
-              description:
-                  '${uniqueLowScoreResults.length} exam${uniqueLowScoreResults.length == 1 ? '' : 's'} with scores below 70%. Review these topics.',
+              title: l10n.lowPerformance,
+              description: l10n.examsWithLowScores(
+                uniqueLowScoreResults.length,
+                uniqueLowScoreResults.length == 1 ? '' : 's',
+              ),
               color: Colors.orange,
-              action: 'Review Topics',
+              action: l10n.reviewTopics,
               onTap: () => _showLowScoreExams(uniqueLowScoreResults),
             ),
             SizedBox(height: 12.h),
@@ -1106,11 +1122,10 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
 
           _buildImprovementCard(
             icon: Icons.analytics,
-            title: 'Study Strategy',
-            description:
-                'Focus on consistent practice. Take exams regularly to improve your performance.',
+            title: l10n.studyStrategy,
+            description: l10n.focusOnConsistentPractice,
             color: Colors.blue,
-            action: 'Study Tips',
+            action: l10n.studyTips,
             onTap: _showStudyTips,
           ),
         ],
@@ -1174,6 +1189,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   Widget _buildPerformanceTrends() {
+    final l10n = AppLocalizations.of(context)!;
     if (_examResults.length < 2) return const SizedBox.shrink();
 
     // Sort results by date
@@ -1213,7 +1229,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
               ),
               SizedBox(width: 8.w),
               Text(
-                'Performance Trend',
+                l10n.performanceTrend,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
@@ -1268,8 +1284,8 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
           SizedBox(height: 12.h),
           Text(
             isImproving
-                ? 'Great job! Your performance is improving. Keep it up!'
-                : 'Your performance needs attention. Focus on consistent study.',
+                ? l10n.greatJobPerformanceImproving
+                : l10n.performanceNeedsAttention,
             style: TextStyle(
               fontSize: 12.sp,
               color: Colors.grey[600],
@@ -1282,6 +1298,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   Widget _buildCategoryPerformance() {
+    final l10n = AppLocalizations.of(context)!;
     // Get unique results first (most recent attempt for each exam)
     final uniqueResults = <String, ExamResultData>{};
     for (final result in _examResults) {
@@ -1345,7 +1362,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
               Icon(Icons.category, color: Colors.blue[600], size: 24.w),
               SizedBox(width: 8.w),
               Text(
-                'Category Performance',
+                l10n.categoryPerformance,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
@@ -1388,7 +1405,11 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          '${results.length} exam${results.length == 1 ? '' : 's'} • $passedCount passed',
+                          l10n.examsCountWithPassed(
+                            results.length,
+                            results.length == 1 ? '' : 's',
+                            passedCount,
+                          ),
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: Colors.grey[600],
@@ -1434,30 +1455,25 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
 
     List<String> recommendations = [];
 
+    final l10n = AppLocalizations.of(context)!;
     if (totalExams < 3) {
-      recommendations.add('Take more practice exams to build confidence');
+      recommendations.add(l10n.takeMorePracticeExams);
     }
 
     if (averageScore < 70) {
-      recommendations.add(
-        'Focus on understanding the material before taking exams',
-      );
+      recommendations.add(l10n.focusOnUnderstandingMaterial);
     }
 
     if (passedExams < totalExams * 0.7) {
-      recommendations.add('Review failed exam topics and retake them');
+      recommendations.add(l10n.reviewFailedExamTopics);
     }
 
     if (averageScore >= 80) {
-      recommendations.add(
-        'Excellent performance! Consider taking advanced exams',
-      );
+      recommendations.add(l10n.excellentPerformanceConsiderAdvanced);
     }
 
     if (recommendations.isEmpty) {
-      recommendations.add(
-        'Keep practicing regularly to maintain your performance',
-      );
+      recommendations.add(l10n.keepPracticingRegularly);
     }
 
     return Container(
@@ -1482,7 +1498,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
               Icon(Icons.lightbulb, color: Colors.amber[600], size: 24.w),
               SizedBox(width: 8.w),
               Text(
-                'Study Recommendations',
+                l10n.studyRecommendations,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
@@ -1530,10 +1546,11 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
 
   // Helper methods for improvement actions
   void _showFailedExams(List<ExamResultData> failedResults) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Failed Exams (${failedResults.length})'),
+        title: Text(l10n.failedExams(failedResults.length)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1542,15 +1559,15 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                   (result) => ListTile(
                     title: Text(
                       result.exam?.title ??
-                          'Exam ${failedResults.indexOf(result) + 1}',
+                          '${l10n.exam} ${failedResults.indexOf(result) + 1}',
                     ),
-                    subtitle: Text('Latest Score: ${result.score}%'),
+                    subtitle: Text(l10n.latestScore(result.score)),
                     trailing: TextButton(
                       onPressed: () {
                         Navigator.pop(context);
                         _retakeExam(result.examId);
                       },
-                      child: const Text('Retake'),
+                      child: Text(l10n.retakeExam),
                     ),
                   ),
                 )
@@ -1560,7 +1577,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(l10n.close),
           ),
         ],
       ),
@@ -1568,10 +1585,11 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   void _showLowScoreExams(List<ExamResultData> lowScoreResults) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Low Performance Exams (${lowScoreResults.length})'),
+        title: Text(l10n.lowPerformanceExams(lowScoreResults.length)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1580,15 +1598,15 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                   (result) => ListTile(
                     title: Text(
                       result.exam?.title ??
-                          'Exam ${lowScoreResults.indexOf(result) + 1}',
+                          '${l10n.exam} ${lowScoreResults.indexOf(result) + 1}',
                     ),
-                    subtitle: Text('Latest Score: ${result.score}%'),
+                    subtitle: Text(l10n.latestScore(result.score)),
                     trailing: TextButton(
                       onPressed: () {
                         Navigator.pop(context);
                         _viewExamResult(result);
                       },
-                      child: const Text('View Answer'),
+                      child: Text(l10n.viewAnswer),
                     ),
                   ),
                 )
@@ -1598,7 +1616,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(l10n.close),
           ),
         ],
       ),
@@ -1606,35 +1624,36 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   void _showStudyTips() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Study Tips'),
-        content: const SingleChildScrollView(
+        title: Text(l10n.studyTips),
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('📚 Study Strategies:'),
-              SizedBox(height: 8),
-              Text('• Review material before taking exams'),
-              Text('• Take practice exams regularly'),
-              Text('• Focus on weak areas identified in results'),
-              Text('• Use spaced repetition for better retention'),
-              SizedBox(height: 16),
-              Text('🎯 Exam Tips:'),
-              SizedBox(height: 8),
-              Text('• Read questions carefully'),
-              Text('• Eliminate obviously wrong answers'),
-              Text('• Manage your time effectively'),
-              Text('• Stay calm and focused'),
+              Text(l10n.studyStrategies),
+              SizedBox(height: 8.h),
+              Text(l10n.reviewMaterialBeforeTakingExams),
+              Text(l10n.takePracticeExamsRegularly),
+              Text(l10n.focusOnWeakAreasIdentifiedInResults),
+              Text(l10n.useSpacedRepetitionForBetterRetention),
+              SizedBox(height: 16.h),
+              Text(l10n.examTips),
+              SizedBox(height: 8.h),
+              Text(l10n.readQuestionsCarefully),
+              Text(l10n.eliminateObviouslyWrongAnswers),
+              Text(l10n.manageYourTimeEffectively),
+              Text(l10n.stayCalmAndFocused),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Got it!'),
+            child: Text(l10n.gotIt),
           ),
         ],
       ),
@@ -1649,10 +1668,11 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
       );
 
       // Create a proper Exam object from the exam result
+      final l10n = AppLocalizations.of(context)!;
       final exam = Exam(
         id: examResult.examId,
-        title: examResult.exam?.title ?? 'Exam',
-        description: 'Retake this exam',
+        title: examResult.exam?.title ?? l10n.exam,
+        description: l10n.retakeThisExam,
         category: examResult.exam?.category ?? 'General',
         difficulty: examResult.exam?.difficulty ?? 'Medium',
         duration: 20,
@@ -1686,9 +1706,10 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
     } catch (e) {
       debugPrint('Error navigating to retake exam: $e');
       // Show error message
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error: Could not start exam retake'),
+        SnackBar(
+          content: Text(l10n.errorCouldNotStartExamRetake),
           backgroundColor: Colors.red,
         ),
       );
@@ -1758,6 +1779,7 @@ class _SecureDetailedAnswersModalState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: BoxDecoration(
@@ -1796,7 +1818,7 @@ class _SecureDetailedAnswersModalState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.examResult.exam?.title ?? 'Exam Result',
+                            widget.examResult.exam?.title ?? l10n.examResult,
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 18.sp,
@@ -1804,7 +1826,11 @@ class _SecureDetailedAnswersModalState
                             ),
                           ),
                           Text(
-                            'Score: ${widget.examResult.score}% • ${widget.examResult.correctAnswers}/${widget.examResult.questionResults?.length ?? 0} correct',
+                            l10n.scoreWithCorrectCount(
+                              widget.examResult.score,
+                              widget.examResult.correctAnswers,
+                              widget.examResult.questionResults?.length ?? 0,
+                            ),
                             style: TextStyle(
                               color: Colors.white70,
                               fontSize: 14.sp,
@@ -1833,7 +1859,7 @@ class _SecureDetailedAnswersModalState
                       SizedBox(width: 8.w),
                       Expanded(
                         child: Text(
-                          'Screenshots are disabled to protect answer integrity',
+                          l10n.screenshotsDisabledToProtectIntegrity,
                           style: TextStyle(
                             fontSize: 12.sp,
                             color: Colors.red[700],
@@ -1873,6 +1899,7 @@ class _SecureDetailedAnswersModalState
   }
 
   Widget _buildSecureNoResultsView() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1880,7 +1907,7 @@ class _SecureDetailedAnswersModalState
           Icon(Icons.quiz_outlined, size: 64.sp, color: Colors.grey[400]),
           SizedBox(height: 16.h),
           Text(
-            'No detailed results available',
+            l10n.noDetailedResultsAvailable,
             style: TextStyle(
               fontSize: 16.sp,
               fontWeight: FontWeight.w500,
@@ -1889,7 +1916,7 @@ class _SecureDetailedAnswersModalState
           ),
           SizedBox(height: 8.h),
           Text(
-            'Question-by-question breakdown is not available for this exam.',
+            l10n.questionBreakdownNotAvailable,
             style: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
             textAlign: TextAlign.center,
           ),
@@ -1902,6 +1929,7 @@ class _SecureDetailedAnswersModalState
     QuestionResult questionResult,
     int questionNumber,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
       padding: EdgeInsets.all(16.w),
@@ -1969,7 +1997,7 @@ class _SecureDetailedAnswersModalState
                     ),
                     SizedBox(width: 4.w),
                     Text(
-                      questionResult.isCorrect ? 'Correct' : 'Wrong',
+                      questionResult.isCorrect ? l10n.correct : l10n.wrong,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 12.sp,

@@ -25,6 +25,7 @@ import '../user/course_detail_screen.dart';
 import '../../services/notification_polling_service.dart';
 import '../../providers/course_provider.dart';
 import '../../core/constants/app_constants.dart';
+import '../../l10n/app_localizations.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -305,6 +306,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
@@ -365,23 +367,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         },
         type: BottomNavigationBarType.fixed,
         items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.dashboard),
+            label: l10n.dashboard,
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.quiz),
-            label: user?.role == 'ADMIN' ? 'Manage Exams' : 'Exams',
+            label: user?.role == 'ADMIN' ? l10n.manageExams : l10n.exams,
           ),
           BottomNavigationBarItem(
             icon: user?.role == 'USER'
                 ? const Icon(Icons.analytics)
                 : const Icon(Icons.group),
-            label: user?.role == 'USER' ? 'Progress' : 'Manage Users',
+            label: user?.role == 'USER' ? l10n.progress : l10n.userManagement,
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.person),
+            label: l10n.profile,
           ),
         ],
       ),
@@ -389,12 +391,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildDashboardTab() {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: Text(l10n.dashboard),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         actions: [
@@ -470,6 +473,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildErrorView() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: EdgeInsets.all(20.w),
@@ -479,7 +483,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
             SizedBox(height: 16.h),
             Text(
-              'Error Loading Dashboard',
+              l10n.errorLoadingDashboard,
               style: AppTextStyles.heading3.copyWith(color: AppColors.error),
             ),
             SizedBox(height: 8.h),
@@ -492,7 +496,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
             SizedBox(height: 16.h),
             CustomButton(
-              text: 'Retry',
+              text: l10n.retry,
               onPressed: _loadDashboardData,
               backgroundColor: AppColors.primary,
               width: 120.w,
@@ -513,6 +517,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildWelcomeCard(User? user) {
+    final l10n = AppLocalizations.of(context)!;
     final isAdmin = user?.role == 'ADMIN';
     final authState = ref.watch(authProvider);
     final accessPeriod = authState.accessPeriod;
@@ -553,7 +558,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isAdmin ? 'Admin Dashboard' : 'Welcome back!',
+            isAdmin ? l10n.adminDashboard : l10n.welcomeBack,
             style: AppTextStyles.heading2.copyWith(
               color: AppColors.white,
               fontSize: 24.sp,
@@ -562,8 +567,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           SizedBox(height: 8.h),
           Text(
             isAdmin
-                ? 'Manage your traffic rules learning platform'
-                : 'Ready to master traffic rules?',
+                ? l10n.manageTrafficRulesPlatform
+                : l10n.readyToMasterTrafficRules,
             style: AppTextStyles.bodyLarge.copyWith(
               color: AppColors.white.withValues(alpha: 0.9),
             ),
@@ -611,29 +616,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          accessPeriod?.hasAccess == true &&
-                                  (accessPeriod?.remainingDays ?? 0) > 0
-                              ? 'Access Active - ${accessPeriod?.remainingDays} days left'
-                              : accessPeriod?.hasAccess == true &&
-                                    (accessPeriod?.remainingDays ?? 0) == 0
-                              ? 'Access Expired'
-                              : 'No Access Code',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14.sp,
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context)!;
+                            String text;
+                            if (accessPeriod?.hasAccess == true &&
+                                (accessPeriod?.remainingDays ?? 0) > 0) {
+                              text = l10n.accessActiveDaysLeft(
+                                accessPeriod!.remainingDays ?? 0,
+                              );
+                            } else if (accessPeriod?.hasAccess == true &&
+                                (accessPeriod?.remainingDays ?? 0) == 0) {
+                              text = l10n.accessExpired;
+                            } else {
+                              text = l10n.noAccessCode;
+                            }
+                            return Text(
+                              text,
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: AppColors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14.sp,
+                              ),
+                            );
+                          },
                         ),
                         if (accessPeriod?.hasAccess == true &&
                             (accessPeriod?.remainingDays ?? 0) > 0) ...[
                           SizedBox(height: 2.h),
-                          Text(
-                            'Payment Tier: ${accessPeriod?.paymentTier ?? 'None'}',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.white.withValues(alpha: 0.8),
-                              fontSize: 11.sp,
-                            ),
+                          Builder(
+                            builder: (context) {
+                              final l10n = AppLocalizations.of(context)!;
+                              return Text(
+                                l10n.paymentTierColon(
+                                  accessPeriod?.paymentTier ?? l10n.none,
+                                ),
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.white.withValues(alpha: 0.8),
+                                  fontSize: 11.sp,
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ],
@@ -645,32 +668,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ],
 
           SizedBox(height: 16.h),
-          CustomButton(
-            text: isAdmin
-                ? 'Manage Platform'
-                : (accessPeriod?.hasAccess == true &&
-                      (accessPeriod?.remainingDays ?? 0) > 0)
-                ? 'Start Learning'
-                : 'Get Access Code',
-            onPressed: () {
-              if (isAdmin) {
-                setState(() {
-                  _currentIndex = 1; // Switch to exams tab
-                });
-              } else if (accessPeriod?.hasAccess == true &&
-                  (accessPeriod?.remainingDays ?? 0) > 0) {
-                setState(() {
-                  _currentIndex = 1; // Switch to exams tab
-                });
-              } else {
-                // Show access code instructions
-                //_showContactSupportDialog();
-                _showPaymentInstructions();
-              }
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return CustomButton(
+                text: isAdmin
+                    ? l10n.managePlatform
+                    : (accessPeriod?.hasAccess == true &&
+                          (accessPeriod?.remainingDays ?? 0) > 0)
+                    ? l10n.startLearning
+                    : l10n.getAccessCode,
+                onPressed: () {
+                  if (isAdmin) {
+                    setState(() {
+                      _currentIndex = 1; // Switch to exams tab
+                    });
+                  } else if (accessPeriod?.hasAccess == true &&
+                      (accessPeriod?.remainingDays ?? 0) > 0) {
+                    setState(() {
+                      _currentIndex = 1; // Switch to exams tab
+                    });
+                  } else {
+                    // Show access code instructions
+                    //_showContactSupportDialog();
+                    _showPaymentInstructions();
+                  }
+                },
+                backgroundColor: AppColors.white,
+                textColor: AppColors.primary,
+                width: 150.w,
+              );
             },
-            backgroundColor: AppColors.white,
-            textColor: AppColors.primary,
-            width: 150.w,
           ),
         ],
       ),
@@ -697,11 +725,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildAdminSection() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Admin Actions',
+          l10n.adminActions,
           style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
         ),
         SizedBox(height: 16.h),
@@ -710,8 +739,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           children: [
             Expanded(
               child: _buildAdminActionCard(
-                'Manage Users',
-                'View, search, and manage all users',
+                l10n.userManagement,
+                l10n.viewSearchManageAllUsers,
                 Icons.people,
                 AppColors.primary,
                 () => Navigator.push(
@@ -725,8 +754,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             SizedBox(width: 12.w),
             Expanded(
               child: _buildAdminActionCard(
-                'Manage Exams',
-                'Create, edit, and manage exams',
+                l10n.manageExams,
+                l10n.createEditManageExams,
                 Icons.quiz,
                 AppColors.success,
                 () {
@@ -744,32 +773,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         Row(
           children: [
             Expanded(
-              child: _buildAdminActionCard(
-                'Access Codes',
-                'Manage access codes and payments',
-                Icons.vpn_key,
-                AppColors.warning,
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AccessCodeManagementScreen(),
-                  ),
-                ),
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return _buildAdminActionCard(
+                    l10n.accessCodes,
+                    l10n.manageAccessCodesAndPayments,
+                    Icons.vpn_key,
+                    AppColors.warning,
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const AccessCodeManagementScreen(),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
             SizedBox(width: 12.w),
             Expanded(
-              child: _buildAdminActionCard(
-                'Manage Courses',
-                'Create, edit, and manage courses',
-                Icons.school,
-                AppColors.secondary,
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CourseManagementScreen(),
-                  ),
-                ),
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return _buildAdminActionCard(
+                    l10n.courseManagement,
+                    l10n.createEditAndManageCourses,
+                    Icons.school,
+                    AppColors.secondary,
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CourseManagementScreen(),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -784,9 +824,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Quick Stats',
-          style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+        Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Text(
+              l10n.quickStats,
+              style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+            );
+          },
         ),
         SizedBox(height: 16.h),
 
@@ -795,20 +840,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Row(
             children: [
               Expanded(
-                child: _buildStatCard(
-                  'Total Users',
-                  '$_totalUsers',
-                  Icons.people,
-                  AppColors.primary,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.totalUsers,
+                      '$_totalUsers',
+                      Icons.people,
+                      AppColors.primary,
+                    );
+                  },
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _buildStatCard(
-                  'Total Exams',
-                  '$_totalExams',
-                  Icons.quiz,
-                  AppColors.success,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.totalExams,
+                      '$_totalExams',
+                      Icons.quiz,
+                      AppColors.success,
+                    );
+                  },
                 ),
               ),
             ],
@@ -817,20 +872,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Row(
             children: [
               Expanded(
-                child: _buildStatCard(
-                  'Total Attempts',
-                  '$_totalExamResults',
-                  Icons.analytics,
-                  AppColors.warning,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.totalAttempts,
+                      '$_totalExamResults',
+                      Icons.analytics,
+                      AppColors.warning,
+                    );
+                  },
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _buildStatCard(
-                  'Avg Score',
-                  '${_averageScore.toStringAsFixed(1)}%',
-                  Icons.trending_up,
-                  AppColors.secondary,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.avgScore,
+                      '${_averageScore.toStringAsFixed(1)}%',
+                      Icons.trending_up,
+                      AppColors.secondary,
+                    );
+                  },
                 ),
               ),
             ],
@@ -840,20 +905,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Row(
             children: [
               Expanded(
-                child: _buildStatCard(
-                  'Exams Taken',
-                  '$_totalExamsTaken',
-                  Icons.quiz,
-                  AppColors.primary,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.examsTaken,
+                      '$_totalExamsTaken',
+                      Icons.quiz,
+                      AppColors.primary,
+                    );
+                  },
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _buildStatCard(
-                  'Average Score',
-                  '${_averageScore.toStringAsFixed(1)}%',
-                  Icons.trending_up,
-                  AppColors.success,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.averageScore,
+                      '${_averageScore.toStringAsFixed(1)}%',
+                      Icons.trending_up,
+                      AppColors.success,
+                    );
+                  },
                 ),
               ),
             ],
@@ -862,20 +937,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Row(
             children: [
               Expanded(
-                child: _buildStatCard(
-                  'Study Streak',
-                  '$_studyStreak days',
-                  Icons.local_fire_department,
-                  AppColors.warning,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.studyStreak,
+                      l10n.studyStreakDays(_studyStreak),
+                      Icons.local_fire_department,
+                      AppColors.warning,
+                    );
+                  },
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _buildStatCard(
-                  'Achievements',
-                  '$_achievements',
-                  Icons.emoji_events,
-                  AppColors.secondary,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.achievements,
+                      '$_achievements',
+                      Icons.emoji_events,
+                      AppColors.secondary,
+                    );
+                  },
                 ),
               ),
             ],
@@ -937,9 +1022,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           children: [
             Icon(Icons.quiz_outlined, size: 48.sp, color: AppColors.grey400),
             SizedBox(height: 16.h),
-            Text(
-              'No exams available',
-              style: AppTextStyles.bodyLarge.copyWith(color: AppColors.grey600),
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Text(
+                  l10n.noExamsAvailable,
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: AppColors.grey600,
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -949,9 +1041,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Available Exams',
-          style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+        Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Text(
+              l10n.availableExams,
+              style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+            );
+          },
         ),
         SizedBox(height: 16.h),
         // Show exam type cards in a grid
@@ -984,12 +1081,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Courses',
-              style: AppTextStyles.heading3.copyWith(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w600,
-              ),
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Text(
+                  l10n.courses,
+                  style: AppTextStyles.heading3.copyWith(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                );
+              },
             ),
             InkWell(
               onTap: () {
@@ -1000,20 +1102,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ),
                 );
               },
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Text(
-                  'View All',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.white,
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 6.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Text(
+                      l10n.viewAll,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.white,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -1029,9 +1139,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               color: AppColors.white,
               borderRadius: BorderRadius.circular(16.r),
             ),
-            child: Text(
-              'Error loading courses: ${courseState.error}',
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
+            child: Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Text(
+                  l10n.errorLoadingCourses(courseState.error ?? ''),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.error,
+                  ),
+                );
+              },
             ),
           )
         else if (courseState.courses.isEmpty)
@@ -1049,11 +1166,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   color: AppColors.grey400,
                 ),
                 SizedBox(height: 16.h),
-                Text(
-                  'No courses available',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.grey600,
-                  ),
+                Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return Text(
+                      l10n.noCoursesAvailable,
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.grey600,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -1296,7 +1418,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ),
                     SizedBox(height: 2.h),
                     Text(
-                      '${exams.length} ${exams.length == 1 ? 'Exam' : 'Exams'}',
+                      '${exams.length} ${exams.length == 1 ? AppLocalizations.of(context)!.exam : AppLocalizations.of(context)!.exams}',
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.grey600,
                         fontSize: 12.sp,
@@ -1314,6 +1436,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildRecentActivity(User? user) {
+    final l10n = AppLocalizations.of(context)!;
     final isAdmin = user?.role == 'ADMIN';
     final recentResults = _examResults.take(5).toList();
 
@@ -1321,7 +1444,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          isAdmin ? 'Recent Activity' : 'Recent Activity',
+          l10n.recentActivity,
           style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
         ),
         SizedBox(height: 16.h),
@@ -1346,7 +1469,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 Icon(Icons.history, size: 48.sp, color: AppColors.grey400),
                 SizedBox(height: 16.h),
                 Text(
-                  'No recent activity',
+                  l10n.noRecentActivity,
                   style: AppTextStyles.bodyLarge.copyWith(
                     color: AppColors.grey600,
                   ),
@@ -1354,8 +1477,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 SizedBox(height: 8.h),
                 Text(
                   isAdmin
-                      ? 'No exam attempts recorded yet'
-                      : 'Start taking exams to see your progress here',
+                      ? l10n.noExamAttemptsRecorded
+                      : l10n.startTakingExamsToSeeProgress,
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.grey500,
                   ),
@@ -1542,6 +1665,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildExamsTab() {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final isAdmin = user?.role == 'ADMIN';
@@ -1554,6 +1678,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildProgressTab() {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final isUser = user?.role == 'USER';
@@ -1565,13 +1690,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildProfileTab() {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
     //disble back button when user are on dashboard screen
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text(l10n.profile),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
       ),
@@ -1607,12 +1733,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    user?.fullName ?? 'User',
+                    user?.fullName ?? l10n.user,
                     style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    user?.phoneNumber ?? 'No phone number',
+                    user?.phoneNumber ?? l10n.noPhoneNumber,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey600,
                     ),
@@ -1643,8 +1769,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
             // Settings Options
             _buildSettingsOption(
-              'View Profile',
-              'View and manage your profile information',
+              l10n.viewProfile,
+              l10n.viewAndManageProfileInfo,
               Icons.person_outline,
               () {
                 Navigator.pushNamed(context, '/view-profile');
@@ -1652,8 +1778,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             _buildSettingsOption(
-              'Notifications',
-              'Manage your notification preferences',
+              l10n.notifications,
+              l10n.manageNotificationPreferences,
               Icons.notifications,
               () {
                 Navigator.pushNamed(context, '/notifications');
@@ -1661,8 +1787,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             _buildSettingsOption(
-              'Study Reminders',
-              'Set up study reminders',
+              l10n.studyReminders,
+              l10n.setUpStudyReminders,
               Icons.schedule,
               () {
                 Navigator.pushNamed(context, '/study-reminders');
@@ -1670,8 +1796,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             _buildSettingsOption(
-              'About App',
-              'Learn more about this application',
+              l10n.aboutApp,
+              l10n.learnMoreAboutApp,
               Icons.info_outline,
               () {
                 Navigator.pushNamed(context, '/about-app');
@@ -1679,8 +1805,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             _buildSettingsOption(
-              'Privacy Policy',
-              'Read our privacy policy',
+              l10n.privacyPolicy,
+              l10n.readPrivacyPolicy,
               Icons.privacy_tip_outlined,
               () {
                 Navigator.pushNamed(context, '/privacy-policy');
@@ -1688,8 +1814,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             _buildSettingsOption(
-              'Terms & Conditions',
-              'Read our terms and conditions',
+              l10n.termsConditions,
+              l10n.readTermsConditions,
               Icons.description_outlined,
               () {
                 Navigator.pushNamed(context, '/terms-conditions');
@@ -1697,8 +1823,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             _buildSettingsOption(
-              'Help & Support',
-              'Get help and contact support',
+              l10n.helpSupport,
+              l10n.getHelpAndContactSupport,
               Icons.help,
               () {
                 Navigator.pushNamed(context, '/help-support');
@@ -1706,8 +1832,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             _buildSettingsOption(
-              'Delete Account',
-              'Permanently delete your account',
+              l10n.deleteAccount,
+              l10n.permanentlyDeleteAccount,
               Icons.delete_forever,
               () {
                 Navigator.pushNamed(context, '/delete-account');
@@ -1719,7 +1845,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
             // Logout Button
             CustomButton(
-              text: 'Logout',
+              text: l10n.logout,
               onPressed: () async {
                 await ref.read(authProvider.notifier).logout();
               },

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
+import '../../l10n/app_localizations.dart';
 
 class HelpSupportScreen extends ConsumerStatefulWidget {
   const HelpSupportScreen({super.key});
@@ -24,9 +25,10 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Help & Support'),
+        title: Text(l10n.helpSupport),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
       ),
@@ -58,12 +60,12 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    'Help & Support',
+                    l10n.helpSupport,
                     style: AppTextStyles.heading2.copyWith(fontSize: 24.sp),
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    'We\'re here to help you succeed',
+                    l10n.weAreHereToHelpYouSucceed,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey600,
                     ),
@@ -93,47 +95,47 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Quick Help',
+                    l10n.quickHelp,
                     style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
                   ),
                   SizedBox(height: 16.h),
 
                   _buildHelpItem(
-                    'How to take an exam',
-                    'Learn the basics of taking exams',
+                    l10n.howToTakeAnExam,
+                    l10n.learnTheBasicsOfTakingExams,
                     Icons.quiz,
                     () => _showHelpDialog(
-                      'How to take an exam',
+                      l10n.howToTakeAnExam,
                       _getExamHelpText(),
                     ),
                   ),
 
                   _buildHelpItem(
-                    'Understanding your progress',
-                    'Track your learning journey',
+                    l10n.understandingYourProgress,
+                    l10n.trackYourLearningJourney,
                     Icons.analytics,
                     () => _showHelpDialog(
-                      'Understanding your progress',
+                      l10n.understandingYourProgress,
                       _getProgressHelpText(),
                     ),
                   ),
 
                   _buildHelpItem(
-                    'Payment and access codes',
-                    'Learn about payment options',
+                    l10n.paymentAndAccessCodes,
+                    l10n.learnAboutPaymentOptions,
                     Icons.payment,
                     () => _showHelpDialog(
-                      'Payment and access codes',
+                      l10n.paymentAndAccessCodes,
                       _getPaymentHelpText(),
                     ),
                   ),
 
                   _buildHelpItem(
-                    'Account management',
-                    'Manage your profile and settings',
+                    l10n.accountManagement,
+                    l10n.manageYourProfileAndSettings,
                     Icons.person,
                     () => _showHelpDialog(
-                      'Account management',
+                      l10n.accountManagement,
                       _getAccountHelpText(),
                     ),
                   ),
@@ -162,35 +164,35 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Contact Support',
+                    l10n.contactSupport,
                     style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
                   ),
                   SizedBox(height: 16.h),
 
                   _buildContactItem(
-                    'Email Support',
+                    l10n.emailSupport,
                     'engineers.devs@gmail.com',
                     Icons.email,
                     () => _launchEmail(),
                   ),
 
                   _buildContactItem(
-                    'Phone Support',
+                    l10n.phoneSupport,
                     '+250 788 659 575',
                     Icons.phone,
                     () => _launchPhone(),
                   ),
 
                   _buildContactItem(
-                    'WhatsApp',
+                    l10n.whatsappLabel,
                     '+250 788 659 575',
                     Icons.chat,
                     () => _launchWhatsApp(),
                   ),
 
                   _buildContactItem(
-                    'Live Chat',
-                    'Available 24/7',
+                    l10n.liveChat,
+                    l10n.available247,
                     Icons.chat_bubble,
                     () => _showLiveChatDialog(),
                   ),
@@ -282,29 +284,29 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Frequently Asked Questions',
+                    l10n.frequentlyAskedQuestions,
                     style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
                   ),
                   SizedBox(height: 16.h),
 
                   _buildFAQItem(
-                    'How do I reset my progress?',
-                    'You can reset your progress from the Profile settings.',
+                    l10n.faqHowDoIResetMyProgress,
+                    l10n.faqHowDoIResetMyProgressAnswer,
                   ),
 
                   _buildFAQItem(
-                    'Can I use the app offline?',
-                    'Yes, you can study offline, but you need internet to submit exams.',
+                    l10n.faqCanIUseTheAppOffline,
+                    l10n.faqCanIUseTheAppOfflineAnswer,
                   ),
 
                   _buildFAQItem(
-                    'How often are new questions added?',
-                    'We add new questions monthly to keep content fresh.',
+                    l10n.faqHowOftenAreNewQuestionsAdded,
+                    l10n.faqHowOftenAreNewQuestionsAddedAnswer,
                   ),
 
                   _buildFAQItem(
-                    'Is my data secure?',
-                    'Yes, we use industry-standard encryption to protect your data.',
+                    l10n.faqIsMyDataSecure,
+                    l10n.faqIsMyDataSecureAnswer,
                   ),
                 ],
               ),
@@ -443,6 +445,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
   }
 
   void _showHelpDialog(String title, String content) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -451,7 +454,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            child: Text(l10n.close),
           ),
         ],
       ),
@@ -459,17 +462,16 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
   }
 
   void _showLiveChatDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Live Chat'),
-        content: const Text(
-          'Live chat is currently unavailable. Please use email or phone support.',
-        ),
+        title: Text(l10n.liveChat),
+        content: Text(l10n.liveChatCurrentlyUnavailable),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: Text(l10n.ok),
           ),
         ],
       ),
@@ -477,10 +479,11 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
   }
 
   void _launchEmail() async {
+    final l10n = AppLocalizations.of(context)!;
     final Uri emailUri = Uri(
       scheme: 'mailto',
       path: 'engineers.devs@gmail.com',
-      query: 'subject=Support Request',
+      query: 'subject=${l10n.supportRequestSubject}',
     );
 
     debugPrint('🔍 Email URI: $emailUri');
@@ -501,23 +504,24 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
         if (!mounted) return;
 
         // Show user-friendly error with alternative options
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Email not available. Try these alternatives:'),
+                Text(l10n.emailNotAvailableTryTheseAlternatives),
                 SizedBox(height: 4.h),
-                const Text('• Call: +250 788 659 575'),
-                const Text('• WhatsApp: +250 788 659 575'),
-                const Text('• Manual: engineers.devs@gmail.com'),
+                Text('${l10n.callColon} +250 788 659 575'),
+                Text('${l10n.whatsAppColon} +250 788 659 575'),
+                Text('${l10n.manualColon} engineers.devs@gmail.com'),
               ],
             ),
             backgroundColor: Colors.orange,
             duration: const Duration(seconds: 5),
             action: SnackBarAction(
-              label: 'Call Instead',
+              label: l10n.callInstead,
               textColor: Colors.white,
               onPressed: () => _launchPhone(),
             ),
@@ -570,22 +574,23 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
           if (!mounted) return;
 
           // Show user-friendly error with alternative options
+          final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('WhatsApp not available. Try these alternatives:'),
+                  Text(l10n.whatsappNotAvailableTryTheseAlternatives),
                   SizedBox(height: 4.h),
-                  const Text('• Call: +250 788 659 575'),
-                  const Text('• WhatsApp Web: web.whatsapp.com'),
+                  Text('${l10n.callColon} +250 788 659 575'),
+                  Text('${l10n.whatsAppWebColon} web.whatsapp.com'),
                 ],
               ),
               backgroundColor: Colors.orange,
               duration: const Duration(seconds: 5),
               action: SnackBarAction(
-                label: 'Call Instead',
+                label: l10n.callInstead,
                 textColor: Colors.white,
                 onPressed: () => _launchPhone(),
               ),

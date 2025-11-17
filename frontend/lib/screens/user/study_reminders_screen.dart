@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/custom_button.dart';
 import '../../services/api_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class StudyRemindersScreen extends ConsumerStatefulWidget {
   const StudyRemindersScreen({super.key});
@@ -33,6 +34,27 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
     'Sunday',
   ];
 
+  String _getDayName(String day, AppLocalizations l10n) {
+    switch (day) {
+      case 'Monday':
+        return l10n.monday;
+      case 'Tuesday':
+        return l10n.tuesday;
+      case 'Wednesday':
+        return l10n.wednesday;
+      case 'Thursday':
+        return l10n.thursday;
+      case 'Friday':
+        return l10n.friday;
+      case 'Saturday':
+        return l10n.saturday;
+      case 'Sunday':
+        return l10n.sunday;
+      default:
+        return day;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -41,9 +63,10 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Study Reminders'),
+        title: Text(l10n.studyReminders),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
       ),
@@ -71,12 +94,12 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                   Icon(Icons.schedule, size: 48.sp, color: AppColors.primary),
                   SizedBox(height: 16.h),
                   Text(
-                    'Study Reminders',
+                    l10n.studyReminders,
                     style: AppTextStyles.heading2.copyWith(fontSize: 24.sp),
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    'Set up reminders to maintain your study routine',
+                    l10n.setUpRemindersToMaintainStudyRoutine,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey600,
                     ),
@@ -115,14 +138,14 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Enable Study Reminders',
+                          l10n.enableStudyReminders,
                           style: AppTextStyles.bodyLarge.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          'Receive daily reminders to study',
+                          l10n.receiveDailyRemindersToStudy,
                           style: AppTextStyles.bodySmall.copyWith(
                             color: AppColors.grey600,
                           ),
@@ -165,7 +188,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Reminder Time',
+                      l10n.reminderTime,
                       style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
                     ),
                     SizedBox(height: 16.h),
@@ -226,7 +249,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Reminder Days',
+                      l10n.reminderDays,
                       style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
                     ),
                     SizedBox(height: 16.h),
@@ -237,7 +260,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                       children: _daysOfWeek.map((day) {
                         final isSelected = _selectedDays.contains(day);
                         return FilterChip(
-                          label: Text(day),
+                          label: Text(_getDayName(day, l10n)),
                           selected: isSelected,
                           onSelected: (selected) {
                             setState(() {
@@ -288,7 +311,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Daily Study Goal',
+                      l10n.dailyStudyGoal,
                       style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
                     ),
                     SizedBox(height: 16.h),
@@ -302,7 +325,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                         ),
                         SizedBox(width: 12.w),
                         Text(
-                          '$_studyGoal minutes per day',
+                          l10n.minutesPerDayValue(_studyGoal),
                           style: AppTextStyles.bodyLarge.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -348,7 +371,9 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
 
             // Save Button
             CustomButton(
-              text: _reminderId == null ? 'Create Reminder' : 'Update Reminder',
+              text: _reminderId == null
+                  ? l10n.createReminder
+                  : l10n.updateReminder,
               onPressed: _isLoading ? null : _saveReminders,
               backgroundColor: AppColors.primary,
               width: double.infinity,
@@ -446,9 +471,10 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
         if (response['success'] == true) {
           _reminderId = response['data']['id'];
           if (mounted) {
+            final l10n = AppLocalizations.of(context)!;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Study reminder created successfully'),
+              SnackBar(
+                content: Text(l10n.studyReminderCreatedSuccessfully),
                 backgroundColor: AppColors.success,
               ),
             );
@@ -467,9 +493,10 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
 
         if (response['success'] == true) {
           if (mounted) {
+            final l10n = AppLocalizations.of(context)!;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Study reminder updated successfully'),
+              SnackBar(
+                content: Text(l10n.studyReminderUpdatedSuccessfully),
                 backgroundColor: AppColors.success,
               ),
             );
@@ -480,9 +507,10 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save reminder: $e'),
+            content: Text('${l10n.failedToSaveReminder}: $e'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -506,9 +534,10 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
           _reminderId = null;
         });
         if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Study reminder deleted successfully'),
+            SnackBar(
+              content: Text(l10n.studyReminderDeletedSuccessfully),
               backgroundColor: AppColors.success,
             ),
           );

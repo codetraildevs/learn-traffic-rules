@@ -7,6 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../services/api_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/simple_notification_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class NotificationsListScreen extends ConsumerStatefulWidget {
   const NotificationsListScreen({super.key});
@@ -88,12 +89,14 @@ class _NotificationsListScreenState
           _showPushNotificationsForNewNotifications(newNotifications);
         }
       } else {
+        final l10n = AppLocalizations.of(context)!;
         _showErrorSnackBar(
-          response['message'] ?? 'Failed to load notifications',
+          response['message'] ?? l10n.failedToLoadNotifications,
         );
       }
     } catch (e) {
-      _showErrorSnackBar('Error loading notifications: $e');
+      final l10n = AppLocalizations.of(context)!;
+      _showErrorSnackBar(l10n.errorLoadingNotifications(e.toString()));
     } finally {
       setState(() {
         _isLoading = false;
@@ -115,7 +118,8 @@ class _NotificationsListScreenState
         });
       }
     } catch (e) {
-      _showErrorSnackBar('Error marking notification as read: $e');
+      final l10n = AppLocalizations.of(context)!;
+      _showErrorSnackBar(l10n.errorMarkingNotificationAsRead(e.toString()));
     }
   }
 
@@ -142,8 +146,9 @@ class _NotificationsListScreenState
   }
 
   void _showPushNotification(Map<String, dynamic> notification) {
+    final l10n = AppLocalizations.of(context)!;
     final type = notification['type'] ?? '';
-    final title = notification['title'] ?? 'New Notification';
+    final title = notification['title'] ?? l10n.newNotification;
     final message = notification['message'] ?? '';
 
     debugPrint('🔔 Attempting to show push notification: $title ($type)');
@@ -287,6 +292,7 @@ class _NotificationsListScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     // if (_notifications.any((n) => !n['isRead'])) {
     //   IconButton(
     //     onPressed: _markAllAsRead,
@@ -312,14 +318,14 @@ class _NotificationsListScreenState
                     ),
                     SizedBox(height: 16.h),
                     Text(
-                      'No notifications yet',
+                      l10n.noNotificationsYet,
                       style: AppTextStyles.heading3.copyWith(
                         color: Colors.grey,
                       ),
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      'You\'ll see your notifications here',
+                      l10n.youllSeeYourNotificationsHere,
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: Colors.grey,
                       ),
@@ -452,17 +458,18 @@ class _NotificationsListScreenState
       final date = DateTime.parse(dateString);
       final now = DateTime.now();
       final difference = now.difference(date);
+      final l10n = AppLocalizations.of(context)!;
 
       if (difference.inMinutes < 1) {
-        return 'Just now';
+        return l10n.justNow;
       } else if (difference.inHours < 1) {
-        return '$difference.inMinutes m ago';
+        return l10n.minutesAgo(difference.inMinutes);
       } else if (difference.inDays < 1) {
-        return '$difference.inHours h ago';
+        return l10n.hoursAgo(difference.inHours);
       } else if (difference.inDays < 7) {
-        return '$difference.inDays d ago';
+        return l10n.daysAgo(difference.inDays);
       } else {
-        return '${date.month}/${date.day}/${date.year}';
+        return l10n.dateFormat(date.month, date.day, date.year);
       }
     } catch (e) {
       return '';

@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flash_message/flash_message.dart';
+import 'package:learn_traffic_rules/l10n/app_localizations.dart';
+import 'package:learn_traffic_rules/l10n/fallback_localizations_delegate.dart';
 import 'package:learn_traffic_rules/screens/auth/register_screen.dart';
 // import 'package:firebase_core/firebase_core.dart';  // Temporarily disabled
 import 'package:learn_traffic_rules/screens/splash/splash_screen.dart';
 import 'package:learn_traffic_rules/screens/onboarding/disclaimer_screen.dart';
+import 'package:learn_traffic_rules/screens/onboarding/language_selection_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
@@ -18,6 +21,8 @@ import 'services/image_cache_service.dart';
 import 'services/network_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/app_provider.dart';
+import 'providers/locale_provider.dart';
+import 'services/locale_service.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/user/view_profile_screen.dart';
@@ -31,6 +36,9 @@ import 'screens/user/help_support_screen.dart';
 
 // Provider for disclaimer status
 final disclaimerAcceptedProvider = StateProvider<bool>((ref) => false);
+
+// Provider for language selection status
+final languageSelectedProvider = StateProvider<bool>((ref) => false);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -101,18 +109,31 @@ void main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  bool _initialized = false;
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
 
-    // Initialize disclaimer status
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeDisclaimerStatus(ref);
-    });
+    // Initialize only once when the widget is first built
+    if (!_initialized) {
+      _initialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _initializeDisclaimerStatus(ref);
+        _initializeLocale(ref);
+        _initializeLanguageSelection(ref);
+      });
+    }
 
     return ScreenUtilInit(
       designSize: const Size(375, 812), // iPhone X design size
@@ -125,12 +146,41 @@ class MyApp extends ConsumerWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeMode,
+          locale: locale,
+          localizationsDelegates: const [
+            AppLocalizations.delegate, // Our custom delegate - supports rw
+            FallbackMaterialLocalizationsDelegate(), // Wrapper with fallback for rw
+            FallbackWidgetsLocalizationsDelegate(), // Wrapper with fallback for rw
+            FallbackCupertinoLocalizationsDelegate(), // Wrapper with fallback for rw
+          ],
+          supportedLocales: const [
+            Locale('en'), // English
+            Locale('rw'), // Kinyarwanda
+            Locale('fr'), // French
+          ],
+          localeResolutionCallback: (locale, supportedLocales) {
+            // If locale is null, return the first supported locale
+            if (locale == null) {
+              return supportedLocales.first;
+            }
+
+            // Check if the exact locale is supported
+            for (var supportedLocale in supportedLocales) {
+              if (supportedLocale.languageCode == locale.languageCode) {
+                return supportedLocale;
+              }
+            }
+
+            // If not found, return the first supported locale as fallback
+            return supportedLocales.first;
+          },
           home: FlashMessageOverlay(
             position: FlashMessagePosition.center,
             child: _getInitialScreen(authState),
           ),
           routes: {
             '/main': (context) => _getInitialScreen(authState),
+            '/language-selection': (context) => const LanguageSelectionScreen(),
             '/disclaimer': (context) => const DisclaimerScreen(),
             '/view-profile': (context) => const ViewProfileScreen(),
             '/about-app': (context) => const AboutAppScreen(),
@@ -160,6 +210,15 @@ class MyApp extends ConsumerWidget {
     return Consumer(
       builder: (context, ref, child) {
         final disclaimerAccepted = ref.watch(disclaimerAcceptedProvider);
+        final languageSelected = ref.watch(languageSelectedProvider);
+
+        // If language not selected, show language selection screen
+        if (!languageSelected) {
+          debugPrint(
+            '🔄 MAIN: Language not selected, showing LanguageSelectionScreen',
+          );
+          return const LanguageSelectionScreen();
+        }
 
         // If disclaimer not accepted, show disclaimer screen
         if (!disclaimerAccepted) {
@@ -210,6 +269,28 @@ class MyApp extends ConsumerWidget {
       debugPrint('🔄 MAIN: Disclaimer status initialized: $disclaimerAccepted');
     } catch (e) {
       debugPrint('Error initializing disclaimer status: $e');
+    }
+  }
+
+  // Initialize locale on app start
+  Future<void> _initializeLocale(WidgetRef ref) async {
+    try {
+      final localeNotifier = ref.read(localeProvider.notifier);
+      await localeNotifier.loadSavedLocale();
+      debugPrint('🔄 MAIN: Locale initialized');
+    } catch (e) {
+      debugPrint('Error initializing locale: $e');
+    }
+  }
+
+  // Initialize language selection status on app start
+  Future<void> _initializeLanguageSelection(WidgetRef ref) async {
+    try {
+      final isSelected = await LocaleService.isLanguageSelected();
+      ref.read(languageSelectedProvider.notifier).state = isSelected;
+      debugPrint('✅ Language selection initialized: $isSelected');
+    } catch (e) {
+      debugPrint('⚠️ Failed to initialize language selection: $e');
     }
   }
 

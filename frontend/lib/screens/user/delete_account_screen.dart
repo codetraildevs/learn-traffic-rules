@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../services/api_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class DeleteAccountScreen extends ConsumerStatefulWidget {
   const DeleteAccountScreen({super.key});
@@ -30,12 +31,13 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Delete Account'),
+        title: Text(l10n.deleteAccount),
         backgroundColor: AppColors.error,
         foregroundColor: AppColors.white,
       ),
@@ -64,7 +66,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    'Delete Account',
+                    l10n.deleteAccount,
                     style: AppTextStyles.heading2.copyWith(
                       fontSize: 24.sp,
                       color: AppColors.error,
@@ -72,7 +74,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    'This action cannot be undone',
+                    l10n.thisActionCannotBeUndone,
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: AppColors.error,
                       fontWeight: FontWeight.w600,
@@ -103,14 +105,20 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Account Information',
+                    l10n.accountInformation,
                     style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
                   ),
                   SizedBox(height: 16.h),
-                  _buildInfoRow('Name', user?.fullName ?? 'Not provided'),
-                  _buildInfoRow('Phone', user?.phoneNumber ?? 'Not provided'),
+                  _buildInfoRow(
+                    l10n.fullName,
+                    user?.fullName ?? l10n.notProvided,
+                  ),
+                  _buildInfoRow(
+                    l10n.phoneNumber,
+                    user?.phoneNumber ?? l10n.notProvided,
+                  ),
                   //_buildInfoRow('User ID', user?.id ?? 'Not available'),
-                  _buildInfoRow('Role', user?.role ?? 'USER'),
+                  _buildInfoRow(l10n.accountStatus, user?.role ?? 'USER'),
                 ],
               ),
             ),
@@ -136,15 +144,15 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'What Will Be Deleted',
+                    l10n.whatWillBeDeleted,
                     style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
                   ),
                   SizedBox(height: 16.h),
-                  _buildDeletionItem('• Your personal profile information'),
-                  _buildDeletionItem('• All exam results and progress data'),
-                  _buildDeletionItem('• Study history and achievements'),
-                  _buildDeletionItem('• App preferences and settings'),
-                  _buildDeletionItem('• Any uploaded content or data'),
+                  _buildDeletionItem(l10n.yourPersonalProfileInformation),
+                  _buildDeletionItem(l10n.allExamResultsAndProgressData),
+                  _buildDeletionItem(l10n.studyHistoryAndAchievements),
+                  _buildDeletionItem(l10n.appPreferencesAndSettings),
+                  _buildDeletionItem(l10n.anyUploadedContentOrData),
                   SizedBox(height: 16.h),
                   Container(
                     padding: EdgeInsets.all(12.w),
@@ -166,7 +174,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                         SizedBox(width: 8.w),
                         Expanded(
                           child: Text(
-                            'This action is permanent and cannot be reversed.',
+                            l10n.thisActionIsPermanentAndCannotBeReversed,
                             style: AppTextStyles.bodySmall.copyWith(
                               color: AppColors.warning,
                               fontWeight: FontWeight.w500,
@@ -201,12 +209,12 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Confirm Deletion',
+                    l10n.confirmDeletion,
                     style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    'To confirm account deletion, please type "DELETE" in the box below:',
+                    l10n.toConfirmAccountDeletionPleaseTypeDelete,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey700,
                     ),
@@ -215,7 +223,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   TextField(
                     controller: _confirmationController,
                     decoration: InputDecoration(
-                      hintText: 'Type DELETE to confirm',
+                      hintText: l10n.typeDeleteToConfirm,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.r),
                       ),
@@ -232,7 +240,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    'Enter your phone number to confirm deletion:',
+                    l10n.enterYourPhoneNumberToConfirmDeletion,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey700,
                     ),
@@ -242,7 +250,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
-                      hintText: 'Enter your phone number',
+                      hintText: l10n.pleaseEnterYourPhoneNumber,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.r),
                       ),
@@ -271,7 +279,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                       ),
                       Expanded(
                         child: Text(
-                          'I understand that this action cannot be undone',
+                          l10n.iUnderstandThatThisActionCannotBeUndone,
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.grey700,
                           ),
@@ -290,7 +298,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
               children: [
                 Expanded(
                   child: CustomButton(
-                    text: 'Cancel',
+                    text: l10n.cancel,
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
@@ -301,7 +309,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 SizedBox(width: 16.w),
                 Expanded(
                   child: CustomButton(
-                    text: 'Delete Account',
+                    text: l10n.deleteAccount,
                     onPressed:
                         _confirmDeletion &&
                             _phoneController.text.isNotEmpty &&
@@ -370,22 +378,21 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
 
     try {
       // Show confirmation dialog
+      final l10n = AppLocalizations.of(context)!;
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Final Confirmation'),
-          content: const Text(
-            'Are you absolutely sure you want to delete your account? This action cannot be undone.',
-          ),
+          title: Text(l10n.finalConfirmation),
+          content: Text(l10n.areYouAbsolutelySureYouWantToDeleteYourAccount),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
               style: TextButton.styleFrom(foregroundColor: AppColors.error),
-              child: const Text('Delete'),
+              child: Text(l10n.delete),
             ),
           ],
         ),
@@ -403,9 +410,10 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
 
       // Show success message
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Account deleted successfully'),
+          SnackBar(
+            content: Text(l10n.accountDeletedSuccessfully),
             backgroundColor: AppColors.success,
           ),
         );
@@ -422,9 +430,10 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to delete account: $e'),
+            content: Text('${l10n.failedToDeleteAccount}: $e'),
             backgroundColor: AppColors.error,
           ),
         );

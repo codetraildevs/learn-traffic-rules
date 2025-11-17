@@ -7,6 +7,7 @@ import '../../models/course_model.dart';
 import '../../services/course_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
+import '../../l10n/app_localizations.dart';
 import 'course_content_viewer_screen.dart';
 import 'payment_instructions_screen.dart';
 
@@ -47,16 +48,22 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
           _fullCourse = response.data;
         });
       } else {
+        if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
+          setState(() {
+            _error = response.message ?? l10n.failedToLoadCourseDetails;
+            _fullCourse = widget.course; // Fallback to basic course info
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
-          _error = response.message ?? 'Failed to load course details';
+          _error = '${l10n.errorLoadingCourse}: $e';
           _fullCourse = widget.course; // Fallback to basic course info
         });
       }
-    } catch (e) {
-      setState(() {
-        _error = 'Error loading course: $e';
-        _fullCourse = widget.course; // Fallback to basic course info
-      });
     } finally {
       setState(() {
         _isLoading = false;
@@ -66,6 +73,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     // Global payment: if user has access, they can access all paid courses
     final hasAccess = authState.accessPeriod?.hasAccess ?? false;
@@ -168,8 +176,8 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                             course.contents!.isNotEmpty))
                       CustomButton(
                         text: canAccess
-                            ? 'Start Course'
-                            : 'Get Access to Start',
+                            ? l10n.startCourse
+                            : l10n.getAccessToStart,
                         onPressed: canAccess
                             ? () {
                                 // Navigate to content viewer - it will load contents if needed
@@ -221,7 +229,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                             SizedBox(width: 12.w),
                             Expanded(
                               child: Text(
-                                'Course content is being prepared. Please check back later.',
+                                l10n.courseContentBeingPrepared,
                                 style: AppTextStyles.bodyMedium.copyWith(
                                   color: AppColors.warning,
                                 ),
@@ -260,11 +268,16 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Difficulty',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.grey600,
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context)!;
+                        return Text(
+                          l10n.difficulty,
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.grey600,
+                          ),
+                        );
+                      },
                     ),
                     SizedBox(height: 4.h),
                     Text(
@@ -304,10 +317,15 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
             spacing: 16.w,
             runSpacing: 8.h,
             children: [
-              _buildInfoItem(
-                Icons.article,
-                '${course.contentCount ?? 0} Content Items',
-                AppColors.primary,
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return _buildInfoItem(
+                    Icons.article,
+                    l10n.contentItemsCount(course.contentCount ?? 0),
+                    AppColors.primary,
+                  );
+                },
               ),
               if (course.category != null)
                 _buildInfoItem(
@@ -350,9 +368,14 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Description',
-            style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Text(
+                l10n.descriptionLabel,
+                style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
+              );
+            },
           ),
           SizedBox(height: 8.h),
           Text(
@@ -385,9 +408,14 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Course Content',
-            style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Text(
+                l10n.courseContent,
+                style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
+              );
+            },
           ),
           SizedBox(height: 12.h),
           ...sortedContents.asMap().entries.map((entry) {
@@ -476,36 +504,43 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
   }
 
   Widget _buildErrorView() {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(20.w),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
-            SizedBox(height: 16.h),
-            Text(
-              'Error Loading Course',
-              style: AppTextStyles.heading3.copyWith(color: AppColors.error),
+    return Builder(
+      builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        return Center(
+          child: Padding(
+            padding: EdgeInsets.all(20.w),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
+                SizedBox(height: 16.h),
+                Text(
+                  l10n.errorLoadingCourse,
+                  style: AppTextStyles.heading3.copyWith(
+                    color: AppColors.error,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  _error ?? l10n.unknownErrorOccurred,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.grey600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 16.h),
+                CustomButton(
+                  text: l10n.retry,
+                  onPressed: _loadCourseDetails,
+                  backgroundColor: AppColors.primary,
+                  width: 120.w,
+                ),
+              ],
             ),
-            SizedBox(height: 8.h),
-            Text(
-              _error ?? 'Unknown error occurred',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.grey600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 16.h),
-            CustomButton(
-              text: 'Retry',
-              onPressed: _loadCourseDetails,
-              backgroundColor: AppColors.primary,
-              width: 120.w,
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

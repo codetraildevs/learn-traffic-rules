@@ -13,6 +13,7 @@ import '../../services/debug_service.dart';
 import '../../services/flash_message_service.dart';
 import 'package:flash_message/flash_message.dart';
 import 'register_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -95,13 +96,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final dialogL10n = AppLocalizations.of(context)!;
         return AlertDialog(
           title: Row(
             children: [
               Icon(Icons.phone, color: AppColors.primary, size: 24.sp),
               SizedBox(width: 8.w),
               Text(
-                'Need Help?',
+                dialogL10n.needHelp,
                 style: AppTextStyles.heading3.copyWith(
                   color: AppColors.primary,
                 ),
@@ -113,7 +115,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Contact our support team:',
+                dialogL10n.contactSupport,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.grey700,
                 ),
@@ -145,7 +147,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               ),
               SizedBox(height: 8.h),
               Text(
-                'Available 24/7 for your support',
+                dialogL10n.available247,
                 style: AppTextStyles.caption.copyWith(
                   color: AppColors.grey600,
                   fontStyle: FontStyle.italic,
@@ -157,7 +159,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                'Close',
+                dialogL10n.close,
                 style: AppTextStyles.link.copyWith(color: AppColors.grey600),
               ),
             ),
@@ -209,14 +211,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         );
                         // If all methods fail, show a snackbar
                         if (mounted) {
+                          final snackL10n = AppLocalizations.of(context)!;
                           ScaffoldMessenger.of(this.context).showSnackBar(
                             SnackBar(
-                              content: const Text(
-                                'Phone number: +250 788 659 575',
+                              content: Text(
+                                snackL10n.phoneNumberColon('+250 788 659 575'),
                               ),
                               backgroundColor: AppColors.primary,
                               action: SnackBarAction(
-                                label: 'Copy',
+                                label: snackL10n.copy,
                                 onPressed: () {
                                   // Copy to clipboard functionality could be added here
                                 },
@@ -231,9 +234,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   debugPrint('📞 Error calling phone: $e');
                   // If still fails, show a snackbar
                   if (mounted) {
+                    final snackL10n = AppLocalizations.of(context)!;
                     ScaffoldMessenger.of(this.context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Phone number: +250 788 659 575'),
+                      SnackBar(
+                        content: Text(
+                          snackL10n.phoneNumberColon('+250 788 659 575'),
+                        ),
                         backgroundColor: AppColors.primary,
                       ),
                     );
@@ -247,7 +253,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   borderRadius: BorderRadius.circular(8.r),
                 ),
               ),
-              child: const Text('Call Now'),
+              child: Text(dialogL10n.callNow),
             ),
           ],
         );
@@ -274,10 +280,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         },
       });
 
+      final l10n = AppLocalizations.of(context)!;
       AppFlashMessage.show(
         context: context,
-        message: 'Please check your phone number',
-        description: 'Please enter a valid phone number',
+        message: l10n.pleaseCheckYourPhoneNumber,
+        description: l10n.pleaseEnterValidPhoneNumber,
         type: FlashMessageType.warning,
       );
       return;
@@ -346,9 +353,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           });
 
           // Check for specific error types and provide clear messages
-          String errorMessage = 'Login Failed';
-          String errorDescription =
-              'Please check your credentials and try again';
+          final l10n = AppLocalizations.of(context)!;
+          String errorMessage = l10n.loginFailed;
+          String errorDescription = l10n.pleaseCheckCredentialsAndTryAgain;
 
           // Debug the actual error message
           debugPrint('🔍 LOGIN ERROR DEBUG:');
@@ -363,68 +370,56 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               errorString.contains('device binding') ||
               errorString.contains('device conflict') ||
               errorString.contains('device not registered')) {
-            errorMessage = 'Device Mismatch';
-            errorDescription =
-                'This phone number is registered on a different device.\n\n'
-                'Solutions:\n'
-                '• Use the same device you registered with\n'
-                '• Create a new account with "Create Account" button\n'
-                '• Contact support if you need device change';
+            errorMessage = l10n.deviceMismatch;
+            errorDescription = l10n.deviceMismatchDescription;
           } else if (errorString.contains(
             'invalid phone number or device id',
           )) {
-            errorMessage = 'Phone Number Not Found';
-            errorDescription =
-                'This phone number is not registered. Please create an account first.';
+            errorMessage = l10n.phoneNumberNotFound;
+            errorDescription = l10n.phoneNumberNotRegistered;
           } else if (errorString.contains('invalid phone') ||
               errorString.contains('phone number invalid') ||
               errorString.contains('invalid phone number') ||
               errorString.contains('phone not found') ||
               errorString.contains('user not found')) {
-            errorMessage = 'Phone Number Not Found';
-            errorDescription =
-                'This phone number is not registered. Please create an account first.';
+            errorMessage = l10n.phoneNumberNotFound;
+            errorDescription = l10n.phoneNumberNotRegistered;
           } else if (errorString.contains('invalid credentials') ||
               errorString.contains('wrong password') ||
               errorString.contains('authentication failed') ||
               errorString.contains('unauthorized') ||
               errorString.contains('401')) {
-            errorMessage = 'Invalid Credentials';
-            errorDescription = 'Please check your phone number and try again.';
+            errorMessage = l10n.invalidCredentials;
+            errorDescription = l10n.pleaseCheckPhoneNumberAndTryAgain;
           } else if (errorString.contains('network') ||
               errorString.contains('connection') ||
               errorString.contains('timeout') ||
               errorString.contains('unreachable') ||
               errorString.contains('socketexception')) {
-            errorMessage = 'Network Error';
-            errorDescription =
-                'Please check your internet connection and try again.';
+            errorMessage = l10n.networkError;
+            errorDescription = l10n.checkInternetConnection;
           } else if (errorString.contains('server') ||
               errorString.contains('api error') ||
               errorString.contains('internal server') ||
               errorString.contains('500') ||
               errorString.contains('502') ||
               errorString.contains('503')) {
-            errorMessage = 'Server Error';
-            errorDescription =
-                'There was a problem with the server. Please try again in a few moments.';
+            errorMessage = l10n.serverError;
+            errorDescription = l10n.serverErrorDescription;
           } else if (errorString.contains('rate limit') ||
               errorString.contains('too many requests') ||
               errorString.contains('429')) {
-            errorMessage = 'Too Many Requests';
-            errorDescription =
-                'You are making requests too quickly. Please wait a moment and try again.';
+            errorMessage = l10n.tooManyRequests;
+            errorDescription = l10n.tooManyRequestsDescription;
           } else if (errorString.contains('forbidden') ||
               errorString.contains('403')) {
-            errorMessage = 'Access Denied';
-            errorDescription =
-                'You do not have permission to perform this action.';
+            errorMessage = l10n.accessDenied;
+            errorDescription = l10n.accessDeniedDescription;
           } else {
             // Generic error with the actual error message
-            errorMessage = 'Login Failed';
+            errorMessage = l10n.loginFailed;
             errorDescription =
-                error?.toString() ??
-                'Please check your credentials and try again';
+                error?.toString() ?? l10n.pleaseCheckCredentialsAndTryAgain;
           }
 
           AppFlashMessage.show(
@@ -441,11 +436,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
       if (mounted) {
         setState(() => _isLoading = false);
+        final l10n = AppLocalizations.of(context)!;
 
         AppFlashMessage.show(
           context: context,
-          message: 'Network Error',
-          description: 'Please check your internet connection and try again',
+          message: l10n.networkError,
+          description: l10n.checkInternetConnection,
           type: FlashMessageType.error,
           duration: const Duration(seconds: 4),
         );
@@ -455,6 +451,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -474,7 +472,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ),
 
                     child: Text(
-                      'LEARN TRAFFIC RULES',
+                      l10n.appName.toUpperCase(),
                       style: AppTextStyles.heading1.copyWith(
                         color: Colors.black,
                         fontSize: 16.sp,
@@ -487,7 +485,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   SizedBox(height: 6.h),
 
                   Text(
-                    'Learn • Practice • Master',
+                    l10n.learnPracticeMaster,
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: AppColors.grey700,
                       fontSize: 16.sp,
@@ -518,7 +516,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         ),
                         SizedBox(width: 8.w),
                         Text(
-                          'Important Information',
+                          l10n.importantInformation,
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w600,
@@ -529,7 +527,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      'Already have account? Tap "Sign In" below. New User? Tap "Create Account" to continue.',
+                      l10n.alreadyHaveAccount,
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.grey700,
                         fontSize: 13.sp,
@@ -549,7 +547,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         ),
                         SizedBox(width: 6.w),
                         Text(
-                          'Need help? Call ',
+                          l10n.needHelp,
                           style: AppTextStyles.bodySmall.copyWith(
                             color: AppColors.grey600,
                             fontSize: 13.sp,
@@ -653,7 +651,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Enter your phone number to continue',
+                        l10n.enterPhoneToContinue,
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: AppColors.grey600,
                           fontSize: 14.sp,
@@ -666,16 +664,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       // Phone Number Field
                       CustomTextField(
                         controller: _phoneController,
-                        label: 'Phone Number',
-                        hint: 'Enter your phone number',
+                        label: l10n.phoneNumber,
+                        hint: l10n.enterPhoneNumber,
                         prefixIcon: Icons.phone_outlined,
                         keyboardType: TextInputType.phone,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Phone number is required';
+                            return l10n.phoneNumberRequired;
                           }
                           if (value.length < 10) {
-                            return 'Please enter a valid phone number';
+                            return l10n.invalidPhoneNumber;
                           }
                           return null;
                         },
@@ -685,7 +683,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
                       // Login Button
                       CustomButton(
-                        text: 'Sign In',
+                        text: l10n.signIn,
                         icon: Icons.login,
                         onPressed: _isLoading ? null : _handleLogin,
                         isLoading: _isLoading,
@@ -706,7 +704,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "Don't have an account?",
+                    l10n.dontHaveAccount,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey700,
                       fontSize: 14.sp,
@@ -722,7 +720,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       );
                     },
                     child: Text(
-                      'Create Account',
+                      l10n.createAccount,
                       style: AppTextStyles.link.copyWith(
                         color: AppColors.primary,
                         fontSize: 14.sp,
@@ -745,7 +743,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 child: Column(
                   children: [
                     Text(
-                      'By using this app, you agree to our',
+                      l10n.byUsingThisAppYouAgreeToOur,
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.grey600,
                         fontSize: 16.sp,
@@ -759,7 +757,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         TextButton(
                           onPressed: () => _showPrivacyPolicyModal(),
                           child: Text(
-                            'Privacy Policy',
+                            l10n.privacyPolicy,
                             style: AppTextStyles.link.copyWith(
                               color: AppColors.primary,
                               fontSize: 12.sp,
@@ -768,7 +766,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           ),
                         ),
                         Text(
-                          ' and ',
+                          l10n.and,
                           style: AppTextStyles.caption.copyWith(
                             color: AppColors.grey600,
                             fontSize: 12.sp,
@@ -777,7 +775,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         TextButton(
                           onPressed: () => _showTermsConditionsModal(),
                           child: Text(
-                            'Terms & Conditions',
+                            l10n.termsConditions,
                             style: AppTextStyles.link.copyWith(
                               color: AppColors.primary,
                               fontSize: 12.sp,
@@ -799,36 +797,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   // Show Privacy Policy Modal
   void _showPrivacyPolicyModal() {
+    final l10n = AppLocalizations.of(context)!;
     PrivacyPolicyModal.show(
       context,
-      title: 'Privacy Policy',
+      title: l10n.privacyPolicy,
       content:
-          'Learn Traffic Rules is an educational application designed to help users prepare for provisional driving license examinations. This app is not affiliated with any government agency and serves as a practice tool only.\n\n'
-          'We collect minimal data necessary to provide our educational services:\n'
-          '• Phone number for account creation and security\n'
-          '• Device information for fraud prevention\n'
-          '• Learning progress to personalize your experience\n'
-          '• App usage data to improve our services\n\n'
-          'Your privacy is important to us. We use industry-standard security measures to protect your data and never share your personal information with third parties.',
+          '${l10n.privacyPolicyDescription}\n\n'
+          '${l10n.privacyPolicyDataCollection}\n'
+          '${l10n.privacyPolicyPhoneNumber}\n'
+          '${l10n.privacyPolicyDeviceInfo}\n'
+          '${l10n.privacyPolicyLearningProgress}\n'
+          '${l10n.privacyPolicyAppUsage}\n\n'
+          '${l10n.privacyPolicyProtection}',
       fullPolicyUrl: 'https://traffic.cyangugudims.com/privacy-policy',
     );
   }
 
   // Show Terms & Conditions Modal
   void _showTermsConditionsModal() {
+    final l10n = AppLocalizations.of(context)!;
     PrivacyPolicyModal.show(
       context,
-      title: 'Terms & Conditions',
+      title: l10n.termsConditions,
       content:
-          'By using Learn Traffic Rules, you agree to these terms:\n\n'
-          'Educational Purpose: This app is designed for educational practice only and is not affiliated with any government agency or official driving examination body.\n\n'
-          'User Responsibilities:\n'
-          '• Provide accurate information during registration\n'
-          '• Use the app for educational purposes only\n'
-          '• Respect intellectual property rights\n'
-          '• Not attempt to reverse engineer the app\n\n'
-          'Service Availability: We strive to maintain service availability but cannot guarantee uninterrupted access.\n\n'
-          'Account Termination: You may delete your account at any time. We reserve the right to suspend accounts that violate these terms.',
+          '${l10n.termsConditionsAgreement}\n\n'
+          '${l10n.termsConditionsEducationalPurpose}\n\n'
+          '${l10n.termsConditionsUserResponsibilities}\n'
+          '${l10n.termsConditionsProvideAccurateInfo}\n'
+          '${l10n.termsConditionsEducationalUseOnly}\n'
+          '${l10n.termsConditionsRespectIP}\n'
+          '${l10n.termsConditionsNoReverseEngineering}\n\n'
+          '${l10n.termsConditionsServiceAvailability}\n\n'
+          '${l10n.termsConditionsAccountTermination}',
       fullPolicyUrl: 'https://traffic.cyangugudims.com/terms-conditions',
     );
   }

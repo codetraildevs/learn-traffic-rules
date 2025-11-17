@@ -11,6 +11,7 @@ import '../../services/user_management_service.dart';
 import '../../services/network_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/loading_widget.dart';
+import '../../l10n/app_localizations.dart';
 
 class PaymentInstructionsScreen extends StatefulWidget {
   final PaymentInstructions? cachedInstructions;
@@ -84,8 +85,9 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           _isLoading = false;
         });
       } else {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
-          _error = 'Failed to load payment instructions: $e';
+          _error = '${l10n.failedToLoadPaymentInstructions}: $e';
           _isLoading = false;
         });
       }
@@ -126,8 +128,9 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
       debugPrint('🔍 Error loading from API: $e');
       // Don't show error if we have offline data
       if (_paymentData == null && _error == null) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
-          _error = 'Failed to load payment instructions: $e';
+          _error = '${l10n.failedToLoadPaymentInstructions}: $e';
           _isLoading = false;
         });
       }
@@ -180,10 +183,11 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Payment Plans',
+          l10n.paymentPlans,
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
@@ -203,6 +207,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildErrorWidget() {
+    final l10n = AppLocalizations.of(context)!;
     // Check if error is due to no internet
     final isNetworkError =
         _error != null &&
@@ -225,8 +230,8 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
             SizedBox(height: 16.h),
             Text(
               isNetworkError
-                  ? 'No Internet Connection'
-                  : 'Error Loading Payment Plans',
+                  ? l10n.noInternetConnection
+                  : l10n.errorLoadingPaymentPlans,
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -236,14 +241,14 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
             SizedBox(height: 8.h),
             Text(
               isNetworkError
-                  ? 'Payment instructions are not available offline. Please connect to the internet to view payment plans.'
-                  : _error ?? 'Unknown error occurred',
+                  ? l10n.paymentInstructionsNotAvailableOffline
+                  : _error ?? l10n.unknownErrorOccurred,
               style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 24.h),
             CustomButton(
-              text: 'Retry',
+              text: l10n.retry,
               onPressed: _loadPaymentInstructions,
               width: 120.w,
             ),
@@ -289,6 +294,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: EdgeInsets.all(8.w),
       decoration: BoxDecoration(
@@ -331,7 +337,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                   borderRadius: BorderRadius.circular(4.r),
                 ),
                 child: Text(
-                  'OPTIMIZED',
+                  l10n.optimized,
                   style: TextStyle(
                     fontSize: 8.sp,
                     fontWeight: FontWeight.bold,
@@ -352,6 +358,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildQuickAccessSection() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
@@ -377,7 +384,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
               Icon(Icons.school, color: Colors.white, size: 20.w),
               SizedBox(width: 6.w),
               Text(
-                'Start Learning Now',
+                l10n.startLearningNow,
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
@@ -388,7 +395,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           ),
           SizedBox(height: 8.h),
           Text(
-            'You can start with FREE practice exams while you get your access code!',
+            l10n.youCanStartWithFreePracticeExams,
             style: TextStyle(
               fontSize: 12.sp,
               color: Colors.white70,
@@ -410,7 +417,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                     );
                   },
                   icon: Icon(Icons.quiz, size: 14.w),
-                  label: const Text('Take Free Exams'),
+                  label: Text(l10n.takeFreeExams),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: const Color(0xFF2196F3),
@@ -429,11 +436,12 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildSimplifiedPaymentSteps() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'How to Get Full Access',
+          l10n.howToGetFullAccess,
           style: TextStyle(
             fontSize: 16.sp,
             fontWeight: FontWeight.bold,
@@ -443,22 +451,22 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         SizedBox(height: 8.h),
         _buildSimpleStepItem(
           '1',
-          'Choose a Plan',
-          'Select from 1 Month =31 days, 3 Months = 93 days, or 6 Months = 186 days',
+          l10n.chooseAPlan,
+          l10n.selectFromPlans,
           Icons.credit_card,
         ),
         SizedBox(height: 8.h),
         _buildSimpleStepItem(
           '2',
-          'Make Payment',
-          'Send money via MoMo using the payment code:329494  after selecting a plan by dialing *182*8*1*329494*FRW#',
+          l10n.makePayment,
+          l10n.sendMoneyViaMoMo,
           Icons.payment,
         ),
         SizedBox(height: 8.h),
         _buildSimpleStepItem(
           '3',
-          'Get Access Code',
-          'Contact admin (Alexis:0788659575) or whatsapp (Alexis:0788659575) if exams access is not granted after payment in 5-10 minutes',
+          l10n.getAccessCode,
+          l10n.contactAdminForAccessCode,
           Icons.vpn_key,
         ),
       ],
@@ -539,11 +547,12 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildPaymentTiers() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Choose Your Plan',
+          l10n.chooseYourPlan,
           style: TextStyle(
             fontSize: 16.sp,
             fontWeight: FontWeight.bold,
@@ -560,7 +569,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           Padding(
             padding: EdgeInsets.all(16.w),
             child: Text(
-              'No payment plans available at the moment.',
+              l10n.noPaymentPlansAvailable,
               style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
@@ -570,6 +579,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildSimplePaymentTierCard(PaymentTier tier) {
+    final l10n = AppLocalizations.of(context)!;
     final isPopular = tier.amount == 1500; // 1 month plan
 
     return Container(
@@ -602,7 +612,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Text(
-                'POPULAR',
+                l10n.popular,
                 style: TextStyle(
                   fontSize: 10.sp,
                   fontWeight: FontWeight.bold,
@@ -644,7 +654,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                 borderRadius: BorderRadius.circular(6.r),
               ),
             ),
-            child: Text('Select', style: TextStyle(fontSize: 12.sp)),
+            child: Text(l10n.select, style: TextStyle(fontSize: 12.sp)),
           ),
         ],
       ),
@@ -652,6 +662,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildContactInfo() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -667,7 +678,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
               Icon(Icons.contact_phone, color: AppColors.secondary, size: 20.w),
               SizedBox(width: 6.w),
               Text(
-                'Contact Admin',
+                l10n.contactAdmin,
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
@@ -678,7 +689,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           ),
           SizedBox(height: 12.h),
           Text(
-            'After making payment, contact admin (Alexis:0788659575) or whatsapp (Alexis:0788659575) to verify and get your access code:',
+            l10n.afterMakingPaymentContactAdmin,
             style: TextStyle(
               fontSize: 12.sp,
               color: Colors.grey[700],
@@ -693,7 +704,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () => _makeCall(_paymentData!.contactInfo.phone),
                   icon: Icon(Icons.phone, size: 16.w),
-                  label: const Text('Call'),
+                  label: Text(l10n.call),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -710,7 +721,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                   onPressed: () =>
                       _openWhatsApp(_paymentData!.contactInfo.whatsapp),
                   icon: Icon(Icons.chat, size: 16.w),
-                  label: const Text('WhatsApp'),
+                  label: Text(l10n.whatsApp),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.secondary,
                     foregroundColor: Colors.white,
@@ -729,20 +740,19 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   void _selectPlan(PaymentTier tier) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Selected Plan: ${tier.formattedAmount}'),
+        title: Text(l10n.selectedPlan(tier.formattedAmount)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Amount: ${tier.formattedAmount}\nDuration: ${tier.durationText}',
-            ),
+            Text(l10n.amountDuration(tier.formattedAmount, tier.durationText)),
             SizedBox(height: 16.h),
             Text(
-              'To pay via MoMo, dial this code *182*8*1*329494*${tier.amount}#:',
+              l10n.toPayViaMoMoDialThisCode('${tier.amount}'),
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 8.h),
@@ -770,14 +780,14 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                     onPressed: () =>
                         _copyToClipboard('*182*8*1*329494*${tier.amount}#'),
                     icon: Icon(Icons.copy, color: Colors.blue[600]),
-                    tooltip: 'Copy  Code',
+                    tooltip: l10n.copyCode,
                   ),
                 ],
               ),
             ),
             SizedBox(height: 8.h),
             Text(
-              'After payment, contact admin to verify and get your access code.',
+              l10n.afterPaymentContactAdminToVerify,
               style: TextStyle(
                 fontSize: 12.sp,
                 color: Colors.grey[600],
@@ -789,21 +799,21 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _dialMoMoPayment(tier.amount);
             },
-            child: const Text('Dial MoMo'),
+            child: Text(l10n.dialMoMo),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _contactAdmin();
             },
-            child: const Text('Contact Alexis'),
+            child: Text(l10n.contactAlexis),
           ),
         ],
       ),
@@ -854,13 +864,14 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           if (!mounted) return;
 
           // Show user-friendly error with alternative options
+          final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('WhatsApp not available. Try these alternatives:'),
+                  Text(l10n.whatsAppNotAvailableTryAlternatives),
                   SizedBox(height: 4.h),
                   const Text('• Call: +250788659575'),
                   const Text('• WhatsApp Web: web.whatsapp.com'),
@@ -869,7 +880,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
               backgroundColor: Colors.orange,
               duration: const Duration(seconds: 5),
               action: SnackBarAction(
-                label: 'Call Instead',
+                label: l10n.callInstead,
                 textColor: Colors.white,
                 onPressed: () => _makeCall('+250788659575'),
               ),
@@ -888,9 +899,10 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
       await launchUrl(phoneUri);
     } else {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not launch phone app'),
+        SnackBar(
+          content: Text(l10n.couldNotLaunchPhoneApp),
           backgroundColor: Colors.red,
         ),
       );
@@ -900,11 +912,12 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   void _copyToClipboard(String text) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Code copied to clipboard'),
+      SnackBar(
+        content: Text(l10n.codeCopiedToClipboard),
         backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -917,9 +930,10 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
       await launchUrl(usdUri);
     } else {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not launch phone app. Please dial: $usdCode'),
+          content: Text(l10n.couldNotLaunchPhoneAppPleaseDial(usdCode)),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 5),
         ),

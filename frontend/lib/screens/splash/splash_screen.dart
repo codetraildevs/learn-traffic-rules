@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
+import '../../l10n/app_localizations.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -124,12 +125,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           ),
                         ),
                         SizedBox(height: 8.h),
-                        Text(
-                          'Master Traffic Rules',
-                          style: AppTextStyles.bodyLarge.copyWith(
-                            color: AppColors.white.withValues(alpha: 0.9),
-                            fontSize: 16.sp,
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context)!;
+                            return Text(
+                              l10n.masterTrafficRules,
+                              style: AppTextStyles.bodyLarge.copyWith(
+                                color: AppColors.white.withValues(alpha: 0.9),
+                                fontSize: 16.sp,
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),

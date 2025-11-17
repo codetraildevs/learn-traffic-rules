@@ -9,6 +9,7 @@ import '../../core/constants/app_constants.dart';
 import '../../models/course_model.dart';
 import '../../services/course_service.dart';
 import '../../widgets/custom_button.dart';
+import '../../l10n/app_localizations.dart';
 
 class CourseContentViewerScreen extends StatefulWidget {
   final Course course;
@@ -106,29 +107,32 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             '   - contents is empty: ${course.contents != null && course.contents!.isEmpty}',
           );
 
+          final l10n = AppLocalizations.of(context)!;
           setState(() {
             _contents = [];
             _isLoading = false;
             _error = expectedContents
-                ? 'Content exists (${course.contentCount} items) but failed to load. Please check your connection and try again.'
-                : 'No content available for this course';
+                ? l10n.contentExistsButFailedToLoad(course.contentCount ?? 0)
+                : l10n.noContentAvailableForThisCourse;
           });
         }
       } else {
         print('❌ API Error: ${response.message}');
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
           _contents = [];
           _isLoading = false;
-          _error = response.message ?? 'Failed to load course content';
+          _error = response.message ?? l10n.failedToLoadCourseContent;
         });
       }
     } catch (e, stackTrace) {
       print('❌ Exception loading course contents: $e');
       print('Stack trace: $stackTrace');
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
         _contents = [];
         _isLoading = false;
-        _error = 'Error loading course content: $e';
+        _error = l10n.errorLoadingCourseContent(e.toString());
       });
     }
   }
@@ -254,9 +258,8 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         // Validate URL exists and is accessible (non-blocking)
         final isValid = await _validateAudioUrl(audioUrl);
         if (!isValid) {
-          throw Exception(
-            'Audio file not found or invalid. Please verify the file exists on the server.',
-          );
+          final l10n = AppLocalizations.of(context)!;
+          throw Exception(l10n.audioFileNotFoundOrInvalid);
         }
 
         // Listen to player state changes
@@ -277,9 +280,9 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
                     _audioPlayer!.duration == null &&
                     _audioPlayer!.playerState.processingState ==
                         ProcessingState.idle) {
+                  final l10n = AppLocalizations.of(context)!;
                   setState(() {
-                    _error =
-                        'Unable to load audio file. The file may not exist or is in an unsupported format.';
+                    _error = l10n.unableToLoadAudioFile;
                     _audioPlayer?.dispose();
                     _audioPlayer = null;
                   });
@@ -321,8 +324,9 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
           onError: (error) {
             print('❌ AUDIO PLAYBACK ERROR: $error');
             if (mounted) {
+              final l10n = AppLocalizations.of(context)!;
               setState(() {
-                _error = 'Error playing audio: ${error.toString()}';
+                _error = l10n.errorPlayingAudio(error.toString());
                 _audioPlayer?.dispose();
                 _audioPlayer = null;
               });
@@ -337,9 +341,8 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
               .timeout(
                 const Duration(seconds: 15),
                 onTimeout: () {
-                  throw Exception(
-                    'Timeout loading audio file. Please check your internet connection.',
-                  );
+                  final l10n = AppLocalizations.of(context)!;
+                  throw Exception(l10n.timeoutLoadingAudioFile);
                 },
               );
           print('🎵 AUDIO: Audio URL set successfully');
@@ -353,9 +356,8 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
               // Check player state
               final state = _audioPlayer!.playerState;
               if (state.processingState == ProcessingState.idle) {
-                throw Exception(
-                  'Audio file could not be loaded. The file may not exist or is in an unsupported format.',
-                );
+                final l10n = AppLocalizations.of(context)!;
+                throw Exception(l10n.audioFileCouldNotBeLoaded);
               }
             } else {
               print('✅ AUDIO: Duration loaded: ${duration.inSeconds}s');
@@ -369,34 +371,29 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         print('❌ AUDIO ERROR: $e');
         print('   Stack trace: $stackTrace');
         if (mounted) {
-          String errorMessage = 'Error loading audio';
+          final l10n = AppLocalizations.of(context)!;
+          String errorMessage = l10n.errorLoadingAudio;
           final errorStr = e.toString().toLowerCase();
 
           if (errorStr.contains('unrecognizedinputformatexception') ||
               errorStr.contains('could read the stream') ||
               errorStr.contains('none of the available extractors')) {
-            errorMessage =
-                'Audio file format not supported or file may be corrupted/invalid. Please verify the audio file exists and is in a supported format (MP3, WAV, M4A, OGG).';
+            errorMessage = l10n.audioFileFormatNotSupported;
           } else if (errorStr.contains('source error') ||
               errorStr.contains('socketexception') ||
               errorStr.contains('failed host lookup')) {
-            errorMessage =
-                'Cannot load audio file. Please check your internet connection.';
+            errorMessage = l10n.cannotLoadAudioFile;
           } else if (errorStr.contains('timeout')) {
-            errorMessage =
-                'Timeout loading audio file. The file may be too large or the connection is slow.';
+            errorMessage = l10n.timeoutLoadingAudioFileSlow;
           } else if (errorStr.contains('404') ||
               errorStr.contains('not found')) {
-            errorMessage =
-                'Audio file not found. The file may have been deleted or moved.';
+            errorMessage = l10n.audioFileNotFound;
           } else if (errorStr.contains('403') ||
               errorStr.contains('forbidden')) {
-            errorMessage =
-                'Access denied to audio file. Please check permissions.';
+            errorMessage = l10n.accessDeniedToAudioFile;
           } else if (errorStr.contains('html') ||
               errorStr.contains('text/html')) {
-            errorMessage =
-                'Server returned an error page instead of audio file. The file may not exist at the specified URL.';
+            errorMessage = l10n.serverReturnedErrorPageForAudio;
           } else if (errorStr.contains('could not be loaded')) {
             errorMessage = errorStr;
           } else {
@@ -407,7 +404,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
                 .replaceAll('Error: ', '')
                 .split('\n')
                 .first;
-            errorMessage = 'Error loading audio: $cleanError';
+            errorMessage = l10n.errorLoadingAudioWithMessage(cleanError);
           }
 
           setState(() {
@@ -431,9 +428,13 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error playing audio: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.errorPlayingAudio(e.toString()),
+            ),
+          ),
+        );
       }
     }
   }
@@ -506,9 +507,13 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Could not open $fullUrl')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${AppLocalizations.of(context)!.couldNotOpenUrl}: $fullUrl',
+            ),
+          ),
+        );
       }
     }
   }
@@ -551,20 +556,30 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
                   color: AppColors.grey400,
                 ),
                 SizedBox(height: 16.h),
-                Text(
-                  _error ?? 'No content available',
-                  style: AppTextStyles.heading3.copyWith(
-                    color: AppColors.grey600,
-                  ),
-                  textAlign: TextAlign.center,
+                Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return Text(
+                      _error ?? l10n.noContentAvailable,
+                      style: AppTextStyles.heading3.copyWith(
+                        color: AppColors.grey600,
+                      ),
+                      textAlign: TextAlign.center,
+                    );
+                  },
                 ),
                 SizedBox(height: 16.h),
-                CustomButton(
-                  text: 'Retry',
-                  onPressed: _loadCourseContents,
-                  backgroundColor: AppColors.primary,
-                  textColor: AppColors.white,
-                  width: 120.w,
+                Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return CustomButton(
+                      text: l10n.retry,
+                      onPressed: _loadCourseContents,
+                      backgroundColor: AppColors.primary,
+                      textColor: AppColors.white,
+                      width: 120.w,
+                    );
+                  },
                 ),
               ],
             ),
@@ -578,7 +593,12 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
     return Scaffold(
       backgroundColor: AppColors.grey50,
       appBar: AppBar(
-        title: Text(content.title ?? 'Content ${_currentIndex + 1}'),
+        title: Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Text(content.title ?? l10n.contentNumber(_currentIndex + 1));
+          },
+        ),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         actions: [
@@ -631,26 +651,36 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: CustomButton(
-                    text: 'Previous',
-                    onPressed: _currentIndex > 0 ? _goToPrevious : null,
-                    backgroundColor: AppColors.grey300,
-                    textColor: AppColors.black,
+                  child: Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context)!;
+                      return CustomButton(
+                        text: l10n.previous,
+                        onPressed: _currentIndex > 0 ? _goToPrevious : null,
+                        backgroundColor: AppColors.grey300,
+                        textColor: AppColors.black,
+                      );
+                    },
                   ),
                 ),
                 SizedBox(width: 16.w),
                 Expanded(
-                  child: CustomButton(
-                    text: _currentIndex < _contents.length - 1
-                        ? 'Next'
-                        : 'Complete',
-                    onPressed: _currentIndex < _contents.length - 1
-                        ? _goToNext
-                        : () {
-                            Navigator.pop(context);
-                          },
-                    backgroundColor: AppColors.primary,
-                    textColor: AppColors.white,
+                  child: Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context)!;
+                      return CustomButton(
+                        text: _currentIndex < _contents.length - 1
+                            ? l10n.next
+                            : l10n.complete,
+                        onPressed: _currentIndex < _contents.length - 1
+                            ? _goToNext
+                            : () {
+                                Navigator.pop(context);
+                              },
+                        backgroundColor: AppColors.primary,
+                        textColor: AppColors.white,
+                      );
+                    },
                   ),
                 ),
               ],
@@ -773,10 +803,15 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         children: [
           Icon(Icons.audiotrack, size: 64.sp, color: AppColors.primary),
           SizedBox(height: 16.h),
-          Text(
-            content.title ?? 'Audio Content',
-            style: AppTextStyles.heading3,
-            textAlign: TextAlign.center,
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Text(
+                content.title ?? l10n.audioContent,
+                style: AppTextStyles.heading3,
+                textAlign: TextAlign.center,
+              );
+            },
           ),
           SizedBox(height: 8.h),
           // Show file path for debugging (can be removed in production)
@@ -825,19 +860,24 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CustomButton(
-                  text: 'Retry',
-                  onPressed: () {
-                    setState(() {
-                      _error = null;
-                      _audioPlayer?.dispose();
-                      _audioPlayer = null;
-                    });
-                    _initializeAudio();
+                Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return CustomButton(
+                      text: l10n.retry,
+                      onPressed: () {
+                        setState(() {
+                          _error = null;
+                          _audioPlayer?.dispose();
+                          _audioPlayer = null;
+                        });
+                        _initializeAudio();
+                      },
+                      backgroundColor: AppColors.primary,
+                      textColor: AppColors.white,
+                      width: 120.w,
+                    );
                   },
-                  backgroundColor: AppColors.primary,
-                  textColor: AppColors.white,
-                  width: 120.w,
                 ),
               ],
             ),
@@ -904,20 +944,29 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             // Loading state
             const CircularProgressIndicator(),
             SizedBox(height: 16.h),
-            Text(
-              'Loading audio...',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.grey600,
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              'Please wait while we load the audio file',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.grey500,
-                fontSize: 11.sp,
-              ),
-              textAlign: TextAlign.center,
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Column(
+                  children: [
+                    Text(
+                      l10n.loadingAudio,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.grey600,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      l10n.pleaseWaitWhileWeLoadTheAudioFile,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.grey500,
+                        fontSize: 11.sp,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ],
@@ -1021,7 +1070,15 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         children: [
           Icon(Icons.link, size: 64.sp, color: AppColors.primary),
           SizedBox(height: 16.h),
-          Text(content.title ?? 'External Link', style: AppTextStyles.heading3),
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Text(
+                content.title ?? l10n.externalLink,
+                style: AppTextStyles.heading3,
+              );
+            },
+          ),
           SizedBox(height: 8.h),
           Text(
             content.content,

@@ -8,6 +8,7 @@ import 'package:learn_traffic_rules/core/theme/app_theme.dart';
 import 'package:learn_traffic_rules/models/user_management_model.dart';
 import 'package:learn_traffic_rules/services/user_management_service.dart';
 import 'package:learn_traffic_rules/widgets/loading_widget.dart';
+import '../../l10n/app_localizations.dart';
 
 class UserManagementScreen extends ConsumerStatefulWidget {
   const UserManagementScreen({super.key});
@@ -334,12 +335,17 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             runSpacing: 8.h,
             children: [
               // Today Filter Button
-              FilterChip(
-                label: const Text('Today'),
-                selected: _filterByToday,
-                onSelected: (selected) => _toggleTodayFilter(),
-                selectedColor: AppColors.primary.withValues(alpha: 0.2),
-                checkmarkColor: AppColors.primary,
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return FilterChip(
+                    label: Text(l10n.today),
+                    selected: _filterByToday,
+                    onSelected: (selected) => _toggleTodayFilter(),
+                    selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                    checkmarkColor: AppColors.primary,
+                  );
+                },
               ),
               // Start Date
               InkWell(
@@ -371,69 +377,79 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             : AppColors.grey600,
                       ),
                       SizedBox(width: 6.w),
-                      Text(
-                        _startDate != null
-                            ? DateFormat('MMM dd, yyyy').format(_startDate!)
-                            : 'Start Date',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: _startDate != null
-                              ? AppColors.primary
-                              : AppColors.grey600,
-                          fontWeight: _startDate != null
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                        ),
+                      Builder(
+                        builder: (context) {
+                          final l10n = AppLocalizations.of(context)!;
+                          return Text(
+                            _startDate != null
+                                ? DateFormat('MMM dd, yyyy').format(_startDate!)
+                                : l10n.startDate,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: _startDate != null
+                                  ? AppColors.primary
+                                  : AppColors.grey600,
+                              fontWeight: _startDate != null
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
                 ),
               ),
               // End Date
-              InkWell(
-                onTap: _selectEndDate,
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                    vertical: 8.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _endDate != null
-                        ? AppColors.primary.withValues(alpha: 0.1)
-                        : AppColors.white,
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(
-                      color: _endDate != null
-                          ? AppColors.primary
-                          : AppColors.grey300,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.calendar_today,
-                        size: 16.sp,
-                        color: _endDate != null
-                            ? AppColors.primary
-                            : AppColors.grey600,
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return InkWell(
+                    onTap: _selectEndDate,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 8.h,
                       ),
-                      SizedBox(width: 6.w),
-                      Text(
-                        _endDate != null
-                            ? DateFormat('MMM dd, yyyy').format(_endDate!)
-                            : 'End Date',
-                        style: AppTextStyles.bodySmall.copyWith(
+                      decoration: BoxDecoration(
+                        color: _endDate != null
+                            ? AppColors.primary.withValues(alpha: 0.1)
+                            : AppColors.white,
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(
                           color: _endDate != null
                               ? AppColors.primary
-                              : AppColors.grey600,
-                          fontWeight: _endDate != null
-                              ? FontWeight.w600
-                              : FontWeight.normal,
+                              : AppColors.grey300,
                         ),
                       ),
-                    ],
-                  ),
-                ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 16.sp,
+                            color: _endDate != null
+                                ? AppColors.primary
+                                : AppColors.grey600,
+                          ),
+                          SizedBox(width: 6.w),
+                          Text(
+                            _endDate != null
+                                ? DateFormat('MMM dd, yyyy').format(_endDate!)
+                                : l10n.endDate,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: _endDate != null
+                                  ? AppColors.primary
+                                  : AppColors.grey600,
+                              fontWeight: _endDate != null
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
               // Clear Button
               if (_startDate != null || _endDate != null || _filterByToday)
@@ -454,12 +470,17 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       children: [
                         Icon(Icons.clear, size: 16.sp, color: AppColors.error),
                         SizedBox(width: 6.w),
-                        Text(
-                          'Clear',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.error,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context)!;
+                            return Text(
+                              l10n.clear,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.error,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -530,97 +551,75 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
 
     return showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Payment Tier', style: AppTextStyles.heading3),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: tiers
-              .map(
-                (tier) => ListTile(
-                  title: Text(
-                    tier['label'] as String,
-                    style: AppTextStyles.bodyMedium,
+      builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Text(l10n.selectPaymentTier, style: AppTextStyles.heading3),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: tiers
+                .map(
+                  (tier) => ListTile(
+                    title: Text(
+                      tier['label'] as String,
+                      style: AppTextStyles.bodyMedium,
+                    ),
+                    onTap: () => Navigator.pop(context, tier),
                   ),
-                  onTap: () => Navigator.pop(context, tier),
-                ),
-              )
-              .toList(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: AppTextStyles.bodyMedium),
+                )
+                .toList(),
           ),
-        ],
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l10n.cancel, style: AppTextStyles.bodyMedium),
+            ),
+          ],
+        );
+      },
     );
   }
 
   Future<void> _deleteUser(UserWithStats user) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.delete_forever, color: AppColors.error, size: 24.sp),
-            SizedBox(width: 8.w),
-            const Text('Delete User'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Are you sure you want to permanently delete ${user.fullName}?',
-              style: AppTextStyles.bodyMedium,
-            ),
-            SizedBox(height: 8.h),
-            Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(
-                  color: AppColors.error.withValues(alpha: 0.3),
-                ),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.delete_forever, color: AppColors.error, size: 24.sp),
+              SizedBox(width: 8.w),
+              Text(l10n.deleteUser),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.areYouSureYouWantToPermanentlyDeleteUser(user.fullName),
+                style: AppTextStyles.bodyMedium,
               ),
-              child: Row(
-                children: [
-                  Icon(Icons.warning, color: AppColors.error, size: 16.sp),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: Text(
-                      'This action cannot be undone. The user and all their data will be permanently removed.',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.error,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (user.accessCodeStats.active > 0) ...[
               SizedBox(height: 8.h),
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.1),
+                  color: AppColors.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
                   border: Border.all(
-                    color: AppColors.warning.withValues(alpha: 0.3),
+                    color: AppColors.error.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info, color: AppColors.warning, size: 16.sp),
+                    Icon(Icons.warning, color: AppColors.error, size: 16.sp),
                     SizedBox(width: 8.w),
                     Expanded(
                       child: Text(
-                        'This user has active access codes. Please delete them first.',
+                        'This action cannot be undone. The user and all their data will be permanently removed.',
                         style: AppTextStyles.caption.copyWith(
-                          color: AppColors.warning,
+                          color: AppColors.error,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -628,26 +627,54 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   ],
                 ),
               ),
+              if (user.accessCodeStats.active > 0) ...[
+                SizedBox(height: 8.h),
+                Container(
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(
+                      color: AppColors.warning.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info, color: AppColors.warning, size: 16.sp),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          l10n.thisUserHasActiveAccessCodesPleaseDeleteThemFirst,
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.warning,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
           ),
-          ElevatedButton(
-            onPressed: user.accessCodeStats.active > 0
-                ? null
-                : () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: AppColors.white,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.cancel),
             ),
-            child: const Text('Delete Permanently'),
-          ),
-        ],
-      ),
+            ElevatedButton(
+              onPressed: user.accessCodeStats.active > 0
+                  ? null
+                  : () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: AppColors.white,
+              ),
+              child: Text(l10n.deletePermanently),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true) {

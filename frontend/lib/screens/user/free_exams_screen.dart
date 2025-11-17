@@ -6,6 +6,7 @@ import '../../models/exam_model.dart';
 import '../../services/user_management_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/loading_widget.dart';
+import '../../l10n/app_localizations.dart';
 import 'payment_instructions_screen.dart';
 
 class FreeExamsScreen extends StatefulWidget {
@@ -48,8 +49,9 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
         });
       }
     } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
-        _error = 'Failed to load exams: $e';
+        _error = l10n.failedToLoadExams(e.toString());
         _isLoading = false;
       });
     }
@@ -57,10 +59,11 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _freeExamData?.isFreeUser == true ? 'Free Exams' : 'All Exams',
+          _freeExamData?.isFreeUser == true ? l10n.freeExams : l10n.allExams,
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
@@ -80,6 +83,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   }
 
   Widget _buildErrorWidget() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -87,7 +91,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
           Icon(Icons.error_outline, size: 64.w, color: Colors.red),
           SizedBox(height: 16.h),
           Text(
-            'Error Loading Exams',
+            l10n.errorLoadingExams,
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
@@ -101,13 +105,18 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 24.h),
-          CustomButton(text: 'Retry', onPressed: _loadFreeExams, width: 120.w),
+          CustomButton(
+            text: l10n.retry,
+            onPressed: _loadFreeExams,
+            width: 120.w,
+          ),
         ],
       ),
     );
   }
 
   Widget _buildContent() {
+    final l10n = AppLocalizations.of(context)!;
     if (_freeExamData == null) return const SizedBox();
 
     return SingleChildScrollView(
@@ -123,7 +132,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
           // Exams list
           if (_freeExamData!.exams.isNotEmpty) ...[
             Text(
-              'Available Exams',
+              l10n.availableExams,
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -148,6 +157,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   }
 
   Widget _buildFreeUserBanner() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -173,7 +183,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
               Icon(Icons.star, color: Colors.white, size: 24.w),
               SizedBox(width: 8.w),
               Text(
-                'Free Trial',
+                l10n.freeTrial,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
@@ -184,13 +194,16 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
           ),
           SizedBox(height: 8.h),
           Text(
-            'You have ${_freeExamData!.freeExamsRemaining} free exam${_freeExamData!.freeExamsRemaining == 1 ? '' : 's'} remaining',
+            l10n.youHaveFreeExamsRemaining(
+              _freeExamData!.freeExamsRemaining,
+              _freeExamData!.freeExamsRemaining == 1 ? '' : 's',
+            ),
             style: TextStyle(fontSize: 14.sp, color: Colors.white70),
           ),
           if (_freeExamData!.freeExamsRemaining == 0) ...[
             SizedBox(height: 8.h),
             Text(
-              'Upgrade to access all exams and features',
+              l10n.upgradeToAccessAllExams,
               style: TextStyle(
                 fontSize: 14.sp,
                 color: Colors.white,
@@ -216,6 +229,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   }
 
   Widget _buildExamCard(Exam exam, int index) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
@@ -300,12 +314,12 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
                           Row(
                             children: [
                               _buildInfoChip(
-                                '${exam.duration} min',
+                                '${exam.duration} ${l10n.min}',
                                 Icons.timer,
                               ),
                               SizedBox(width: 8.w),
                               _buildInfoChip(
-                                '${exam.passingScore}% pass',
+                                '${exam.passingScore}% ${l10n.pass}',
                                 Icons.flag,
                               ),
                               SizedBox(width: 8.w),
@@ -331,7 +345,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
                           borderRadius: BorderRadius.circular(12.r),
                         ),
                         child: Text(
-                          'FREE',
+                          l10n.free,
                           style: TextStyle(
                             fontSize: 10.sp,
                             fontWeight: FontWeight.bold,
@@ -348,7 +362,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: CustomButton(
-                    text: 'Start Exam',
+                    text: l10n.startExam,
                     onPressed: () => _startExam(exam),
                     width: double.infinity,
                   ),
@@ -387,6 +401,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   }
 
   Widget _buildNoExamsWidget() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -394,7 +409,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
           Icon(Icons.quiz_outlined, size: 64.w, color: Colors.grey[400]),
           SizedBox(height: 16.h),
           Text(
-            'No Exams Available',
+            l10n.noExamsAvailable,
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
@@ -403,7 +418,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
           ),
           SizedBox(height: 8.h),
           Text(
-            'Check back later for new exams',
+            l10n.checkBackLaterForNewExams,
             style: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
           ),
         ],
@@ -412,6 +427,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   }
 
   Widget _buildPaymentInstructionsCard() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -427,7 +443,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
               Icon(Icons.payment, color: Colors.blue[700], size: 24.w),
               SizedBox(width: 8.w),
               Text(
-                'Get Full Access',
+                l10n.getFullAccess,
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
@@ -438,7 +454,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
           ),
           SizedBox(height: 8.h),
           Text(
-            'You\'ve used all your free exams. Upgrade to access all features!',
+            l10n.youveUsedAllFreeExams,
             style: TextStyle(fontSize: 14.sp, color: Colors.blue[600]),
           ),
           SizedBox(height: 12.h),
@@ -446,7 +462,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
             children: [
               Expanded(
                 child: CustomButton(
-                  text: 'View Plans',
+                  text: l10n.viewPlans,
                   onPressed: () => _showPaymentInstructions(),
                   width: double.infinity,
                 ),
@@ -454,7 +470,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
               SizedBox(width: 12.w),
               Expanded(
                 child: CustomButton(
-                  text: 'Contact Admin',
+                  text: l10n.contactAdmin,
                   onPressed: _contactAdmin,
                   width: double.infinity,
                   backgroundColor: Colors.green,
@@ -468,11 +484,12 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   }
 
   void _startExam(Exam exam) {
+    final l10n = AppLocalizations.of(context)!;
     // Navigate to exam screen
     // This would be implemented based on your exam taking flow
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Starting exam: ${exam.title}'),
+        content: Text(l10n.startingExam(exam.title)),
         backgroundColor: Colors.green,
       ),
     );
@@ -491,13 +508,14 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
     const phoneNumber = '+250788659575';
     final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
 
+    final l10n = AppLocalizations.of(context)!;
     if (await canLaunchUrl(phoneUri)) {
       await launchUrl(phoneUri);
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not launch phone app'),
+        SnackBar(
+          content: Text(l10n.couldNotLaunchPhoneApp),
           backgroundColor: Colors.red,
         ),
       );

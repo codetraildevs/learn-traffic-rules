@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
 class AsyncDataBuilder<T> extends StatelessWidget {
   final Future<T> future;
@@ -36,39 +37,43 @@ class AsyncDataBuilder<T> extends StatelessWidget {
           debugPrint('🚨 AsyncDataBuilder Error: $error');
 
           return errorBuilder?.call(context, error) ??
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.red,
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.red,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.somethingWentWrong,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.pleaseTryAgainLater,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: Colors.grey[600]),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Trigger rebuild by calling setState in parent
+                            if (context.mounted) {
+                              (context as Element).markNeedsBuild();
+                            }
+                          },
+                          child: Text(l10n.retry),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Something went wrong',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Please try again later',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Trigger rebuild by calling setState in parent
-                        if (context.mounted) {
-                          (context as Element).markNeedsBuild();
-                        }
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
+                  );
+                },
               );
         }
 
@@ -78,7 +83,12 @@ class AsyncDataBuilder<T> extends StatelessWidget {
         }
 
         // Fallback
-        return const Center(child: Text('No data available'));
+        return Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Center(child: Text(l10n.noDataAvailable));
+          },
+        );
       },
     );
   }

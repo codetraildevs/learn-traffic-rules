@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_button.dart';
+import '../../l10n/app_localizations.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -52,11 +53,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     if (mounted) {
       setState(() => _isLoading = false);
 
+      final l10n = AppLocalizations.of(context)!;
       if (success) {
         setState(() => _codeSent = true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Reset code sent! Check console for the code.'),
+          SnackBar(
+            content: Text(l10n.resetCodeSentCheckConsole),
             backgroundColor: AppColors.success,
           ),
         );
@@ -64,7 +66,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         final error = ref.read(authProvider).error;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(error ?? 'Failed to send reset code'),
+            content: Text(error ?? l10n.failedToSendResetCode),
             backgroundColor: AppColors.error,
           ),
         );
@@ -74,9 +76,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Forgot Password'),
+        title: Text(l10n.forgotPassword),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
       ),
@@ -116,7 +119,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       ),
                       SizedBox(height: 16.h),
                       Text(
-                        'Reset Password',
+                        l10n.resetPassword,
                         style: AppTextStyles.heading2.copyWith(
                           color: AppColors.white,
                           fontSize: 24.sp,
@@ -124,7 +127,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       ),
                       SizedBox(height: 8.h),
                       Text(
-                        'Enter your phone number to receive a reset code',
+                        l10n.enterPhoneNumberToReceiveResetCode,
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: AppColors.white.withValues(alpha: 0.9),
                         ),
@@ -156,7 +159,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          'Forgot Password',
+                          l10n.forgotPassword,
                           style: AppTextStyles.heading3.copyWith(
                             fontSize: 20.sp,
                           ),
@@ -167,17 +170,19 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         // Phone Number Field
                         CustomTextField(
                           controller: _phoneController,
-                          label: 'Phone Number',
-                          hint: 'Enter your phone number',
+                          label: l10n.phoneNumber,
+                          hint: l10n.pleaseEnterYourPhoneNumber,
                           prefixIcon: Icons.phone,
                           keyboardType: TextInputType.phone,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Phone number is required';
+                              return l10n.phoneNumberIsRequired;
                             }
                             if (value.length !=
                                 AppConstants.phoneNumberLength) {
-                              return 'Phone number must be $AppConstants.phoneNumberLength digits';
+                              return l10n.phoneNumberMustBeDigits(
+                                AppConstants.phoneNumberLength,
+                              );
                             }
                             return null;
                           },

@@ -6,6 +6,7 @@ import 'package:learn_traffic_rules/core/theme/app_theme.dart';
 import 'package:learn_traffic_rules/models/user_management_model.dart';
 import 'package:learn_traffic_rules/services/user_management_service.dart';
 import 'package:learn_traffic_rules/widgets/loading_widget.dart';
+import 'package:learn_traffic_rules/l10n/app_localizations.dart';
 
 class UserDashboardScreen extends ConsumerStatefulWidget {
   const UserDashboardScreen({super.key});
@@ -88,10 +89,11 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.grey50,
       appBar: AppBar(
-        title: const Text('My Dashboard', style: AppTextStyles.heading2),
+        title: Text(l10n.myDashboard, style: AppTextStyles.heading2),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         elevation: 0,
@@ -117,7 +119,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    'Failed to load dashboard data',
+                    l10n.errorLoadingDashboard,
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: AppColors.grey600,
                     ),
@@ -125,7 +127,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                   SizedBox(height: 16.h),
                   ElevatedButton(
                     onPressed: _loadRemainingDays,
-                    child: const Text('Retry'),
+                    child: Text(l10n.retry),
                   ),
                 ],
               ),
@@ -301,7 +303,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                                       ),
                                       SizedBox(width: 8.w),
                                       Text(
-                                        'No Active Access',
+                                        l10n.noActiveAccess,
                                         style: AppTextStyles.bodyLarge.copyWith(
                                           color: AppColors.warning,
                                           fontWeight: FontWeight.bold,
@@ -311,7 +313,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                                   ),
                                   SizedBox(height: 8.h),
                                   Text(
-                                    'You don\'t have any active access codes',
+                                    l10n.youDontHaveAnyActiveAccessCodes,
                                     style: AppTextStyles.bodyMedium.copyWith(
                                       color: AppColors.grey700,
                                     ),
@@ -320,11 +322,11 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                                   ElevatedButton.icon(
                                     onPressed: () {
                                       _showErrorSnackBar(
-                                        'Payment screen coming soon!',
+                                        l10n.paymentScreenComingSoon,
                                       );
                                     },
                                     icon: const Icon(Icons.payment),
-                                    label: const Text('Get Access'),
+                                    label: Text(l10n.getAccess),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.primary,
                                       foregroundColor: AppColors.white,
@@ -361,7 +363,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                               ),
                               SizedBox(width: 8.w),
                               Text(
-                                'Quick Actions',
+                                l10n.quickActions,
                                 style: AppTextStyles.heading3.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -374,10 +376,10 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                               Expanded(
                                 child: _buildQuickActionButton(
                                   icon: Icons.quiz,
-                                  label: 'Take Exam',
+                                  label: l10n.startExam,
                                   color: AppColors.primary,
                                   onPressed: () {
-                                    _showErrorSnackBar('Exams coming soon!');
+                                    _showErrorSnackBar(l10n.examsComingSoon);
                                   },
                                 ),
                               ),
@@ -385,10 +387,10 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                               Expanded(
                                 child: _buildQuickActionButton(
                                   icon: Icons.history,
-                                  label: 'My Results',
+                                  label: l10n.myResults,
                                   color: AppColors.success,
                                   onPressed: () {
-                                    _showErrorSnackBar('Results coming soon!');
+                                    _showErrorSnackBar(l10n.resultsComingSoon);
                                   },
                                 ),
                               ),
@@ -400,10 +402,10 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                               Expanded(
                                 child: _buildQuickActionButton(
                                   icon: Icons.payment,
-                                  label: 'Get Access',
+                                  label: l10n.getAccess,
                                   color: AppColors.warning,
                                   onPressed: () {
-                                    _showErrorSnackBar('Payment coming soon!');
+                                    _showErrorSnackBar(l10n.paymentComingSoon);
                                   },
                                 ),
                               ),
@@ -411,10 +413,10 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                               Expanded(
                                 child: _buildQuickActionButton(
                                   icon: Icons.help,
-                                  label: 'Help & Support',
+                                  label: l10n.helpSupport,
                                   color: AppColors.info,
                                   onPressed: () {
-                                    _showErrorSnackBar('Help coming soon!');
+                                    _showErrorSnackBar(l10n.helpComingSoon);
                                   },
                                 ),
                               ),

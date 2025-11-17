@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/custom_button.dart';
 import '../../services/api_service.dart';
+import '../../l10n/app_localizations.dart';
 //import '../../services/notification_service.dart';
 //import '../../services/simple_notification_service.dart';
 import 'notifications_list_screen.dart';
@@ -48,9 +49,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: Text(l10n.notifications),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         bottom: TabBar(
@@ -58,9 +60,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           indicatorColor: AppColors.white,
           labelColor: AppColors.white,
           unselectedLabelColor: AppColors.white.withValues(alpha: 0.7),
-          tabs: const [
-            Tab(text: 'Notifications'),
-            Tab(text: 'Settings'),
+          tabs: [
+            Tab(text: l10n.notifications),
+            Tab(text: l10n.settings),
           ],
         ),
         actions: const [],
@@ -99,12 +101,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                       ),
                       SizedBox(height: 16.h),
                       Text(
-                        'Notification Settings',
+                        l10n.notificationSettings,
                         style: AppTextStyles.heading2.copyWith(fontSize: 24.sp),
                       ),
                       SizedBox(height: 8.h),
                       Text(
-                        'Customize your notification preferences',
+                        l10n.customizeNotificationPreferences,
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: AppColors.grey600,
                         ),
@@ -134,46 +136,46 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Notification Types',
+                        l10n.notificationTypes,
                         style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
                       ),
                       SizedBox(height: 20.h),
 
                       _buildNotificationOption(
-                        'Exam Reminders',
-                        'Get notified about upcoming exams and deadlines',
+                        l10n.examReminders,
+                        l10n.getNotifiedAboutUpcomingExams,
                         Icons.quiz,
                         _examReminders,
                         (value) => setState(() => _examReminders = value),
                       ),
 
                       _buildNotificationOption(
-                        'Achievement Alerts',
-                        'Celebrate your progress and achievements',
+                        l10n.achievementAlerts,
+                        l10n.celebrateProgressAndAchievements,
                         Icons.emoji_events,
                         _achievementAlerts,
                         (value) => setState(() => _achievementAlerts = value),
                       ),
 
                       _buildNotificationOption(
-                        'Study Reminders',
-                        'Daily reminders to keep up with your studies',
+                        l10n.studyReminders,
+                        l10n.dailyRemindersToKeepUp,
                         Icons.schedule,
                         _studyReminders,
                         (value) => setState(() => _studyReminders = value),
                       ),
 
                       _buildNotificationOption(
-                        'System Updates',
-                        'Important app updates and maintenance notices',
+                        l10n.systemUpdates,
+                        l10n.importantAppUpdatesAndMaintenance,
                         Icons.system_update,
                         _systemUpdates,
                         (value) => setState(() => _systemUpdates = value),
                       ),
 
                       _buildNotificationOption(
-                        'Payment Notifications',
-                        'Updates about payments and access codes',
+                        l10n.paymentNotifications,
+                        l10n.updatesAboutPaymentsAndAccessCodes,
                         Icons.payment,
                         _paymentNotifications,
                         (value) =>
@@ -181,8 +183,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                       ),
 
                       _buildNotificationOption(
-                        'Weekly Reports',
-                        'Summary of your weekly progress and performance',
+                        l10n.weeklyReports,
+                        l10n.summaryOfWeeklyProgressAndPerformance,
                         Icons.analytics,
                         _weeklyReports,
                         (value) => setState(() => _weeklyReports = value),
@@ -212,7 +214,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Notification Timing',
+                        l10n.notificationTiming,
                         style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
                       ),
                       SizedBox(height: 16.h),
@@ -227,7 +229,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                           SizedBox(width: 12.w),
                           Expanded(
                             child: Text(
-                              'Quiet Hours: 10:00 PM - 7:00 AM',
+                              l10n.quietHours,
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: AppColors.grey700,
                               ),
@@ -257,7 +259,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                           SizedBox(width: 12.w),
                           Expanded(
                             child: Text(
-                              'Vibration',
+                              l10n.vibration,
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: AppColors.grey700,
                               ),
@@ -309,7 +311,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
 
                 // Save Button
                 CustomButton(
-                  text: 'Save Preferences',
+                  text: l10n.savePreferences,
                   onPressed: _isLoading ? null : _savePreferences,
                   backgroundColor: AppColors.primary,
                   width: double.infinity,
@@ -395,6 +397,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
   }
 
   Future<void> _savePreferences() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _isLoading = true;
     });
@@ -418,8 +421,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
       if (response['success'] == true) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Notification preferences saved successfully'),
+            SnackBar(
+              content: Text(l10n.notificationPreferencesSavedSuccessfully),
               backgroundColor: AppColors.success,
             ),
           );
@@ -431,7 +434,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save preferences: $e'),
+            content: Text('${l10n.failedToSavePreferences}: $e'),
             backgroundColor: AppColors.error,
           ),
         );
@@ -444,39 +447,4 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
       }
     }
   }
-
-  // void _testPushNotification() {
-  //   try {
-  //     _notificationService.showStudyReminderNotification(
-  //       title: 'Test Study Reminder! 📚',
-  //       body:
-  //           'This is a test push notification to verify the system is working.',
-  //       studyGoalMinutes: 30,
-  //     );
-  //   } catch (e) {
-  //     // Fallback to simple notification service
-  //     _simpleNotificationService.showStudyReminderNotification(
-  //       title: 'Test Study Reminder! 📚',
-  //       body:
-  //           'This is a test push notification to verify the system is working.',
-  //       studyGoalMinutes: 30,
-  //     );
-  //   }
-  // }
-
-  // void _testStudyReminder() {
-  //   try {
-  //     NotificationPollingService().testStudyReminder();
-  //   } catch (e) {
-  //     debugPrint('Error testing study reminder: $e');
-  //   }
-  // }
-
-  // void _testSimpleNotification() {
-  //   try {
-  //     NotificationPollingService().testNotification();
-  //   } catch (e) {
-  //     debugPrint('Error testing simple notification: $e');
-  //   }
-  // }
 }

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../main.dart';
+import '../../l10n/app_localizations.dart';
 
 class DisclaimerScreen extends ConsumerStatefulWidget {
   const DisclaimerScreen({super.key});
@@ -18,6 +19,8 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -37,13 +40,11 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                         width: 120.w,
                         height: 120.w,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF4F46E5),
+                          color: AppColors.primary,
                           borderRadius: BorderRadius.circular(24.r),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(
-                                0xFF4F46E5,
-                              ).withValues(alpha: 0.3),
+                              color: AppColors.primary.withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -59,7 +60,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
 
                       // App Title
                       Text(
-                        'Learn Traffic Rules',
+                        l10n.appName,
                         style: TextStyle(
                           fontSize: 28.sp,
                           fontWeight: FontWeight.bold,
@@ -70,7 +71,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
 
                       // Subtitle
                       Text(
-                        'Provisional Driving License Preparation',
+                        l10n.provisionalDrivingLicensePreparation,
                         style: TextStyle(
                           fontSize: 16.sp,
                           color: const Color(0xFF6B7280),
@@ -106,7 +107,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
 
                       // Disclaimer Title
                       Text(
-                        'Educational Disclaimer',
+                        l10n.educationalDisclaimer,
                         style: TextStyle(
                           fontSize: 24.sp,
                           fontWeight: FontWeight.bold,
@@ -131,30 +132,26 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                           children: [
                             _buildDisclaimerItem(
                               icon: Icons.school,
-                              title: 'Educational Purpose Only',
-                              description:
-                                  'This app is designed for educational purposes to help you prepare for your provisional driving license exam.',
+                              title: l10n.educationalPurposeOnly,
+                              description: l10n.educationalPurposeDescription,
                             ),
                             SizedBox(height: 16.h),
                             _buildDisclaimerItem(
                               icon: Icons.sim_card,
-                              title: 'Practice Simulation',
-                              description:
-                                  'The practice tests simulate real exam conditions but are not official government examinations.',
+                              title: l10n.practiceSimulation,
+                              description: l10n.practiceSimulationDescription,
                             ),
                             SizedBox(height: 16.h),
                             _buildDisclaimerItem(
                               icon: Icons.warning_amber,
-                              title: 'Not Official',
-                              description:
-                                  'This app is not affiliated with any government agency or official driving test authority.',
+                              title: l10n.notOfficial,
+                              description: l10n.notOfficialDescription,
                             ),
                             SizedBox(height: 16.h),
                             _buildDisclaimerItem(
                               icon: Icons.update,
-                              title: 'Stay Updated',
-                              description:
-                                  'Always refer to official sources for the most current traffic rules and regulations.',
+                              title: l10n.stayUpdated,
+                              description: l10n.stayUpdatedDescription,
                             ),
                           ],
                         ),
@@ -187,7 +184,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                             ),
                           ),
                           child: Text(
-                            'I Understand - Continue',
+                            l10n.iUnderstandContinue,
                             style: TextStyle(
                               fontSize: 18.sp,
                               fontWeight: FontWeight.w600,
@@ -208,11 +205,11 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                                 _hasAcceptedDisclaimer = value ?? false;
                               });
                             },
-                            activeColor: const Color(0xFF4F46E5),
+                            activeColor: AppColors.primary,
                           ),
                           Expanded(
                             child: Text(
-                              'I have read and understood the educational disclaimer',
+                              l10n.iHaveReadAndUnderstoodDisclaimer,
                               style: TextStyle(
                                 fontSize: 14.sp,
                                 color: const Color(0xFF6B7280),
@@ -244,10 +241,10 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
           width: 40.w,
           height: 40.w,
           decoration: BoxDecoration(
-            color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8.r),
           ),
-          child: Icon(icon, size: 20.w, color: const Color(0xFF4F46E5)),
+          child: Icon(icon, size: 20.w, color: AppColors.primary),
         ),
         SizedBox(width: 12.w),
         Expanded(

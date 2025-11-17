@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../core/theme/app_theme.dart';
+import '../l10n/app_localizations.dart';
 
 class LegalDisclaimerDialog extends StatelessWidget {
   const LegalDisclaimerDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
       title: Row(
         children: [
@@ -14,7 +16,7 @@ class LegalDisclaimerDialog extends StatelessWidget {
           SizedBox(width: 8.w),
           Expanded(
             child: Text(
-              'Important Legal Notice',
+              l10n.importantLegalNotice,
               style: AppTextStyles.heading3.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
@@ -31,9 +33,8 @@ class LegalDisclaimerDialog extends StatelessWidget {
             // Government Disclaimer
             _buildDisclaimerSection(
               icon: Icons.warning_amber_rounded,
-              title: 'Government Affiliation',
-              content:
-                  'This app is NOT affiliated with, endorsed by, or connected to any government agency, DMV, or official driving license authority.',
+              title: l10n.governmentAffiliation,
+              content: l10n.governmentAffiliationContent,
               isWarning: true,
             ),
 
@@ -42,9 +43,8 @@ class LegalDisclaimerDialog extends StatelessWidget {
             // Educational Purpose
             _buildDisclaimerSection(
               icon: Icons.school_rounded,
-              title: 'Educational Purpose Only',
-              content:
-                  'This app is designed solely for educational purposes to help you learn traffic rules and practice for driving examinations.',
+              title: l10n.educationalPurposeOnlyDisclaimer,
+              content: l10n.educationalPurposeOnlyContent,
               isWarning: false,
             ),
 
@@ -53,9 +53,8 @@ class LegalDisclaimerDialog extends StatelessWidget {
             // No Official Certification
             _buildDisclaimerSection(
               icon: Icons.cancel_outlined,
-              title: 'No Official Certification',
-              content:
-                  'This app does NOT provide official driving licenses, does NOT guarantee passing any official examination, and does NOT replace official government procedures.',
+              title: l10n.noOfficialCertification,
+              content: l10n.noOfficialCertificationContent,
               isWarning: true,
             ),
 
@@ -64,9 +63,8 @@ class LegalDisclaimerDialog extends StatelessWidget {
             // User Responsibility
             _buildDisclaimerSection(
               icon: Icons.person_outline,
-              title: 'Your Responsibility',
-              content:
-                  'You must complete official procedures through government agencies to obtain driving licenses. This app is for learning and practice only.',
+              title: l10n.yourResponsibility,
+              content: l10n.yourResponsibilityContent,
               isWarning: false,
             ),
 
@@ -95,7 +93,7 @@ class LegalDisclaimerDialog extends StatelessWidget {
                       ),
                       SizedBox(width: 6.w),
                       Text(
-                        'Remember:',
+                        l10n.remember,
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.bold,
@@ -105,7 +103,7 @@ class LegalDisclaimerDialog extends StatelessWidget {
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    'This is a private educational tool. Always verify information with official government sources.',
+                    l10n.privateEducationalToolDisclaimer,
                     style: AppTextStyles.caption.copyWith(
                       color: AppColors.grey700,
                     ),
@@ -120,7 +118,7 @@ class LegalDisclaimerDialog extends StatelessWidget {
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
           child: Text(
-            'I Understand',
+            l10n.iUnderstand,
             style: AppTextStyles.button.copyWith(color: AppColors.grey600),
           ),
         ),
@@ -132,7 +130,7 @@ class LegalDisclaimerDialog extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
           ),
           child: Text(
-            'Continue Learning',
+            l10n.continueLearning,
             style: AppTextStyles.button.copyWith(
               color: AppColors.white,
               fontWeight: FontWeight.bold,

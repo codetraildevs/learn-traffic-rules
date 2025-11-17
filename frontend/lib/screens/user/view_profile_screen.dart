@@ -3,18 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/language_selector.dart';
+import '../../l10n/app_localizations.dart';
 
 class ViewProfileScreen extends ConsumerWidget {
   const ViewProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('View Profile'),
+        title: Text(l10n.viewProfile),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
       ),
@@ -50,7 +53,7 @@ class ViewProfileScreen extends ConsumerWidget {
                   ),
                   SizedBox(height: 20.h),
                   Text(
-                    user?.fullName ?? 'User',
+                    user?.fullName ?? l10n.user,
                     style: AppTextStyles.heading2.copyWith(fontSize: 24.sp),
                   ),
                   SizedBox(height: 8.h),
@@ -77,6 +80,11 @@ class ViewProfileScreen extends ConsumerWidget {
 
             SizedBox(height: 24.h),
 
+            // Language Settings
+            const LanguageSelector(),
+
+            SizedBox(height: 24.h),
+
             // Profile Details
             Container(
               width: double.infinity,
@@ -96,26 +104,29 @@ class ViewProfileScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Profile Information',
+                    l10n.profileInformation,
                     style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
                   ),
                   SizedBox(height: 20.h),
 
-                  _buildInfoRow('Full Name', user?.fullName ?? 'Not provided'),
                   _buildInfoRow(
-                    'Phone Number',
-                    user?.phoneNumber ?? 'Not provided',
+                    l10n.fullName,
+                    user?.fullName ?? l10n.notProvided,
+                  ),
+                  _buildInfoRow(
+                    l10n.phoneNumber,
+                    user?.phoneNumber ?? l10n.noPhoneNumber,
                   ),
 
                   _buildInfoRow(
-                    'Account Status',
-                    user?.isActive != true ? 'Active' : 'Inactive',
+                    l10n.accountStatus,
+                    user?.isActive != true ? l10n.active : l10n.inactive,
                   ),
                   _buildInfoRow(
-                    'Last Login',
+                    l10n.lastLogin,
                     user?.lastLogin != null
-                        ? _formatDate(user!.lastLogin!)
-                        : 'Never',
+                        ? _formatDate(user!.lastLogin!, l10n)
+                        : l10n.never,
                   ),
                 ],
               ),
@@ -156,7 +167,15 @@ class ViewProfileScreen extends ConsumerWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.month}/${date.day}/${date.year} at ${date.hour}:${date.minute}';
+  String _formatDate(DateTime date, AppLocalizations l10n) {
+    final hour = date.hour;
+    final minute = date.minute.toString().padLeft(2, '0');
+    return l10n.dateTimeFormat(
+      date.month,
+      date.day,
+      date.year,
+      hour,
+      int.parse(minute),
+    );
   }
 }

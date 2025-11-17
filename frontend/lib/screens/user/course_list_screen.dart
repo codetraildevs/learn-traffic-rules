@@ -7,6 +7,7 @@ import '../../models/course_model.dart';
 import '../../services/course_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
+import '../../l10n/app_localizations.dart';
 import 'course_detail_screen.dart';
 import 'payment_instructions_screen.dart';
 
@@ -80,10 +81,11 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
     final authState = ref.watch(authProvider);
     final hasAccess = authState.accessPeriod?.hasAccess ?? false;
 
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.grey50,
       appBar: AppBar(
-        title: const Text('Courses'),
+        title: Text(l10n.courses),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         actions: [
@@ -122,6 +124,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
   }
 
   Widget _buildFilterSection() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
@@ -139,7 +142,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
         children: [
           Expanded(
             child: FilterChip(
-              label: const Text('All Courses'),
+              label: Text(l10n.allCourses),
               selected: _selectedCourseType == null,
               onSelected: (selected) {
                 setState(() {
@@ -154,7 +157,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
           SizedBox(width: 8.w),
           Expanded(
             child: FilterChip(
-              label: const Text('Free'),
+              label: Text(l10n.free),
               selected: _selectedCourseType == CourseType.free,
               onSelected: (selected) {
                 setState(() {
@@ -169,7 +172,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
           SizedBox(width: 8.w),
           Expanded(
             child: FilterChip(
-              label: const Text('Paid'),
+              label: Text(l10n.paid),
               selected: _selectedCourseType == CourseType.paid,
               onSelected: (selected) {
                 setState(() {
