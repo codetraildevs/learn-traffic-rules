@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
 
@@ -61,7 +62,7 @@ class AboutAppScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 24.h),
                       Text(
-                        'Learn Traffic Rules',
+                        'Rwanda Traffic Rule 🇷🇼',
                         style: AppTextStyles.heading1.copyWith(
                           fontSize: 28.sp,
                           color: AppColors.white,
@@ -118,7 +119,7 @@ class AboutAppScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Learn Traffic Rules is a comprehensive educational mobile application designed to help individuals prepare for their provisional driving license examination. This app provides interactive practice tests, comprehensive courses, and study materials with multi-language support to enhance safe driving knowledge development.',
+                              'Rwanda Traffic Rule 🇷🇼 is a comprehensive educational mobile application designed to help individuals prepare for their provisional driving license examination. This app provides interactive practice tests, comprehensive courses, and study materials with multi-language support to enhance safe driving knowledge development.',
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: AppColors.grey700,
                                 height: 1.6,
@@ -128,8 +129,10 @@ class AboutAppScreen extends StatelessWidget {
                             _buildInfoBanner(
                               icon: Icons.school_rounded,
                               message:
-                                  'Educational Purpose Only: This app is not affiliated with any government agency or official driving test authority.',
+                                  '⚠️ IMPORTANT: This app is NOT affiliated with, endorsed by, or associated with the Government of Rwanda or any official driving test authority. This is an independent educational tool.',
                             ),
+                            SizedBox(height: 16.h),
+                            _buildSourceLinksSection(),
                           ],
                         ),
                       ),
@@ -331,7 +334,7 @@ class AboutAppScreen extends StatelessWidget {
                               icon: Icons.info_outline_rounded,
                               title: 'Legal Notice',
                               content:
-                                  'This app is designed for educational purposes only. While we strive to provide accurate and up-to-date information, users should always refer to official traffic regulations and consult with local authorities for the most current rules.',
+                                  'This app is designed for educational purposes only. While we strive to provide accurate and up-to-date information, users should always refer to official traffic regulations and consult with local authorities for the most current rules.\n\nFor official driving license information (provisional and permanent), please visit:\n• Rwanda National Police (Driving License Services): police.gov.rw/home',
                               color: AppColors.error,
                             ),
                             SizedBox(height: 16.h),
@@ -681,6 +684,106 @@ class AboutAppScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSourceLinksSection() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: AppColors.error.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.link_rounded, color: AppColors.error, size: 20.sp),
+              SizedBox(width: 8.w),
+              Text(
+                'Official Government Sources',
+                style: AppTextStyles.bodyLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.error,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            'For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to:',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.grey700,
+              height: 1.5,
+            ),
+          ),
+          SizedBox(height: 12.h),
+          _buildSourceLink(
+            'Rwanda National Police (Driving License Services)',
+            'police.gov.rw/home',
+            'https://police.gov.rw/home/',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSourceLink(String title, String url, String fullUrl) {
+    return InkWell(
+      onTap: () async {
+        final uri = Uri.parse(fullUrl);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      child: Container(
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(
+            color: AppColors.error.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.open_in_new_rounded,
+              size: 16.sp,
+              color: AppColors.error,
+            ),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.grey800,
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    url,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.error,
+                      fontSize: 11.sp,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
