@@ -73,12 +73,12 @@ class TermsConditionsScreen extends StatelessWidget {
                 children: [
                   _buildSection(
                     '1. Acceptance of Terms',
-                    'By downloading, installing, or using the Learn Traffic Rules mobile application, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our app.',
+                    'By downloading, installing, or using the Rwanda Traffic Rule 🇷🇼 mobile application, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our app.',
                   ),
 
                   _buildSection(
                     '2. Description of Service',
-                    'Learn Traffic Rules is an educational mobile application that provides:\n\n'
+                    'Rwanda Traffic Rule 🇷🇼 is an educational mobile application that provides:\n\n'
                         '• Interactive traffic rules quizzes and practice exams\n\n'
                         '• Progress tracking and performance analytics\n\n'
                         '• Educational content about traffic regulations\n\n'

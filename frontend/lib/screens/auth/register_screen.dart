@@ -400,12 +400,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               errorString.contains('device already used') ||
               errorString.contains('device binding') ||
               errorString.contains('device conflict')) {
+            // Check if user exists by attempting a login check
+            // This handles the case where device is registered but user doesn't exist
             errorMessage = 'Device Already Registered';
             errorDescription =
-                'This device is already registered to another account.\n\n'
-                'You can only have one account per device for security reasons.\n\n'
-                'Please login with the existing account instead of creating a new one.';
+                'This device appears to be registered, but we need to verify your account.\n\n'
+                'Please try logging in first. If login fails, contact support to reset your device binding.\n\n'
+                'Support: +250 788 659 575';
             errorIcon = '📱';
+
+            // Try to check if user exists by attempting login
+            // This helps identify if it's a device binding issue vs user doesn't exist
+            _checkUserExists(_phoneController.text.trim());
           } else if (errorString.contains('invalid phone') ||
               errorString.contains('phone number invalid') ||
               errorString.contains('invalid phone number')) {
@@ -518,7 +524,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
                   // App Title with Creative Styling
                   Text(
-                    'Create Account For Free',
+                    'Start Learning Journey 🇷🇼',
                     style: AppTextStyles.heading2.copyWith(
                       color: AppColors.black,
                       fontSize: 18.sp,
@@ -528,7 +534,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   SizedBox(height: 10.h),
 
                   Text(
-                    'Learn • Practice • Master',
+                    'Learn • Practice • Master 🚗',
                     style: AppTextStyles.bodyLarge.copyWith(
                       color: AppColors.grey700,
                       fontSize: 16.sp,
@@ -859,7 +865,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       context,
       title: 'Privacy Policy',
       content:
-          'Learn Traffic Rules is an educational application designed to help users prepare for provisional driving license examinations. This app is not affiliated with any government agency and serves as a practice tool only.\n\n'
+          'Rwanda Traffic Rule 🇷🇼 is an educational application designed to help users prepare for provisional driving license examinations.\n\n'
+          '⚠️ IMPORTANT: This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.\n\n'
+          'Official Source: For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to Rwanda National Police (Driving License Services): https://police.gov.rw/home/\n\n'
           'We collect minimal data necessary to provide our educational services:\n'
           '• Phone number for account creation and security\n'
           '• Device information for fraud prevention\n'
@@ -876,17 +884,87 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       context,
       title: 'Terms & Conditions',
       content:
-          'By using Learn Traffic Rules, you agree to these terms:\n\n'
-          'Educational Purpose: This app is designed for educational practice only and is not affiliated with any government agency or official driving examination body.\n\n'
+          'By using Rwanda Traffic Rule 🇷🇼, you agree to these terms:\n\n'
+          '⚠️ IMPORTANT DISCLAIMER:\n'
+          'This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.\n\n'
+          'Official Source: For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to Rwanda National Police (Driving License Services): https://police.gov.rw/home/\n\n'
+          'Educational Purpose: This app is designed for educational practice only. While we provide comprehensive study materials, users must complete official government procedures to obtain driving licenses. Always verify information with official sources and consult local authorities.\n\n'
           'User Responsibilities:\n'
           '• Provide accurate information during registration\n'
           '• Use the app for educational purposes only\n'
           '• Respect intellectual property rights\n'
-          '• Not attempt to reverse engineer the app\n\n'
+          '• Not attempt to reverse engineer the app\n'
+          '• Verify all information with official government sources\n\n'
           'Service Availability: We strive to maintain service availability but cannot guarantee uninterrupted access.\n\n'
           'Account Termination: You may delete your account at any time. We reserve the right to suspend accounts that violate these terms.',
       fullPolicyUrl: 'https://traffic.cyangugudims.com/terms-conditions',
     );
+  }
+
+  // Check if user exists by attempting a login
+  Future<void> _checkUserExists(String phoneNumber) async {
+    try {
+      debugPrint('🔍 Checking if user exists for phone: $phoneNumber');
+
+      // Use fallback device ID if not available
+      final deviceId =
+          _deviceId ??
+          'unknown_device_${DateTime.now().millisecondsSinceEpoch}';
+
+      final loginRequest = LoginRequest(
+        phoneNumber: phoneNumber,
+        deviceId: deviceId,
+      );
+
+      // Try to login to check if user exists
+      final loginResult = await ref
+          .read(authProvider.notifier)
+          .login(loginRequest);
+
+      if (loginResult) {
+        // User exists and login succeeded
+        debugPrint('✅ User exists and login succeeded');
+        if (mounted) {
+          // User is now logged in, no need to show error
+          return;
+        }
+      } else {
+        // Login failed - check the error
+        final authState = ref.read(authProvider);
+        final error = authState.error?.toLowerCase() ?? '';
+        debugPrint('❌ Login failed, error: $error');
+
+        if (error.contains('phone number not found') ||
+            error.contains('user not found') ||
+            error.contains('phone not registered') ||
+            error.contains('invalid phone number or device id')) {
+          // User doesn't exist - this is the problematic scenario
+          debugPrint('⚠️ Device is registered but user does not exist!');
+
+          if (mounted) {
+            // Show special error message for this scenario
+            AppFlashMessage.show(
+              context: context,
+              message: 'Device Binding Issue 🔧',
+              description:
+                  'Your device is registered but your account doesn\'t exist.\n\n'
+                  'This usually happens if:\n'
+                  '• Registration was interrupted\n'
+                  '• Account was deleted\n'
+                  '• Database issue occurred\n\n'
+                  'Please contact support to reset your device binding:\n'
+                  '📞 +250 788 659 575\n\n'
+                  'Or try again in a few moments.',
+              type: FlashMessageType.error,
+              duration: const Duration(seconds: 10),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Error checking user existence: $e');
+      // Don't show error, just log it
+    }
   }
 
   // Show Login Confirmation Dialog

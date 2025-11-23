@@ -94,28 +94,136 @@ class PrivacyPolicyModal extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(16.w),
                     decoration: BoxDecoration(
-                      color: AppColors.warning.withValues(alpha: 0.1),
+                      color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12.r),
                       border: Border.all(
-                        color: AppColors.warning.withValues(alpha: 0.3),
-                        width: 1,
+                        color: AppColors.error.withValues(alpha: 0.3),
+                        width: 1.5,
                       ),
                     ),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.school_outlined,
-                          color: AppColors.warning,
-                          size: 20.sp,
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Text(
-                            'Educational Purpose Only',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.warning,
-                              fontWeight: FontWeight.w600,
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: AppColors.error,
+                              size: 20.sp,
                             ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Text(
+                                '⚠️ IMPORTANT DISCLAIMER',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.error,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 12.h),
+                        Text(
+                          'This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.grey800,
+                            fontWeight: FontWeight.w600,
+                            height: 1.5,
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                        Text(
+                          'Official Source:',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.grey800,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: 6.h),
+                        GestureDetector(
+                          onTap: () async {
+                            const url = 'https://police.gov.rw/home/';
+                            try {
+                              final uri = Uri.parse(url);
+                              debugPrint('🌐 Attempting to open: $url');
+
+                              bool launched = false;
+
+                              // Try inAppWebView first (keeps app running)
+                              try {
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(
+                                    uri,
+                                    mode: LaunchMode.inAppWebView,
+                                  );
+                                  launched = true;
+                                  debugPrint('✅ Opened with inAppWebView');
+                                }
+                              } catch (e) {
+                                debugPrint('⚠️ inAppWebView failed: $e');
+                              }
+
+                              // Fallback to platformDefault
+                              if (!launched) {
+                                try {
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(
+                                      uri,
+                                      mode: LaunchMode.platformDefault,
+                                    );
+                                    launched = true;
+                                    debugPrint('✅ Opened with platformDefault');
+                                  }
+                                } catch (e) {
+                                  debugPrint('⚠️ platformDefault failed: $e');
+                                }
+                              }
+
+                              // Try without canLaunchUrl check
+                              if (!launched) {
+                                try {
+                                  await launchUrl(
+                                    uri,
+                                    mode: LaunchMode.inAppWebView,
+                                  );
+                                  launched = true;
+                                  debugPrint(
+                                    '✅ Opened with inAppWebView (no check)',
+                                  );
+                                } catch (e) {
+                                  debugPrint('⚠️ Direct launch failed: $e');
+                                }
+                              }
+
+                              if (!launched) {
+                                debugPrint(
+                                  '❌ All launch attempts failed for: $url',
+                                );
+                              }
+                            } catch (e) {
+                              debugPrint('❌ Error launching URL: $e');
+                            }
+                          },
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.link_rounded,
+                                color: AppColors.primary,
+                                size: 16.sp,
+                              ),
+                              SizedBox(width: 6.w),
+                              Expanded(
+                                child: Text(
+                                  'Rwanda National Police (Driving License Services): police.gov.rw/home',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],

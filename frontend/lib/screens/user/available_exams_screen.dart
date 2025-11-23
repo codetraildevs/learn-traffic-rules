@@ -522,7 +522,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _freeExamData!.isFreeUser ? 'Free Exams' : 'All Exams',
+                  _freeExamData!.isFreeUser ? 'Exams' : 'All Exams',
                   style: AppTextStyles.heading2.copyWith(
                     color: AppColors.white,
                     fontSize: 20.sp,

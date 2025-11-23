@@ -375,7 +375,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           )) {
             errorMessage = 'Phone Number Not Found';
             errorDescription =
-                'This phone number is not registered. Please create an account first.';
+                'This phone number is not registered. Please create an account first.\n\n'
+                'If you tried to register and got "device already registered" error, '
+                'this means your device is registered but your account doesn\'t exist.\n\n'
+                'Please contact support: +250 788 659 575';
           } else if (errorString.contains('invalid phone') ||
               errorString.contains('phone number invalid') ||
               errorString.contains('invalid phone number') ||
@@ -474,7 +477,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ),
 
                     child: Text(
-                      'LEARN TRAFFIC RULES',
+                      'Rwanda Traffic Rule 🇷🇼',
                       style: AppTextStyles.heading1.copyWith(
                         color: Colors.black,
                         fontSize: 16.sp,
@@ -803,7 +806,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       context,
       title: 'Privacy Policy',
       content:
-          'Learn Traffic Rules is an educational application designed to help users prepare for provisional driving license examinations. This app is not affiliated with any government agency and serves as a practice tool only.\n\n'
+          'Rwanda Traffic Rule 🇷🇼 is an educational application designed to help users prepare for provisional driving license examinations.\n\n'
+          '⚠️ IMPORTANT: This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.\n\n'
+          'Official Source: For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to Rwanda National Police (Driving License Services): https://police.gov.rw/home/\n\n'
           'We collect minimal data necessary to provide our educational services:\n'
           '• Phone number for account creation and security\n'
           '• Device information for fraud prevention\n'
@@ -820,13 +825,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       context,
       title: 'Terms & Conditions',
       content:
-          'By using Learn Traffic Rules, you agree to these terms:\n\n'
-          'Educational Purpose: This app is designed for educational practice only and is not affiliated with any government agency or official driving examination body.\n\n'
+          'By using Rwanda Traffic Rule 🇷🇼, you agree to these terms:\n\n'
+          '⚠️ IMPORTANT DISCLAIMER:\n'
+          'This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.\n\n'
+          'Official Source: For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to Rwanda National Police (Driving License Services): https://police.gov.rw/home/\n\n'
+          'Educational Purpose: This app is designed for educational practice only. While we provide comprehensive study materials, users must complete official government procedures to obtain driving licenses. Always verify information with official sources and consult local authorities.\n\n'
           'User Responsibilities:\n'
           '• Provide accurate information during registration\n'
           '• Use the app for educational purposes only\n'
           '• Respect intellectual property rights\n'
-          '• Not attempt to reverse engineer the app\n\n'
+          '• Not attempt to reverse engineer the app\n'
+          '• Verify all information with official government sources\n\n'
           'Service Availability: We strive to maintain service availability but cannot guarantee uninterrupted access.\n\n'
           'Account Termination: You may delete your account at any time. We reserve the right to suspend accounts that violate these terms.',
       fullPolicyUrl: 'https://traffic.cyangugudims.com/terms-conditions',

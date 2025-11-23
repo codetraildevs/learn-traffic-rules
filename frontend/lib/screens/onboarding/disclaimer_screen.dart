@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../main.dart';
@@ -59,7 +61,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
 
                       // App Title
                       Text(
-                        'Learn Traffic Rules',
+                        'Rwanda Traffic Rule 🇷🇼',
                         style: TextStyle(
                           fontSize: 28.sp,
                           fontWeight: FontWeight.bold,
@@ -147,15 +149,10 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                               icon: Icons.warning_amber,
                               title: 'Not Official',
                               description:
-                                  'This app is not affiliated with any government agency or official driving test authority.',
+                                  '⚠️ IMPORTANT: This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool.',
                             ),
                             SizedBox(height: 16.h),
-                            _buildDisclaimerItem(
-                              icon: Icons.update,
-                              title: 'Stay Updated',
-                              description:
-                                  'Always refer to official sources for the most current traffic rules and regulations.',
-                            ),
+                            _buildOfficialSourceItem(),
                           ],
                         ),
                       ),
@@ -276,6 +273,203 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildOfficialSourceItem() {
+    const policeUrl = 'https://police.gov.rw/home/';
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 40.w,
+          height: 40.w,
+          decoration: BoxDecoration(
+            color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          child: Icon(Icons.link, size: 20.w, color: const Color(0xFF4F46E5)),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Official Source',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1F2937),
+                ),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                'For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to ',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: const Color(0xFF6B7280),
+                  height: 1.4,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              GestureDetector(
+                onTap: () => _openPoliceWebsite(),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.link_rounded,
+                      size: 16.sp,
+                      color: const Color(0xFF4F46E5),
+                    ),
+                    SizedBox(width: 4.w),
+                    Flexible(
+                      child: Text(
+                        'Rwanda National Police (Driving License Services)',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: const Color(0xFF4F46E5),
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 2.h),
+              GestureDetector(
+                onTap: () => _openPoliceWebsite(),
+                child: Text(
+                  policeUrl,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: const Color(0xFF4F46E5),
+                    decoration: TextDecoration.underline,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openPoliceWebsite() async {
+    const url = 'https://police.gov.rw/home/';
+    try {
+      final uri = Uri.parse(url);
+      debugPrint('🌐 Attempting to open: $url');
+
+      // Try to launch the URL with multiple fallback strategies
+      bool launched = false;
+
+      // First, try with inAppWebView (keeps app running, opens in-app browser)
+      try {
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.inAppWebView);
+          launched = true;
+          debugPrint('✅ Opened with inAppWebView');
+        }
+      } catch (e) {
+        debugPrint('⚠️ inAppWebView failed: $e');
+      }
+
+      // If that didn't work, try platformDefault (keeps app in foreground)
+      if (!launched) {
+        try {
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.platformDefault);
+            launched = true;
+            debugPrint('✅ Opened with platformDefault');
+          }
+        } catch (e) {
+          debugPrint('⚠️ platformDefault failed: $e');
+        }
+      }
+
+      // If still not launched, try without checking canLaunchUrl first
+      // (sometimes canLaunchUrl returns false but launchUrl still works)
+      if (!launched) {
+        try {
+          await launchUrl(uri, mode: LaunchMode.inAppWebView);
+          launched = true;
+          debugPrint('✅ Opened with inAppWebView (no check)');
+        } catch (e) {
+          debugPrint('⚠️ Direct inAppWebView launch failed: $e');
+        }
+      }
+
+      // Last resort: externalApplication (may cause app to exit)
+      if (!launched) {
+        try {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          launched = true;
+          debugPrint('⚠️ Opened with externalApplication (app may exit)');
+        } catch (e) {
+          debugPrint('⚠️ externalApplication failed: $e');
+        }
+      }
+
+      // If all attempts failed, show error with copy option
+      if (!launched) {
+        debugPrint('❌ All launch attempts failed for: $url');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open link. Tap "Copy" to copy the URL.'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+              action: SnackBarAction(
+                label: 'Copy',
+                textColor: Colors.white,
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: url));
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('URL copied to clipboard'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Error opening website: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Copy URL',
+              textColor: Colors.white,
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: url));
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('URL copied to clipboard'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _proceedToApp() async {

@@ -283,6 +283,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
 
           // Contact Admin
           _buildContactInfo(),
+          SizedBox(height: 40.h),
         ],
       ),
     );
@@ -691,7 +692,10 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => _makeCall(_paymentData!.contactInfo.phone),
+                  onPressed: () {
+                    // Always use the correct phone number
+                    _makeCall('+250788659575');
+                  },
                   icon: Icon(Icons.phone, size: 16.w),
                   label: const Text('Call'),
                   style: ElevatedButton.styleFrom(
@@ -811,9 +815,111 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   void _makeCall(String phoneNumber) async {
-    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
-    if (await canLaunchUrl(phoneUri)) {
-      await launchUrl(phoneUri);
+    // Check if widget is still mounted before proceeding
+    if (!mounted) {
+      debugPrint('⚠️ Widget not mounted, skipping call');
+      return;
+    }
+
+    // Use the correct phone number as primary, or fallback to provided number
+    const correctPhoneNumber = '+250788659575';
+    final phoneToUse = phoneNumber.isNotEmpty
+        ? phoneNumber
+        : correctPhoneNumber;
+
+    // Clean the phone number - remove spaces and ensure it starts with +
+    String cleanPhone = phoneToUse.replaceAll(' ', '').replaceAll('-', '');
+    if (!cleanPhone.startsWith('+')) {
+      // If it starts with 0, replace with +250
+      if (cleanPhone.startsWith('0')) {
+        cleanPhone = '+250${cleanPhone.substring(1)}';
+      } else if (cleanPhone.startsWith('250')) {
+        cleanPhone = '+$cleanPhone';
+      } else {
+        cleanPhone = '+250$cleanPhone';
+      }
+    }
+
+    // If the number contains 123456, replace with correct number
+    if (cleanPhone.contains('123456') || cleanPhone.contains('788123')) {
+      cleanPhone = correctPhoneNumber;
+    }
+
+    debugPrint('📞 Attempting to call: $cleanPhone');
+    debugPrint('📞 Original number: $phoneNumber');
+
+    try {
+      final Uri phoneUri = Uri(scheme: 'tel', path: cleanPhone);
+
+      // Use platformDefault first - it's safer and won't crash the app
+      // This keeps the app in foreground while opening dialer
+      try {
+        final launched = await launchUrl(
+          phoneUri,
+          mode: LaunchMode.platformDefault,
+        );
+
+        if (launched) {
+          debugPrint('✅ Phone call launched successfully');
+          // Small delay to ensure the launch completes
+          await Future.delayed(const Duration(milliseconds: 100));
+        } else {
+          throw Exception('Launch returned false');
+        }
+      } catch (e) {
+        debugPrint('⚠️ Platform default failed: $e, trying external');
+
+        // Fallback to externalApplication only if platformDefault fails
+        try {
+          await launchUrl(phoneUri, mode: LaunchMode.externalApplication);
+          debugPrint('✅ Phone call launched with external application');
+          // Small delay to ensure the launch completes
+          await Future.delayed(const Duration(milliseconds: 100));
+        } catch (e2) {
+          debugPrint('❌ External application also failed: $e2');
+
+          // Final fallback: try with different URI format
+          try {
+            final Uri altUri = Uri.parse('tel:$cleanPhone');
+            await launchUrl(altUri, mode: LaunchMode.platformDefault);
+            debugPrint('✅ Phone call launched with alternative URI');
+          } catch (e3) {
+            debugPrint('❌ All launch methods failed: $e3');
+            _showCallError(cleanPhone);
+          }
+        }
+      }
+    } catch (e, stackTrace) {
+      debugPrint('❌ Unexpected error calling phone: $e');
+      debugPrint('❌ Stack trace: $stackTrace');
+      _showCallError(cleanPhone);
+    }
+  }
+
+  void _showCallError(String phoneNumber) {
+    if (!mounted) return;
+
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not launch phone app. Number: $phoneNumber'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'Copy',
+            textColor: Colors.white,
+            onPressed: () {
+              try {
+                Clipboard.setData(ClipboardData(text: phoneNumber));
+              } catch (e) {
+                debugPrint('❌ Error copying to clipboard: $e');
+              }
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('❌ Error showing snackbar: $e');
     }
   }
 
@@ -871,7 +977,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
               action: SnackBarAction(
                 label: 'Call Instead',
                 textColor: Colors.white,
-                onPressed: () => _makeCall('+250788659575'),
+                onPressed: () => ('+250788659575'),
               ),
             ),
           );
@@ -881,19 +987,36 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   void _contactAdmin() async {
-    const phoneNumber = '+250788659575';
-    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+    if (!mounted) return;
 
-    if (await canLaunchUrl(phoneUri)) {
-      await launchUrl(phoneUri);
-    } else {
+    const phoneNumber = '+250788659575';
+
+    try {
+      final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+
+      // Use platformDefault first - safer and won't crash
+      try {
+        final launched = await launchUrl(
+          phoneUri,
+          mode: LaunchMode.platformDefault,
+        );
+
+        if (launched) {
+          debugPrint('✅ Admin call launched successfully');
+          await Future.delayed(const Duration(milliseconds: 100));
+        } else {
+          throw Exception('Launch returned false');
+        }
+      } catch (e) {
+        debugPrint('⚠️ Platform default failed: $e, trying external');
+        await launchUrl(phoneUri, mode: LaunchMode.externalApplication);
+        debugPrint('✅ Admin call launched with external application');
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+    } catch (e) {
+      debugPrint('❌ Error calling admin: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not launch phone app'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showCallError(phoneNumber);
     }
   }
 

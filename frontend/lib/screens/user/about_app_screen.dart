@@ -737,9 +737,52 @@ class AboutAppScreen extends StatelessWidget {
   Widget _buildSourceLink(String title, String url, String fullUrl) {
     return InkWell(
       onTap: () async {
-        final uri = Uri.parse(fullUrl);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        try {
+          final uri = Uri.parse(fullUrl);
+          debugPrint('🌐 Attempting to open: $fullUrl');
+
+          bool launched = false;
+
+          // Try inAppWebView first (keeps app running)
+          try {
+            if (await canLaunchUrl(uri)) {
+              await launchUrl(uri, mode: LaunchMode.inAppWebView);
+              launched = true;
+              debugPrint('✅ Opened with inAppWebView');
+            }
+          } catch (e) {
+            debugPrint('⚠️ inAppWebView failed: $e');
+          }
+
+          // Fallback to platformDefault
+          if (!launched) {
+            try {
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.platformDefault);
+                launched = true;
+                debugPrint('✅ Opened with platformDefault');
+              }
+            } catch (e) {
+              debugPrint('⚠️ platformDefault failed: $e');
+            }
+          }
+
+          // Try without canLaunchUrl check
+          if (!launched) {
+            try {
+              await launchUrl(uri, mode: LaunchMode.inAppWebView);
+              launched = true;
+              debugPrint('✅ Opened with inAppWebView (no check)');
+            } catch (e) {
+              debugPrint('⚠️ Direct launch failed: $e');
+            }
+          }
+
+          if (!launched) {
+            debugPrint('❌ All launch attempts failed for: $fullUrl');
+          }
+        } catch (e) {
+          debugPrint('❌ Error launching URL: $e');
         }
       },
       child: Container(
