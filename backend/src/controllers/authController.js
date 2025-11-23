@@ -173,22 +173,49 @@ class AuthController {
         });
       }
 
-      // Check if phone number is already registered (normal flow)
+      // DEVICE BINDING LOGIC: One device = One phone number
+      // Step 1: Check if phone number is already registered
       const existingPhone = await User.findOne({ where: { phoneNumber: phoneNumber } });
       if (existingPhone) {
-        return res.status(409).json({
-          success: false,
-          message: 'This phone number is already registered'
-        });
+        // Phone number exists - check if it's on the same device
+        if (existingPhone.deviceId === deviceId) {
+          // Same phone, same device - user should login instead
+          return res.status(409).json({
+            success: false,
+            message: 'This phone number is already registered on this device. Please login instead.'
+          });
+        } else {
+          // Phone number exists but on different device
+          return res.status(409).json({
+            success: false,
+            message: 'This phone number is registered on a different device. Please use the same device you registered with.'
+          });
+        }
       }
 
-      // Check if device is already registered (normal flow)
+      // Step 2: Phone number doesn't exist - check if device is registered
       const existingDevice = await User.findOne({ where: { deviceId: deviceId } });
       if (existingDevice) {
-        return res.status(409).json({
-          success: false,
-          message: 'This device is already registered to another account'
-        });
+        // Device is registered but with different phone number
+        // This is the problematic scenario - device registered but user doesn't exist for this phone
+        // SOLUTION: Allow registration by updating the device binding to the new phone number
+        // This enforces: one device = one phone number
+        
+        console.log(`⚠️ Device ${deviceId} is registered to phone ${existingDevice.phoneNumber}, but new registration with phone ${phoneNumber}`);
+        console.log(`🔄 Updating device binding: ${existingDevice.phoneNumber} -> ${phoneNumber}`);
+        
+        // Check if the old user account is still active
+        if (existingDevice.isActive && !existingDevice.deletedAt) {
+          // Old user is active - this shouldn't happen, but handle it
+          // Delete the old user record to allow new registration
+          // This enforces one device = one phone number
+          await existingDevice.destroy();
+          console.log(`🗑️ Deleted old user account for device ${deviceId} to allow new registration`);
+        } else {
+          // Old user is inactive/deleted - safe to delete
+          await existingDevice.destroy();
+          console.log(`🗑️ Deleted inactive user account for device ${deviceId}`);
+        }
       }
 
       // Create user (no password needed)
