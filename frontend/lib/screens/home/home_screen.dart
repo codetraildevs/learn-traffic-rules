@@ -2181,7 +2181,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             CustomButton(
               text: 'Logout',
               onPressed: () async {
-                await ref.read(authProvider.notifier).logout();
+                // Show confirmation dialog
+                final shouldLogout = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Row(
+                      children: [
+                        Icon(Icons.logout, color: AppColors.error, size: 24.sp),
+                        SizedBox(width: 8.w),
+                        const Text('Logout'),
+                      ],
+                    ),
+                    content: const Text(
+                      'Are you sure you want to logout?',
+                      style: AppTextStyles.bodyMedium,
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                          foregroundColor: AppColors.white,
+                        ),
+                        child: const Text('Logout'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (shouldLogout == true && mounted) {
+                  // Perform logout
+                  await ref.read(authProvider.notifier).logout();
+                  
+                  // Navigate to login screen explicitly
+                  if (mounted) {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/login',
+                      (route) => false, // Remove all previous routes
+                    );
+                  }
+                }
               },
               backgroundColor: AppColors.error,
               width: double.infinity,
