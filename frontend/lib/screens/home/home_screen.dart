@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:learn_traffic_rules/models/user_model.dart';
@@ -80,6 +82,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    
+    // Set initial tab based on user role
+    // USER: Exams first (index 0), ADMIN: Dashboard first (index 1)
+    final authState = ref.read(authProvider);
+    final user = authState.user;
+    if (user?.role == 'USER') {
+      _currentIndex = 0; // Exams tab first for users
+    } else {
+      _currentIndex = 1; // Dashboard tab first for admin/manager
+    }
+    
     // Load dashboard data (will use cache if available)
     _loadDashboardData(forceRefresh: false);
     // Load courses (will use cache if available)
@@ -646,77 +659,124 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => _loadDashboardData(forceRefresh: true),
-          ),
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {
-              Navigator.pushNamed(context, '/notifications');
-            },
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () => _loadDashboardData(forceRefresh: true),
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [AppColors.grey50, AppColors.white],
-            ),
-          ),
-          child: SafeArea(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _error.isNotEmpty
-                ? _buildErrorView()
-                : SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.all(16.w),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Welcome Card
-                        _buildWelcomeCard(user),
-                        SizedBox(height: 24.h),
-
-                        // Admin Quick ActionsR
-                        if (user?.role == 'ADMIN') ...[
-                          _buildAdminSection(),
-                          SizedBox(height: 24.h),
-                        ],
-
-                        // Quick Stats (for admin only)
-                        if (user?.role == 'ADMIN') ...[
-                          _buildQuickStats(user),
-                          SizedBox(height: 24.h),
-                        ],
-
-                        // Exams grouped by type (for users)
-                        if (user?.role == 'USER') ...[
-                          _buildExamsByType(),
-                          SizedBox(height: 24.h),
-                          _buildCoursesSection(),
-                          SizedBox(height: 24.h),
-                          // Quick Stats for users
-                          _buildQuickStats(user),
-                          SizedBox(height: 24.h),
-                        ],
-
-                        // Recent Activity
-                        _buildRecentActivity(user),
-                      ],
-                    ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          // Show exit confirmation dialog
+          final shouldExit = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.exit_to_app, color: AppColors.warning, size: 24.sp),
+                  SizedBox(width: 8.w),
+                  const Text('Exit App?'),
+                ],
+              ),
+              content: const Text(
+                'Are you sure you want to exit the app?',
+                style: AppTextStyles.bodyMedium,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: AppColors.white,
                   ),
+                  child: const Text('Exit'),
+                ),
+              ],
+            ),
+          );
+          
+          if (shouldExit == true && mounted) {
+            // Exit the app
+            if (Platform.isAndroid) {
+              SystemNavigator.pop();
+            } else if (Platform.isIOS) {
+              exit(0);
+            }
+          }
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Dashboard'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () => _loadDashboardData(forceRefresh: true),
+            ),
+            IconButton(
+              icon: const Icon(Icons.notifications),
+              onPressed: () {
+                Navigator.pushNamed(context, '/notifications');
+              },
+            ),
+          ],
+        ),
+        body: RefreshIndicator(
+          onRefresh: () => _loadDashboardData(forceRefresh: true),
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [AppColors.grey50, AppColors.white],
+              ),
+            ),
+            child: SafeArea(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error.isNotEmpty
+                  ? _buildErrorView()
+                  : SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.all(16.w),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Welcome Card
+                          _buildWelcomeCard(user),
+                          SizedBox(height: 24.h),
+
+                          // Admin Quick ActionsR
+                          if (user?.role == 'ADMIN') ...[
+                            _buildAdminSection(),
+                            SizedBox(height: 24.h),
+                          ],
+
+                          // Quick Stats (for admin only)
+                          if (user?.role == 'ADMIN') ...[
+                            _buildQuickStats(user),
+                            SizedBox(height: 24.h),
+                          ],
+
+                          // Exams grouped by type (for users)
+                          if (user?.role == 'USER') ...[
+                            _buildExamsByType(),
+                            SizedBox(height: 24.h),
+                            _buildCoursesSection(),
+                            SizedBox(height: 24.h),
+                            // Quick Stats for users
+                            _buildQuickStats(user),
+                            SizedBox(height: 24.h),
+                          ],
+
+                          // Recent Activity
+                          _buildRecentActivity(user),
+                        ],
+                      ),
+                    ),
+            ),
           ),
         ),
       ),

@@ -191,6 +191,8 @@ class MyApp extends ConsumerWidget {
             debugPrint('🔄 MAIN: Showing HomeScreen');
             return const HomeScreen();
           case AuthStatus.unauthenticated:
+            // Show RegisterScreen for new users, LoginScreen for returning users
+            // For now, default to RegisterScreen (can be enhanced with "Already have account?" link)
             debugPrint('🔄 MAIN: Showing RegisterScreen');
             return const RegisterScreen();
           case AuthStatus.loading:

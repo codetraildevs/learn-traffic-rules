@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../../models/exam_model.dart';
@@ -41,6 +43,9 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   final OfflineExamService _offlineService = OfflineExamService();
   final ExamSyncService _syncService = ExamSyncService();
   final NetworkService _networkService = NetworkService();
+
+  // Progress saving key
+  String get _progressKey => 'exam_progress_${widget.exam.id}';
 
   // State variables
   List<question_model.Question> _questions = [];
@@ -166,9 +171,13 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
       _backgroundTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
         _backgroundTime++;
         // Removed auto-submit - allow user to continue exam after screen lock
-        debugPrint('🔒 Security: App in background for $_backgroundTime seconds (no auto-submit)');
+        debugPrint(
+          '🔒 Security: App in background for $_backgroundTime seconds (no auto-submit)',
+        );
       });
-      debugPrint('🔒 Security: App paused, tracking background time (no auto-submit)');
+      debugPrint(
+        '🔒 Security: App paused, tracking background time (no auto-submit)',
+      );
     }
   }
 
@@ -294,11 +303,11 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             onPressed: () {
               Navigator.pop(context);
               // Exit without submitting - user can return later
+              // Save progress before exiting
+              _saveExamProgress();
               Navigator.pop(context);
             },
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.warning,
-            ),
+            style: TextButton.styleFrom(foregroundColor: AppColors.warning),
             child: const Text('Exit Without Submitting'),
           ),
           ElevatedButton(
@@ -491,6 +500,9 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
       debugPrint('✅ Successfully loaded ${questions.length} questions');
       debugPrint('   Timer set to: ${widget.exam.duration * 60} seconds');
 
+      // Load saved progress if available
+      await _loadExamProgress();
+
       _startTimer();
       _progressController.forward();
       _questionController.forward();
@@ -606,6 +618,9 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
       _userAnswers[questionId] = answer;
       _showAnswerFeedback[questionId] = true; // Show feedback immediately
     });
+
+    // Save progress after answering
+    _saveExamProgress();
   }
 
   void _nextQuestion() {
@@ -615,6 +630,8 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
       });
       _questionController.reset();
       _questionController.forward();
+      // Save progress when navigating
+      _saveExamProgress();
     }
   }
 
@@ -625,6 +642,8 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
       });
       _questionController.reset();
       _questionController.forward();
+      // Save progress when navigating
+      _saveExamProgress();
     }
   }
 
@@ -638,6 +657,9 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
 
     _timer?.cancel();
     _backgroundTimer?.cancel();
+
+    // Clear saved progress when submitting
+    await _clearExamProgress();
 
     // Re-enable screenshots after exam completion
     if (Platform.isAndroid) {
@@ -1861,6 +1883,105 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
         ],
       ),
     );
+  }
+
+  /// Save exam progress to SharedPreferences
+  Future<void> _saveExamProgress() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final progressData = {
+        'currentQuestionIndex': _currentQuestionIndex,
+        'userAnswers': _userAnswers,
+        'timeRemaining': _timeRemaining,
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+      await prefs.setString(_progressKey, json.encode(progressData));
+      debugPrint(
+        '💾 Saved exam progress: Question ${_currentQuestionIndex + 1}/${_questions.length}',
+      );
+    } catch (e) {
+      debugPrint('❌ Error saving exam progress: $e');
+    }
+  }
+
+  /// Load exam progress from SharedPreferences
+  Future<void> _loadExamProgress() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final progressJson = prefs.getString(_progressKey);
+
+      if (progressJson != null) {
+        final progressData = json.decode(progressJson) as Map<String, dynamic>;
+        final savedIndex = progressData['currentQuestionIndex'] as int?;
+        final savedAnswers =
+            progressData['userAnswers'] as Map<String, dynamic>?;
+        final savedTimeRemaining = progressData['timeRemaining'] as int?;
+        final savedTimestamp = progressData['timestamp'] as String?;
+
+        // Check if progress is recent (within 24 hours)
+        if (savedTimestamp != null) {
+          final savedDate = DateTime.parse(savedTimestamp);
+          final now = DateTime.now();
+          final difference = now.difference(savedDate);
+
+          if (difference.inHours > 24) {
+            debugPrint(
+              '⏰ Saved progress is older than 24 hours, starting fresh',
+            );
+            await _clearExamProgress();
+            return;
+          }
+        }
+
+        // Restore progress if valid
+        if (savedIndex != null &&
+            savedIndex >= 0 &&
+            savedIndex < _questions.length &&
+            savedAnswers != null) {
+          setState(() {
+            _currentQuestionIndex = savedIndex;
+            _userAnswers.clear();
+            savedAnswers.forEach((key, value) {
+              _userAnswers[key] = value.toString();
+            });
+
+            // Restore time remaining if available and valid
+            if (savedTimeRemaining != null && savedTimeRemaining > 0) {
+              _timeRemaining = savedTimeRemaining;
+            }
+          });
+
+          debugPrint(
+            '✅ Loaded exam progress: Question ${_currentQuestionIndex + 1}/${_questions.length}',
+          );
+          debugPrint('   Answers saved: ${_userAnswers.length}');
+          debugPrint('   Time remaining: ${_formatTime(_timeRemaining)}');
+
+          // Show a message to user that progress was restored
+          if (mounted) {
+            AppFlashMessage.showInfo(
+              context,
+              'Progress Restored',
+              description:
+                  'Resuming from question ${_currentQuestionIndex + 1}',
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Error loading exam progress: $e');
+    }
+  }
+
+  /// Clear saved exam progress
+  Future<void> _clearExamProgress() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_progressKey);
+      debugPrint('🗑️ Cleared exam progress');
+    } catch (e) {
+      debugPrint('❌ Error clearing exam progress: $e');
+    }
   }
 }
 
