@@ -352,13 +352,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             duration: const Duration(seconds: 2),
           );
 
-          // Navigate to home screen after successful registration
+          // Wait for auth state to update, then navigate to home screen
           // Registration automatically logs the user in
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
+          await Future.delayed(const Duration(milliseconds: 100));
+          
+          // Verify auth state is authenticated before navigating
+          final authState = ref.read(authProvider);
+          if (authState.status == AuthStatus.authenticated && mounted) {
+            Navigator.pushReplacementNamed(context, '/main');
+          } else {
+            // If state not updated yet, wait a bit more and check again
+            await Future.delayed(const Duration(milliseconds: 200));
+            final updatedAuthState = ref.read(authProvider);
+            if (updatedAuthState.status == AuthStatus.authenticated && mounted) {
               Navigator.pushReplacementNamed(context, '/main');
             }
-          });
+          }
         } else {
           final error = ref.read(authProvider).error;
 
