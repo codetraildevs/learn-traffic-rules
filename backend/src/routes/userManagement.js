@@ -821,7 +821,7 @@ router.delete('/delete-account',
  */
 router.post('/users/:userId/mark-called',
   authMiddleware.authenticate,
-  authMiddleware.authorize(['ADMIN', 'MANAGER']),
+  authMiddleware.requireManager,
   userManagementController.markUserAsCalled
 );
 
@@ -841,7 +841,7 @@ router.post('/users/:userId/mark-called',
  */
 router.get('/called-users',
   authMiddleware.authenticate,
-  authMiddleware.authorize(['ADMIN', 'MANAGER']),
+  authMiddleware.requireManager,
   userManagementController.getCalledUsers
 );
 
@@ -875,7 +875,7 @@ router.get('/called-users',
  */
 router.post('/sync-call-tracking',
   authMiddleware.authenticate,
-  authMiddleware.authorize(['ADMIN', 'MANAGER']),
+  authMiddleware.requireManager,
   userManagementController.syncCallTracking
 );
 
