@@ -13,6 +13,7 @@ import '../../services/device_service.dart';
 import '../../services/debug_service.dart';
 import '../../services/flash_message_service.dart';
 import 'package:flash_message/flash_message.dart';
+import '../../screens/home/home_screen.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -363,7 +364,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             if (authState.status == AuthStatus.authenticated) {
               debugPrint('✅ Auth state confirmed as authenticated, navigating...');
               if (mounted) {
-                Navigator.pushReplacementNamed(context, '/main');
+                // Navigate directly to HomeScreen to ensure proper state
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  (route) => false, // Remove all previous routes
+                );
               }
               return;
             }
@@ -373,7 +379,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           // Fallback: navigate even if state check didn't work (shouldn't happen)
           if (mounted) {
             debugPrint('⚠️ Navigating to dashboard (fallback)');
-            Navigator.pushReplacementNamed(context, '/main');
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+              (route) => false, // Remove all previous routes
+            );
           }
         } else {
           final error = ref.read(authProvider).error;
