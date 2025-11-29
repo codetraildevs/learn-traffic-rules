@@ -779,7 +779,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      // Navigate to login screen explicitly
+                      Navigator.pushReplacementNamed(context, '/login');
                     },
                     child: Text(
                       'Sign In',
@@ -1051,7 +1052,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Close dialog
-                Navigator.pop(context); // Go back to login screen
+                // Navigate to login screen explicitly
+                Navigator.pushReplacementNamed(context, '/login');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,

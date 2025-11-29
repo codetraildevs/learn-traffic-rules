@@ -513,7 +513,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       slivers: [
         // Custom App Bar
         SliverAppBar(
-          expandedHeight: 200.h,
+          expandedHeight: 50.h,
           floating: false,
           pinned: true,
           backgroundColor: AppColors.primary,
@@ -522,7 +522,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _freeExamData!.isFreeUser ? 'Exams' : 'All Exams',
+                  _freeExamData!.isFreeUser ? 'Available Exams' : 'All Exams',
                   style: AppTextStyles.heading2.copyWith(
                     color: AppColors.white,
                     fontSize: 20.sp,
@@ -551,60 +551,61 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 ],
               ],
             ),
-            background: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.primary, AppColors.secondary],
-                ),
-              ),
-              child: Stack(
-                children: [
-                  // Background Pattern
-                  Positioned(
-                    top: -50.h,
-                    right: -50.w,
-                    child: Container(
-                      width: 200.w,
-                      height: 200.h,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.white.withValues(alpha: 0.1),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: -30.h,
-                    left: -30.w,
-                    child: Container(
-                      width: 150.w,
-                      height: 150.h,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.white.withValues(alpha: 0.05),
-                      ),
-                    ),
-                  ),
-                  // Content
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.quiz, size: 48.sp, color: AppColors.white),
-                        SizedBox(height: 8.h),
-                        Text(
-                          'Test Your Traffic Rules Knowledge',
-                          style: AppTextStyles.bodyLarge.copyWith(
-                            color: AppColors.white.withValues(alpha: 0.9),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // background: Container(
+            //   decoration: const BoxDecoration(
+            //     gradient: LinearGradient(
+            //       begin: Alignment.topLeft,
+            //       end: Alignment.bottomRight,
+            //       colors: [AppColors.primary, AppColors.secondary],
+            //     ),
+            //   ),
+            //   // child:
+            //   //  Stack(
+            //   //   children: [
+            //   //     // Background Pattern
+            //   //     Positioned(
+            //   //       top: -50.h,
+            //   //       right: -50.w,
+            //   //       child: Container(
+            //   //         width: 200.w,
+            //   //         height: 200.h,
+            //   //         decoration: BoxDecoration(
+            //   //           shape: BoxShape.circle,
+            //   //           color: AppColors.white.withValues(alpha: 0.1),
+            //   //         ),
+            //   //       ),
+            //   //     ),
+            //   //     Positioned(
+            //   //       bottom: -30.h,
+            //   //       left: -30.w,
+            //   //       child: Container(
+            //   //         width: 150.w,
+            //   //         height: 150.h,
+            //   //         decoration: BoxDecoration(
+            //   //           shape: BoxShape.circle,
+            //   //           color: AppColors.white.withValues(alpha: 0.05),
+            //   //         ),
+            //   //       ),
+            //   //     ),
+            //   //     // Content
+            //   //     Center(
+            //   //       child: Column(
+            //   //         mainAxisAlignment: MainAxisAlignment.center,
+            //   //         children: [
+            //   //           Icon(Icons.quiz, size: 48.sp, color: AppColors.white),
+            //   //           SizedBox(height: 8.h),
+            //   //           Text(
+            //   //             'Test Your Traffic Rules Knowledge',
+            //   //             style: AppTextStyles.bodyLarge.copyWith(
+            //   //               color: AppColors.white.withValues(alpha: 0.9),
+            //   //             ),
+            //   //           ),
+            //   //         ],
+            //   //       ),
+            //   //     ),
+            //   //   ],
+            //   // ),
+            // ),
           ),
         ),
 
@@ -662,7 +663,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Filter by Language',
+          'Filter by Exam Type',
           style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
         ),
         SizedBox(height: 12.h),
