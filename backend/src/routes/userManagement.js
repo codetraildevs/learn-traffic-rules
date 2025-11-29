@@ -796,4 +796,87 @@ router.delete('/delete-account',
   userManagementController.deleteOwnAccount
 );
 
+/**
+ * @swagger
+ * /api/user-management/users/{userId}/mark-called:
+ *   post:
+ *     summary: Mark user as called (Admin/Manager only)
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID to mark as called
+ *     responses:
+ *       200:
+ *         description: User marked as called successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/users/:userId/mark-called',
+  authMiddleware.authenticate,
+  authMiddleware.authorize(['ADMIN', 'MANAGER']),
+  userManagementController.markUserAsCalled
+);
+
+/**
+ * @swagger
+ * /api/user-management/called-users:
+ *   get:
+ *     summary: Get all called users (Admin/Manager only)
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Called users retrieved successfully
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/called-users',
+  authMiddleware.authenticate,
+  authMiddleware.authorize(['ADMIN', 'MANAGER']),
+  userManagementController.getCalledUsers
+);
+
+/**
+ * @swagger
+ * /api/user-management/sync-call-tracking:
+ *   post:
+ *     summary: Sync call tracking data (Admin/Manager only)
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - calledUsers
+ *             properties:
+ *               calledUsers:
+ *                 type: object
+ *                 description: Map of userId to calledAt timestamp
+ *     responses:
+ *       200:
+ *         description: Call tracking synced successfully
+ *       400:
+ *         description: Invalid data
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/sync-call-tracking',
+  authMiddleware.authenticate,
+  authMiddleware.authorize(['ADMIN', 'MANAGER']),
+  userManagementController.syncCallTracking
+);
+
 module.exports = router;

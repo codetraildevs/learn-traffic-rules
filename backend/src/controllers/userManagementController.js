@@ -1,4 +1,5 @@
 const { User, AccessCode, ExamResult, PaymentRequest, Exam } = require('../models');
+const { sequelize } = require('../config/database');
 const { validationResult } = require('express-validator');
 const notificationService = require('../services/notificationService');
 
@@ -651,8 +652,8 @@ const getFreeExams = async (req, res) => {
       });
     }
 
-    // For free users, first 2 exams of EACH TYPE (oldest by creation date) are completely free with unlimited attempts
-    // Group exams by type and identify the first 2 of each type
+    // For free users, first 1 exam of EACH TYPE (oldest by creation date) is completely free with unlimited attempts
+    // Group exams by type and identify the first 1 of each type
     const examsByType = {
       kinyarwanda: [],
       english: [],
@@ -676,13 +677,13 @@ const getFreeExams = async (req, res) => {
       });
     });
 
-    // Create a set of free exam IDs (first 2 of each type)
+    // Create a set of free exam IDs (first 1 of each type)
     const freeExamIds = new Set();
     Object.keys(examsByType).forEach(type => {
       const examsOfType = examsByType[type];
-      // Get first 2 exams of this type (ordered by createdAt ASC)
-      const firstTwoOfType = examsOfType.slice(0, 2);
-      firstTwoOfType.forEach(exam => {
+      // Get first 1 exam of this type (ordered by createdAt ASC)
+      const firstOneOfType = examsOfType.slice(0, 1);
+      firstOneOfType.forEach(exam => {
         freeExamIds.add(exam.id);
         console.log(`🆓 Free exam (${type}): ${exam.title} (ID: ${exam.id})`);
       });
@@ -698,7 +699,7 @@ const getFreeExams = async (req, res) => {
       });
     });
 
-    // Mark which exams are free (first 2 of each type)
+    // Mark which exams are free (first 1 of each type)
     const examsWithFreeStatus = examsWithQuestions.map(exam => ({
       ...exam.toJSON(),
       questionCount: exam.dataValues.questionCount,
@@ -720,11 +721,11 @@ const getFreeExams = async (req, res) => {
       data: {
         exams: examsWithFreeStatus,
         isFreeUser: true,
-        freeExamsRemaining: freeExamIds.size, // Total free exams (2 per type)
+        freeExamsRemaining: freeExamIds.size, // Total free exams (1 per type)
         freeExamIds: Array.from(freeExamIds),
         paymentInstructions: {
           title: 'Get Full Access',
-          description: 'First 2 exams of each language (Kinyarwanda, English, French) are free with unlimited attempts. For more exams:',
+          description: 'First exam of each language (Kinyarwanda, English, French) is free with unlimited attempts. For more exams:',
           steps: [
             'Choose a payment plan below',
             'Make payment via mobile money (MoMo: 808085) or bank transfer',
@@ -788,7 +789,8 @@ const submitFreeExamResult = async (req, res) => {
       }
     });
 
-    if (freeExamResults >= 2) {
+    // With 1 free exam per type (3 types = 3 total free exams), check if user has used all 3
+    if (freeExamResults >= 3) {
       return res.status(403).json({
         success: false,
         message: 'You have used all your free exams. Please purchase access to continue.',
@@ -875,7 +877,7 @@ const submitFreeExamResult = async (req, res) => {
           passed: passed,
           isFreeExam: true
         },
-        freeExamsRemaining: Math.max(0, 1 - freeExamResults)
+        freeExamsRemaining: Math.max(0, 3 - freeExamResults - 1) // 3 total free exams (1 per type), minus already taken, minus this one
       }
     });
   } catch (error) {
@@ -1201,6 +1203,179 @@ const deleteOwnAccount = async (req, res) => {
   }
 };
 
+// Mark user as called (Admin/Manager only)
+const markUserAsCalled = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const adminId = req.user.userId;
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    const calledAt = new Date();
+    
+    // Use INSERT ... ON DUPLICATE KEY UPDATE for MySQL
+    await sequelize.query(
+      `INSERT INTO user_call_tracking (id, user_id, admin_id, called_at, created_at, updated_at) 
+       VALUES (UUID(), :userId, :adminId, :calledAt, NOW(), NOW())
+       ON DUPLICATE KEY UPDATE called_at = :calledAt, updated_at = NOW()`,
+      {
+        replacements: { userId, adminId, calledAt },
+        type: sequelize.QueryTypes.INSERT
+      }
+    );
+
+    res.json({
+      success: true,
+      message: 'User marked as called',
+      data: {
+        userId,
+        calledAt: calledAt.toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Mark user as called error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// Get all called users (Admin/Manager only)
+const getCalledUsers = async (req, res) => {
+  try {
+    const adminId = req.user.userId;
+
+    const calledUsers = await sequelize.query(
+      `SELECT uct.user_id, uct.called_at
+       FROM user_call_tracking uct
+       WHERE uct.admin_id = :adminId
+       ORDER BY uct.called_at DESC`,
+      {
+        replacements: { adminId },
+        type: sequelize.QueryTypes.SELECT
+      }
+    );
+
+    // Convert to map format for frontend (userId -> ISO timestamp string)
+    const calledUsersMap = {};
+    calledUsers.forEach(record => {
+      calledUsersMap[record.user_id] = new Date(record.called_at).toISOString();
+    });
+
+    res.json({
+      success: true,
+      message: 'Called users retrieved successfully',
+      data: {
+        calledUsers: calledUsersMap
+      }
+    });
+  } catch (error) {
+    console.error('Get called users error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+// Sync call tracking (bulk update)
+const syncCallTracking = async (req, res) => {
+  try {
+    const adminId = req.user.userId;
+    const { calledUsers } = req.body; // Map of userId -> calledAt timestamp
+
+    if (!calledUsers || typeof calledUsers !== 'object') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid calledUsers data'
+      });
+    }
+
+    // Get existing call tracking for this admin
+    const existing = await sequelize.query(
+      `SELECT user_id, called_at FROM user_call_tracking WHERE admin_id = :adminId`,
+      {
+        replacements: { adminId },
+        type: sequelize.QueryTypes.SELECT
+      }
+    );
+
+    const existingMap = {};
+    existing.forEach(record => {
+      existingMap[record.user_id] = new Date(record.called_at);
+    });
+
+    // Merge: keep the latest called_at for each user
+    const updates = [];
+    const inserts = [];
+
+    Object.keys(calledUsers).forEach(userId => {
+      const localCalledAt = new Date(calledUsers[userId]);
+      const existingCalledAt = existingMap[userId] ? new Date(existingMap[userId]) : null;
+
+      if (existingCalledAt) {
+        // Update if local is newer
+        if (localCalledAt > existingCalledAt) {
+          updates.push({ userId, calledAt: localCalledAt });
+        } else if (existingCalledAt > localCalledAt) {
+          // Server has newer data, will return it
+        }
+      } else {
+        // Insert new
+        inserts.push({ userId, calledAt: localCalledAt });
+      }
+    });
+
+    // Execute updates and inserts using INSERT ... ON DUPLICATE KEY UPDATE
+    const allOperations = [...updates, ...inserts];
+    for (const op of allOperations) {
+      await sequelize.query(
+        `INSERT INTO user_call_tracking (id, user_id, admin_id, called_at, created_at, updated_at) 
+         VALUES (UUID(), :userId, :adminId, :calledAt, NOW(), NOW())
+         ON DUPLICATE KEY UPDATE called_at = :calledAt, updated_at = NOW()`,
+        {
+          replacements: { userId: op.userId, calledAt: op.calledAt, adminId },
+          type: sequelize.QueryTypes.INSERT
+        }
+      );
+    }
+
+    // Return merged data (server has the latest)
+    const merged = { ...calledUsers };
+    existing.forEach(record => {
+      const existingDate = new Date(record.called_at);
+      const localDate = merged[record.user_id] ? new Date(merged[record.user_id]) : null;
+      if (!localDate || existingDate > localDate) {
+        merged[record.user_id] = record.called_at;
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Call tracking synced successfully',
+      data: {
+        calledUsers: merged
+      }
+    });
+  } catch (error) {
+    console.error('Sync call tracking error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserDetails,
@@ -1216,5 +1391,8 @@ module.exports = {
   getPaymentInstructions,
   blockUser,
   deleteUser,
-  deleteOwnAccount
+  deleteOwnAccount,
+  markUserAsCalled,
+  getCalledUsers,
+  syncCallTracking
 };

@@ -310,6 +310,19 @@ const createMissingTablesOnly = async (sequelize, missingTables) => {
         updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )`,
       
+      'user_call_tracking': `CREATE TABLE IF NOT EXISTS user_call_tracking (
+        id CHAR(36) PRIMARY KEY,
+        user_id CHAR(36) NOT NULL,
+        admin_id CHAR(36) NOT NULL,
+        called_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_user_admin (user_id, admin_id),
+        INDEX idx_admin_id (admin_id),
+        INDEX idx_user_id (user_id),
+        INDEX idx_called_at (called_at)
+      )`,
+      
       'studyreminders': `CREATE TABLE IF NOT EXISTS studyreminders (
         id CHAR(36) PRIMARY KEY,
         userId CHAR(36) NOT NULL,

@@ -410,16 +410,40 @@ class OfflineController {
     try {
       const userId = req.user.userId;
 
-      // Get first 2 exams (free exams) with questions
-      const freeExams = await Exam.findAll({
+      // Get first 1 exam of each type (free exams) with questions
+      // Group by type and get the oldest exam of each type
+      const { Op } = require('sequelize');
+      const examsByType = {
+        kinyarwanda: [],
+        english: [],
+        french: []
+      };
+      
+      // Get all active exams with questions
+      const allExams = await Exam.findAll({
         where: { isActive: true },
         include: [{
           model: Question,
           as: 'questions',
           required: false
         }],
-        order: [['createdAt', 'ASC'], ['id', 'ASC']],
-        limit: 2
+        order: [['createdAt', 'ASC'], ['id', 'ASC']]
+      });
+      
+      // Group by type
+      allExams.forEach(exam => {
+        const examType = exam.examType || 'english';
+        if (examsByType[examType] && examsByType[examType].length === 0) {
+          examsByType[examType].push(exam);
+        }
+      });
+      
+      // Combine to get first 1 exam of each type (up to 3 total)
+      const freeExams = [];
+      Object.keys(examsByType).forEach(type => {
+        if (examsByType[type].length > 0) {
+          freeExams.push(examsByType[type][0]);
+        }
       });
 
       // Prepare offline data for free exams
@@ -490,7 +514,7 @@ class OfflineController {
 
       // Get exam counts
       const totalExams = await Exam.count({ where: { isActive: true } });
-      const freeExamsCount = Math.min(2, totalExams); // First 2 exams are free
+      const freeExamsCount = Math.min(3, totalExams); // First 1 exam of each type (3 types = 3 total) are free
       const premiumExamsCount = Math.max(0, totalExams - 2);
 
       // Get user's last sync time
