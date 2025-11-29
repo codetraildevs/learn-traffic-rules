@@ -1621,11 +1621,12 @@ const initializeTables = async () => {
       const tables = await sequelize.getQueryInterface().showAllTables();
       console.log('📋 Existing tables:', tables);
       
-      // Check for all required tables (core + notification + course tables)
+      // Check for all required tables (core + notification + course + call tracking tables)
       const allRequiredTables = [
         'users', 'exams', 'questions', 'exam_results', 'payment_requests', 'access_codes',
         'notifications', 'studyreminders', 'notificationpreferences',
-        'courses', 'course_contents', 'course_progress', 'course_content_progress'
+        'courses', 'course_contents', 'course_progress', 'course_content_progress',
+        'user_call_tracking'
       ];
       const missingTables = allRequiredTables.filter(table => !tables.includes(table));
       

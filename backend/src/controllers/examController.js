@@ -277,7 +277,7 @@ class ExamController {
         });
       }
 
-      if (isFirstTwoExam) {
+      if (isFirstOneExam) {
         console.log(`✅ First 1 ${examType} exam - allowing unlimited attempts`);
       } else if (hasAccess) {
         console.log('✅ Paid user - allowing access');
