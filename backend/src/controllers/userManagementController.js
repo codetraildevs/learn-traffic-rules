@@ -12,34 +12,87 @@ const getAllUsers = async (req, res) => {
       search = '', 
       role = '', 
       sortBy = 'createdAt', 
-      sortOrder = 'DESC' 
+      sortOrder = 'DESC',
+      filter = '', // 'with_code', 'without_code', 'called', 'not_called'
+      startDate = '', // ISO date string
+      endDate = '', // ISO date string
+      filterByToday = false // 'true' or 'false' as string
     } = req.query;
     
     const offset = (page - 1) * limit;
+    const { Op } = require('sequelize');
+    const Sequelize = require('sequelize');
     
     // Build where clause
     const whereClause = {};
     if (search) {
-      whereClause[require('sequelize').Op.or] = [
-        { fullName: { [require('sequelize').Op.iLike]: `%${search}%` } },
-        { phoneNumber: { [require('sequelize').Op.iLike]: `%${search}%` } }
+      // Use LIKE with LOWER for case-insensitive search in MySQL
+      whereClause[Op.or] = [
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('User.fullName')),
+          { [Op.like]: `%${search.toLowerCase()}%` }
+        ),
+        Sequelize.where(
+          Sequelize.fn('LOWER', Sequelize.col('User.phoneNumber')),
+          { [Op.like]: `%${search.toLowerCase()}%` }
+        )
       ];
     }
     if (role) {
       whereClause.role = role;
     }
 
+    // Date filters
+    if (filterByToday === 'true' || filterByToday === true) {
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const todayEnd = new Date(todayStart);
+      todayEnd.setDate(todayEnd.getDate() + 1);
+      whereClause.createdAt = {
+        [Op.gte]: todayStart,
+        [Op.lt]: todayEnd
+      };
+    } else if (startDate || endDate) {
+      whereClause.createdAt = {};
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        whereClause.createdAt[Op.gte] = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        whereClause.createdAt[Op.lte] = end;
+      }
+    }
+
+    // Build include clause with access code filtering
+    const includeClause = [
+      {
+        model: AccessCode,
+        as: 'accessCodes',
+        attributes: ['id', 'isUsed', 'expiresAt', 'paymentTier', 'createdAt'],
+        required: false
+      }
+    ];
+
+    // Access code filters (with_code, without_code)
+    if (filter === 'with_code') {
+      // Users with active access codes
+      includeClause[0].required = true;
+      includeClause[0].where = {
+        isUsed: false,
+        expiresAt: { [Op.gt]: new Date() }
+      };
+    } else if (filter === 'without_code') {
+      // Users without active access codes - use subquery
+      // This is complex, we'll handle it after getting users
+    }
+
     // Get users with access code count
-    const { count, rows: users } = await User.findAndCountAll({
+    let { count, rows: users } = await User.findAndCountAll({
       where: whereClause,
-      include: [
-        {
-          model: AccessCode,
-          as: 'accessCodes',
-          attributes: ['id', 'isUsed', 'expiresAt', 'paymentTier', 'createdAt'],
-          required: false
-        }
-      ],
+      include: includeClause,
       attributes: [
         'id', 'fullName', 'phoneNumber', 'role', 
         'isActive', 'lastLogin', 'createdAt', 'updatedAt',
@@ -51,8 +104,28 @@ const getAllUsers = async (req, res) => {
       distinct: true
     });
 
-    // Process users to add access code statistics and remaining days
-    const processedUsers = users.map(user => {
+
+    // Get called users for the current admin (for called/not_called filter)
+    const adminId = req.user?.userId;
+    let calledUserIds = new Set();
+    if ((filter === 'called' || filter === 'not_called') && adminId) {
+      try {
+        const calledUsers = await sequelize.query(
+          `SELECT user_id FROM user_call_tracking WHERE admin_id = :adminId`,
+          {
+            replacements: { adminId },
+            type: sequelize.QueryTypes.SELECT
+          }
+        );
+        calledUserIds = new Set(calledUsers.map(r => r.user_id));
+      } catch (error) {
+        console.error('Error fetching called users:', error);
+        // Continue without call tracking filter if table doesn't exist yet
+      }
+    }
+
+    // Process users first to check access codes and call status
+    let processedUsers = users.map(user => {
       const userJson = user.toJSON();
       const activeCodes = userJson.accessCodes.filter(code => 
         !code.isUsed && new Date(code.expiresAt) > new Date()
@@ -88,9 +161,65 @@ const getAllUsers = async (req, res) => {
           latestCode: userJson.accessCodes.length > 0 
             ? userJson.accessCodes[0] 
             : null
-        }
+        },
+        _hasActiveCode: activeCodes.length > 0,
+        _isCalled: calledUserIds.has(user.id)
       };
     });
+
+    // Apply filters that need processing (without_code, called, not_called)
+    if (filter === 'without_code') {
+      processedUsers = processedUsers.filter(user => !user._hasActiveCode);
+    } else if (filter === 'called') {
+      processedUsers = processedUsers.filter(user => user._isCalled);
+    } else if (filter === 'not_called') {
+      processedUsers = processedUsers.filter(user => !user._isCalled);
+    }
+
+    // Remove internal filter flags
+    processedUsers = processedUsers.map(user => {
+      const { _hasActiveCode, _isCalled, ...userWithoutFlags } = user;
+      return userWithoutFlags;
+    });
+
+    // Recalculate count for filters that need post-processing
+    if (filter === 'without_code' || filter === 'called' || filter === 'not_called') {
+      // Get all users matching base filters (without pagination)
+      const allUsersForCount = await User.findAll({
+        where: whereClause,
+        include: includeClause,
+        attributes: ['id'],
+        distinct: true
+      });
+
+      // Process and filter
+      let filteredForCount = allUsersForCount.map(user => {
+        const userJson = user.toJSON();
+        const activeCodes = userJson.accessCodes.filter(code => 
+          !code.isUsed && new Date(code.expiresAt) > new Date()
+        );
+        return {
+          id: user.id,
+          _hasActiveCode: activeCodes.length > 0,
+          _isCalled: calledUserIds.has(user.id)
+        };
+      });
+
+      if (filter === 'without_code') {
+        filteredForCount = filteredForCount.filter(u => !u._hasActiveCode);
+      } else if (filter === 'called') {
+        filteredForCount = filteredForCount.filter(u => u._isCalled);
+      } else if (filter === 'not_called') {
+        filteredForCount = filteredForCount.filter(u => !u._isCalled);
+      }
+
+      count = filteredForCount.length;
+      
+      // Re-apply pagination to processed users
+      const startIndex = offset;
+      const endIndex = offset + parseInt(limit);
+      processedUsers = processedUsers.slice(startIndex, endIndex);
+    }
 
     res.json({
       success: true,
