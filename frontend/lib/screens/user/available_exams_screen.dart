@@ -48,8 +48,8 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Initialize selected exam type from widget parameter
-    _selectedExamType = widget.initialExamType?.toLowerCase();
+    // Initialize selected exam type from widget parameter, default to 'kinyarwanda'
+    _selectedExamType = widget.initialExamType?.toLowerCase() ?? 'kinyarwanda';
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -608,16 +608,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           ),
         ),
 
-        // Free user status banner
-        if (_freeExamData!.isFreeUser)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(16.w),
-              child: _buildFreeUserBanner(),
-            ),
-          ),
-
-        // Exam Type Filter
+        // Exam Type Filter (moved to top)
         SliverToBoxAdapter(
           child: FadeTransition(
             opacity: _fadeAnimation,
@@ -631,8 +622,17 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           ),
         ),
 
-        // Exams grouped by type
+        // Exams grouped by type (moved to top, before free banner)
         ..._buildExamsByType(),
+
+        // Free user status banner (moved below exams, made smaller)
+        if (_freeExamData!.isFreeUser)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(16.w),
+              child: _buildFreeUserBanner(),
+            ),
+          ),
 
         // Bottom Padding
         SliverToBoxAdapter(child: SizedBox(height: 100.h)),
@@ -1141,75 +1141,64 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
 
   Widget _buildFreeUserBanner() {
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [AppColors.secondary, AppColors.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(10.r),
         boxShadow: [
           BoxShadow(
-            color: AppColors.secondary.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: AppColors.secondary.withValues(alpha: 0.2),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Icon(Icons.star, color: Colors.white, size: 24.w),
-              SizedBox(width: 8.w),
-              Text(
-                'Free Trial',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+          Icon(Icons.star, color: Colors.white, size: 18.sp),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Free Trial: First exam of each type is free',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'First exam of each type is free with unlimited attempts',
-            style: TextStyle(fontSize: 14.sp, color: Colors.white70),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Upgrade to access all exams and features',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
+                SizedBox(height: 4.h),
+                Text(
+                  'Upgrade to access all exams',
+                  style: TextStyle(fontSize: 11.sp, color: Colors.white70),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              Expanded(
-                child: CustomButton(
-                  text: 'View Plans',
-                  onPressed: () => _showPaymentInstructions(),
-                  width: double.infinity,
-                  backgroundColor: Colors.white,
-                  textColor: AppColors.primary,
-                ),
+          SizedBox(width: 8.w),
+          TextButton(
+            onPressed: () => _showPaymentInstructions(),
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
+            ),
+            child: Text(
+              'View Plans',
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
               ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: CustomButton(
-                  text: 'Contact Admin',
-                  onPressed: _contactAdmin,
-                  width: double.infinity,
-                  backgroundColor: AppColors.secondary,
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),

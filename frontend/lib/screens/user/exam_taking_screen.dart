@@ -310,17 +310,17 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             style: TextButton.styleFrom(foregroundColor: AppColors.warning),
             child: const Text('Exit Without Submitting'),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _submitExam();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: AppColors.white,
-            ),
-            child: const Text('Exit & Submit'),
-          ),
+          // ElevatedButton(
+          //   onPressed: () {
+          //     Navigator.pop(context);
+          //     _submitExam();
+          //   },
+          //   style: ElevatedButton.styleFrom(
+          //     backgroundColor: AppColors.error,
+          //     foregroundColor: AppColors.white,
+          //   ),
+          //   child: const Text('Exit & Submit'),
+          // ),
         ],
       ),
     );
