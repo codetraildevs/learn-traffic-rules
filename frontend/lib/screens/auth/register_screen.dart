@@ -347,15 +347,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           AppFlashMessage.show(
             context: context,
             message: 'Registration Successful!',
-            description: 'Welcome to Traffic Rules Master! You can now login.',
+            description: 'Welcome to Traffic Rules Master!',
             type: FlashMessageType.success,
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 2),
           );
 
-          // Navigate back to login screen after a short delay
-          Future.delayed(const Duration(seconds: 2), () {
+          // Navigate to home screen after successful registration
+          // Registration automatically logs the user in
+          Future.delayed(const Duration(milliseconds: 500), () {
             if (mounted) {
-              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, '/main');
             }
           });
         } else {

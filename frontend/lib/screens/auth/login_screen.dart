@@ -334,8 +334,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             'timestamp': DateTime.now().toIso8601String(),
           });
 
-          // Let main.dart handle navigation automatically
-          // The auth state change will trigger the rebuild
+          // Navigate to home screen after successful login
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, '/main');
+          }
         } else {
           final error = ref.read(authProvider).error;
 
