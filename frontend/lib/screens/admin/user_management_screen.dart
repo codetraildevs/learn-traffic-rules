@@ -40,6 +40,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   // Track called users - Map of user ID to call timestamp
   final Map<String, DateTime> _calledUsers = {};
   static const String _calledUsersPrefsKey = 'called_users_tracking';
+  
+  // Pagination state
+  int _currentPage = 1;
+  int _totalPages = 1;
+  int _totalUsers = 0;
+  static const int _usersPerPage = 20;
 
   @override
   void initState() {
@@ -68,7 +74,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     });
   }
 
-  Future<void> _loadUsers() async {
+  Future<void> _loadUsers({int? page}) async {
     if (mounted) {
       setState(() {
         _isLoading = true;
@@ -76,9 +82,33 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     }
 
     try {
-      debugPrint('🔄 Loading users...');
-      final response = await _userManagementService.getAllUsers();
+      final pageToLoad = page ?? _currentPage;
+      debugPrint('🔄 Loading users (page $pageToLoad)...');
+      
+      // Convert sort direction to backend format
+      final sortOrder = _sortAscending ? 'ASC' : 'DESC';
+      
+      // Convert filter to role if needed
+      String roleFilter = '';
+      if (_selectedFilter == 'user') {
+        roleFilter = 'USER';
+      } else if (_selectedFilter == 'manager') {
+        roleFilter = 'MANAGER';
+      } else if (_selectedFilter == 'admin') {
+        roleFilter = 'ADMIN';
+      }
+      
+      final response = await _userManagementService.getAllUsers(
+        page: pageToLoad,
+        limit: _usersPerPage,
+        search: _searchQuery,
+        role: roleFilter,
+        sortBy: _selectedSort,
+        sortOrder: sortOrder,
+      );
+      
       debugPrint('🔄 Users response: ${response.data.users.length} users');
+      debugPrint('🔄 Pagination: ${response.data.pagination.total} total, page ${response.data.pagination.page}/${response.data.pagination.totalPages}');
 
       if (response.success) {
         debugPrint('🔄 Users data: ${response.data.users.length} users');
@@ -91,10 +121,13 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         if (mounted) {
           setState(() {
             _users = response.data.users;
-            _filteredUsers = _users;
+            _currentPage = response.data.pagination.page;
+            _totalPages = response.data.pagination.totalPages;
+            _totalUsers = response.data.pagination.total;
+            // Apply client-side filters (date filters, called/not called) on the current page
+            _applyClientSideFilters();
           });
         }
-        _applyFiltersAndSort();
         
         // Sync call tracking after loading users (to get latest from server)
         _syncCallTrackingWithBackend();
@@ -113,7 +146,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     }
   }
 
-  void _applyFiltersAndSort() {
+  void _applyClientSideFilters() {
     List<UserWithStats> filtered = List.from(_users);
 
     // Filter out only the test admin user (0780000000), but show all other users including ADMINs
@@ -121,39 +154,28 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         .where((user) => user.phoneNumber.toString() != '0780000000')
         .toList();
 
-    // Apply search filter
-    if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((user) {
-        return user.fullName.toLowerCase().contains(
-              _searchQuery.toLowerCase(),
-            ) ||
-            user.phoneNumber.contains(_searchQuery) ||
-            user.role.toLowerCase().contains(_searchQuery.toLowerCase());
-      }).toList();
+    // Note: Search and role filters are now handled by backend pagination
+    // Only apply client-side filters that backend doesn't handle:
+    // - with_code/without_code (access code status)
+    // - called/not_called (call tracking)
+    
+    // Apply access code status filter (client-side only)
+    if (_selectedFilter == 'with_code') {
+      filtered = filtered
+          .where((user) => user.accessCodeStats.active > 0)
+          .toList();
+    } else if (_selectedFilter == 'without_code') {
+      filtered = filtered
+          .where((user) => user.accessCodeStats.active == 0)
+          .toList();
+    } else if (_selectedFilter == 'called') {
+      filtered = filtered.where((user) => _isUserCalled(user.id)).toList();
+    } else if (_selectedFilter == 'not_called') {
+      filtered = filtered.where((user) => !_isUserCalled(user.id)).toList();
     }
 
-    // Apply role filter
-    if (_selectedFilter != 'all') {
-      if (_selectedFilter == 'with_code') {
-        filtered = filtered
-            .where((user) => user.accessCodeStats.active > 0)
-            .toList();
-      } else if (_selectedFilter == 'without_code') {
-        filtered = filtered
-            .where((user) => user.accessCodeStats.active == 0)
-            .toList();
-      } else if (_selectedFilter == 'called') {
-        filtered = filtered.where((user) => _isUserCalled(user.id)).toList();
-      } else if (_selectedFilter == 'not_called') {
-        filtered = filtered.where((user) => !_isUserCalled(user.id)).toList();
-      } else {
-        filtered = filtered
-            .where((user) => user.role.toLowerCase() == _selectedFilter)
-            .toList();
-      }
-    }
-
-    // Apply date filters
+    // Apply date filters (client-side only - note: pagination counts may be affected)
+    // TODO: Add date filter support to backend for accurate pagination
     if (_filterByToday) {
       final today = DateTime.now();
       final todayStart = DateTime(today.year, today.month, today.day);
@@ -215,26 +237,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       }).toList();
     }
 
-    // Apply sorting
-    filtered.sort((a, b) {
-      int comparison = 0;
-      switch (_selectedSort) {
-        case 'name':
-          comparison = a.fullName.compareTo(b.fullName);
-          break;
-        case 'role':
-          comparison = a.role.compareTo(b.role);
-          break;
-        case 'createdAt':
-          comparison = a.createdAt.compareTo(b.createdAt);
-          break;
-        case 'lastLogin':
-          comparison =
-              a.lastLogin?.compareTo(b.lastLogin ?? DateTime(1970)) ?? 0;
-          break;
-      }
-      return _sortAscending ? comparison : -comparison;
-    });
+    // Note: Sorting is now handled by backend, no need to sort client-side
 
     if (mounted) {
       setState(() {
@@ -256,29 +259,33 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   void _onSearchChanged(String query) {
     setState(() {
       _searchQuery = query;
+      _currentPage = 1; // Reset to first page on search
     });
-    _applyFiltersAndSort();
+    _loadUsers(page: 1);
   }
 
   void _onFilterChanged(String filter) {
     setState(() {
       _selectedFilter = filter;
+      _currentPage = 1; // Reset to first page on filter change
     });
-    _applyFiltersAndSort();
+    _loadUsers(page: 1);
   }
 
   void _onSortChanged(String sort) {
     setState(() {
       _selectedSort = sort;
+      _currentPage = 1; // Reset to first page on sort change
     });
-    _applyFiltersAndSort();
+    _loadUsers(page: 1);
   }
 
   void _toggleSortDirection() {
     setState(() {
       _sortAscending = !_sortAscending;
+      _currentPage = 1; // Reset to first page on sort direction change
     });
-    _applyFiltersAndSort();
+    _loadUsers(page: 1);
   }
 
   Future<void> _selectStartDate() async {
@@ -292,8 +299,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       setState(() {
         _startDate = picked;
         _filterByToday = false;
+        _currentPage = 1; // Reset to first page on date filter
       });
-      _applyFiltersAndSort();
+      _loadUsers(page: 1);
     }
   }
 
@@ -308,8 +316,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       setState(() {
         _endDate = picked;
         _filterByToday = false;
+        _currentPage = 1; // Reset to first page on date filter
       });
-      _applyFiltersAndSort();
+      _loadUsers(page: 1);
     }
   }
 
@@ -320,8 +329,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         _startDate = null;
         _endDate = null;
       }
+      _currentPage = 1; // Reset to first page on date filter
     });
-    _applyFiltersAndSort();
+    _loadUsers(page: 1);
   }
 
   void _clearDateFilters() {
@@ -329,8 +339,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       _startDate = null;
       _endDate = null;
       _filterByToday = false;
+      _currentPage = 1; // Reset to first page on clear
     });
-    _applyFiltersAndSort();
+    _loadUsers(page: 1);
   }
 
   Widget _buildDateFilters() {
@@ -727,13 +738,26 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     return Scaffold(
       backgroundColor: AppColors.grey50,
       appBar: AppBar(
-        title: const Text('User Management', style: AppTextStyles.heading2),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('User Management', style: AppTextStyles.heading2),
+            if (_totalUsers > 0)
+              Text(
+                '$_totalUsers users',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.white.withValues(alpha: 0.8),
+                  fontSize: 12.sp,
+                ),
+              ),
+          ],
+        ),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: _loadUsers,
+            onPressed: () => _loadUsers(),
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh',
           ),
@@ -784,6 +808,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   }, childCount: _filteredUsers.length),
                 ),
               ),
+            // Pagination controls
+            SliverToBoxAdapter(child: _buildPaginationControls()),
+            // Total users count
+            SliverToBoxAdapter(child: _buildTotalUsersCount()),
           ],
         ),
       ),
@@ -1600,6 +1628,183 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
 
   DateTime? _getCallTimestamp(String userId) {
     return _calledUsers[userId];
+  }
+
+  Widget _buildTotalUsersCount() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      color: AppColors.white,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.people, color: AppColors.primary, size: 20.sp),
+          SizedBox(width: 8.w),
+          Text(
+            'Total Users: $_totalUsers',
+            style: AppTextStyles.bodyMedium.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaginationControls() {
+    if (_totalPages <= 1) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+      color: AppColors.white,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Previous button
+          IconButton(
+            onPressed: _currentPage > 1
+                ? () {
+                    setState(() {
+                      _currentPage--;
+                    });
+                    _loadUsers(page: _currentPage);
+                    _scrollToTop();
+                  }
+                : null,
+            icon: const Icon(Icons.chevron_left),
+            tooltip: 'Previous page',
+          ),
+          SizedBox(width: 8.w),
+          
+          // Page numbers
+          ...List.generate(
+            _totalPages > 5 ? 5 : _totalPages,
+            (index) {
+              int pageNumber;
+              if (_totalPages <= 5) {
+                pageNumber = index + 1;
+              } else {
+                // Show current page and 2 pages on each side
+                if (_currentPage <= 3) {
+                  pageNumber = index + 1;
+                } else if (_currentPage >= _totalPages - 2) {
+                  pageNumber = _totalPages - 4 + index;
+                } else {
+                  pageNumber = _currentPage - 2 + index;
+                }
+              }
+
+              final isCurrentPage = pageNumber == _currentPage;
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      _currentPage = pageNumber;
+                    });
+                    _loadUsers(page: pageNumber);
+                    _scrollToTop();
+                  },
+                  borderRadius: BorderRadius.circular(8.r),
+                  child: Container(
+                    width: 40.w,
+                    height: 40.h,
+                    decoration: BoxDecoration(
+                      color: isCurrentPage
+                          ? AppColors.primary
+                          : AppColors.grey100,
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
+                        color: isCurrentPage
+                            ? AppColors.primary
+                            : AppColors.grey300,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$pageNumber',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: isCurrentPage
+                              ? AppColors.white
+                              : AppColors.grey800,
+                          fontWeight: isCurrentPage
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          
+          // Show ellipsis if there are more pages
+          if (_totalPages > 5 && _currentPage < _totalPages - 2)
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4.w),
+              child: Text(
+                '...',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.grey600,
+                ),
+              ),
+            ),
+          
+          // Show last page if not in visible range
+          if (_totalPages > 5 && _currentPage < _totalPages - 2)
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4.w),
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _currentPage = _totalPages;
+                  });
+                  _loadUsers(page: _totalPages);
+                  _scrollToTop();
+                },
+                borderRadius: BorderRadius.circular(8.r),
+                child: Container(
+                  width: 40.w,
+                  height: 40.h,
+                  decoration: BoxDecoration(
+                    color: AppColors.grey100,
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(color: AppColors.grey300),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$_totalPages',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.grey800,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          
+          SizedBox(width: 8.w),
+          
+          // Next button
+          IconButton(
+            onPressed: _currentPage < _totalPages
+                ? () {
+                    setState(() {
+                      _currentPage++;
+                    });
+                    _loadUsers(page: _currentPage);
+                    _scrollToTop();
+                  }
+                : null,
+            icon: const Icon(Icons.chevron_right),
+            tooltip: 'Next page',
+          ),
+        ],
+      ),
+    );
   }
 
   void _showBlockUserDialog(UserWithStats user) {
