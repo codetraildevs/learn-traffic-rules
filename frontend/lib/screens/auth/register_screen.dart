@@ -354,19 +354,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
           // Wait for auth state to update, then navigate to home screen
           // Registration automatically logs the user in
-          await Future.delayed(const Duration(milliseconds: 100));
-          
-          // Verify auth state is authenticated before navigating
-          final authState = ref.read(authProvider);
-          if (authState.status == AuthStatus.authenticated && mounted) {
-            Navigator.pushReplacementNamed(context, '/main');
-          } else {
-            // If state not updated yet, wait a bit more and check again
-            await Future.delayed(const Duration(milliseconds: 200));
-            final updatedAuthState = ref.read(authProvider);
-            if (updatedAuthState.status == AuthStatus.authenticated && mounted) {
-              Navigator.pushReplacementNamed(context, '/main');
+          // Poll auth state until it's authenticated (with timeout)
+          int attempts = 0;
+          const maxAttempts = 10;
+          while (attempts < maxAttempts && mounted) {
+            await Future.delayed(const Duration(milliseconds: 50));
+            final authState = ref.read(authProvider);
+            if (authState.status == AuthStatus.authenticated) {
+              debugPrint('✅ Auth state confirmed as authenticated, navigating...');
+              if (mounted) {
+                Navigator.pushReplacementNamed(context, '/main');
+              }
+              return;
             }
+            attempts++;
+          }
+          
+          // Fallback: navigate even if state check didn't work (shouldn't happen)
+          if (mounted) {
+            debugPrint('⚠️ Navigating to dashboard (fallback)');
+            Navigator.pushReplacementNamed(context, '/main');
           }
         } else {
           final error = ref.read(authProvider).error;
