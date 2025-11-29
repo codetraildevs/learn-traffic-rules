@@ -191,12 +191,12 @@ class MyApp extends ConsumerWidget {
             debugPrint('🔄 MAIN: Showing HomeScreen');
             return const HomeScreen();
           case AuthStatus.unauthenticated:
-            debugPrint('🔄 MAIN: Showing LoginScreen');
-            return const LoginScreen();
+            debugPrint('🔄 MAIN: Showing RegisterScreen');
+            return const RegisterScreen();
           case AuthStatus.loading:
-            debugPrint('🔄 MAIN: Showing LoginScreen (loading)');
-            // Don't show splash during login - stay on current screen
-            return const LoginScreen();
+            debugPrint('🔄 MAIN: Showing RegisterScreen (loading)');
+            // Don't show splash during loading - stay on current screen
+            return const RegisterScreen();
         }
       },
     );

@@ -587,8 +587,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          _buildDashboardTab(),
-          _buildExamsTab(),
+          _buildExamsTab(), // Index 0: Exams (first tab)
+          _buildDashboardTab(), // Index 1: Dashboard (second tab)
           _buildProgressTab(),
           _buildProfileTab(),
         ],
@@ -601,12 +601,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           });
 
           // Clear shown notifications when user opens exams tab
-          if (index == 1) {
+          if (index == 0) { // Exams is now index 0
             _clearShownNotifications();
           }
 
           // Reload data when switching to dashboard or exams tab
-          if (index == 0 || index == 1) {
+          if (index == 0 || index == 1) { // Exams (0) or Dashboard (1)
             // Small delay to ensure state is updated
             Future.delayed(const Duration(milliseconds: 100), () {
               if (mounted && _currentIndex == index) {
@@ -619,13 +619,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         },
         type: BottomNavigationBarType.fixed,
         items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.quiz),
             label: user?.role == 'ADMIN' ? 'Manage Exams' : 'Exams',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
           ),
           BottomNavigationBarItem(
             icon: user?.role == 'USER'
@@ -909,12 +909,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             onPressed: () {
               if (isAdmin) {
                 setState(() {
-                  _currentIndex = 1; // Switch to exams tab
+                  _currentIndex = 0; // Switch to exams tab (now first tab)
                 });
               } else if (accessPeriod?.hasAccess == true &&
                   (accessPeriod?.remainingDays ?? 0) > 0) {
                 setState(() {
-                  _currentIndex = 1; // Switch to exams tab
+                  _currentIndex = 0; // Switch to exams tab (now first tab)
                 });
               } else {
                 // Show access code instructions
@@ -985,7 +985,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 AppColors.success,
                 () {
                   setState(() {
-                    _currentIndex = 1; // Switch to exams tab
+                    _currentIndex = 0; // Switch to exams tab (now first tab)
                   });
                 },
               ),

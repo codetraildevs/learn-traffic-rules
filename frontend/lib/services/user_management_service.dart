@@ -17,6 +17,10 @@ class UserManagementService {
     String role = '',
     String sortBy = 'createdAt',
     String sortOrder = 'DESC',
+    String filter = '', // 'with_code', 'without_code', 'called', 'not_called'
+    String? startDate, // ISO date string (YYYY-MM-DD)
+    String? endDate, // ISO date string (YYYY-MM-DD)
+    bool filterByToday = false,
   }) async {
     final queryParams = <String, String>{
       'page': page.toString(),
@@ -25,6 +29,10 @@ class UserManagementService {
       if (role.isNotEmpty) 'role': role,
       'sortBy': sortBy,
       'sortOrder': sortOrder,
+      if (filter.isNotEmpty) 'filter': filter,
+      if (startDate != null) 'startDate': startDate,
+      if (endDate != null) 'endDate': endDate,
+      'filterByToday': filterByToday.toString(),
     };
 
     final queryString = queryParams.entries

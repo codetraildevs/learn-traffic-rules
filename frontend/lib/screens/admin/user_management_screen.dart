@@ -88,14 +88,30 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       // Convert sort direction to backend format
       final sortOrder = _sortAscending ? 'ASC' : 'DESC';
       
-      // Convert filter to role if needed
+      // Convert filter to role or filter type
       String roleFilter = '';
+      String filterType = '';
       if (_selectedFilter == 'user') {
         roleFilter = 'USER';
       } else if (_selectedFilter == 'manager') {
         roleFilter = 'MANAGER';
       } else if (_selectedFilter == 'admin') {
         roleFilter = 'ADMIN';
+      } else if (_selectedFilter == 'with_code' || 
+                 _selectedFilter == 'without_code' ||
+                 _selectedFilter == 'called' ||
+                 _selectedFilter == 'not_called') {
+        filterType = _selectedFilter;
+      }
+      
+      // Prepare date filters (format as YYYY-MM-DD)
+      String? startDateStr;
+      String? endDateStr;
+      if (_startDate != null) {
+        startDateStr = '${_startDate!.year}-${_startDate!.month.toString().padLeft(2, '0')}-${_startDate!.day.toString().padLeft(2, '0')}';
+      }
+      if (_endDate != null) {
+        endDateStr = '${_endDate!.year}-${_endDate!.month.toString().padLeft(2, '0')}-${_endDate!.day.toString().padLeft(2, '0')}';
       }
       
       final response = await _userManagementService.getAllUsers(
@@ -105,6 +121,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         role: roleFilter,
         sortBy: _selectedSort,
         sortOrder: sortOrder,
+        filter: filterType,
+        startDate: startDateStr,
+        endDate: endDateStr,
+        filterByToday: _filterByToday,
       );
       
       debugPrint('🔄 Users response: ${response.data.users.length} users');
@@ -124,7 +144,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             _currentPage = response.data.pagination.page;
             _totalPages = response.data.pagination.totalPages;
             _totalUsers = response.data.pagination.total;
-            // Apply client-side filters (date filters, called/not called) on the current page
+            // All filters are now handled by backend, just filter out test admin
             _applyClientSideFilters();
           });
         }
@@ -154,88 +174,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         .where((user) => user.phoneNumber.toString() != '0780000000')
         .toList();
 
-    // Note: Search and role filters are now handled by backend pagination
-    // Only apply client-side filters that backend doesn't handle:
-    // - with_code/without_code (access code status)
-    // - called/not_called (call tracking)
-    
-    // Apply access code status filter (client-side only)
-    if (_selectedFilter == 'with_code') {
-      filtered = filtered
-          .where((user) => user.accessCodeStats.active > 0)
-          .toList();
-    } else if (_selectedFilter == 'without_code') {
-      filtered = filtered
-          .where((user) => user.accessCodeStats.active == 0)
-          .toList();
-    } else if (_selectedFilter == 'called') {
-      filtered = filtered.where((user) => _isUserCalled(user.id)).toList();
-    } else if (_selectedFilter == 'not_called') {
-      filtered = filtered.where((user) => !_isUserCalled(user.id)).toList();
-    }
-
-    // Apply date filters (client-side only - note: pagination counts may be affected)
-    // TODO: Add date filter support to backend for accurate pagination
-    if (_filterByToday) {
-      final today = DateTime.now();
-      final todayStart = DateTime(today.year, today.month, today.day);
-      final todayEnd = todayStart.add(const Duration(days: 1));
-
-      filtered = filtered.where((user) {
-        final userDate = DateTime(
-          user.createdAt.year,
-          user.createdAt.month,
-          user.createdAt.day,
-        );
-        return userDate.isAfter(
-              todayStart.subtract(const Duration(microseconds: 1)),
-            ) &&
-            userDate.isBefore(todayEnd);
-      }).toList();
-    } else if (_startDate != null || _endDate != null) {
-      filtered = filtered.where((user) {
-        final userDate = DateTime(
-          user.createdAt.year,
-          user.createdAt.month,
-          user.createdAt.day,
-        );
-
-        if (_startDate != null && _endDate != null) {
-          final rangeStart = DateTime(
-            _startDate!.year,
-            _startDate!.month,
-            _startDate!.day,
-          );
-          final rangeEnd = DateTime(
-            _endDate!.year,
-            _endDate!.month,
-            _endDate!.day,
-          ).add(const Duration(days: 1));
-
-          return userDate.isAfter(
-                rangeStart.subtract(const Duration(microseconds: 1)),
-              ) &&
-              userDate.isBefore(rangeEnd);
-        } else if (_startDate != null) {
-          final rangeStart = DateTime(
-            _startDate!.year,
-            _startDate!.month,
-            _startDate!.day,
-          );
-          return userDate.isAfter(
-            rangeStart.subtract(const Duration(microseconds: 1)),
-          );
-        } else if (_endDate != null) {
-          final rangeEnd = DateTime(
-            _endDate!.year,
-            _endDate!.month,
-            _endDate!.day,
-          ).add(const Duration(days: 1));
-          return userDate.isBefore(rangeEnd);
-        }
-        return true;
-      }).toList();
-    }
+    // All filters (search, role, date, access code, call tracking) are now handled by backend
+    // We only filter out the test admin user client-side
 
     // Note: Sorting is now handled by backend, no need to sort client-side
 
