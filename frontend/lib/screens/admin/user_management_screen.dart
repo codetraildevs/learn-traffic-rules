@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:learn_traffic_rules/core/theme/app_theme.dart';
 import 'package:learn_traffic_rules/models/user_management_model.dart';
 import 'package:learn_traffic_rules/services/user_management_service.dart';
+import 'package:learn_traffic_rules/services/network_service.dart';
 import 'package:learn_traffic_rules/widgets/loading_widget.dart';
 
 class UserManagementScreen extends ConsumerStatefulWidget {
@@ -21,6 +22,7 @@ class UserManagementScreen extends ConsumerStatefulWidget {
 
 class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   final UserManagementService _userManagementService = UserManagementService();
+  final NetworkService _networkService = NetworkService();
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _listScrollController = ScrollController();
 
@@ -45,6 +47,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     _loadCalledUsersFromPrefs();
     _loadUsers();
     _startRefreshTimer();
+    // Sync call tracking with backend when online
+    _syncCallTrackingWithBackend();
   }
 
   @override
@@ -91,6 +95,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           });
         }
         _applyFiltersAndSort();
+        
+        // Sync call tracking after loading users (to get latest from server)
+        _syncCallTrackingWithBackend();
       } else {
         debugPrint('❌ Failed to load users: ${response.message}');
       }
@@ -1482,11 +1489,15 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
       if (await canLaunchUrl(phoneUri)) {
         await launchUrl(phoneUri);
-        // Mark user as called and persist to SharedPreferences
+        // Mark user as called and persist locally
         setState(() {
           _calledUsers[user.id] = DateTime.now();
         });
         await _saveCalledUsersToPrefs();
+        
+        // Sync with backend if online (works offline, syncs when online)
+        _syncCallTrackingWithBackend();
+        
         _showSuccessSnackBar('Calling ${user.fullName}...');
         debugPrint('📞 Marked user ${user.fullName} (${user.id}) as called');
       } else {
@@ -1523,6 +1534,46 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       }
     } catch (e) {
       debugPrint('❌ Error loading called users from SharedPreferences: $e');
+    }
+  }
+
+  /// Sync call tracking with backend (works offline, syncs when online)
+  Future<void> _syncCallTrackingWithBackend() async {
+    try {
+      final hasInternet = await _networkService.hasInternetConnection();
+      if (!hasInternet) {
+        debugPrint('📞 No internet - call tracking saved locally, will sync when online');
+        return;
+      }
+
+      // Convert local called users to Map<String, String> for API
+      final Map<String, String> localCalledUsers = {};
+      _calledUsers.forEach((userId, timestamp) {
+        localCalledUsers[userId] = timestamp.toIso8601String();
+      });
+
+      // Sync with backend
+      final syncedCalledUsers = await _userManagementService.syncCallTracking(localCalledUsers);
+      
+      // Update local state with merged data from server
+      setState(() {
+        _calledUsers.clear();
+        syncedCalledUsers.forEach((userId, timestampStr) {
+          try {
+            _calledUsers[userId] = DateTime.parse(timestampStr);
+          } catch (e) {
+            debugPrint('⚠️ Error parsing synced timestamp for user $userId: $e');
+          }
+        });
+      });
+
+      // Save synced data to SharedPreferences
+      await _saveCalledUsersToPrefs();
+
+      debugPrint('✅ Synced ${_calledUsers.length} called users with backend');
+    } catch (e) {
+      debugPrint('❌ Error syncing call tracking with backend: $e');
+      // Continue with local data if sync fails
     }
   }
 

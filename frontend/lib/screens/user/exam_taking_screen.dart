@@ -161,14 +161,14 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   void _handleAppPaused() {
     if (!_isExamCompleted) {
       _isAppInBackground = true;
+      // Don't auto-submit when screen locks - just track background time
+      // User can resume and continue the exam
       _backgroundTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
         _backgroundTime++;
-        if (_backgroundTime > 30) {
-          // More than 30 seconds in background
-          _autoSubmitExam();
-        }
+        // Removed auto-submit - allow user to continue exam after screen lock
+        debugPrint('🔒 Security: App in background for $_backgroundTime seconds (no auto-submit)');
       });
-      debugPrint('🔒 Security: App paused, starting background timer');
+      debugPrint('🔒 Security: App paused, tracking background time (no auto-submit)');
     }
   }
 
@@ -245,42 +245,8 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
     );
   }
 
-  void _autoSubmitExam() {
-    if (_isExamCompleted) return;
-
-    debugPrint(
-      '🔒 Security: Auto-submitting exam due to extended background time',
-    );
-    _isExamCompleted = true;
-    _backgroundTimer?.cancel();
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.warning, color: AppColors.error, size: 24.sp),
-            SizedBox(width: 8.w),
-            const Text('Exam Terminated'),
-          ],
-        ),
-        content: const Text(
-          'Your exam has been automatically submitted due to extended background activity. This is to maintain exam integrity.',
-          style: AppTextStyles.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _submitExam();
-            },
-            child: const Text('View Results'),
-          ),
-        ],
-      ),
-    );
-  }
+  // Removed _autoSubmitExam - no longer auto-submitting when screen locks
+  // Users can now exit and return to continue the exam
 
   void _showExitWarning() {
     showDialog(
@@ -299,21 +265,21 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Are you sure you want to exit the exam?',
+              'What would you like to do?',
               style: AppTextStyles.bodyMedium,
             ),
             SizedBox(height: 12.h),
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
+                color: AppColors.info.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(
-                '⚠️ Exiting will submit your current answers and end the exam.',
+                'You can exit and return later, or submit your current answers.',
                 style: AppTextStyles.caption.copyWith(
-                  color: AppColors.error,
-                  fontWeight: FontWeight.bold,
+                  color: AppColors.info,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
@@ -323,6 +289,17 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Continue Exam'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Exit without submitting - user can return later
+              Navigator.pop(context);
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.warning,
+            ),
+            child: const Text('Exit Without Submitting'),
           ),
           ElevatedButton(
             onPressed: () {

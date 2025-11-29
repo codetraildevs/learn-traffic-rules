@@ -190,6 +190,51 @@ class UserManagementService {
     return FreeExamResponse.fromJson(response);
   }
 
+  // Mark user as called
+  Future<Map<String, dynamic>> markUserAsCalled(String userId) async {
+    final response = await _apiService.makeRequest(
+      'POST',
+      '${AppConstants.userManagementEndpoint}/users/$userId/mark-called',
+    );
+    return response;
+  }
+
+  // Get all called users from server
+  Future<Map<String, String>> getCalledUsers() async {
+    final response = await _apiService.makeRequest(
+      'GET',
+      '${AppConstants.userManagementEndpoint}/called-users',
+    );
+    if (response['success'] == true && response['data'] != null) {
+      final calledUsersMap = response['data']['calledUsers'] as Map<String, dynamic>;
+      // Convert to Map<String, String>
+      return calledUsersMap.map((key, value) => MapEntry(key, value.toString()));
+    }
+    return {};
+  }
+
+  // Sync call tracking with server
+  Future<Map<String, String>> syncCallTracking(Map<String, String> localCalledUsers) async {
+    try {
+      final response = await _apiService.makeRequest(
+        'POST',
+        '${AppConstants.userManagementEndpoint}/sync-call-tracking',
+        body: {
+          'calledUsers': localCalledUsers,
+        },
+      );
+      if (response['success'] == true && response['data'] != null) {
+        final calledUsersMap = response['data']['calledUsers'] as Map<String, dynamic>;
+        // Convert to Map<String, String>
+        return calledUsersMap.map((key, value) => MapEntry(key, value.toString()));
+      }
+      return localCalledUsers; // Return local if sync fails
+    } catch (e) {
+      debugPrint('❌ Error syncing call tracking: $e');
+      return localCalledUsers; // Return local if sync fails
+    }
+  }
+
   // Submit free exam result
   Future<SubmitFreeExamResponse> submitFreeExam(
     String examId,
