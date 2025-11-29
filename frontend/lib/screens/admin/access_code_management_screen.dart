@@ -20,6 +20,7 @@ class _AccessCodeManagementScreenState
     extends ConsumerState<AccessCodeManagementScreen> {
   final UserManagementService _userManagementService = UserManagementService();
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   List<AccessCode> _accessCodes = [];
   List<AccessCode> _filteredCodes = [];
@@ -43,6 +44,7 @@ class _AccessCodeManagementScreenState
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     _refreshTimer?.cancel();
     super.dispose();
   }
@@ -474,10 +476,50 @@ class _AccessCodeManagementScreenState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Access Code', style: AppTextStyles.heading3),
-        content: Text(
-          'Are you sure you want to delete access code ${code.code}? This action cannot be undone.',
-          style: AppTextStyles.bodyMedium,
+        title: Expanded(
+          child: Row(
+            children: [
+              Icon(Icons.delete_forever, color: AppColors.error, size: 24.sp),
+              SizedBox(width: 8.w),
+              const Text('Delete Access Code', style: AppTextStyles.caption),
+            ],
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Delete access code ${code.code}? This action cannot be undone.',
+              style: AppTextStyles.bodyMedium,
+            ),
+            SizedBox(height: 12.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(
+                  color: AppColors.error.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.warning, color: AppColors.error, size: 18.sp),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      'Users relying on this code may lose access immediately.',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.error,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -556,221 +598,53 @@ class _AccessCodeManagementScreenState
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Search and Filter Bar
-          Container(
-            padding: EdgeInsets.all(16.w),
-            color: AppColors.white,
-            child: Column(
-              children: [
-                // Search Bar
-                TextField(
-                  controller: _searchController,
-                  onChanged: _onSearchChanged,
-                  decoration: InputDecoration(
-                    hintText: 'Search access codes...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            onPressed: () {
-                              _searchController.clear();
-                              _onSearchChanged('');
-                            },
-                            icon: const Icon(Icons.clear),
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(color: AppColors.grey300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(color: AppColors.primary),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12.h),
-
-                // Filter and Sort Row
-                Row(
+      body: RefreshIndicator(
+        onRefresh: _loadAccessCodes,
+        child: CustomScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: _buildFilterSection()),
+            if (_isLoading)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: const Center(child: LoadingWidget()),
+              )
+            else if (_filteredCodes.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Filter Dropdown
-                    Expanded(
-                      flex: 3,
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _selectedFilter,
-                        onChanged: (value) => _onFilterChanged(value!),
-                        decoration: InputDecoration(
-                          labelText: 'Filter by Status',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 6.w,
-                            vertical: 4.h,
-                          ),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'all',
-                            child: Text(
-                              'All Codes',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'active',
-                            child: Text(
-                              'Active',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'used',
-                            child: Text(
-                              'Used',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'expired',
-                            child: Text(
-                              'Expired',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'blocked',
-                            child: Text(
-                              'Blocked',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
+                    Icon(
+                      Icons.vpn_key_outlined,
+                      size: 64.sp,
+                      color: AppColors.grey400,
                     ),
-                    SizedBox(width: 6.w),
-
-                    // Sort Dropdown
-                    Expanded(
-                      flex: 3,
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _selectedSort,
-                        onChanged: (value) => _onSortChanged(value!),
-                        decoration: InputDecoration(
-                          labelText: 'Sort by',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 6.w,
-                            vertical: 4.h,
-                          ),
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'code',
-                            child: Text(
-                              'Code',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'user',
-                            child: Text(
-                              'User',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'createdAt',
-                            child: Text(
-                              'Created Date',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'expiresAt',
-                            child: Text(
-                              'Expires Date',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DropdownMenuItem(
-                            value: 'paymentAmount',
-                            child: Text(
-                              'Amount',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 6.w),
-
-                    // Sort Direction Toggle
-                    IconButton(
-                      onPressed: _toggleSortDirection,
-                      icon: Icon(
-                        _sortAscending
-                            ? Icons.arrow_upward
-                            : Icons.arrow_downward,
-                        color: AppColors.primary,
-                        size: 18.sp,
-                      ),
-                      tooltip: _sortAscending ? 'Ascending' : 'Descending',
-                      constraints: BoxConstraints(
-                        minWidth: 36.w,
-                        minHeight: 36.h,
+                    SizedBox(height: 16.h),
+                    Text(
+                      _searchQuery.isNotEmpty
+                          ? 'No access codes found matching "$_searchQuery"'
+                          : 'No access codes found',
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.grey600,
                       ),
                     ),
                   ],
                 ),
-
-                // Date Filters
-                SizedBox(height: 12.h),
-                _buildDateFilters(),
-              ],
-            ),
-          ),
-
-          // Access Codes List
-          Expanded(
-            child: _isLoading
-                ? const Center(child: LoadingWidget())
-                : _filteredCodes.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.vpn_key_outlined,
-                          size: 64.sp,
-                          color: AppColors.grey400,
-                        ),
-                        SizedBox(height: 16.h),
-                        Text(
-                          _searchQuery.isNotEmpty
-                              ? 'No access codes found matching "$_searchQuery"'
-                              : 'No access codes found',
-                          style: AppTextStyles.bodyLarge.copyWith(
-                            color: AppColors.grey600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: EdgeInsets.all(16.w),
-                    itemCount: _filteredCodes.length,
-                    itemBuilder: (context, index) {
-                      final code = _filteredCodes[index];
-                      return _buildAccessCodeCard(code);
-                    },
-                  ),
-          ),
-        ],
+              )
+            else
+              SliverPadding(
+                padding: EdgeInsets.all(16.w),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final code = _filteredCodes[index];
+                    return _buildAccessCodeCard(code);
+                  }, childCount: _filteredCodes.length),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -928,6 +802,118 @@ class _AccessCodeManagementScreenState
               fontSize: 10.sp,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterSection() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      color: AppColors.white,
+      child: Column(
+        children: [
+          TextField(
+            controller: _searchController,
+            onChanged: _onSearchChanged,
+            decoration: InputDecoration(
+              hintText: 'Search access codes...',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      onPressed: () {
+                        _searchController.clear();
+                        _onSearchChanged('');
+                      },
+                      icon: const Icon(Icons.clear),
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: const BorderSide(color: AppColors.grey300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: const BorderSide(color: AppColors.primary),
+              ),
+            ),
+          ),
+          SizedBox(height: 12.h),
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: DropdownButtonFormField<String>(
+                  value: _selectedFilter,
+                  onChanged: (value) => _onFilterChanged(value!),
+                  decoration: InputDecoration(
+                    labelText: 'Filter by Status',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 6.w,
+                      vertical: 4.h,
+                    ),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'all', child: Text('All Codes')),
+                    DropdownMenuItem(value: 'active', child: Text('Active')),
+                    DropdownMenuItem(value: 'used', child: Text('Used')),
+                    DropdownMenuItem(value: 'expired', child: Text('Expired')),
+                    DropdownMenuItem(value: 'blocked', child: Text('Blocked')),
+                  ],
+                ),
+              ),
+              SizedBox(width: 6.w),
+              Expanded(
+                flex: 3,
+                child: DropdownButtonFormField<String>(
+                  value: _selectedSort,
+                  onChanged: (value) => _onSortChanged(value!),
+                  decoration: InputDecoration(
+                    labelText: 'Sort by',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 6.w,
+                      vertical: 4.h,
+                    ),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'code', child: Text('Code')),
+                    DropdownMenuItem(value: 'user', child: Text('User')),
+                    DropdownMenuItem(
+                      value: 'createdAt',
+                      child: Text('Created Date'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'expiresAt',
+                      child: Text('Expires Date'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'paymentAmount',
+                      child: Text('Amount'),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 6.w),
+              IconButton(
+                onPressed: _toggleSortDirection,
+                icon: Icon(
+                  _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                  color: AppColors.primary,
+                  size: 18.sp,
+                ),
+                tooltip: _sortAscending ? 'Ascending' : 'Descending',
+                constraints: BoxConstraints(minWidth: 36.w, minHeight: 36.h),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          _buildDateFilters(),
         ],
       ),
     );

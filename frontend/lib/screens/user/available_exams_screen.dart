@@ -315,7 +315,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     }
   }
 
-  /// Marks the first 2 exams of each type as free
+  /// Marks the first 1 exam of each type as free
   List<Exam> _markFreeExamsByType(List<Exam> exams) {
     if (exams.isEmpty) return exams;
 
@@ -352,17 +352,17 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       });
     }
 
-    // Create a set of free exam IDs (first 2 of each type)
+    // Create a set of free exam IDs (first 1 of each type)
     final Set<String> freeExamIds = {};
     for (final type in ['kinyarwanda', 'english', 'french']) {
       final examsOfType = examsByType[type.toLowerCase()] ?? [];
-      // Get first 2 exams of this type
-      for (int i = 0; i < examsOfType.length && i < 2; i++) {
+      // Get first 1 exam of this type
+      for (int i = 0; i < examsOfType.length && i < 1; i++) {
         freeExamIds.add(examsOfType[i].id);
       }
     }
 
-    // Mark first 2 exams of each type as free
+    // Mark first 1 exam of each type as free
     final List<Exam> updatedExams = exams.map((exam) {
       final isFree = freeExamIds.contains(exam.id);
       // Use copyWith, but ensure we set isFirstTwo explicitly
@@ -1099,29 +1099,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 ),
               ],
             ),
-            SizedBox(height: 8.h),
 
-            // Passing Score
-            Row(
-              children: [
-                Icon(
-                  Icons.trending_up_outlined,
-                  size: 16.sp,
-                  color: AppColors.grey600,
-                ),
-                SizedBox(width: 6.w),
-                Flexible(
-                  child: Text(
-                    'Passing Score: ${exam.passingScore}%',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.grey700,
-                      fontSize: 14.sp,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
             SizedBox(height: 16.h),
 
             // Start Exam Button
@@ -1146,7 +1124,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                     Text(
                       'Start Exam',
                       style: AppTextStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         fontSize: 15.sp,
                         color: AppColors.white,
                       ),
@@ -1198,7 +1176,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           ),
           SizedBox(height: 8.h),
           Text(
-            'First 2 exams are free with unlimited attempts',
+            'First exam of each type is free with unlimited attempts',
             style: TextStyle(fontSize: 14.sp, color: Colors.white70),
           ),
           SizedBox(height: 8.h),
@@ -1239,7 +1217,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   void _startExam(Exam exam) {
-    // Check if this exam is marked as free (first 2 exams of each type)
+    // Check if this exam is marked as free (first 1 exam of each type)
     // Free status is determined per exam type (English, French, Kinyarwanda)
     final isFreeExam = exam.isFirstTwo ?? false;
 

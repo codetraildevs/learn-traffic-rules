@@ -6,6 +6,8 @@ import 'package:learn_traffic_rules/models/user_model.dart';
 import 'package:learn_traffic_rules/screens/user/payment_instructions_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:learn_traffic_rules/screens/user/progress_screen.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/exam_provider.dart';
@@ -25,6 +27,7 @@ import '../user/course_detail_screen.dart';
 import '../../services/notification_polling_service.dart';
 import '../../providers/course_provider.dart';
 import '../../core/constants/app_constants.dart';
+import '../../services/network_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -56,19 +59,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   final ExamService _examService = ExamService();
   final UserManagementService _userManagementService = UserManagementService();
+  final NetworkService _networkService = NetworkService();
 
   // Track app lifecycle to prevent unnecessary refreshes
   DateTime? _lastBackgroundTime;
   static const _minBackgroundDuration = Duration(seconds: 3);
 
+  // Cache keys
+  static const String _cacheKeyExamResults = 'cached_exam_results';
+  static const String _cacheKeyExams = 'cached_exams';
+  static const String _cacheKeyUserStats = 'cached_user_stats';
+  static const String _cacheKeyAdminStats = 'cached_admin_stats';
+  static const String _cacheKeyExamCountsByType = 'cached_exam_counts_by_type';
+  static const String _cacheKeyTimestamp = 'dashboard_cache_timestamp';
+  static const Duration _cacheValidityDuration = Duration(
+    hours: 1,
+  ); // Cache valid for 1 hour
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _loadDashboardData();
-    // Load courses
+    // Load dashboard data (will use cache if available)
+    _loadDashboardData(forceRefresh: false);
+    // Load courses (will use cache if available)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(courseProvider.notifier).loadCourses();
+      ref.read(courseProvider.notifier).loadCourses(forceRefresh: false);
     });
   }
 
@@ -101,7 +117,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           debugPrint(
             '🔄 App resumed after ${backgroundDuration.inSeconds}s, reloading data',
           );
-          _loadDashboardData();
+          _loadDashboardData(forceRefresh: false); // Use cache if available
         } else {
           debugPrint(
             '🔄 App resumed quickly (${backgroundDuration.inSeconds}s), skipping reload (likely screenshot)',
@@ -124,7 +140,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     debugPrint('🧹 Cleared shown notifications - user opened exams');
   }
 
-  Future<void> _loadDashboardData() async {
+  Future<void> _loadDashboardData({bool forceRefresh = false}) async {
     if (mounted) {
       setState(() {
         _isLoading = true;
@@ -136,13 +152,59 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final authState = ref.read(authProvider);
       final user = authState.user;
 
-      if (user?.role == 'USER') {
-        await _loadUserDashboardData();
-      } else if (user?.role == 'ADMIN') {
-        await _loadAdminDashboardData();
+      // Check internet connection
+      final hasInternet = await _networkService.hasInternetConnection();
+
+      // Try to load from cache first if offline or if cache is still valid
+      if (!hasInternet || !forceRefresh) {
+        final cachedDataLoaded = await _loadCachedDashboardData(user?.role);
+        if (cachedDataLoaded && !forceRefresh) {
+          debugPrint('📦 Using cached dashboard data');
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+          // If offline, use cache and return
+          if (!hasInternet) {
+            debugPrint('🌐 No internet - using cached data only');
+            return;
+          }
+          // If online but cache is valid, use cache and refresh in background
+          if (await _isCacheValid()) {
+            debugPrint('📦 Cache is valid, refreshing in background');
+            // Load fresh data in background
+            _loadFreshDashboardData(user?.role);
+            return;
+          }
+        }
+      }
+
+      // Load fresh data from API
+      if (hasInternet) {
+        if (user?.role == 'USER') {
+          await _loadUserDashboardData();
+        } else if (user?.role == 'ADMIN') {
+          await _loadAdminDashboardData();
+        }
+      } else {
+        // No internet and no cache - show error
+        if (mounted) {
+          setState(() {
+            _error = 'No internet connection and no cached data available';
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
-      if (mounted) {
+      debugPrint('Error loading dashboard data: $e');
+      // Try to load from cache on error
+      final authState = ref.read(authProvider);
+      final user = authState.user;
+      final cachedDataLoaded = await _loadCachedDashboardData(user?.role);
+      if (cachedDataLoaded) {
+        debugPrint('📦 Error occurred, using cached data as fallback');
+      } else if (mounted) {
         setState(() {
           _error = 'Failed to load dashboard data: $e';
         });
@@ -153,6 +215,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _loadFreshDashboardData(String? role) async {
+    try {
+      if (role == 'USER') {
+        await _loadUserDashboardData();
+      } else if (role == 'ADMIN') {
+        await _loadAdminDashboardData();
+      }
+    } catch (e) {
+      debugPrint('Error loading fresh dashboard data: $e');
+      // Silently fail - user already has cached data
     }
   }
 
@@ -169,9 +244,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         });
         _calculateUserStats();
         debugPrint('✅ Loaded ${freshExams.length} exams for user dashboard');
+
+        // Cache the data
+        await _cacheDashboardData('USER');
       }
     } catch (e) {
       debugPrint('Error loading user dashboard data: $e');
+      rethrow; // Re-throw to allow fallback to cache
     }
   }
 
@@ -195,8 +274,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       }
 
       _calculateAdminStats();
+
+      // Cache the data
+      await _cacheDashboardData('ADMIN');
     } catch (e) {
       debugPrint('Error loading admin dashboard data: $e');
+      rethrow; // Re-throw to allow fallback to cache
     }
   }
 
@@ -273,6 +356,175 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
 
     return streak;
+  }
+
+  // Cache management methods
+  Future<void> _cacheDashboardData(String role) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final timestamp = DateTime.now().toIso8601String();
+
+      // Cache exam results
+      final examResultsJson = _examResults.map((r) => r.toJson()).toList();
+      await prefs.setString(_cacheKeyExamResults, jsonEncode(examResultsJson));
+
+      // Cache exams
+      final examsJson = _exams.map((e) => e.toJson()).toList();
+      await prefs.setString(_cacheKeyExams, jsonEncode(examsJson));
+
+      // Cache exam counts by type
+      final examCountsByType = <String, int>{};
+      for (final exam in _exams) {
+        if (exam.isActive) {
+          String type = exam.examType?.toLowerCase() ?? 'english';
+          if (type == 'unknown' || exam.examType == null) {
+            final titleLower = exam.title.toLowerCase();
+            if (titleLower.contains('kiny') ||
+                titleLower.contains('kinyarwanda')) {
+              type = 'kinyarwanda';
+            } else if (titleLower.contains('french') ||
+                titleLower.contains('français')) {
+              type = 'french';
+            } else {
+              type = 'english';
+            }
+          }
+          examCountsByType[type] = (examCountsByType[type] ?? 0) + 1;
+        }
+      }
+      await prefs.setString(
+        _cacheKeyExamCountsByType,
+        jsonEncode(examCountsByType),
+      );
+
+      // Cache stats based on role
+      if (role == 'USER') {
+        await prefs.setString(
+          _cacheKeyUserStats,
+          jsonEncode({
+            'totalExamsTaken': _totalExamsTaken,
+            'averageScore': _averageScore,
+            'studyStreak': _studyStreak,
+            'achievements': _achievements,
+          }),
+        );
+      } else if (role == 'ADMIN') {
+        await prefs.setString(
+          _cacheKeyAdminStats,
+          jsonEncode({
+            'totalUsers': _totalUsers,
+            'totalExams': _totalExams,
+            'totalExamResults': _totalExamResults,
+            'averageScore': _averageScore,
+          }),
+        );
+      }
+
+      // Cache timestamp
+      await prefs.setString(_cacheKeyTimestamp, timestamp);
+
+      debugPrint('💾 Cached dashboard data at $timestamp');
+    } catch (e) {
+      debugPrint('Error caching dashboard data: $e');
+    }
+  }
+
+  Future<bool> _loadCachedDashboardData(String? role) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Check if cache exists
+      final examResultsJson = prefs.getString(_cacheKeyExamResults);
+      final examsJson = prefs.getString(_cacheKeyExams);
+
+      if (examResultsJson == null || examsJson == null) {
+        debugPrint('📦 No cached dashboard data found');
+        return false;
+      }
+
+      // Load exam results
+      final examResultsList = jsonDecode(examResultsJson) as List;
+      _examResults = examResultsList
+          .map((json) => ExamResultData.fromJson(json as Map<String, dynamic>))
+          .toList();
+
+      // Load exams
+      final examsList = jsonDecode(examsJson) as List;
+      _exams = examsList
+          .map((json) => Exam.fromJson(json as Map<String, dynamic>))
+          .toList();
+
+      // Load exam counts by type from cache
+      final examCountsJson = prefs.getString(_cacheKeyExamCountsByType);
+      if (examCountsJson != null) {
+        try {
+          final examCounts = jsonDecode(examCountsJson) as Map<String, dynamic>;
+          // Store exam counts for use in _buildExamsByType
+          // This will be used to show counts even when offline
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+
+      // Load stats based on role
+      if (role == 'USER') {
+        final statsJson = prefs.getString(_cacheKeyUserStats);
+        if (statsJson != null) {
+          final stats = jsonDecode(statsJson) as Map<String, dynamic>;
+          _totalExamsTaken = stats['totalExamsTaken'] as int? ?? 0;
+          _averageScore = (stats['averageScore'] as num?)?.toDouble() ?? 0.0;
+          _studyStreak = stats['studyStreak'] as int? ?? 0;
+          _achievements = stats['achievements'] as int? ?? 0;
+        } else {
+          _calculateUserStats();
+        }
+      } else if (role == 'ADMIN') {
+        final statsJson = prefs.getString(_cacheKeyAdminStats);
+        if (statsJson != null) {
+          final stats = jsonDecode(statsJson) as Map<String, dynamic>;
+          _totalUsers = stats['totalUsers'] as int? ?? 0;
+          _totalExams = stats['totalExams'] as int? ?? 0;
+          _totalExamResults = stats['totalExamResults'] as int? ?? 0;
+          _averageScore = (stats['averageScore'] as num?)?.toDouble() ?? 0.0;
+        } else {
+          _calculateAdminStats();
+        }
+      } else {
+        // Calculate stats if role is unknown
+        if (role == 'USER') {
+          _calculateUserStats();
+        } else {
+          _calculateAdminStats();
+        }
+      }
+
+      if (mounted) {
+        setState(() {});
+      }
+
+      debugPrint('📦 Loaded cached dashboard data');
+      return true;
+    } catch (e) {
+      debugPrint('Error loading cached dashboard data: $e');
+      return false;
+    }
+  }
+
+  Future<bool> _isCacheValid() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final timestampStr = prefs.getString(_cacheKeyTimestamp);
+      if (timestampStr == null) return false;
+
+      final timestamp = DateTime.parse(timestampStr);
+      final now = DateTime.now();
+      final age = now.difference(timestamp);
+
+      return age < _cacheValidityDuration;
+    } catch (e) {
+      debugPrint('Error checking cache validity: $e');
+      return false;
+    }
   }
 
   int _calculateAchievements(List<ExamResultData> results) {
@@ -358,7 +610,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             // Small delay to ensure state is updated
             Future.delayed(const Duration(milliseconds: 100), () {
               if (mounted && _currentIndex == index) {
-                _loadDashboardData();
+                _loadDashboardData(
+                  forceRefresh: false,
+                ); // Use cache if available
               }
             });
           }
@@ -400,7 +654,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadDashboardData,
+            onPressed: () => _loadDashboardData(forceRefresh: true),
           ),
           IconButton(
             icon: const Icon(Icons.notifications),
@@ -411,7 +665,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: _loadDashboardData,
+        onRefresh: () => _loadDashboardData(forceRefresh: true),
         child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -493,7 +747,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             SizedBox(height: 16.h),
             CustomButton(
               text: 'Retry',
-              onPressed: _loadDashboardData,
+              onPressed: () => _loadDashboardData(forceRefresh: true),
               backgroundColor: AppColors.primary,
               width: 120.w,
             ),
@@ -913,6 +1167,115 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       examsByType.putIfAbsent(type, () => []).add(exam);
     }
 
+    // If no exams loaded, try to load cached exam counts
+    if (examsByType.isEmpty) {
+      return FutureBuilder<Map<String, int>?>(
+        future: _loadCachedExamCounts(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+            final cachedCounts = snapshot.data!;
+            // Create exam type cards from cached counts
+            final orderedTypes = ['kinyarwanda', 'english', 'french'];
+            final availableTypes = orderedTypes
+                .where((type) => cachedCounts.containsKey(type))
+                .toList();
+
+            if (availableTypes.isEmpty) {
+              return Container(
+                padding: EdgeInsets.all(20.w),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(16.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.quiz_outlined,
+                      size: 48.sp,
+                      color: AppColors.grey400,
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      'No exams available',
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.grey600,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Available Exams',
+                  style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+                ),
+                SizedBox(height: 16.h),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 1.6,
+                    crossAxisSpacing: 12.w,
+                    mainAxisSpacing: 12.h,
+                  ),
+                  itemCount: availableTypes.length,
+                  itemBuilder: (context, index) {
+                    final type = availableTypes[index];
+                    final count = cachedCounts[type] ?? 0;
+                    return _buildExamTypeCard(type, [], cachedCount: count);
+                  },
+                ),
+              ],
+            );
+          }
+
+          // No cached data either
+          return Container(
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.quiz_outlined,
+                  size: 48.sp,
+                  color: AppColors.grey400,
+                ),
+                SizedBox(height: 16.h),
+                Text(
+                  'No exams available',
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: AppColors.grey600,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
     // Order: kinyarwanda, english, french
     final orderedTypes = ['kinyarwanda', 'english', 'french'];
     final availableTypes = orderedTypes
@@ -967,8 +1330,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           itemCount: availableTypes.length,
           itemBuilder: (context, index) {
             final type = availableTypes[index];
-            final exams = examsByType[type]!;
-            return _buildExamTypeCard(type, exams);
+            final exams = examsByType[type] ?? [];
+            return FutureBuilder<Map<String, int>?>(
+              future: _loadCachedExamCounts(),
+              builder: (context, snapshot) {
+                final cachedCount = snapshot.data?[type];
+                return _buildExamTypeCard(
+                  type,
+                  exams,
+                  cachedCount: cachedCount,
+                );
+              },
+            );
           },
         ),
       ],
@@ -1022,7 +1395,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         SizedBox(height: 16.h),
         if (courseState.isLoading)
           const Center(child: CircularProgressIndicator())
-        else if (courseState.error != null)
+        else if (courseState.error != null && courseState.courses.isEmpty)
+          // Only show error if we have no cached courses
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
@@ -1211,7 +1585,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildExamTypeCard(String examType, List<Exam> exams) {
+  Future<Map<String, int>?> _loadCachedExamCounts() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final examCountsJson = prefs.getString(_cacheKeyExamCountsByType);
+      if (examCountsJson == null) return null;
+
+      final examCounts = jsonDecode(examCountsJson) as Map<String, dynamic>;
+      return examCounts.map((key, value) => MapEntry(key, value as int));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Widget _buildExamTypeCard(
+    String examType,
+    List<Exam> exams, {
+    int? cachedCount,
+  }) {
     // Get display name and icon for each exam type
     String displayName;
     IconData icon;
@@ -1296,7 +1687,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ),
                     SizedBox(height: 2.h),
                     Text(
-                      '${exams.length} ${exams.length == 1 ? 'Exam' : 'Exams'}',
+                      '${cachedCount ?? exams.length} ${(cachedCount ?? exams.length) == 1 ? 'Exam' : 'Exams'}',
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.grey600,
                         fontSize: 12.sp,
@@ -1697,6 +2088,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             _buildSettingsOption(
+              'Share App',
+              'Share this app with friends and family',
+              Icons.share,
+              () {
+                _shareApp();
+              },
+            ),
+
+            _buildSettingsOption(
               'Help & Support',
               'Get help and contact support',
               Icons.help,
@@ -1730,6 +2130,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _shareApp() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      final appName = packageInfo.appName;
+      final version = packageInfo.version;
+      final buildNumber = packageInfo.buildNumber;
+      const playStoreLink =
+          'https://play.google.com/store/apps/details?id=com.trafficrules.master';
+      final shareText =
+          '''
+🚗 Rwanda Traffic Rule 🇷🇼 - Master Your Driving Test!
+
+Download the best app to prepare for your provisional driving license exam.
+
+📱 App: $appName
+📦 Version: $version ($buildNumber)
+
+✨ Features:
+• Interactive practice tests
+• Comprehensive study materials
+• Road signs and traffic rules
+• Progress tracking
+• Available in English, Kinyarwanda, and French
+
+📥 Download now:
+$playStoreLink
+
+Start your journey to becoming a safe driver!
+#TrafficRules #DrivingTest #LearnToDrive
+''';
+      await Share.share(
+        shareText,
+        subject: 'Rwanda Traffic Rule 🇷🇼 - Driving Test Preparation App',
+      );
+    } catch (e) {
+      debugPrint('Error sharing app: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to share app: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildSettingsOption(

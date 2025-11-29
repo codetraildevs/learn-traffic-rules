@@ -262,13 +262,11 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          _buildHeader(),
-
+          //_buildHeader(),
           SizedBox(height: 8.h),
 
           // Quick Access to Free Exams
-          _buildQuickAccessSection(),
-
+          // _buildQuickAccessSection(),
           SizedBox(height: 8.h),
 
           // Simplified Payment Steps
@@ -289,145 +287,145 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      padding: EdgeInsets.all(8.w),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primary, AppColors.secondary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(8.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.star, color: Colors.white, size: 18.w),
-              SizedBox(width: 4.w),
-              Expanded(
-                child: Text(
-                  _paymentData!.title,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              // Add a visible indicator that changes are applied
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-                decoration: BoxDecoration(
-                  color: Colors.orange,
-                  borderRadius: BorderRadius.circular(4.r),
-                ),
-                child: Text(
-                  'OPTIMIZED',
-                  style: TextStyle(
-                    fontSize: 8.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            _paymentData!.description,
-            style: TextStyle(fontSize: 10.sp, color: Colors.white70),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildHeader() {
+  //   return Container(
+  //     padding: EdgeInsets.all(8.w),
+  //     decoration: BoxDecoration(
+  //       gradient: const LinearGradient(
+  //         colors: [AppColors.primary, AppColors.secondary],
+  //         begin: Alignment.topLeft,
+  //         end: Alignment.bottomRight,
+  //       ),
+  //       borderRadius: BorderRadius.circular(8.r),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: AppColors.primary.withValues(alpha: 0.1),
+  //           blurRadius: 4,
+  //           offset: const Offset(0, 2),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           children: [
+  //             Icon(Icons.star, color: Colors.white, size: 18.w),
+  //             SizedBox(width: 4.w),
+  //             // Expanded(
+  //             //   child: Text(
+  //             //     _paymentData!.title,
+  //             //     style: TextStyle(
+  //             //       fontSize: 14.sp,
+  //             //       fontWeight: FontWeight.bold,
+  //             //       color: Colors.white,
+  //             //     ),
+  //             //   ),
+  //             // ),
+  //             // Add a visible indicator that changes are applied
+  //             // Container(
+  //             //   padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+  //             //   decoration: BoxDecoration(
+  //             //     color: Colors.orange,
+  //             //     borderRadius: BorderRadius.circular(4.r),
+  //             //   ),
+  //             //   child: Text(
+  //             //     'OPTIMIZED',
+  //             //     style: TextStyle(
+  //             //       fontSize: 8.sp,
+  //             //       fontWeight: FontWeight.bold,
+  //             //       color: Colors.white,
+  //             //     ),
+  //             //   ),
+  //             // ),
+  //           ],
+  //         ),
+  //         SizedBox(height: 4.h),
+  //         Text(
+  //           _paymentData!.description,
+  //           style: TextStyle(fontSize: 10.sp, color: Colors.white70),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
-  Widget _buildQuickAccessSection() {
-    return Container(
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primary, AppColors.secondary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(10.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.secondary.withValues(alpha: 0.15),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.school, color: Colors.white, size: 20.w),
-              SizedBox(width: 6.w),
-              Text(
-                'Start Learning Now',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'You can start with FREE practice exams while you get your access code!',
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: Colors.white70,
-              height: 1.2,
-            ),
-          ),
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    // Navigate to available exams
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AvailableExamsScreen(),
-                      ),
-                    );
-                  },
-                  icon: Icon(Icons.quiz, size: 14.w),
-                  label: const Text('Take Free Exams'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF2196F3),
-                    padding: EdgeInsets.symmetric(vertical: 8.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6.r),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildQuickAccessSection() {
+  //   return Container(
+  //     padding: EdgeInsets.all(12.w),
+  //     decoration: BoxDecoration(
+  //       gradient: const LinearGradient(
+  //         colors: [AppColors.primary, AppColors.secondary],
+  //         begin: Alignment.topLeft,
+  //         end: Alignment.bottomRight,
+  //       ),
+  //       borderRadius: BorderRadius.circular(10.r),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: AppColors.secondary.withValues(alpha: 0.15),
+  //           blurRadius: 6,
+  //           offset: const Offset(0, 3),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           children: [
+  //             Icon(Icons.school, color: Colors.white, size: 20.w),
+  //             SizedBox(width: 6.w),
+  //             Text(
+  //               'Start Learning Now',
+  //               style: TextStyle(
+  //                 fontSize: 16.sp,
+  //                 fontWeight: FontWeight.bold,
+  //                 color: Colors.white,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         SizedBox(height: 8.h),
+  //         Text(
+  //           'You can start with FREE practice exams while you get your access code!',
+  //           style: TextStyle(
+  //             fontSize: 12.sp,
+  //             color: Colors.white70,
+  //             height: 1.2,
+  //           ),
+  //         ),
+  //         SizedBox(height: 12.h),
+  //         Row(
+  //           children: [
+  //             Expanded(
+  //               child: ElevatedButton.icon(
+  //                 onPressed: () {
+  //                   // Navigate to available exams
+  //                   Navigator.push(
+  //                     context,
+  //                     MaterialPageRoute(
+  //                       builder: (context) => const AvailableExamsScreen(),
+  //                     ),
+  //                   );
+  //                 },
+  //                 icon: Icon(Icons.quiz, size: 14.w),
+  //                 label: const Text('Take Free Exams'),
+  //                 style: ElevatedButton.styleFrom(
+  //                   backgroundColor: Colors.white,
+  //                   foregroundColor: const Color(0xFF2196F3),
+  //                   padding: EdgeInsets.symmetric(vertical: 8.h),
+  //                   shape: RoundedRectangleBorder(
+  //                     borderRadius: BorderRadius.circular(6.r),
+  //                   ),
+  //                 ),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildSimplifiedPaymentSteps() {
     return Column(
@@ -435,8 +433,10 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
       children: [
         Text(
           'How to Get Full Access',
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 16.sp,
+
             fontWeight: FontWeight.bold,
             color: Colors.grey[800],
           ),

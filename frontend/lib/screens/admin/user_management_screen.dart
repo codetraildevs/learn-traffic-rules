@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:learn_traffic_rules/core/theme/app_theme.dart';
 import 'package:learn_traffic_rules/models/user_management_model.dart';
 import 'package:learn_traffic_rules/services/user_management_service.dart';
@@ -20,22 +22,27 @@ class UserManagementScreen extends ConsumerStatefulWidget {
 class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   final UserManagementService _userManagementService = UserManagementService();
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _listScrollController = ScrollController();
 
   List<UserWithStats> _users = [];
   List<UserWithStats> _filteredUsers = [];
   bool _isLoading = false;
   String _searchQuery = '';
   String _selectedFilter = 'all';
-  String _selectedSort = 'name';
-  bool _sortAscending = true;
+  String _selectedSort = 'createdAt';
+  bool _sortAscending = false; // false = descending (newest first)
   Timer? _refreshTimer;
   DateTime? _startDate;
   DateTime? _endDate;
   bool _filterByToday = false;
+  // Track called users - Map of user ID to call timestamp
+  final Map<String, DateTime> _calledUsers = {};
+  static const String _calledUsersPrefsKey = 'called_users_tracking';
 
   @override
   void initState() {
     super.initState();
+    _loadCalledUsersFromPrefs();
     _loadUsers();
     _startRefreshTimer();
   }
@@ -43,6 +50,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _listScrollController.dispose();
     _refreshTimer?.cancel();
     super.dispose();
   }
@@ -101,9 +109,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   void _applyFiltersAndSort() {
     List<UserWithStats> filtered = List.from(_users);
 
-    // Filter out ADMIN users
+    // Filter out only the test admin user (0780000000), but show all other users including ADMINs
     filtered = filtered
-        .where((user) => user.role.toUpperCase() != 'ADMIN')
+        .where((user) => user.phoneNumber.toString() != '0780000000')
         .toList();
 
     // Apply search filter
@@ -127,6 +135,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         filtered = filtered
             .where((user) => user.accessCodeStats.active == 0)
             .toList();
+      } else if (_selectedFilter == 'called') {
+        filtered = filtered.where((user) => _isUserCalled(user.id)).toList();
+      } else if (_selectedFilter == 'not_called') {
+        filtered = filtered.where((user) => !_isUserCalled(user.id)).toList();
       } else {
         filtered = filtered
             .where((user) => user.role.toLowerCase() == _selectedFilter)
@@ -221,7 +233,17 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       setState(() {
         _filteredUsers = filtered;
       });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToTop());
     }
+  }
+
+  void _scrollToTop() {
+    if (!_listScrollController.hasClients) return;
+    _listScrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+    );
   }
 
   void _onSearchChanged(String query) {
@@ -710,373 +732,53 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Search and Filter Bar
-          Container(
-            padding: EdgeInsets.all(16.w),
-            color: AppColors.white,
-            child: Column(
-              children: [
-                // Search Bar
-                TextField(
-                  controller: _searchController,
-                  onChanged: _onSearchChanged,
-                  decoration: InputDecoration(
-                    hintText: 'Search users...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            onPressed: () {
-                              _searchController.clear();
-                              _onSearchChanged('');
-                            },
-                            icon: const Icon(Icons.clear),
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(color: AppColors.grey300),
+      body: RefreshIndicator(
+        onRefresh: _loadUsers,
+        child: CustomScrollView(
+          controller: _listScrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: _buildFilterSection()),
+            if (_isLoading)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: const Center(child: LoadingWidget()),
+              )
+            else if (_filteredUsers.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.people_outline,
+                      size: 64.sp,
+                      color: AppColors.grey400,
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(color: AppColors.primary),
+                    SizedBox(height: 16.h),
+                    Text(
+                      _searchQuery.isNotEmpty
+                          ? 'No users found matching "$_searchQuery"'
+                          : 'No users found',
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.grey600,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-                SizedBox(height: 12.h),
-
-                // Filter and Sort Row - Responsive Layout
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    // Use different layouts based on screen width
-                    if (constraints.maxWidth < 400) {
-                      // Small screens: Stack vertically
-                      return Column(
-                        children: [
-                          // Filter Row
-                          Row(
-                            children: [
-                              Expanded(
-                                child: DropdownButtonFormField<String>(
-                                  initialValue: _selectedFilter,
-                                  onChanged: (value) =>
-                                      _onFilterChanged(value!),
-                                  decoration: InputDecoration(
-                                    labelText: 'Filter',
-                                    labelStyle: TextStyle(fontSize: 10.sp),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8.r),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 8.w,
-                                      vertical: 4.h,
-                                    ),
-                                  ),
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: 'all',
-                                      child: Text(
-                                        'All Users',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'user',
-                                      child: Text(
-                                        'Users',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'manager',
-                                      child: Text(
-                                        'Managers',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'with_code',
-                                      child: Text(
-                                        'With Code',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'without_code',
-                                      child: Text(
-                                        'No Code',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 8.h),
-                          // Sort Row
-                          Row(
-                            children: [
-                              Expanded(
-                                child: DropdownButtonFormField<String>(
-                                  initialValue: _selectedSort,
-                                  onChanged: (value) => _onSortChanged(value!),
-                                  decoration: InputDecoration(
-                                    labelText: 'Sort',
-                                    labelStyle: TextStyle(fontSize: 10.sp),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8.r),
-                                    ),
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 8.w,
-                                      vertical: 4.h,
-                                    ),
-                                  ),
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: 'name',
-                                      child: Text(
-                                        'Name',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'role',
-                                      child: Text(
-                                        'Role',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'createdAt',
-                                      child: Text(
-                                        'Created',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'lastLogin',
-                                      child: Text(
-                                        'Last Login',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(width: 8.w),
-                              // Sort Direction Toggle
-                              IconButton(
-                                onPressed: _toggleSortDirection,
-                                icon: Icon(
-                                  _sortAscending
-                                      ? Icons.arrow_upward
-                                      : Icons.arrow_downward,
-                                  color: AppColors.primary,
-                                  size: 16.sp,
-                                ),
-                                tooltip: _sortAscending
-                                    ? 'Ascending'
-                                    : 'Descending',
-                                padding: EdgeInsets.all(4.w),
-                                constraints: BoxConstraints(
-                                  minWidth: 32.w,
-                                  minHeight: 32.h,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      );
-                    } else {
-                      // Larger screens: Horizontal layout
-                      return Row(
-                        children: [
-                          // Filter Dropdown
-                          Expanded(
-                            flex: 2,
-                            child: DropdownButtonFormField<String>(
-                              initialValue: _selectedFilter,
-                              onChanged: (value) => _onFilterChanged(value!),
-                              decoration: InputDecoration(
-                                labelText: 'Filter',
-                                labelStyle: TextStyle(fontSize: 10.sp),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.r),
-                                ),
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 6.w,
-                                  vertical: 2.h,
-                                ),
-                              ),
-                              items: const [
-                                DropdownMenuItem(
-                                  value: 'all',
-                                  child: Text(
-                                    'All Users',
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'user',
-                                  child: Text(
-                                    'Users',
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'admin',
-                                  child: Text(
-                                    'Admins',
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'manager',
-                                  child: Text(
-                                    'Managers',
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'with_code',
-                                  child: Text(
-                                    'With Code',
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'without_code',
-                                  child: Text(
-                                    'No Code',
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(width: 6.w),
-
-                          // Sort Dropdown
-                          Expanded(
-                            flex: 2,
-                            child: DropdownButtonFormField<String>(
-                              initialValue: _selectedSort,
-                              onChanged: (value) => _onSortChanged(value!),
-                              decoration: InputDecoration(
-                                labelText: 'Sort',
-                                labelStyle: TextStyle(fontSize: 10.sp),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.r),
-                                ),
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 6.w,
-                                  vertical: 2.h,
-                                ),
-                              ),
-                              items: const [
-                                DropdownMenuItem(
-                                  value: 'name',
-                                  child: Text(
-                                    'Name',
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'role',
-                                  child: Text(
-                                    'Role',
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'createdAt',
-                                  child: Text(
-                                    'Created',
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'lastLogin',
-                                  child: Text(
-                                    'Last Login',
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(width: 6.w),
-
-                          // Sort Direction Toggle
-                          IconButton(
-                            onPressed: _toggleSortDirection,
-                            icon: Icon(
-                              _sortAscending
-                                  ? Icons.arrow_upward
-                                  : Icons.arrow_downward,
-                              color: AppColors.primary,
-                              size: 16.sp,
-                            ),
-                            tooltip: _sortAscending
-                                ? 'Ascending'
-                                : 'Descending',
-                            padding: EdgeInsets.all(4.w),
-                            constraints: BoxConstraints(
-                              minWidth: 32.w,
-                              minHeight: 32.h,
-                            ),
-                          ),
-                        ],
-                      );
-                    }
-                  },
+              )
+            else
+              SliverPadding(
+                padding: EdgeInsets.all(16.w),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final user = _filteredUsers[index];
+                    return _buildUserCard(user);
+                  }, childCount: _filteredUsers.length),
                 ),
-
-                // Date Filters
-                SizedBox(height: 12.h),
-                _buildDateFilters(),
-              ],
-            ),
-          ),
-
-          // Users List
-          Expanded(
-            child: _isLoading
-                ? const Center(child: LoadingWidget())
-                : _filteredUsers.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.people_outline,
-                          size: 64.sp,
-                          color: AppColors.grey400,
-                        ),
-                        SizedBox(height: 16.h),
-                        Text(
-                          _searchQuery.isNotEmpty
-                              ? 'No users found matching "$_searchQuery"'
-                              : 'No users found',
-                          style: AppTextStyles.bodyLarge.copyWith(
-                            color: AppColors.grey600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: EdgeInsets.all(16.w),
-                    itemCount: _filteredUsers.length,
-                    itemBuilder: (context, index) {
-                      final user = _filteredUsers[index];
-                      return _buildUserCard(user);
-                    },
-                  ),
-          ),
-        ],
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1085,10 +787,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     return Card(
       margin: EdgeInsets.only(bottom: 16.h),
       elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(8.r),
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -1105,6 +807,48 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Blocked Status Banner (if blocked)
+                  if (user.isBlocked == true)
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 8.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(16.r),
+                          topRight: Radius.circular(16.r),
+                        ),
+                        border: Border(
+                          bottom: BorderSide(
+                            color: AppColors.error.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.block,
+                            color: AppColors.error,
+                            size: 18.sp,
+                          ),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: Text(
+                              'BLOCKED${user.blockReason != null && user.blockReason!.isNotEmpty ? ': ${user.blockReason}' : ''}',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: AppColors.error,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12.sp,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   // Header Row with Avatar and User Info
                   Row(
                     children: [
@@ -1118,13 +862,22 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              AppColors.primary,
-                              AppColors.primary.withValues(alpha: 0.8),
+                              user.isBlocked == true
+                                  ? AppColors.error
+                                  : AppColors.secondary,
+                              (user.isBlocked == true
+                                      ? AppColors.error
+                                      : AppColors.primary)
+                                  .withValues(alpha: 0.8),
                             ],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.3),
+                              color:
+                                  (user.isBlocked == true
+                                          ? AppColors.error
+                                          : AppColors.primary)
+                                      .withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -1153,29 +906,38 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             Text(
                               user.fullName,
                               style: AppTextStyles.heading2.copyWith(
-                                fontSize: 20.sp,
+                                fontSize: 16.sp,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.grey800,
+                                color: user.isBlocked == true
+                                    ? AppColors.error
+                                    : AppColors.grey800,
                               ),
                             ),
                             SizedBox(height: 6.h),
                             // Phone - Clickable for calling
                             GestureDetector(
-                              onTap: () => _makePhoneCall(user.phoneNumber),
+                              onTap: () =>
+                                  _makePhoneCall(user.phoneNumber, user),
                               child: Container(
                                 padding: EdgeInsets.symmetric(
                                   horizontal: 8.w,
                                   vertical: 4.h,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.1,
-                                  ),
+                                  color: _isUserCalled(user.id)
+                                      ? AppColors.success.withValues(alpha: 0.1)
+                                      : AppColors.primary.withValues(
+                                          alpha: 0.1,
+                                        ),
                                   borderRadius: BorderRadius.circular(8.r),
                                   border: Border.all(
-                                    color: AppColors.primary.withValues(
-                                      alpha: 0.3,
-                                    ),
+                                    color: _isUserCalled(user.id)
+                                        ? AppColors.success.withValues(
+                                            alpha: 0.3,
+                                          )
+                                        : AppColors.primary.withValues(
+                                            alpha: 0.3,
+                                          ),
                                     width: 1,
                                   ),
                                 ),
@@ -1183,19 +945,33 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
-                                      Icons.phone,
+                                      _isUserCalled(user.id)
+                                          ? Icons.phone_callback
+                                          : Icons.phone,
                                       size: 16.sp,
-                                      color: AppColors.primary,
+                                      color: _isUserCalled(user.id)
+                                          ? AppColors.success
+                                          : AppColors.primary,
                                     ),
                                     SizedBox(width: 6.w),
                                     Text(
                                       user.phoneNumber,
                                       style: AppTextStyles.bodyMedium.copyWith(
-                                        color: AppColors.primary,
+                                        color: _isUserCalled(user.id)
+                                            ? AppColors.success
+                                            : AppColors.primary,
                                         fontWeight: FontWeight.w600,
                                         decoration: TextDecoration.underline,
                                       ),
                                     ),
+                                    if (_isUserCalled(user.id)) ...[
+                                      SizedBox(width: 4.w),
+                                      Icon(
+                                        Icons.check_circle,
+                                        size: 14.sp,
+                                        color: AppColors.success,
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -1312,17 +1088,27 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     spacing: 8.w,
                     runSpacing: 8.h,
                     children: [
+                      // _buildStatChip(
+                      //   Icons.calendar_today,
+                      //   'Created: ${DateFormat('MMM dd, yyyy').format(user.createdAt)}',
+                      //   AppColors.info,
+                      // ),
+                      // _buildStatChip(
+                      //   Icons.login,
+                      //   'Last Login: ${user.lastLogin != null ? DateFormat('MMM dd, yyyy').format(user.lastLogin!) : 'Never'}',
+                      //   AppColors.success,
+                      // ),
                       _buildStatChip(
                         Icons.calendar_today,
                         'Created: ${DateFormat('MMM dd, yyyy').format(user.createdAt)}',
                         AppColors.info,
                       ),
-                      _buildStatChip(
-                        Icons.login,
-                        'Last Login: ${user.lastLogin != null ? DateFormat('MMM dd, yyyy').format(user.lastLogin!) : 'Never'}',
-                        AppColors.success,
-                      ),
-
+                      if (user.lastLogin != null)
+                        _buildStatChip(
+                          Icons.login,
+                          'Last Login: ${DateFormat('MMM dd, yyyy').format(user.lastLogin!)}',
+                          AppColors.success,
+                        ),
                       if (user.remainingDays > 0)
                         _buildStatChip(
                           Icons.schedule,
@@ -1335,8 +1121,18 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           'Expires at: ${DateFormat('MMM dd, yyyy').format(user.expiresAt!)}',
                           AppColors.grey600,
                         ),
-                      // if (user.isBlocked == true)
-                      //   _buildStatChip(Icons.block, 'Blocked', AppColors.error),
+                      if (user.isBlocked == true)
+                        _buildStatChip(
+                          Icons.block,
+                          'Blocked${user.blockReason != null && user.blockReason!.isNotEmpty ? ': ${user.blockReason}' : ''}',
+                          AppColors.error,
+                        ),
+                      if (_isUserCalled(user.id))
+                        _buildStatChip(
+                          Icons.phone_callback,
+                          'Called${_getCallTimestamp(user.id) != null ? ' ${_formatCallTime(_getCallTimestamp(user.id)!)}' : ''}',
+                          AppColors.success,
+                        ),
                     ],
                   ),
                 ],
@@ -1403,17 +1199,356 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     );
   }
 
-  void _makePhoneCall(String phoneNumber) async {
+  String _formatCallTime(DateTime callTime) {
+    final now = DateTime.now();
+    final difference = now.difference(callTime);
+
+    if (difference.inMinutes < 1) {
+      return 'just now';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inDays == 1) {
+      return 'yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else {
+      return DateFormat('MMM dd').format(callTime);
+    }
+  }
+
+  Widget _buildFilterSection() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      color: AppColors.white,
+      child: Column(
+        children: [
+          TextField(
+            controller: _searchController,
+            onChanged: _onSearchChanged,
+            decoration: InputDecoration(
+              hintText: 'Search users...',
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      onPressed: () {
+                        _searchController.clear();
+                        _onSearchChanged('');
+                      },
+                      icon: const Icon(Icons.clear),
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: const BorderSide(color: AppColors.grey300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: const BorderSide(color: AppColors.primary),
+              ),
+            ),
+          ),
+          SizedBox(height: 12.h),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 400) {
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            value: _selectedFilter,
+                            onChanged: (value) => _onFilterChanged(value!),
+                            decoration: InputDecoration(
+                              labelText: 'Filter',
+                              labelStyle: TextStyle(fontSize: 10.sp),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 4.h,
+                              ),
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'all',
+                                child: Text('All Users'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'user',
+                                child: Text('Users'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'manager',
+                                child: Text('Managers'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'with_code',
+                                child: Text('With Code'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'without_code',
+                                child: Text('No Code'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'called',
+                                child: Text('Called'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'not_called',
+                                child: Text('Not Called'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            value: _selectedSort,
+                            onChanged: (value) => _onSortChanged(value!),
+                            decoration: InputDecoration(
+                              labelText: 'Sort',
+                              labelStyle: TextStyle(fontSize: 10.sp),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 4.h,
+                              ),
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'name',
+                                child: Text('Name'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'role',
+                                child: Text('Role'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'createdAt',
+                                child: Text('Created'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'lastLogin',
+                                child: Text('Last Login'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        IconButton(
+                          onPressed: _toggleSortDirection,
+                          icon: Icon(
+                            _sortAscending
+                                ? Icons.arrow_upward
+                                : Icons.arrow_downward,
+                            color: AppColors.primary,
+                            size: 16.sp,
+                          ),
+                          tooltip: _sortAscending ? 'Ascending' : 'Descending',
+                          padding: EdgeInsets.all(4.w),
+                          constraints: BoxConstraints(
+                            minWidth: 32.w,
+                            minHeight: 32.h,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              } else {
+                return Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedFilter,
+                        onChanged: (value) => _onFilterChanged(value!),
+                        decoration: InputDecoration(
+                          labelText: 'Filter',
+                          labelStyle: TextStyle(fontSize: 10.sp),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 2.h,
+                          ),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'all',
+                            child: Text('All Users'),
+                          ),
+                          DropdownMenuItem(value: 'user', child: Text('Users')),
+                          DropdownMenuItem(
+                            value: 'admin',
+                            child: Text('Admins'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'manager',
+                            child: Text('Managers'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'with_code',
+                            child: Text('With Code'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'without_code',
+                            child: Text('No Code'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'called',
+                            child: Text('Called'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'not_called',
+                            child: Text('Not Called'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                    Expanded(
+                      flex: 2,
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedSort,
+                        onChanged: (value) => _onSortChanged(value!),
+                        decoration: InputDecoration(
+                          labelText: 'Sort',
+                          labelStyle: TextStyle(fontSize: 10.sp),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 2.h,
+                          ),
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 'name', child: Text('Name')),
+                          DropdownMenuItem(value: 'role', child: Text('Role')),
+                          DropdownMenuItem(
+                            value: 'createdAt',
+                            child: Text('Created'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'lastLogin',
+                            child: Text('Last Login'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                    IconButton(
+                      onPressed: _toggleSortDirection,
+                      icon: Icon(
+                        _sortAscending
+                            ? Icons.arrow_upward
+                            : Icons.arrow_downward,
+                        color: AppColors.primary,
+                        size: 16.sp,
+                      ),
+                      tooltip: _sortAscending ? 'Ascending' : 'Descending',
+                      padding: EdgeInsets.all(4.w),
+                      constraints: BoxConstraints(
+                        minWidth: 32.w,
+                        minHeight: 32.h,
+                      ),
+                    ),
+                  ],
+                );
+              }
+            },
+          ),
+          SizedBox(height: 12.h),
+          _buildDateFilters(),
+        ],
+      ),
+    );
+  }
+
+  void _makePhoneCall(String phoneNumber, UserWithStats user) async {
     try {
       final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
       if (await canLaunchUrl(phoneUri)) {
         await launchUrl(phoneUri);
+        // Mark user as called and persist to SharedPreferences
+        setState(() {
+          _calledUsers[user.id] = DateTime.now();
+        });
+        await _saveCalledUsersToPrefs();
+        _showSuccessSnackBar('Calling ${user.fullName}...');
+        debugPrint('📞 Marked user ${user.fullName} (${user.id}) as called');
       } else {
         _showErrorSnackBar('Could not make phone call to $phoneNumber');
       }
     } catch (e) {
       _showErrorSnackBar('Error making phone call: $e');
     }
+  }
+
+  /// Load called users from SharedPreferences
+  Future<void> _loadCalledUsersFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final calledUsersJson = prefs.getString(_calledUsersPrefsKey);
+      if (calledUsersJson != null) {
+        final Map<String, dynamic> calledUsersMap =
+            json.decode(calledUsersJson) as Map<String, dynamic>;
+        setState(() {
+          _calledUsers.clear();
+          calledUsersMap.forEach((userId, timestampStr) {
+            try {
+              _calledUsers[userId] = DateTime.parse(timestampStr as String);
+            } catch (e) {
+              debugPrint(
+                '⚠️ Error parsing call timestamp for user $userId: $e',
+              );
+            }
+          });
+        });
+        debugPrint(
+          '✅ Loaded ${_calledUsers.length} called users from SharedPreferences',
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ Error loading called users from SharedPreferences: $e');
+    }
+  }
+
+  /// Save called users to SharedPreferences
+  Future<void> _saveCalledUsersToPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final Map<String, String> calledUsersMap = {};
+      _calledUsers.forEach((userId, timestamp) {
+        calledUsersMap[userId] = timestamp.toIso8601String();
+      });
+      await prefs.setString(_calledUsersPrefsKey, json.encode(calledUsersMap));
+      debugPrint(
+        '✅ Saved ${_calledUsers.length} called users to SharedPreferences',
+      );
+    } catch (e) {
+      debugPrint('❌ Error saving called users to SharedPreferences: $e');
+    }
+  }
+
+  bool _isUserCalled(String userId) {
+    return _calledUsers.containsKey(userId);
+  }
+
+  DateTime? _getCallTimestamp(String userId) {
+    return _calledUsers[userId];
   }
 
   void _showBlockUserDialog(UserWithStats user) {

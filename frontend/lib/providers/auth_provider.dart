@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,7 @@ import '../models/user_model.dart';
 import '../services/api_service.dart';
 import '../services/error_handler_service.dart';
 import '../services/device_service.dart';
+import '../services/network_service.dart';
 
 enum AuthStatus { initial, authenticated, unauthenticated, loading }
 
@@ -98,7 +100,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
             '   Access period: $accessPeriod ($accessPeriod.remainingDays days)',
           );
 
-          // For users, always fetch fresh access period data during session restoration
+          // Check internet connection before making API calls
+          final networkService = NetworkService();
+          final hasInternet = await networkService.hasInternetConnection();
+
+          if (!hasInternet) {
+            debugPrint(
+              '🌐 AUTH RESTORE: No internet connection, using stored data',
+            );
+            // No internet - use stored data and restore session
+            state = state.copyWith(
+              status: AuthStatus.authenticated,
+              user: user,
+              accessPeriod: accessPeriod,
+              isLoading: false,
+            );
+            return;
+          }
+
+          // For users, always fetch fresh access period data during session restoration (only if online)
           if (user.role == 'USER') {
             debugPrint(
               '🔄 AUTH RESTORE: Fetching fresh access period for user...',
@@ -132,11 +152,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
               debugPrint(
                 '❌ AUTH RESTORE: Failed to fetch fresh access period: $e',
               );
-              // Fall back to stored data
+              // Fall back to stored data - don't clear session if offline
+              debugPrint('🔄 AUTH RESTORE: Using stored data due to error');
+              state = state.copyWith(
+                status: AuthStatus.authenticated,
+                user: user,
+                accessPeriod: accessPeriod,
+                isLoading: false,
+              );
+              return;
             }
           }
 
-          // Validate token by making a test API call
+          // Validate token by making a test API call (only if online)
           await _validateTokenAndRestoreUser(
             user,
             token,
@@ -167,6 +195,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
     AccessPeriod? accessPeriod,
   }) async {
     try {
+      // Check internet before validating token
+      final networkService = NetworkService();
+      final hasInternet = await networkService.hasInternetConnection();
+
+      if (!hasInternet) {
+        debugPrint(
+          '🌐 AUTH RESTORE: No internet, skipping token validation, using stored data',
+        );
+        // No internet - restore with stored data
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          user: user,
+          accessPeriod: accessPeriod,
+          isLoading: false,
+        );
+        return;
+      }
+
       // Make a simple API call to validate the token
       // We'll use the getExams call as it requires authentication
       await _apiService.getExams();
@@ -180,9 +226,33 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
     } catch (e) {
       debugPrint('❌ AUTH RESTORE: Token validation failed: $e');
-      // Token is invalid, clear stored data
-      await _clearStoredAuth();
-      state = state.copyWith(status: AuthStatus.unauthenticated);
+
+      // Check if error is due to network issues
+      final errorString = e.toString().toLowerCase();
+      final isNetworkError =
+          errorString.contains('network') ||
+          errorString.contains('connection') ||
+          errorString.contains('timeout') ||
+          errorString.contains('socketexception') ||
+          errorString.contains('no internet');
+
+      if (isNetworkError) {
+        debugPrint(
+          '🌐 AUTH RESTORE: Network error detected, using stored data',
+        );
+        // Network error - restore with stored data instead of clearing
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          user: user,
+          accessPeriod: accessPeriod,
+          isLoading: false,
+        );
+      } else {
+        // Other errors - token might be invalid
+        debugPrint('❌ AUTH RESTORE: Non-network error, clearing auth');
+        await _clearStoredAuth();
+        state = state.copyWith(status: AuthStatus.unauthenticated);
+      }
     }
   }
 
@@ -381,7 +451,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final deviceService = DeviceService();
       final deviceId = await deviceService.getDeviceId();
 
-      await _apiService.logout(deviceId);
+      final networkService = NetworkService();
+      final hasInternet = await networkService.hasInternetConnection();
+
+      if (hasInternet) {
+        await _apiService.logout(deviceId).timeout(const Duration(seconds: 5));
+      } else {
+        debugPrint(
+          '🌐 LOGOUT: No internet connection, clearing local session only',
+        );
+      }
+    } on TimeoutException catch (_) {
+      debugPrint(
+        '⏱️ LOGOUT: Server did not respond, proceeding with local log out',
+      );
     } catch (e) {
       // Log error but continue with logout
       debugPrint('Logout error: $e');
