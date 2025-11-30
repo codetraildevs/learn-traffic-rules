@@ -7,6 +7,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../main.dart';
+import '../../services/flash_message_service.dart';
+import '../auth/register_screen.dart';
 
 class DisclaimerScreen extends ConsumerStatefulWidget {
   const DisclaimerScreen({super.key});
@@ -172,9 +174,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                         width: double.infinity,
                         height: 56.h,
                         child: ElevatedButton(
-                          onPressed: _hasAcceptedDisclaimer
-                              ? _proceedToApp
-                              : null,
+                          onPressed: _proceedToApp,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
@@ -183,12 +183,25 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                               borderRadius: BorderRadius.circular(16.r),
                             ),
                           ),
-                          child: Text(
-                            'I Understand - Continue',
-                            style: TextStyle(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'I Understand - Continue',
+                                style: TextStyle(
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              if (!_hasAcceptedDisclaimer) ...[
+                                SizedBox(width: 8.w),
+                                Icon(
+                                  Icons.arrow_downward,
+                                  size: 20.sp,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ),
@@ -421,14 +434,16 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Could not open link. Tap "Copy" to copy the URL.'),
+              content: const Text(
+                'Could not open link. Tap "Copy" to copy the URL.',
+              ),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 4),
               action: SnackBarAction(
                 label: 'Copy',
                 textColor: Colors.white,
                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: url));
+                  Clipboard.setData(const ClipboardData(text: url));
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -455,7 +470,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
               label: 'Copy URL',
               textColor: Colors.white,
               onPressed: () {
-                Clipboard.setData(ClipboardData(text: url));
+                Clipboard.setData(const ClipboardData(text: url));
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -473,6 +488,21 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
   }
 
   Future<void> _proceedToApp() async {
+    // Check if user has accepted the disclaimer
+    if (!_hasAcceptedDisclaimer) {
+      // Show flash message asking user to accept terms
+      AppFlashMessage.showWarning(
+        context,
+        'Please accept terms and conditions',
+        description:
+            'Please check the box below to accept the terms and conditions before continuing',
+      );
+
+      // Scroll to checkbox to make it visible
+      // The flash message will guide the user
+      return;
+    }
+
     // Save that user has accepted disclaimer
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('disclaimer_accepted', true);
@@ -480,12 +510,16 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
     // Update the provider to trigger rebuild
     ref.read(disclaimerAcceptedProvider.notifier).state = true;
 
-    debugPrint('🔄 DISCLAIMER: Disclaimer accepted, provider updated');
     debugPrint(
-      '🔄 DISCLAIMER: Letting main app handle navigation automatically',
+      '🔄 DISCLAIMER: Disclaimer accepted, navigating to RegisterScreen',
     );
 
-    // Don't navigate manually - let the main app handle it automatically
-    // The provider update will trigger a rebuild and show the appropriate screen
+    // Navigate directly to RegisterScreen (first time user opens app)
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const RegisterScreen()),
+      );
+    }
   }
 }

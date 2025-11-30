@@ -1582,9 +1582,6 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   }
 
   Widget _buildNavigationButtons() {
-    final hasAnswer = _userAnswers.containsKey(
-      _questions[_currentQuestionIndex].id,
-    );
     final isLastQuestion = _currentQuestionIndex == _questions.length - 1;
     final answeredCount = _userAnswers.length;
     final totalQuestions = _questions.length;
@@ -1690,27 +1687,21 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
 
                 SizedBox(width: 12.w),
 
-                // Next/Submit button
+                // Next/Submit button - allow skipping questions
                 Expanded(
                   flex: 1,
                   child: SizedBox(
                     height: 50.h,
                     child: ElevatedButton.icon(
-                      onPressed: hasAnswer
-                          ? (isLastQuestion
-                                ? _showFinishExamDialog
-                                : _nextQuestion)
-                          : null,
+                      onPressed: isLastQuestion
+                          ? _showFinishExamDialog
+                          : _nextQuestion,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: hasAnswer
-                            ? (isLastQuestion
-                                  ? AppColors.success
-                                  : AppColors.primary)
-                            : AppColors.grey300,
-                        foregroundColor: hasAnswer
-                            ? AppColors.white
-                            : AppColors.grey500,
-                        elevation: hasAnswer ? 4 : 0,
+                        backgroundColor: isLastQuestion
+                            ? AppColors.success
+                            : AppColors.primary,
+                        foregroundColor: AppColors.white,
+                        elevation: 4,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12.r),
                         ),
@@ -1724,16 +1715,14 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                             ? Icons.check_circle
                             : Icons.arrow_forward_ios,
                         size: 18.sp,
-                        color: hasAnswer ? AppColors.white : AppColors.grey500,
+                        color: AppColors.white,
                       ),
                       label: Text(
                         isLastQuestion ? 'Submit Exam' : 'Next',
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontSize: 15.sp,
                           fontWeight: FontWeight.bold,
-                          color: hasAnswer
-                              ? AppColors.white
-                              : AppColors.grey500,
+                          color: AppColors.white,
                         ),
                       ),
                     ),
@@ -1777,6 +1766,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
     final answeredCount = _userAnswers.length;
     final totalQuestions = _questions.length;
     final unansweredCount = totalQuestions - answeredCount;
+    final allAnswered = unansweredCount == 0;
 
     showDialog(
       context: context,
@@ -1788,13 +1778,15 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
         title: Row(
           children: [
             Icon(
-              Icons.warning_amber_rounded,
-              color: AppColors.warning,
+              allAnswered
+                  ? Icons.check_circle
+                  : Icons.warning_amber_rounded,
+              color: allAnswered ? AppColors.success : AppColors.warning,
               size: 24.sp,
             ),
             SizedBox(width: 8.w),
             Text(
-              'Finish Exam?',
+              allAnswered ? 'Submit Exam?' : 'Finish Exam?',
               style: AppTextStyles.heading3.copyWith(color: AppColors.grey800),
             ),
           ],
@@ -1803,37 +1795,44 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Are you sure you want to finish the exam?',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.grey700,
+            if (allAnswered) ...[
+              Text(
+                'All questions have been answered. Are you ready to submit?',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.grey700,
+                ),
               ),
-            ),
-            SizedBox(height: 16.h),
-            if (unansweredCount > 0) ...[
+            ] else ...[
+              Text(
+                'You have unanswered questions. Please answer all questions before submitting.',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.grey700,
+                ),
+              ),
+              SizedBox(height: 16.h),
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.1),
+                  color: AppColors.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
                   border: Border.all(
-                    color: AppColors.warning.withValues(alpha: 0.3),
+                    color: AppColors.error.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
                 child: Row(
                   children: [
                     Icon(
-                      Icons.info_outline,
-                      color: AppColors.warning,
+                      Icons.error_outline,
+                      color: AppColors.error,
                       size: 16.sp,
                     ),
                     SizedBox(width: 8.w),
                     Expanded(
                       child: Text(
-                        'You have $unansweredCount unanswered question${unansweredCount == 1 ? '' : 's'}.',
+                        'You have $unansweredCount unanswered question${unansweredCount == 1 ? '' : 's'}. Please go back and answer them before submitting.',
                         style: AppTextStyles.caption.copyWith(
-                          color: AppColors.warning,
+                          color: AppColors.error,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -1841,8 +1840,8 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                   ],
                 ),
               ),
-              SizedBox(height: 16.h),
             ],
+            SizedBox(height: 16.h),
             Text(
               'Once submitted, you cannot change your answers.',
               style: AppTextStyles.caption.copyWith(
@@ -1863,23 +1862,24 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
               ),
             ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _submitExam();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: AppColors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
+          if (allAnswered)
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _submitExam();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+                foregroundColor: AppColors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+              child: const Text(
+                'Submit Exam',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-            child: const Text(
-              'Finish Exam',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
         ],
       ),
     );
