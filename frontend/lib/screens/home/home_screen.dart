@@ -82,7 +82,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    
+
     // Set initial tab based on user role
     // USER: Exams first (index 0), ADMIN: Dashboard first (index 1)
     final authState = ref.read(authProvider);
@@ -92,7 +92,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     } else {
       _currentIndex = 1; // Dashboard tab first for admin/manager
     }
-    
+
     // Load dashboard data (will use cache if available)
     _loadDashboardData(forceRefresh: false);
     // Load courses (will use cache if available)
@@ -614,12 +614,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           });
 
           // Clear shown notifications when user opens exams tab
-          if (index == 0) { // Exams is now index 0
+          if (index == 0) {
+            // Exams is now index 0
             _clearShownNotifications();
           }
 
           // Reload data when switching to dashboard or exams tab
-          if (index == 0 || index == 1) { // Exams (0) or Dashboard (1)
+          if (index == 0 || index == 1) {
+            // Exams (0) or Dashboard (1)
             // Small delay to ensure state is updated
             Future.delayed(const Duration(milliseconds: 100), () {
               if (mounted && _currentIndex == index) {
@@ -669,7 +671,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             builder: (context) => AlertDialog(
               title: Row(
                 children: [
-                  Icon(Icons.exit_to_app, color: AppColors.warning, size: 24.sp),
+                  Icon(
+                    Icons.exit_to_app,
+                    color: AppColors.warning,
+                    size: 24.sp,
+                  ),
                   SizedBox(width: 8.w),
                   const Text('Exit App?'),
                 ],
@@ -694,7 +700,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ],
             ),
           );
-          
+
           if (shouldExit == true && mounted) {
             // Exit the app
             if (Platform.isAndroid) {
@@ -867,10 +873,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isAdmin ? 'Admin Dashboard' : 'Welcome back!',
+            isAdmin
+                ? 'Admin Dashboard'
+                : 'Welcome back ${user?.fullName ?? 'User'}!',
             style: AppTextStyles.heading2.copyWith(
               color: AppColors.white,
-              fontSize: 24.sp,
+              fontSize: 18.sp,
             ),
           ),
           SizedBox(height: 8.h),
@@ -2216,7 +2224,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 if (shouldLogout == true && mounted) {
                   // Perform logout
                   await ref.read(authProvider.notifier).logout();
-                  
+
                   // Navigate to login screen explicitly
                   if (mounted) {
                     Navigator.pushNamedAndRemoveUntil(

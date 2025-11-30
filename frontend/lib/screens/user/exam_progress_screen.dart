@@ -97,6 +97,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
 
           // Action Buttons
           _buildActionButtons(),
+          SizedBox(height: 30.h),
         ],
       ),
     );
@@ -333,26 +334,26 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
     return Column(
       children: [
         // Check Answers Button
-        SizedBox(
-          width: double.infinity,
-          height: 50.h,
-          child: ElevatedButton.icon(
-            onPressed: _showDetailedAnswers,
-            icon: Icon(Icons.quiz, size: 20.w),
-            label: Text(
-              'Check Answers',
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              elevation: 4,
-            ),
-          ),
-        ),
+        // SizedBox(
+        //   width: double.infinity,
+        //   height: 50.h,
+        //   child: ElevatedButton.icon(
+        //     onPressed: _showDetailedAnswers,
+        //     icon: Icon(Icons.quiz, size: 20.w),
+        //     label: Text(
+        //       'Check Answers',
+        //       style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+        //     ),
+        //     style: ElevatedButton.styleFrom(
+        //       backgroundColor: AppColors.primary,
+        //       foregroundColor: Colors.white,
+        //       shape: RoundedRectangleBorder(
+        //         borderRadius: BorderRadius.circular(12.r),
+        //       ),
+        //       elevation: 4,
+        //     ),
+        //   ),
+        // ),
         SizedBox(height: 12.h),
 
         // Retake Button

@@ -172,7 +172,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                     children: [
                       SizedBox(
                         width: double.infinity,
-                        height: 56.h,
+                        height: 50.h,
                         child: ElevatedButton(
                           onPressed: _proceedToApp,
                           style: ElevatedButton.styleFrom(
@@ -189,18 +189,23 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                               Text(
                                 'I Understand - Continue',
                                 style: TextStyle(
-                                  fontSize: 18.sp,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              if (!_hasAcceptedDisclaimer) ...[
-                                SizedBox(width: 8.w),
-                                Icon(
-                                  Icons.arrow_downward,
-                                  size: 20.sp,
-                                  color: Colors.white,
-                                ),
-                              ],
+
+                              SizedBox(width: 8.w),
+                              !_hasAcceptedDisclaimer
+                                  ? Icon(
+                                      Icons.arrow_downward,
+                                      size: 20.sp,
+                                      color: Colors.white,
+                                    )
+                                  : Icon(
+                                      Icons.arrow_circle_right,
+                                      size: 20.sp,
+                                      color: Colors.white,
+                                    ),
                             ],
                           ),
                         ),
