@@ -214,16 +214,6 @@ class MyApp extends ConsumerWidget {
       debugPrint('Error initializing disclaimer status: $e');
     }
   }
-
-  // Future<bool> _checkDisclaimerAccepted() async {
-  //   try {
-  //     final prefs = await SharedPreferences.getInstance();
-  //     return prefs.getBool('disclaimer_accepted') ?? false;
-  //   } catch (e) {
-  //     debugPrint('Error checking disclaimer acceptance: $e');
-  //     return false;
-  //   }
-  // }
 }
 
 // Global error handler
