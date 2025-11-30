@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../main.dart';
-import '../../l10n/app_localizations.dart';
+import '../../services/flash_message_service.dart';
+import '../auth/register_screen.dart';
 
 class DisclaimerScreen extends ConsumerStatefulWidget {
   const DisclaimerScreen({super.key});
@@ -19,8 +22,6 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -40,11 +41,13 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                         width: 120.w,
                         height: 120.w,
                         decoration: BoxDecoration(
-                          color: AppColors.primary,
+                          color: const Color(0xFF4F46E5),
                           borderRadius: BorderRadius.circular(24.r),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.3),
+                              color: const Color(
+                                0xFF4F46E5,
+                              ).withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -60,7 +63,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
 
                       // App Title
                       Text(
-                        l10n.appName,
+                        'Rwanda Traffic Rule 🇷🇼',
                         style: TextStyle(
                           fontSize: 28.sp,
                           fontWeight: FontWeight.bold,
@@ -71,7 +74,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
 
                       // Subtitle
                       Text(
-                        l10n.provisionalDrivingLicensePreparation,
+                        'Provisional Driving License Preparation',
                         style: TextStyle(
                           fontSize: 16.sp,
                           color: const Color(0xFF6B7280),
@@ -107,7 +110,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
 
                       // Disclaimer Title
                       Text(
-                        l10n.educationalDisclaimer,
+                        'Educational Disclaimer',
                         style: TextStyle(
                           fontSize: 24.sp,
                           fontWeight: FontWeight.bold,
@@ -132,27 +135,26 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                           children: [
                             _buildDisclaimerItem(
                               icon: Icons.school,
-                              title: l10n.educationalPurposeOnly,
-                              description: l10n.educationalPurposeDescription,
+                              title: 'Educational Purpose Only',
+                              description:
+                                  'This app is designed for educational purposes to help you prepare for your provisional driving license exam.',
                             ),
                             SizedBox(height: 16.h),
                             _buildDisclaimerItem(
                               icon: Icons.sim_card,
-                              title: l10n.practiceSimulation,
-                              description: l10n.practiceSimulationDescription,
+                              title: 'Practice Simulation',
+                              description:
+                                  'The practice tests simulate real exam conditions but are not official government examinations.',
                             ),
                             SizedBox(height: 16.h),
                             _buildDisclaimerItem(
                               icon: Icons.warning_amber,
-                              title: l10n.notOfficial,
-                              description: l10n.notOfficialDescription,
+                              title: 'Not Official',
+                              description:
+                                  '⚠️ IMPORTANT: This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool.',
                             ),
                             SizedBox(height: 16.h),
-                            _buildDisclaimerItem(
-                              icon: Icons.update,
-                              title: l10n.stayUpdated,
-                              description: l10n.stayUpdatedDescription,
-                            ),
+                            _buildOfficialSourceItem(),
                           ],
                         ),
                       ),
@@ -170,11 +172,9 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                     children: [
                       SizedBox(
                         width: double.infinity,
-                        height: 56.h,
+                        height: 50.h,
                         child: ElevatedButton(
-                          onPressed: _hasAcceptedDisclaimer
-                              ? _proceedToApp
-                              : null,
+                          onPressed: _proceedToApp,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
@@ -183,12 +183,30 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                               borderRadius: BorderRadius.circular(16.r),
                             ),
                           ),
-                          child: Text(
-                            l10n.iUnderstandContinue,
-                            style: TextStyle(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'I Understand - Continue',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+
+                              SizedBox(width: 8.w),
+                              !_hasAcceptedDisclaimer
+                                  ? Icon(
+                                      Icons.arrow_downward,
+                                      size: 20.sp,
+                                      color: Colors.white,
+                                    )
+                                  : Icon(
+                                      Icons.arrow_circle_right,
+                                      size: 20.sp,
+                                      color: Colors.white,
+                                    ),
+                            ],
                           ),
                         ),
                       ),
@@ -205,11 +223,11 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                                 _hasAcceptedDisclaimer = value ?? false;
                               });
                             },
-                            activeColor: AppColors.primary,
+                            activeColor: const Color(0xFF4F46E5),
                           ),
                           Expanded(
                             child: Text(
-                              l10n.iHaveReadAndUnderstoodDisclaimer,
+                              'I have read and understood the educational disclaimer',
                               style: TextStyle(
                                 fontSize: 14.sp,
                                 color: const Color(0xFF6B7280),
@@ -241,10 +259,10 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
           width: 40.w,
           height: 40.w,
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
+            color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8.r),
           ),
-          child: Icon(icon, size: 20.w, color: AppColors.primary),
+          child: Icon(icon, size: 20.w, color: const Color(0xFF4F46E5)),
         ),
         SizedBox(width: 12.w),
         Expanded(
@@ -275,7 +293,221 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
     );
   }
 
+  Widget _buildOfficialSourceItem() {
+    const policeUrl = 'https://police.gov.rw/home/';
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 40.w,
+          height: 40.w,
+          decoration: BoxDecoration(
+            color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          child: Icon(Icons.link, size: 20.w, color: const Color(0xFF4F46E5)),
+        ),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Official Source',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1F2937),
+                ),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                'For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to ',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: const Color(0xFF6B7280),
+                  height: 1.4,
+                ),
+              ),
+              SizedBox(height: 4.h),
+              GestureDetector(
+                onTap: () => _openPoliceWebsite(),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.link_rounded,
+                      size: 16.sp,
+                      color: const Color(0xFF4F46E5),
+                    ),
+                    SizedBox(width: 4.w),
+                    Flexible(
+                      child: Text(
+                        'Rwanda National Police (Driving License Services)',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: const Color(0xFF4F46E5),
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 2.h),
+              GestureDetector(
+                onTap: () => _openPoliceWebsite(),
+                child: Text(
+                  policeUrl,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: const Color(0xFF4F46E5),
+                    decoration: TextDecoration.underline,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openPoliceWebsite() async {
+    const url = 'https://police.gov.rw/home/';
+    try {
+      final uri = Uri.parse(url);
+      debugPrint('🌐 Attempting to open: $url');
+
+      // Try to launch the URL with multiple fallback strategies
+      bool launched = false;
+
+      // First, try with inAppWebView (keeps app running, opens in-app browser)
+      try {
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.inAppWebView);
+          launched = true;
+          debugPrint('✅ Opened with inAppWebView');
+        }
+      } catch (e) {
+        debugPrint('⚠️ inAppWebView failed: $e');
+      }
+
+      // If that didn't work, try platformDefault (keeps app in foreground)
+      if (!launched) {
+        try {
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.platformDefault);
+            launched = true;
+            debugPrint('✅ Opened with platformDefault');
+          }
+        } catch (e) {
+          debugPrint('⚠️ platformDefault failed: $e');
+        }
+      }
+
+      // If still not launched, try without checking canLaunchUrl first
+      // (sometimes canLaunchUrl returns false but launchUrl still works)
+      if (!launched) {
+        try {
+          await launchUrl(uri, mode: LaunchMode.inAppWebView);
+          launched = true;
+          debugPrint('✅ Opened with inAppWebView (no check)');
+        } catch (e) {
+          debugPrint('⚠️ Direct inAppWebView launch failed: $e');
+        }
+      }
+
+      // Last resort: externalApplication (may cause app to exit)
+      if (!launched) {
+        try {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          launched = true;
+          debugPrint('⚠️ Opened with externalApplication (app may exit)');
+        } catch (e) {
+          debugPrint('⚠️ externalApplication failed: $e');
+        }
+      }
+
+      // If all attempts failed, show error with copy option
+      if (!launched) {
+        debugPrint('❌ All launch attempts failed for: $url');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                'Could not open link. Tap "Copy" to copy the URL.',
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+              action: SnackBarAction(
+                label: 'Copy',
+                textColor: Colors.white,
+                onPressed: () {
+                  Clipboard.setData(const ClipboardData(text: url));
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('URL copied to clipboard'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Error opening website: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Copy URL',
+              textColor: Colors.white,
+              onPressed: () {
+                Clipboard.setData(const ClipboardData(text: url));
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('URL copied to clipboard'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _proceedToApp() async {
+    // Check if user has accepted the disclaimer
+    if (!_hasAcceptedDisclaimer) {
+      // Show flash message asking user to accept terms
+      AppFlashMessage.showWarning(
+        context,
+        'Please accept terms and conditions',
+        description:
+            'Please check the box below to accept the terms and conditions before continuing',
+      );
+
+      // Scroll to checkbox to make it visible
+      // The flash message will guide the user
+      return;
+    }
+
     // Save that user has accepted disclaimer
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('disclaimer_accepted', true);
@@ -283,12 +515,16 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
     // Update the provider to trigger rebuild
     ref.read(disclaimerAcceptedProvider.notifier).state = true;
 
-    debugPrint('🔄 DISCLAIMER: Disclaimer accepted, provider updated');
     debugPrint(
-      '🔄 DISCLAIMER: Letting main app handle navigation automatically',
+      '🔄 DISCLAIMER: Disclaimer accepted, navigating to RegisterScreen',
     );
 
-    // Don't navigate manually - let the main app handle it automatically
-    // The provider update will trigger a rebuild and show the appropriate screen
+    // Navigate directly to RegisterScreen (first time user opens app)
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const RegisterScreen()),
+      );
+    }
   }
 }

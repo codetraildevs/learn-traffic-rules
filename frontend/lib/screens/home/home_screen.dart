@@ -1,11 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:learn_traffic_rules/models/user_model.dart';
 import 'package:learn_traffic_rules/screens/user/payment_instructions_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:learn_traffic_rules/screens/user/progress_screen.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/exam_provider.dart';
@@ -25,7 +29,7 @@ import '../user/course_detail_screen.dart';
 import '../../services/notification_polling_service.dart';
 import '../../providers/course_provider.dart';
 import '../../core/constants/app_constants.dart';
-import '../../l10n/app_localizations.dart';
+import '../../services/network_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -57,19 +61,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   final ExamService _examService = ExamService();
   final UserManagementService _userManagementService = UserManagementService();
+  final NetworkService _networkService = NetworkService();
 
   // Track app lifecycle to prevent unnecessary refreshes
   DateTime? _lastBackgroundTime;
   static const _minBackgroundDuration = Duration(seconds: 3);
 
+  // Cache keys
+  static const String _cacheKeyExamResults = 'cached_exam_results';
+  static const String _cacheKeyExams = 'cached_exams';
+  static const String _cacheKeyUserStats = 'cached_user_stats';
+  static const String _cacheKeyAdminStats = 'cached_admin_stats';
+  static const String _cacheKeyExamCountsByType = 'cached_exam_counts_by_type';
+  static const String _cacheKeyTimestamp = 'dashboard_cache_timestamp';
+  static const Duration _cacheValidityDuration = Duration(
+    hours: 1,
+  ); // Cache valid for 1 hour
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _loadDashboardData();
-    // Load courses
+
+    // Set initial tab based on user role
+    // USER: Exams first (index 0), ADMIN: Dashboard first (index 1)
+    final authState = ref.read(authProvider);
+    final user = authState.user;
+    if (user?.role == 'USER') {
+      _currentIndex = 0; // Exams tab first for users
+    } else {
+      _currentIndex = 1; // Dashboard tab first for admin/manager
+    }
+
+    // Load dashboard data (will use cache if available)
+    _loadDashboardData(forceRefresh: false);
+    // Load courses (will use cache if available)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(courseProvider.notifier).loadCourses();
+      ref.read(courseProvider.notifier).loadCourses(forceRefresh: false);
     });
   }
 
@@ -102,7 +130,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           debugPrint(
             '🔄 App resumed after ${backgroundDuration.inSeconds}s, reloading data',
           );
-          _loadDashboardData();
+          _loadDashboardData(forceRefresh: false); // Use cache if available
         } else {
           debugPrint(
             '🔄 App resumed quickly (${backgroundDuration.inSeconds}s), skipping reload (likely screenshot)',
@@ -125,7 +153,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     debugPrint('🧹 Cleared shown notifications - user opened exams');
   }
 
-  Future<void> _loadDashboardData() async {
+  Future<void> _loadDashboardData({bool forceRefresh = false}) async {
     if (mounted) {
       setState(() {
         _isLoading = true;
@@ -137,13 +165,59 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final authState = ref.read(authProvider);
       final user = authState.user;
 
-      if (user?.role == 'USER') {
-        await _loadUserDashboardData();
-      } else if (user?.role == 'ADMIN') {
-        await _loadAdminDashboardData();
+      // Check internet connection
+      final hasInternet = await _networkService.hasInternetConnection();
+
+      // Try to load from cache first if offline or if cache is still valid
+      if (!hasInternet || !forceRefresh) {
+        final cachedDataLoaded = await _loadCachedDashboardData(user?.role);
+        if (cachedDataLoaded && !forceRefresh) {
+          debugPrint('📦 Using cached dashboard data');
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+          }
+          // If offline, use cache and return
+          if (!hasInternet) {
+            debugPrint('🌐 No internet - using cached data only');
+            return;
+          }
+          // If online but cache is valid, use cache and refresh in background
+          if (await _isCacheValid()) {
+            debugPrint('📦 Cache is valid, refreshing in background');
+            // Load fresh data in background
+            _loadFreshDashboardData(user?.role);
+            return;
+          }
+        }
+      }
+
+      // Load fresh data from API
+      if (hasInternet) {
+        if (user?.role == 'USER') {
+          await _loadUserDashboardData();
+        } else if (user?.role == 'ADMIN') {
+          await _loadAdminDashboardData();
+        }
+      } else {
+        // No internet and no cache - show error
+        if (mounted) {
+          setState(() {
+            _error = 'No internet connection and no cached data available';
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
-      if (mounted) {
+      debugPrint('Error loading dashboard data: $e');
+      // Try to load from cache on error
+      final authState = ref.read(authProvider);
+      final user = authState.user;
+      final cachedDataLoaded = await _loadCachedDashboardData(user?.role);
+      if (cachedDataLoaded) {
+        debugPrint('📦 Error occurred, using cached data as fallback');
+      } else if (mounted) {
         setState(() {
           _error = 'Failed to load dashboard data: $e';
         });
@@ -154,6 +228,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _loadFreshDashboardData(String? role) async {
+    try {
+      if (role == 'USER') {
+        await _loadUserDashboardData();
+      } else if (role == 'ADMIN') {
+        await _loadAdminDashboardData();
+      }
+    } catch (e) {
+      debugPrint('Error loading fresh dashboard data: $e');
+      // Silently fail - user already has cached data
     }
   }
 
@@ -170,9 +257,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         });
         _calculateUserStats();
         debugPrint('✅ Loaded ${freshExams.length} exams for user dashboard');
+
+        // Cache the data
+        await _cacheDashboardData('USER');
       }
     } catch (e) {
       debugPrint('Error loading user dashboard data: $e');
+      rethrow; // Re-throw to allow fallback to cache
     }
   }
 
@@ -196,8 +287,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       }
 
       _calculateAdminStats();
+
+      // Cache the data
+      await _cacheDashboardData('ADMIN');
     } catch (e) {
       debugPrint('Error loading admin dashboard data: $e');
+      rethrow; // Re-throw to allow fallback to cache
     }
   }
 
@@ -276,6 +371,175 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return streak;
   }
 
+  // Cache management methods
+  Future<void> _cacheDashboardData(String role) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final timestamp = DateTime.now().toIso8601String();
+
+      // Cache exam results
+      final examResultsJson = _examResults.map((r) => r.toJson()).toList();
+      await prefs.setString(_cacheKeyExamResults, jsonEncode(examResultsJson));
+
+      // Cache exams
+      final examsJson = _exams.map((e) => e.toJson()).toList();
+      await prefs.setString(_cacheKeyExams, jsonEncode(examsJson));
+
+      // Cache exam counts by type
+      final examCountsByType = <String, int>{};
+      for (final exam in _exams) {
+        if (exam.isActive) {
+          String type = exam.examType?.toLowerCase() ?? 'english';
+          if (type == 'unknown' || exam.examType == null) {
+            final titleLower = exam.title.toLowerCase();
+            if (titleLower.contains('kiny') ||
+                titleLower.contains('kinyarwanda')) {
+              type = 'kinyarwanda';
+            } else if (titleLower.contains('french') ||
+                titleLower.contains('français')) {
+              type = 'french';
+            } else {
+              type = 'english';
+            }
+          }
+          examCountsByType[type] = (examCountsByType[type] ?? 0) + 1;
+        }
+      }
+      await prefs.setString(
+        _cacheKeyExamCountsByType,
+        jsonEncode(examCountsByType),
+      );
+
+      // Cache stats based on role
+      if (role == 'USER') {
+        await prefs.setString(
+          _cacheKeyUserStats,
+          jsonEncode({
+            'totalExamsTaken': _totalExamsTaken,
+            'averageScore': _averageScore,
+            'studyStreak': _studyStreak,
+            'achievements': _achievements,
+          }),
+        );
+      } else if (role == 'ADMIN') {
+        await prefs.setString(
+          _cacheKeyAdminStats,
+          jsonEncode({
+            'totalUsers': _totalUsers,
+            'totalExams': _totalExams,
+            'totalExamResults': _totalExamResults,
+            'averageScore': _averageScore,
+          }),
+        );
+      }
+
+      // Cache timestamp
+      await prefs.setString(_cacheKeyTimestamp, timestamp);
+
+      debugPrint('💾 Cached dashboard data at $timestamp');
+    } catch (e) {
+      debugPrint('Error caching dashboard data: $e');
+    }
+  }
+
+  Future<bool> _loadCachedDashboardData(String? role) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Check if cache exists
+      final examResultsJson = prefs.getString(_cacheKeyExamResults);
+      final examsJson = prefs.getString(_cacheKeyExams);
+
+      if (examResultsJson == null || examsJson == null) {
+        debugPrint('📦 No cached dashboard data found');
+        return false;
+      }
+
+      // Load exam results
+      final examResultsList = jsonDecode(examResultsJson) as List;
+      _examResults = examResultsList
+          .map((json) => ExamResultData.fromJson(json as Map<String, dynamic>))
+          .toList();
+
+      // Load exams
+      final examsList = jsonDecode(examsJson) as List;
+      _exams = examsList
+          .map((json) => Exam.fromJson(json as Map<String, dynamic>))
+          .toList();
+
+      // Load exam counts by type from cache
+      final examCountsJson = prefs.getString(_cacheKeyExamCountsByType);
+      if (examCountsJson != null) {
+        try {
+          final examCounts = jsonDecode(examCountsJson) as Map<String, dynamic>;
+          // Store exam counts for use in _buildExamsByType
+          // This will be used to show counts even when offline
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+
+      // Load stats based on role
+      if (role == 'USER') {
+        final statsJson = prefs.getString(_cacheKeyUserStats);
+        if (statsJson != null) {
+          final stats = jsonDecode(statsJson) as Map<String, dynamic>;
+          _totalExamsTaken = stats['totalExamsTaken'] as int? ?? 0;
+          _averageScore = (stats['averageScore'] as num?)?.toDouble() ?? 0.0;
+          _studyStreak = stats['studyStreak'] as int? ?? 0;
+          _achievements = stats['achievements'] as int? ?? 0;
+        } else {
+          _calculateUserStats();
+        }
+      } else if (role == 'ADMIN') {
+        final statsJson = prefs.getString(_cacheKeyAdminStats);
+        if (statsJson != null) {
+          final stats = jsonDecode(statsJson) as Map<String, dynamic>;
+          _totalUsers = stats['totalUsers'] as int? ?? 0;
+          _totalExams = stats['totalExams'] as int? ?? 0;
+          _totalExamResults = stats['totalExamResults'] as int? ?? 0;
+          _averageScore = (stats['averageScore'] as num?)?.toDouble() ?? 0.0;
+        } else {
+          _calculateAdminStats();
+        }
+      } else {
+        // Calculate stats if role is unknown
+        if (role == 'USER') {
+          _calculateUserStats();
+        } else {
+          _calculateAdminStats();
+        }
+      }
+
+      if (mounted) {
+        setState(() {});
+      }
+
+      debugPrint('📦 Loaded cached dashboard data');
+      return true;
+    } catch (e) {
+      debugPrint('Error loading cached dashboard data: $e');
+      return false;
+    }
+  }
+
+  Future<bool> _isCacheValid() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final timestampStr = prefs.getString(_cacheKeyTimestamp);
+      if (timestampStr == null) return false;
+
+      final timestamp = DateTime.parse(timestampStr);
+      final now = DateTime.now();
+      final age = now.difference(timestamp);
+
+      return age < _cacheValidityDuration;
+    } catch (e) {
+      debugPrint('Error checking cache validity: $e');
+      return false;
+    }
+  }
+
   int _calculateAchievements(List<ExamResultData> results) {
     int achievements = 0;
 
@@ -306,7 +570,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
@@ -337,8 +600,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          _buildDashboardTab(),
-          _buildExamsTab(),
+          _buildExamsTab(), // Index 0: Exams (first tab)
+          _buildDashboardTab(), // Index 1: Dashboard (second tab)
           _buildProgressTab(),
           _buildProfileTab(),
         ],
@@ -351,16 +614,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           });
 
           // Clear shown notifications when user opens exams tab
-          if (index == 1) {
+          if (index == 0) {
+            // Exams is now index 0
             _clearShownNotifications();
           }
 
           // Reload data when switching to dashboard or exams tab
           if (index == 0 || index == 1) {
+            // Exams (0) or Dashboard (1)
             // Small delay to ensure state is updated
             Future.delayed(const Duration(milliseconds: 100), () {
               if (mounted && _currentIndex == index) {
-                _loadDashboardData();
+                _loadDashboardData(
+                  forceRefresh: false,
+                ); // Use cache if available
               }
             });
           }
@@ -368,22 +635,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         type: BottomNavigationBarType.fixed,
         items: [
           BottomNavigationBarItem(
-            icon: const Icon(Icons.dashboard),
-            label: l10n.dashboard,
-          ),
-          BottomNavigationBarItem(
             icon: const Icon(Icons.quiz),
-            label: user?.role == 'ADMIN' ? l10n.manageExams : l10n.exams,
+            label: user?.role == 'ADMIN' ? 'Manage Exams' : 'Exams',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
           ),
           BottomNavigationBarItem(
             icon: user?.role == 'USER'
                 ? const Icon(Icons.analytics)
                 : const Icon(Icons.group),
-            label: user?.role == 'USER' ? l10n.progress : l10n.userManagement,
+            label: user?.role == 'USER' ? 'Progress' : 'Manage Users',
           ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.person),
-            label: l10n.profile,
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
       ),
@@ -391,81 +658,131 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildDashboardTab() {
-    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.dashboard),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadDashboardData,
-          ),
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {
-              Navigator.pushNamed(context, '/notifications');
-            },
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _loadDashboardData,
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [AppColors.grey50, AppColors.white],
-            ),
-          ),
-          child: SafeArea(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _error.isNotEmpty
-                ? _buildErrorView()
-                : SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.all(16.w),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Welcome Card
-                        _buildWelcomeCard(user),
-                        SizedBox(height: 24.h),
-
-                        // Admin Quick ActionsR
-                        if (user?.role == 'ADMIN') ...[
-                          _buildAdminSection(),
-                          SizedBox(height: 24.h),
-                        ],
-
-                        // Quick Stats (for admin only)
-                        if (user?.role == 'ADMIN') ...[
-                          _buildQuickStats(user),
-                          SizedBox(height: 24.h),
-                        ],
-
-                        // Exams grouped by type (for users)
-                        if (user?.role == 'USER') ...[
-                          _buildExamsByType(),
-                          SizedBox(height: 24.h),
-                          _buildCoursesSection(),
-                          SizedBox(height: 24.h),
-                          // Quick Stats for users
-                          _buildQuickStats(user),
-                          SizedBox(height: 24.h),
-                        ],
-
-                        // Recent Activity
-                        _buildRecentActivity(user),
-                      ],
-                    ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          // Show exit confirmation dialog
+          final shouldExit = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.exit_to_app,
+                    color: AppColors.warning,
+                    size: 24.sp,
                   ),
+                  SizedBox(width: 8.w),
+                  const Text('Exit App?'),
+                ],
+              ),
+              content: const Text(
+                'Are you sure you want to exit the app?',
+                style: AppTextStyles.bodyMedium,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: AppColors.white,
+                  ),
+                  child: const Text('Exit'),
+                ),
+              ],
+            ),
+          );
+
+          if (shouldExit == true && mounted) {
+            // Exit the app
+            if (Platform.isAndroid) {
+              SystemNavigator.pop();
+            } else if (Platform.isIOS) {
+              exit(0);
+            }
+          }
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Dashboard'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () => _loadDashboardData(forceRefresh: true),
+            ),
+            IconButton(
+              icon: const Icon(Icons.notifications),
+              onPressed: () {
+                Navigator.pushNamed(context, '/notifications');
+              },
+            ),
+          ],
+        ),
+        body: RefreshIndicator(
+          onRefresh: () => _loadDashboardData(forceRefresh: true),
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [AppColors.grey50, AppColors.white],
+              ),
+            ),
+            child: SafeArea(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error.isNotEmpty
+                  ? _buildErrorView()
+                  : SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.all(16.w),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Welcome Card
+                          _buildWelcomeCard(user),
+                          SizedBox(height: 24.h),
+
+                          // Admin Quick ActionsR
+                          if (user?.role == 'ADMIN') ...[
+                            _buildAdminSection(),
+                            SizedBox(height: 24.h),
+                          ],
+
+                          // Quick Stats (for admin only)
+                          if (user?.role == 'ADMIN') ...[
+                            _buildQuickStats(user),
+                            SizedBox(height: 24.h),
+                          ],
+
+                          // Exams grouped by type (for users)
+                          if (user?.role == 'USER') ...[
+                            _buildExamsByType(),
+                            SizedBox(height: 24.h),
+                            _buildCoursesSection(),
+                            SizedBox(height: 24.h),
+                            // Quick Stats for users
+                            _buildQuickStats(user),
+                            SizedBox(height: 24.h),
+                          ],
+
+                          // Recent Activity
+                          _buildRecentActivity(user),
+                        ],
+                      ),
+                    ),
+            ),
           ),
         ),
       ),
@@ -473,7 +790,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildErrorView() {
-    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: EdgeInsets.all(20.w),
@@ -483,7 +799,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
             SizedBox(height: 16.h),
             Text(
-              l10n.errorLoadingDashboard,
+              'Error Loading Dashboard',
               style: AppTextStyles.heading3.copyWith(color: AppColors.error),
             ),
             SizedBox(height: 8.h),
@@ -496,8 +812,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
             SizedBox(height: 16.h),
             CustomButton(
-              text: l10n.retry,
-              onPressed: _loadDashboardData,
+              text: 'Retry',
+              onPressed: () => _loadDashboardData(forceRefresh: true),
               backgroundColor: AppColors.primary,
               width: 120.w,
             ),
@@ -517,7 +833,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildWelcomeCard(User? user) {
-    final l10n = AppLocalizations.of(context)!;
     final isAdmin = user?.role == 'ADMIN';
     final authState = ref.watch(authProvider);
     final accessPeriod = authState.accessPeriod;
@@ -558,17 +873,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isAdmin ? l10n.adminDashboard : l10n.welcomeBack,
+            isAdmin
+                ? 'Admin Dashboard'
+                : 'Welcome back ${user?.fullName ?? 'User'}!',
             style: AppTextStyles.heading2.copyWith(
               color: AppColors.white,
-              fontSize: 24.sp,
+              fontSize: 18.sp,
             ),
           ),
           SizedBox(height: 8.h),
           Text(
             isAdmin
-                ? l10n.manageTrafficRulesPlatform
-                : l10n.readyToMasterTrafficRules,
+                ? 'Manage your traffic rules learning platform'
+                : 'Ready to master traffic rules?',
             style: AppTextStyles.bodyLarge.copyWith(
               color: AppColors.white.withValues(alpha: 0.9),
             ),
@@ -616,47 +933,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Builder(
-                          builder: (context) {
-                            final l10n = AppLocalizations.of(context)!;
-                            String text;
-                            if (accessPeriod?.hasAccess == true &&
-                                (accessPeriod?.remainingDays ?? 0) > 0) {
-                              text = l10n.accessActiveDaysLeft(
-                                accessPeriod!.remainingDays ?? 0,
-                              );
-                            } else if (accessPeriod?.hasAccess == true &&
-                                (accessPeriod?.remainingDays ?? 0) == 0) {
-                              text = l10n.accessExpired;
-                            } else {
-                              text = l10n.noAccessCode;
-                            }
-                            return Text(
-                              text,
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14.sp,
-                              ),
-                            );
-                          },
+                        Text(
+                          accessPeriod?.hasAccess == true &&
+                                  (accessPeriod?.remainingDays ?? 0) > 0
+                              ? 'Access Active - ${accessPeriod?.remainingDays} days left'
+                              : accessPeriod?.hasAccess == true &&
+                                    (accessPeriod?.remainingDays ?? 0) == 0
+                              ? 'Access Expired'
+                              : 'No Access Code',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14.sp,
+                          ),
                         ),
                         if (accessPeriod?.hasAccess == true &&
                             (accessPeriod?.remainingDays ?? 0) > 0) ...[
                           SizedBox(height: 2.h),
-                          Builder(
-                            builder: (context) {
-                              final l10n = AppLocalizations.of(context)!;
-                              return Text(
-                                l10n.paymentTierColon(
-                                  accessPeriod?.paymentTier ?? l10n.none,
-                                ),
-                                style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.white.withValues(alpha: 0.8),
-                                  fontSize: 11.sp,
-                                ),
-                              );
-                            },
+                          Text(
+                            'Payment Tier: ${accessPeriod?.paymentTier ?? 'None'}',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.white.withValues(alpha: 0.8),
+                              fontSize: 11.sp,
+                            ),
                           ),
                         ],
                       ],
@@ -668,37 +967,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ],
 
           SizedBox(height: 16.h),
-          Builder(
-            builder: (context) {
-              final l10n = AppLocalizations.of(context)!;
-              return CustomButton(
-                text: isAdmin
-                    ? l10n.managePlatform
-                    : (accessPeriod?.hasAccess == true &&
-                          (accessPeriod?.remainingDays ?? 0) > 0)
-                    ? l10n.startLearning
-                    : l10n.getAccessCode,
-                onPressed: () {
-                  if (isAdmin) {
-                    setState(() {
-                      _currentIndex = 1; // Switch to exams tab
-                    });
-                  } else if (accessPeriod?.hasAccess == true &&
-                      (accessPeriod?.remainingDays ?? 0) > 0) {
-                    setState(() {
-                      _currentIndex = 1; // Switch to exams tab
-                    });
-                  } else {
-                    // Show access code instructions
-                    //_showContactSupportDialog();
-                    _showPaymentInstructions();
-                  }
-                },
-                backgroundColor: AppColors.white,
-                textColor: AppColors.primary,
-                width: 150.w,
-              );
+          CustomButton(
+            text: isAdmin
+                ? 'Manage Platform'
+                : (accessPeriod?.hasAccess == true &&
+                      (accessPeriod?.remainingDays ?? 0) > 0)
+                ? 'Start Learning'
+                : 'Get Access Code',
+            onPressed: () {
+              if (isAdmin) {
+                setState(() {
+                  _currentIndex = 0; // Switch to exams tab (now first tab)
+                });
+              } else if (accessPeriod?.hasAccess == true &&
+                  (accessPeriod?.remainingDays ?? 0) > 0) {
+                setState(() {
+                  _currentIndex = 0; // Switch to exams tab (now first tab)
+                });
+              } else {
+                // Show access code instructions
+                //_showContactSupportDialog();
+                _showPaymentInstructions();
+              }
             },
+            backgroundColor: AppColors.white,
+            textColor: AppColors.primary,
+            width: 150.w,
           ),
         ],
       ),
@@ -725,12 +1019,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildAdminSection() {
-    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n.adminActions,
+          'Admin Actions',
           style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
         ),
         SizedBox(height: 16.h),
@@ -739,8 +1032,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           children: [
             Expanded(
               child: _buildAdminActionCard(
-                l10n.userManagement,
-                l10n.viewSearchManageAllUsers,
+                'Manage Users',
+                'View, search, and manage all users',
                 Icons.people,
                 AppColors.primary,
                 () => Navigator.push(
@@ -754,13 +1047,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             SizedBox(width: 12.w),
             Expanded(
               child: _buildAdminActionCard(
-                l10n.manageExams,
-                l10n.createEditManageExams,
+                'Manage Exams',
+                'Create, edit, and manage exams',
                 Icons.quiz,
                 AppColors.success,
                 () {
                   setState(() {
-                    _currentIndex = 1; // Switch to exams tab
+                    _currentIndex = 0; // Switch to exams tab (now first tab)
                   });
                 },
               ),
@@ -773,43 +1066,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         Row(
           children: [
             Expanded(
-              child: Builder(
-                builder: (context) {
-                  final l10n = AppLocalizations.of(context)!;
-                  return _buildAdminActionCard(
-                    l10n.accessCodes,
-                    l10n.manageAccessCodesAndPayments,
-                    Icons.vpn_key,
-                    AppColors.warning,
-                    () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            const AccessCodeManagementScreen(),
-                      ),
-                    ),
-                  );
-                },
+              child: _buildAdminActionCard(
+                'Access Codes',
+                'Manage access codes and payments',
+                Icons.vpn_key,
+                AppColors.warning,
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AccessCodeManagementScreen(),
+                  ),
+                ),
               ),
             ),
             SizedBox(width: 12.w),
             Expanded(
-              child: Builder(
-                builder: (context) {
-                  final l10n = AppLocalizations.of(context)!;
-                  return _buildAdminActionCard(
-                    l10n.courseManagement,
-                    l10n.createEditAndManageCourses,
-                    Icons.school,
-                    AppColors.secondary,
-                    () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const CourseManagementScreen(),
-                      ),
-                    ),
-                  );
-                },
+              child: _buildAdminActionCard(
+                'Manage Courses',
+                'Create, edit, and manage courses',
+                Icons.school,
+                AppColors.secondary,
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CourseManagementScreen(),
+                  ),
+                ),
               ),
             ),
           ],
@@ -824,14 +1106,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Builder(
-          builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
-            return Text(
-              l10n.quickStats,
-              style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
-            );
-          },
+        Text(
+          'Quick Stats',
+          style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
         ),
         SizedBox(height: 16.h),
 
@@ -840,30 +1117,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Row(
             children: [
               Expanded(
-                child: Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return _buildStatCard(
-                      l10n.totalUsers,
-                      '$_totalUsers',
-                      Icons.people,
-                      AppColors.primary,
-                    );
-                  },
+                child: _buildStatCard(
+                  'Total Users',
+                  '$_totalUsers',
+                  Icons.people,
+                  AppColors.primary,
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return _buildStatCard(
-                      l10n.totalExams,
-                      '$_totalExams',
-                      Icons.quiz,
-                      AppColors.success,
-                    );
-                  },
+                child: _buildStatCard(
+                  'Total Exams',
+                  '$_totalExams',
+                  Icons.quiz,
+                  AppColors.success,
                 ),
               ),
             ],
@@ -872,30 +1139,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Row(
             children: [
               Expanded(
-                child: Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return _buildStatCard(
-                      l10n.totalAttempts,
-                      '$_totalExamResults',
-                      Icons.analytics,
-                      AppColors.warning,
-                    );
-                  },
+                child: _buildStatCard(
+                  'Total Attempts',
+                  '$_totalExamResults',
+                  Icons.analytics,
+                  AppColors.warning,
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return _buildStatCard(
-                      l10n.avgScore,
-                      '${_averageScore.toStringAsFixed(1)}%',
-                      Icons.trending_up,
-                      AppColors.secondary,
-                    );
-                  },
+                child: _buildStatCard(
+                  'Avg Score',
+                  '${_averageScore.toStringAsFixed(1)}%',
+                  Icons.trending_up,
+                  AppColors.secondary,
                 ),
               ),
             ],
@@ -905,30 +1162,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Row(
             children: [
               Expanded(
-                child: Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return _buildStatCard(
-                      l10n.examsTaken,
-                      '$_totalExamsTaken',
-                      Icons.quiz,
-                      AppColors.primary,
-                    );
-                  },
+                child: _buildStatCard(
+                  'Exams Taken',
+                  '$_totalExamsTaken',
+                  Icons.quiz,
+                  AppColors.primary,
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return _buildStatCard(
-                      l10n.averageScore,
-                      '${_averageScore.toStringAsFixed(1)}%',
-                      Icons.trending_up,
-                      AppColors.success,
-                    );
-                  },
+                child: _buildStatCard(
+                  'Average Score',
+                  '${_averageScore.toStringAsFixed(1)}%',
+                  Icons.trending_up,
+                  AppColors.success,
                 ),
               ),
             ],
@@ -937,30 +1184,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Row(
             children: [
               Expanded(
-                child: Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return _buildStatCard(
-                      l10n.studyStreak,
-                      l10n.studyStreakDays(_studyStreak),
-                      Icons.local_fire_department,
-                      AppColors.warning,
-                    );
-                  },
+                child: _buildStatCard(
+                  'Study Streak',
+                  '$_studyStreak days',
+                  Icons.local_fire_department,
+                  AppColors.warning,
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return _buildStatCard(
-                      l10n.achievements,
-                      '$_achievements',
-                      Icons.emoji_events,
-                      AppColors.secondary,
-                    );
-                  },
+                child: _buildStatCard(
+                  'Achievements',
+                  '$_achievements',
+                  Icons.emoji_events,
+                  AppColors.secondary,
                 ),
               ),
             ],
@@ -998,6 +1235,115 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       examsByType.putIfAbsent(type, () => []).add(exam);
     }
 
+    // If no exams loaded, try to load cached exam counts
+    if (examsByType.isEmpty) {
+      return FutureBuilder<Map<String, int>?>(
+        future: _loadCachedExamCounts(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+            final cachedCounts = snapshot.data!;
+            // Create exam type cards from cached counts
+            final orderedTypes = ['kinyarwanda', 'english', 'french'];
+            final availableTypes = orderedTypes
+                .where((type) => cachedCounts.containsKey(type))
+                .toList();
+
+            if (availableTypes.isEmpty) {
+              return Container(
+                padding: EdgeInsets.all(20.w),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(16.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.quiz_outlined,
+                      size: 48.sp,
+                      color: AppColors.grey400,
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      'No exams available',
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.grey600,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Available Exams',
+                  style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+                ),
+                SizedBox(height: 16.h),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 1.6,
+                    crossAxisSpacing: 12.w,
+                    mainAxisSpacing: 12.h,
+                  ),
+                  itemCount: availableTypes.length,
+                  itemBuilder: (context, index) {
+                    final type = availableTypes[index];
+                    final count = cachedCounts[type] ?? 0;
+                    return _buildExamTypeCard(type, [], cachedCount: count);
+                  },
+                ),
+              ],
+            );
+          }
+
+          // No cached data either
+          return Container(
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.quiz_outlined,
+                  size: 48.sp,
+                  color: AppColors.grey400,
+                ),
+                SizedBox(height: 16.h),
+                Text(
+                  'No exams available',
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: AppColors.grey600,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
     // Order: kinyarwanda, english, french
     final orderedTypes = ['kinyarwanda', 'english', 'french'];
     final availableTypes = orderedTypes
@@ -1022,16 +1368,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           children: [
             Icon(Icons.quiz_outlined, size: 48.sp, color: AppColors.grey400),
             SizedBox(height: 16.h),
-            Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
-                return Text(
-                  l10n.noExamsAvailable,
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.grey600,
-                  ),
-                );
-              },
+            Text(
+              'No exams available',
+              style: AppTextStyles.bodyLarge.copyWith(color: AppColors.grey600),
             ),
           ],
         ),
@@ -1041,14 +1380,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Builder(
-          builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
-            return Text(
-              l10n.availableExams,
-              style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
-            );
-          },
+        Text(
+          'Available Exams',
+          style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
         ),
         SizedBox(height: 16.h),
         // Show exam type cards in a grid
@@ -1064,8 +1398,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           itemCount: availableTypes.length,
           itemBuilder: (context, index) {
             final type = availableTypes[index];
-            final exams = examsByType[type]!;
-            return _buildExamTypeCard(type, exams);
+            final exams = examsByType[type] ?? [];
+            return FutureBuilder<Map<String, int>?>(
+              future: _loadCachedExamCounts(),
+              builder: (context, snapshot) {
+                final cachedCount = snapshot.data?[type];
+                return _buildExamTypeCard(
+                  type,
+                  exams,
+                  cachedCount: cachedCount,
+                );
+              },
+            );
           },
         ),
       ],
@@ -1081,17 +1425,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
-                return Text(
-                  l10n.courses,
-                  style: AppTextStyles.heading3.copyWith(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                );
-              },
+            Text(
+              'Courses',
+              style: AppTextStyles.heading3.copyWith(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             InkWell(
               onTap: () {
@@ -1102,28 +1441,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ),
                 );
               },
-              child: Builder(
-                builder: (context) {
-                  final l10n = AppLocalizations.of(context)!;
-                  return Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 6.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Text(
-                      l10n.viewAll,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.white,
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  );
-                },
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Text(
+                  'View All',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.white,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ],
@@ -1132,23 +1463,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         SizedBox(height: 16.h),
         if (courseState.isLoading)
           const Center(child: CircularProgressIndicator())
-        else if (courseState.error != null)
+        else if (courseState.error != null && courseState.courses.isEmpty)
+          // Only show error if we have no cached courses
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
               color: AppColors.white,
               borderRadius: BorderRadius.circular(16.r),
             ),
-            child: Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
-                return Text(
-                  l10n.errorLoadingCourses(courseState.error ?? ''),
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.error,
-                  ),
-                );
-              },
+            child: Text(
+              'Error loading courses: ${courseState.error}',
+              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
             ),
           )
         else if (courseState.courses.isEmpty)
@@ -1166,16 +1491,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   color: AppColors.grey400,
                 ),
                 SizedBox(height: 16.h),
-                Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return Text(
-                      l10n.noCoursesAvailable,
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        color: AppColors.grey600,
-                      ),
-                    );
-                  },
+                Text(
+                  'No courses available',
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: AppColors.grey600,
+                  ),
                 ),
               ],
             ),
@@ -1333,7 +1653,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildExamTypeCard(String examType, List<Exam> exams) {
+  Future<Map<String, int>?> _loadCachedExamCounts() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final examCountsJson = prefs.getString(_cacheKeyExamCountsByType);
+      if (examCountsJson == null) return null;
+
+      final examCounts = jsonDecode(examCountsJson) as Map<String, dynamic>;
+      return examCounts.map((key, value) => MapEntry(key, value as int));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Widget _buildExamTypeCard(
+    String examType,
+    List<Exam> exams, {
+    int? cachedCount,
+  }) {
     // Get display name and icon for each exam type
     String displayName;
     IconData icon;
@@ -1418,7 +1755,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ),
                     SizedBox(height: 2.h),
                     Text(
-                      '${exams.length} ${exams.length == 1 ? AppLocalizations.of(context)!.exam : AppLocalizations.of(context)!.exams}',
+                      '${cachedCount ?? exams.length} ${(cachedCount ?? exams.length) == 1 ? 'Exam' : 'Exams'}',
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.grey600,
                         fontSize: 12.sp,
@@ -1436,7 +1773,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildRecentActivity(User? user) {
-    final l10n = AppLocalizations.of(context)!;
     final isAdmin = user?.role == 'ADMIN';
     final recentResults = _examResults.take(5).toList();
 
@@ -1444,7 +1780,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n.recentActivity,
+          isAdmin ? 'Recent Activity' : 'Recent Activity',
           style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
         ),
         SizedBox(height: 16.h),
@@ -1469,7 +1805,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 Icon(Icons.history, size: 48.sp, color: AppColors.grey400),
                 SizedBox(height: 16.h),
                 Text(
-                  l10n.noRecentActivity,
+                  'No recent activity',
                   style: AppTextStyles.bodyLarge.copyWith(
                     color: AppColors.grey600,
                   ),
@@ -1477,8 +1813,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 SizedBox(height: 8.h),
                 Text(
                   isAdmin
-                      ? l10n.noExamAttemptsRecorded
-                      : l10n.startTakingExamsToSeeProgress,
+                      ? 'No exam attempts recorded yet'
+                      : 'Start taking exams to see your progress here',
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.grey500,
                   ),
@@ -1665,7 +2001,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildExamsTab() {
-    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final isAdmin = user?.role == 'ADMIN';
@@ -1678,7 +2013,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildProgressTab() {
-    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final isUser = user?.role == 'USER';
@@ -1690,14 +2024,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildProfileTab() {
-    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
     //disble back button when user are on dashboard screen
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.profile),
+        title: const Text('Profile'),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
       ),
@@ -1733,12 +2066,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    user?.fullName ?? l10n.user,
+                    user?.fullName ?? 'User',
                     style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
                   ),
                   SizedBox(height: 4.h),
                   Text(
-                    user?.phoneNumber ?? l10n.noPhoneNumber,
+                    user?.phoneNumber ?? 'No phone number',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey600,
                     ),
@@ -1769,8 +2102,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
             // Settings Options
             _buildSettingsOption(
-              l10n.viewProfile,
-              l10n.viewAndManageProfileInfo,
+              'View Profile',
+              'View and manage your profile information',
               Icons.person_outline,
               () {
                 Navigator.pushNamed(context, '/view-profile');
@@ -1778,8 +2111,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             _buildSettingsOption(
-              l10n.notifications,
-              l10n.manageNotificationPreferences,
+              'Notifications',
+              'Manage your notification preferences',
               Icons.notifications,
               () {
                 Navigator.pushNamed(context, '/notifications');
@@ -1787,8 +2120,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             _buildSettingsOption(
-              l10n.studyReminders,
-              l10n.setUpStudyReminders,
+              'Study Reminders',
+              'Set up study reminders',
               Icons.schedule,
               () {
                 Navigator.pushNamed(context, '/study-reminders');
@@ -1796,8 +2129,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             _buildSettingsOption(
-              l10n.aboutApp,
-              l10n.learnMoreAboutApp,
+              'About App',
+              'Learn more about this application',
               Icons.info_outline,
               () {
                 Navigator.pushNamed(context, '/about-app');
@@ -1805,8 +2138,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             _buildSettingsOption(
-              l10n.privacyPolicy,
-              l10n.readPrivacyPolicy,
+              'Privacy Policy',
+              'Read our privacy policy',
               Icons.privacy_tip_outlined,
               () {
                 Navigator.pushNamed(context, '/privacy-policy');
@@ -1814,8 +2147,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             _buildSettingsOption(
-              l10n.termsConditions,
-              l10n.readTermsConditions,
+              'Terms & Conditions',
+              'Read our terms and conditions',
               Icons.description_outlined,
               () {
                 Navigator.pushNamed(context, '/terms-conditions');
@@ -1823,8 +2156,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             _buildSettingsOption(
-              l10n.helpSupport,
-              l10n.getHelpAndContactSupport,
+              'Share App',
+              'Share this app with friends and family',
+              Icons.share,
+              () {
+                _shareApp();
+              },
+            ),
+
+            _buildSettingsOption(
+              'Help & Support',
+              'Get help and contact support',
               Icons.help,
               () {
                 Navigator.pushNamed(context, '/help-support');
@@ -1832,8 +2174,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             _buildSettingsOption(
-              l10n.deleteAccount,
-              l10n.permanentlyDeleteAccount,
+              'Delete Account',
+              'Permanently delete your account',
               Icons.delete_forever,
               () {
                 Navigator.pushNamed(context, '/delete-account');
@@ -1845,9 +2187,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
             // Logout Button
             CustomButton(
-              text: l10n.logout,
+              text: 'Logout',
               onPressed: () async {
-                await ref.read(authProvider.notifier).logout();
+                // Show confirmation dialog
+                final shouldLogout = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Row(
+                      children: [
+                        Icon(Icons.logout, color: AppColors.error, size: 24.sp),
+                        SizedBox(width: 8.w),
+                        const Text('Logout'),
+                      ],
+                    ),
+                    content: const Text(
+                      'Are you sure you want to logout?',
+                      style: AppTextStyles.bodyMedium,
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                          foregroundColor: AppColors.white,
+                        ),
+                        child: const Text('Logout'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (shouldLogout == true && mounted) {
+                  // Perform logout
+                  await ref.read(authProvider.notifier).logout();
+
+                  // Navigate to login screen explicitly
+                  if (mounted) {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/login',
+                      (route) => false, // Remove all previous routes
+                    );
+                  }
+                }
               },
               backgroundColor: AppColors.error,
               width: double.infinity,
@@ -1856,6 +2242,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _shareApp() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      final appName = packageInfo.appName;
+      final version = packageInfo.version;
+      final buildNumber = packageInfo.buildNumber;
+      const playStoreLink =
+          'https://play.google.com/store/apps/details?id=com.trafficrules.master';
+      final shareText =
+          '''
+🚗 Rwanda Traffic Rule 🇷🇼 - Master Your Driving Test!
+
+Download the best app to prepare for your provisional driving license exam.
+
+📱 App: $appName
+📦 Version: $version ($buildNumber)
+
+✨ Features:
+• Interactive practice tests
+• Comprehensive study materials
+• Road signs and traffic rules
+• Progress tracking
+• Available in English, Kinyarwanda, and French
+
+📥 Download now:
+$playStoreLink
+
+Start your journey to becoming a safe driver!
+#TrafficRules #DrivingTest #LearnToDrive
+''';
+      await Share.share(
+        shareText,
+        subject: 'Rwanda Traffic Rule 🇷🇼 - Driving Test Preparation App',
+      );
+    } catch (e) {
+      debugPrint('Error sharing app: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to share app: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildSettingsOption(

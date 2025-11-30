@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
-import '../../l10n/app_localizations.dart';
 
 class TermsConditionsScreen extends StatelessWidget {
   const TermsConditionsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.termsConditions),
+        title: const Text('Terms & Conditions'),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
       ),
@@ -39,12 +37,12 @@ class TermsConditionsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.termsConditions,
+                    'Terms & Conditions',
                     style: AppTextStyles.heading2.copyWith(fontSize: 24.sp),
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    l10n.lastUpdated('November 2025'),
+                    'Last updated: November 2025',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey600,
                     ),
@@ -74,68 +72,109 @@ class TermsConditionsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSection(
-                    l10n.termsSection1Title,
-                    l10n.termsSection1Content,
+                    '1. Acceptance of Terms',
+                    'By downloading, installing, or using the Rwanda Traffic Rule 🇷🇼 mobile application, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our app.',
                   ),
 
                   _buildSection(
-                    l10n.termsSection2Title,
-                    l10n.termsSection2Content,
+                    '2. Description of Service',
+                    'Rwanda Traffic Rule 🇷🇼 is an educational mobile application that provides:\n\n'
+                        '• Interactive traffic rules quizzes and practice exams\n\n'
+                        '• Progress tracking and performance analytics\n\n'
+                        '• Educational content about traffic regulations\n\n'
+                        '• Offline study capabilities\n\n'
+                        '• Achievement and progress tracking features',
                   ),
 
                   _buildSection(
-                    l10n.termsSection3Title,
-                    l10n.termsSection3Content,
+                    '3. User Accounts',
+                    'To use our app, you must:\n\n'
+                        '• Provide accurate and complete information during registration\n\n'
+                        '• Maintain the security of your account\n\n'
+                        '• Be responsible for all activities under your account\n\n'
+                        '• Notify us immediately of any unauthorized use\n\n'
+                        '• Be at least 13 years old to create an account',
                   ),
 
                   _buildSection(
-                    l10n.termsSection4Title,
-                    l10n.termsSection4Content,
+                    '4. Acceptable Use',
+                    'You agree to use our app only for lawful purposes and in accordance with these terms. You may not:\n\n'
+                        '• Use the app for any illegal or unauthorized purpose\n\n'
+                        '• Attempt to gain unauthorized access to our systems\n\n'
+                        '• Interfere with or disrupt the app\'s functionality\n\n'
+                        '• Share your account credentials with others\n\n'
+                        '• Use automated systems to access the app\n\n'
+                        '• Reverse engineer or attempt to extract source code',
                   ),
 
                   _buildSection(
-                    l10n.termsSection5Title,
-                    l10n.termsSection5Content,
+                    '5. Educational Content',
+                    'The content provided in our app is for educational purposes only. While we strive for accuracy:\n\n'
+                        '• Information may not reflect the most current traffic laws\n\n'
+                        '• Local regulations may vary and take precedence\n\n'
+                        '• Users should verify information with official sources\n\n'
+                        '• We are not responsible for decisions made based on app content',
                   ),
 
                   _buildSection(
-                    l10n.termsSection6Title,
-                    l10n.termsSection6Content,
+                    '6. Intellectual Property',
+                    'All content, features, and functionality of the app are owned by us and are protected by copyright, trademark, and other intellectual property laws. You may not:\n\n'
+                        '• Copy, modify, or distribute our content\n\n'
+                        '• Use our trademarks without permission\n\n'
+                        '• Create derivative works based on our app\n\n'
+                        '• Remove or alter copyright notices',
                   ),
 
                   _buildSection(
-                    l10n.termsSection7Title,
-                    l10n.termsSection7Content,
+                    '7. Privacy and Data Protection',
+                    'Your privacy is important to us. Our collection and use of personal information is governed by our Privacy Policy, which is incorporated into these terms by reference.',
                   ),
 
                   _buildSection(
-                    l10n.termsSection8Title,
-                    l10n.termsSection8Content,
+                    '8. Disclaimers and Limitations',
+                    'THE APP IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND. WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:\n\n'
+                        '• WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\n\n'
+                        '• WARRANTIES OF NON-INFRINGEMENT\n\n'
+                        '• WARRANTIES THAT THE APP WILL BE UNINTERRUPTED OR ERROR-FREE\n\n'
+                        '• WARRANTIES REGARDING THE ACCURACY OR RELIABILITY OF CONTENT',
                   ),
 
                   _buildSection(
-                    l10n.termsSection9Title,
-                    l10n.termsSection9Content,
+                    '9. Limitation of Liability',
+                    'TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO:\n\n'
+                        '• LOSS OF PROFITS, DATA, OR USE\n\n'
+                        '• BUSINESS INTERRUPTION\n\n'
+                        '• PERSONAL INJURY OR PROPERTY DAMAGE\n\n'
+                        '• DAMAGES RESULTING FROM USE OR INABILITY TO USE THE APP',
                   ),
 
                   _buildSection(
-                    l10n.termsSection10Title,
-                    l10n.termsSection10Content,
+                    '10. Termination',
+                    'We may terminate or suspend your account at any time for:\n\n'
+                        '• Violation of these terms\n\n'
+                        '• Fraudulent or illegal activity\n\n'
+                        '• Extended periods of inactivity\n\n'
+                        '• At our sole discretion\n\n'
+                        'You may also terminate your account at any time by contacting us.',
                   ),
 
                   _buildSection(
-                    l10n.termsSection11Title,
-                    l10n.termsSection11Content,
+                    '11. Changes to Terms',
+                    'We reserve the right to modify these terms at any time. Changes will be effective immediately upon posting. Your continued use of the app constitutes acceptance of the modified terms.',
                   ),
 
                   _buildSection(
-                    l10n.termsSection12Title,
-                    l10n.termsSection12Content,
+                    '12. Governing Law',
+                    'These terms are governed by and construed in accordance with the laws of Rwanda, without regard to conflict of law principles.',
                   ),
 
                   _buildSection(
-                    l10n.termsSection13Title,
-                    l10n.termsSection13Content,
+                    '13. Contact Information',
+                    'If you have any questions about these Terms and Conditions, please contact us at:\n\n'
+                        'Email: engineers.devs@gmail.com\n\n'
+                        'Phone: +250788659575\n\n'
+                        'WhatsApp: +250788659575\n\n'
+                        'Live Chat: Available 24/7',
                   ),
                 ],
               ),

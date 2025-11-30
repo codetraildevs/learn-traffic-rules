@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:learn_traffic_rules/core/theme/app_theme.dart';
 import '../../models/exam_result_model.dart';
 import '../../models/exam_model.dart';
-import '../../l10n/app_localizations.dart';
 import 'exam_taking_screen.dart';
 import 'available_exams_screen.dart';
 
@@ -55,12 +54,11 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: Text(
-          l10n.resultOfExam(widget.exam.title),
+          'Result of ${widget.exam.title}',
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
@@ -99,13 +97,13 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
 
           // Action Buttons
           _buildActionButtons(),
+          SizedBox(height: 30.h),
         ],
       ),
     );
   }
 
   Widget _buildScoreOverview() {
-    final l10n = AppLocalizations.of(context)!;
     final score = widget.examResult.score;
     final isPassed = widget.examResult.passed;
     final passingScore = widget.exam.passingScore;
@@ -161,7 +159,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
                   ),
                 ),
                 Text(
-                  isPassed ? l10n.passed : l10n.failed,
+                  isPassed ? 'PASSED' : 'FAILED',
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w600,
@@ -179,18 +177,18 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildScoreDetail(
-                label: l10n.correct,
+                label: 'Correct',
                 value: '${widget.examResult.correctAnswers}',
                 color: const Color(0xFF4CAF50),
               ),
               _buildScoreDetail(
-                label: l10n.incorrect,
+                label: 'Incorrect',
                 value:
                     '${widget.examResult.totalQuestions - widget.examResult.correctAnswers}',
                 color: const Color(0xFFFF5722),
               ),
               _buildScoreDetail(
-                label: l10n.passingScore(passingScore),
+                label: 'Passing Score',
                 value: '$passingScore%',
                 color: const Color(0xFF2196F3),
               ),
@@ -230,7 +228,6 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
   }
 
   Widget _buildDetailedResults() {
-    final l10n = AppLocalizations.of(context)!;
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(20.w),
@@ -249,7 +246,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.examSummary,
+            'Exam Summary',
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
@@ -260,37 +257,37 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
 
           _buildResultRow(
             icon: Icons.quiz,
-            label: l10n.totalQuestions,
+            label: 'Total Questions',
             value: '${widget.examResult.totalQuestions}',
           ),
           _buildResultRow(
             icon: Icons.check_circle,
-            label: l10n.correctAnswers,
+            label: 'Correct Answers',
             value: '${widget.examResult.correctAnswers}',
             color: const Color(0xFF4CAF50),
           ),
           _buildResultRow(
             icon: Icons.cancel,
-            label: l10n.incorrectAnswers,
+            label: 'Incorrect Answers',
             value:
                 '${widget.examResult.totalQuestions - widget.examResult.correctAnswers}',
             color: const Color(0xFFFF5722),
           ),
           _buildResultRow(
             icon: Icons.timer,
-            label: l10n.timeSpent,
+            label: 'Time Spent',
             value: _formatTime(widget.examResult.timeSpent),
           ),
           _buildResultRow(
             icon: Icons.schedule,
-            label: l10n.completedAt,
+            label: 'Completed At',
             value: _formatDateTime(widget.examResult.submittedAt),
           ),
           if (widget.isFreeExam)
             _buildResultRow(
               icon: Icons.free_breakfast,
-              label: l10n.examType,
-              value: l10n.freeExam,
+              label: 'Exam Type',
+              value: 'Free Exam',
               color: const Color(0xFF2196F3),
             ),
         ],
@@ -334,30 +331,29 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
   }
 
   Widget _buildActionButtons() {
-    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         // Check Answers Button
-        SizedBox(
-          width: double.infinity,
-          height: 50.h,
-          child: ElevatedButton.icon(
-            onPressed: _showDetailedAnswers,
-            icon: Icon(Icons.quiz, size: 20.w),
-            label: Text(
-              l10n.checkAnswers,
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              elevation: 4,
-            ),
-          ),
-        ),
+        // SizedBox(
+        //   width: double.infinity,
+        //   height: 50.h,
+        //   child: ElevatedButton.icon(
+        //     onPressed: _showDetailedAnswers,
+        //     icon: Icon(Icons.quiz, size: 20.w),
+        //     label: Text(
+        //       'Check Answers',
+        //       style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+        //     ),
+        //     style: ElevatedButton.styleFrom(
+        //       backgroundColor: AppColors.primary,
+        //       foregroundColor: Colors.white,
+        //       shape: RoundedRectangleBorder(
+        //         borderRadius: BorderRadius.circular(12.r),
+        //       ),
+        //       elevation: 4,
+        //     ),
+        //   ),
+        // ),
         SizedBox(height: 12.h),
 
         // Retake Button
@@ -368,7 +364,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
             onPressed: _retakeExam,
             icon: Icon(Icons.refresh, size: 20.w),
             label: Text(
-              l10n.retakeExam,
+              'Retake Exam',
               style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
             ),
             style: ElevatedButton.styleFrom(
@@ -391,7 +387,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
             onPressed: _backToExams,
             icon: Icon(Icons.list, size: 20.w),
             label: Text(
-              l10n.backToExams,
+              'Back to Exams',
               style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
             ),
             style: OutlinedButton.styleFrom(
@@ -611,85 +607,70 @@ class _SecureDetailedAnswersModalState
             ),
 
             // Header with security warning
-            Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
-                return Padding(
-                  padding: EdgeInsets.all(20.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            Padding(
+              padding: EdgeInsets.all(20.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Icon(
-                            Icons.security,
-                            color: Colors.red[600],
-                            size: 20.w,
-                          ),
-                          SizedBox(width: 8.w),
-                          Text(
-                            l10n.secureView,
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red[600],
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-
-                          IconButton(
-                            onPressed: () => Navigator.pop(context),
-                            icon: Icon(Icons.close, color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-
-                      SizedBox(height: 12.h),
+                      Icon(Icons.security, color: Colors.red[600], size: 20.w),
+                      SizedBox(width: 8.w),
                       Text(
-                        l10n.detailedAnswersFor(
-                          widget.examResult.exam?.title ?? l10n.exam,
-                        ),
+                        'SECURE VIEW',
                         style: TextStyle(
-                          fontSize: 18.sp,
+                          fontSize: 12.sp,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey[800],
+                          color: Colors.red[600],
+                          letterSpacing: 1.0,
                         ),
                       ),
-                      SizedBox(height: 8.h),
 
-                      Container(
-                        padding: EdgeInsets.all(12.w),
-                        decoration: BoxDecoration(
-                          color: Colors.red[50],
-                          borderRadius: BorderRadius.circular(8.r),
-                          border: Border.all(color: Colors.red[200]!),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.warning,
-                              color: Colors.red[600],
-                              size: 16.w,
-                            ),
-                            SizedBox(width: 8.w),
-                            Expanded(
-                              child: Text(
-                                l10n.screenshotsDisabledToProtectAnswerIntegrity,
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: Colors.red[700],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(Icons.close, color: Colors.grey[600]),
                       ),
                     ],
                   ),
-                );
-              },
+
+                  SizedBox(height: 12.h),
+                  Text(
+                    'Detailed Answers for ${widget.examResult.exam?.title ?? 'Exam'}',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: Colors.red[50],
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(color: Colors.red[200]!),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.warning, color: Colors.red[600], size: 16.w),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            'Screenshots are disabled to protect answer integrity',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: Colors.red[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
 
             // Content
@@ -719,7 +700,6 @@ class _SecureDetailedAnswersModalState
   }
 
   Widget _buildSecureNoResultsView() {
-    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: EdgeInsets.all(40.w),
@@ -729,7 +709,7 @@ class _SecureDetailedAnswersModalState
             Icon(Icons.quiz_outlined, size: 64.w, color: Colors.grey[400]),
             SizedBox(height: 16.h),
             Text(
-              l10n.noDetailedResultsAvailable,
+              'No Detailed Results Available',
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -738,7 +718,7 @@ class _SecureDetailedAnswersModalState
             ),
             SizedBox(height: 8.h),
             Text(
-              l10n.questionByQuestionResultsNotAvailable,
+              'Question-by-question results are not available for this exam.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
             ),
@@ -746,7 +726,7 @@ class _SecureDetailedAnswersModalState
             ElevatedButton.icon(
               onPressed: () => Navigator.pop(context),
               icon: Icon(Icons.close, size: 20.w),
-              label: Text(l10n.close),
+              label: const Text('Close'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey[600],
                 foregroundColor: Colors.white,
@@ -766,7 +746,6 @@ class _SecureDetailedAnswersModalState
     QuestionResult questionResult,
     int questionNumber,
   ) {
-    final l10n = AppLocalizations.of(context)!;
     final isCorrect = questionResult.isCorrect;
 
     return Container(
@@ -795,7 +774,7 @@ class _SecureDetailedAnswersModalState
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
-                  l10n.questionNumber(questionNumber),
+                  'Q$questionNumber',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 12.sp,
@@ -811,7 +790,7 @@ class _SecureDetailedAnswersModalState
               ),
               SizedBox(width: 8.w),
               Text(
-                isCorrect ? l10n.correct : l10n.incorrect,
+                isCorrect ? 'Correct' : 'Incorrect',
                 style: TextStyle(
                   color: isCorrect ? Colors.green : Colors.red,
                   fontSize: 14.sp,
@@ -820,7 +799,7 @@ class _SecureDetailedAnswersModalState
               ),
               const Spacer(),
               Text(
-                '${questionResult.points} ${questionResult.points > 1 ? l10n.points : l10n.point}',
+                '${questionResult.points} point${questionResult.points > 1 ? 's' : ''}',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12.sp,
@@ -847,7 +826,7 @@ class _SecureDetailedAnswersModalState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.questionLabel,
+                    'Question:',
                     style: TextStyle(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.bold,
@@ -886,7 +865,7 @@ class _SecureDetailedAnswersModalState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.optionsLabel,
+                    'Options:',
                     style: TextStyle(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.bold,

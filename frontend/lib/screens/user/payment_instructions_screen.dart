@@ -11,7 +11,6 @@ import '../../services/user_management_service.dart';
 import '../../services/network_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/loading_widget.dart';
-import '../../l10n/app_localizations.dart';
 
 class PaymentInstructionsScreen extends StatefulWidget {
   final PaymentInstructions? cachedInstructions;
@@ -85,9 +84,8 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           _isLoading = false;
         });
       } else {
-        final l10n = AppLocalizations.of(context)!;
         setState(() {
-          _error = '${l10n.failedToLoadPaymentInstructions}: $e';
+          _error = 'Failed to load payment instructions: $e';
           _isLoading = false;
         });
       }
@@ -128,9 +126,8 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
       debugPrint('🔍 Error loading from API: $e');
       // Don't show error if we have offline data
       if (_paymentData == null && _error == null) {
-        final l10n = AppLocalizations.of(context)!;
         setState(() {
-          _error = '${l10n.failedToLoadPaymentInstructions}: $e';
+          _error = 'Failed to load payment instructions: $e';
           _isLoading = false;
         });
       }
@@ -183,11 +180,10 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          l10n.paymentPlans,
+          'Payment Plans',
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
@@ -207,7 +203,6 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildErrorWidget() {
-    final l10n = AppLocalizations.of(context)!;
     // Check if error is due to no internet
     final isNetworkError =
         _error != null &&
@@ -230,8 +225,8 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
             SizedBox(height: 16.h),
             Text(
               isNetworkError
-                  ? l10n.noInternetConnection
-                  : l10n.errorLoadingPaymentPlans,
+                  ? 'No Internet Connection'
+                  : 'Error Loading Payment Plans',
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -241,14 +236,14 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
             SizedBox(height: 8.h),
             Text(
               isNetworkError
-                  ? l10n.paymentInstructionsNotAvailableOffline
-                  : _error ?? l10n.unknownErrorOccurred,
+                  ? 'Payment instructions are not available offline. Please connect to the internet to view payment plans.'
+                  : _error ?? 'Unknown error occurred',
               style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 24.h),
             CustomButton(
-              text: l10n.retry,
+              text: 'Retry',
               onPressed: _loadPaymentInstructions,
               width: 120.w,
             ),
@@ -267,13 +262,11 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          _buildHeader(),
-
+          //_buildHeader(),
           SizedBox(height: 8.h),
 
           // Quick Access to Free Exams
-          _buildQuickAccessSection(),
-
+          // _buildQuickAccessSection(),
           SizedBox(height: 8.h),
 
           // Simplified Payment Steps
@@ -288,162 +281,162 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
 
           // Contact Admin
           _buildContactInfo(),
+          SizedBox(height: 40.h),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: EdgeInsets.all(8.w),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primary, AppColors.secondary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(8.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.star, color: Colors.white, size: 18.w),
-              SizedBox(width: 4.w),
-              Expanded(
-                child: Text(
-                  _paymentData!.title,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              // Add a visible indicator that changes are applied
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-                decoration: BoxDecoration(
-                  color: Colors.orange,
-                  borderRadius: BorderRadius.circular(4.r),
-                ),
-                child: Text(
-                  l10n.optimized,
-                  style: TextStyle(
-                    fontSize: 8.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 4.h),
-          Text(
-            _paymentData!.description,
-            style: TextStyle(fontSize: 10.sp, color: Colors.white70),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildHeader() {
+  //   return Container(
+  //     padding: EdgeInsets.all(8.w),
+  //     decoration: BoxDecoration(
+  //       gradient: const LinearGradient(
+  //         colors: [AppColors.primary, AppColors.secondary],
+  //         begin: Alignment.topLeft,
+  //         end: Alignment.bottomRight,
+  //       ),
+  //       borderRadius: BorderRadius.circular(8.r),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: AppColors.primary.withValues(alpha: 0.1),
+  //           blurRadius: 4,
+  //           offset: const Offset(0, 2),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           children: [
+  //             Icon(Icons.star, color: Colors.white, size: 18.w),
+  //             SizedBox(width: 4.w),
+  //             // Expanded(
+  //             //   child: Text(
+  //             //     _paymentData!.title,
+  //             //     style: TextStyle(
+  //             //       fontSize: 14.sp,
+  //             //       fontWeight: FontWeight.bold,
+  //             //       color: Colors.white,
+  //             //     ),
+  //             //   ),
+  //             // ),
+  //             // Add a visible indicator that changes are applied
+  //             // Container(
+  //             //   padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+  //             //   decoration: BoxDecoration(
+  //             //     color: Colors.orange,
+  //             //     borderRadius: BorderRadius.circular(4.r),
+  //             //   ),
+  //             //   child: Text(
+  //             //     'OPTIMIZED',
+  //             //     style: TextStyle(
+  //             //       fontSize: 8.sp,
+  //             //       fontWeight: FontWeight.bold,
+  //             //       color: Colors.white,
+  //             //     ),
+  //             //   ),
+  //             // ),
+  //           ],
+  //         ),
+  //         SizedBox(height: 4.h),
+  //         Text(
+  //           _paymentData!.description,
+  //           style: TextStyle(fontSize: 10.sp, color: Colors.white70),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
-  Widget _buildQuickAccessSection() {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      padding: EdgeInsets.all(12.w),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primary, AppColors.secondary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(10.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.secondary.withValues(alpha: 0.15),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.school, color: Colors.white, size: 20.w),
-              SizedBox(width: 6.w),
-              Text(
-                l10n.startLearningNow,
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            l10n.youCanStartWithFreePracticeExams,
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: Colors.white70,
-              height: 1.2,
-            ),
-          ),
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    // Navigate to available exams
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AvailableExamsScreen(),
-                      ),
-                    );
-                  },
-                  icon: Icon(Icons.quiz, size: 14.w),
-                  label: Text(l10n.takeFreeExams),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF2196F3),
-                    padding: EdgeInsets.symmetric(vertical: 8.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6.r),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildQuickAccessSection() {
+  //   return Container(
+  //     padding: EdgeInsets.all(12.w),
+  //     decoration: BoxDecoration(
+  //       gradient: const LinearGradient(
+  //         colors: [AppColors.primary, AppColors.secondary],
+  //         begin: Alignment.topLeft,
+  //         end: Alignment.bottomRight,
+  //       ),
+  //       borderRadius: BorderRadius.circular(10.r),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: AppColors.secondary.withValues(alpha: 0.15),
+  //           blurRadius: 6,
+  //           offset: const Offset(0, 3),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           children: [
+  //             Icon(Icons.school, color: Colors.white, size: 20.w),
+  //             SizedBox(width: 6.w),
+  //             Text(
+  //               'Start Learning Now',
+  //               style: TextStyle(
+  //                 fontSize: 16.sp,
+  //                 fontWeight: FontWeight.bold,
+  //                 color: Colors.white,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         SizedBox(height: 8.h),
+  //         Text(
+  //           'You can start with FREE practice exams while you get your access code!',
+  //           style: TextStyle(
+  //             fontSize: 12.sp,
+  //             color: Colors.white70,
+  //             height: 1.2,
+  //           ),
+  //         ),
+  //         SizedBox(height: 12.h),
+  //         Row(
+  //           children: [
+  //             Expanded(
+  //               child: ElevatedButton.icon(
+  //                 onPressed: () {
+  //                   // Navigate to available exams
+  //                   Navigator.push(
+  //                     context,
+  //                     MaterialPageRoute(
+  //                       builder: (context) => const AvailableExamsScreen(),
+  //                     ),
+  //                   );
+  //                 },
+  //                 icon: Icon(Icons.quiz, size: 14.w),
+  //                 label: const Text('Take Free Exams'),
+  //                 style: ElevatedButton.styleFrom(
+  //                   backgroundColor: Colors.white,
+  //                   foregroundColor: const Color(0xFF2196F3),
+  //                   padding: EdgeInsets.symmetric(vertical: 8.h),
+  //                   shape: RoundedRectangleBorder(
+  //                     borderRadius: BorderRadius.circular(6.r),
+  //                   ),
+  //                 ),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildSimplifiedPaymentSteps() {
-    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n.howToGetFullAccess,
+          'How to Get Full Access',
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 16.sp,
+
             fontWeight: FontWeight.bold,
             color: Colors.grey[800],
           ),
@@ -451,22 +444,22 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         SizedBox(height: 8.h),
         _buildSimpleStepItem(
           '1',
-          l10n.chooseAPlan,
-          l10n.selectFromPlans,
+          'Choose a Plan',
+          'Select from 1 Month =31 days, 3 Months = 93 days, or 6 Months = 186 days',
           Icons.credit_card,
         ),
         SizedBox(height: 8.h),
         _buildSimpleStepItem(
           '2',
-          l10n.makePayment,
-          l10n.sendMoneyViaMoMo,
+          'Make Payment',
+          'Send money via MoMo using the payment code:329494  after selecting a plan by dialing *182*8*1*329494*FRW#',
           Icons.payment,
         ),
         SizedBox(height: 8.h),
         _buildSimpleStepItem(
           '3',
-          l10n.getAccessCode,
-          l10n.contactAdminForAccessCode,
+          'Get Access Code',
+          'Contact admin (Alexis:0788659575) or whatsapp (Alexis:0788659575) if exams access is not granted after payment in 5-10 minutes',
           Icons.vpn_key,
         ),
       ],
@@ -547,12 +540,11 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildPaymentTiers() {
-    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n.chooseYourPlan,
+          'Choose Your Plan',
           style: TextStyle(
             fontSize: 16.sp,
             fontWeight: FontWeight.bold,
@@ -569,7 +561,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           Padding(
             padding: EdgeInsets.all(16.w),
             child: Text(
-              l10n.noPaymentPlansAvailable,
+              'No payment plans available at the moment.',
               style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
@@ -579,7 +571,6 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildSimplePaymentTierCard(PaymentTier tier) {
-    final l10n = AppLocalizations.of(context)!;
     final isPopular = tier.amount == 1500; // 1 month plan
 
     return Container(
@@ -612,7 +603,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Text(
-                l10n.popular,
+                'POPULAR',
                 style: TextStyle(
                   fontSize: 10.sp,
                   fontWeight: FontWeight.bold,
@@ -654,7 +645,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                 borderRadius: BorderRadius.circular(6.r),
               ),
             ),
-            child: Text(l10n.select, style: TextStyle(fontSize: 12.sp)),
+            child: Text('Select', style: TextStyle(fontSize: 12.sp)),
           ),
         ],
       ),
@@ -662,7 +653,6 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildContactInfo() {
-    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -678,7 +668,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
               Icon(Icons.contact_phone, color: AppColors.secondary, size: 20.w),
               SizedBox(width: 6.w),
               Text(
-                l10n.contactAdmin,
+                'Contact Admin',
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
@@ -689,7 +679,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           ),
           SizedBox(height: 12.h),
           Text(
-            l10n.afterMakingPaymentContactAdmin,
+            'After making payment, contact admin (Alexis:0788659575) or whatsapp (Alexis:0788659575) to verify and get your access code:',
             style: TextStyle(
               fontSize: 12.sp,
               color: Colors.grey[700],
@@ -702,9 +692,12 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => _makeCall(_paymentData!.contactInfo.phone),
+                  onPressed: () {
+                    // Always use the correct phone number
+                    _makeCall('+250788659575');
+                  },
                   icon: Icon(Icons.phone, size: 16.w),
-                  label: Text(l10n.call),
+                  label: const Text('Call'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -721,7 +714,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                   onPressed: () =>
                       _openWhatsApp(_paymentData!.contactInfo.whatsapp),
                   icon: Icon(Icons.chat, size: 16.w),
-                  label: Text(l10n.whatsApp),
+                  label: const Text('WhatsApp'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.secondary,
                     foregroundColor: Colors.white,
@@ -740,19 +733,20 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   void _selectPlan(PaymentTier tier) {
-    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.selectedPlan(tier.formattedAmount)),
+        title: Text('Selected Plan: ${tier.formattedAmount}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.amountDuration(tier.formattedAmount, tier.durationText)),
+            Text(
+              'Amount: ${tier.formattedAmount}\nDuration: ${tier.durationText}',
+            ),
             SizedBox(height: 16.h),
             Text(
-              l10n.toPayViaMoMoDialThisCode('${tier.amount}'),
+              'To pay via MoMo, dial this code *182*8*1*329494*${tier.amount}#:',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 8.h),
@@ -780,14 +774,14 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                     onPressed: () =>
                         _copyToClipboard('*182*8*1*329494*${tier.amount}#'),
                     icon: Icon(Icons.copy, color: Colors.blue[600]),
-                    tooltip: l10n.copyCode,
+                    tooltip: 'Copy  Code',
                   ),
                 ],
               ),
             ),
             SizedBox(height: 8.h),
             Text(
-              l10n.afterPaymentContactAdminToVerify,
+              'After payment, contact admin to verify and get your access code.',
               style: TextStyle(
                 fontSize: 12.sp,
                 color: Colors.grey[600],
@@ -799,21 +793,21 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _dialMoMoPayment(tier.amount);
             },
-            child: Text(l10n.dialMoMo),
+            child: const Text('Dial MoMo'),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _contactAdmin();
             },
-            child: Text(l10n.contactAlexis),
+            child: const Text('Contact Alexis'),
           ),
         ],
       ),
@@ -821,9 +815,111 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   void _makeCall(String phoneNumber) async {
-    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
-    if (await canLaunchUrl(phoneUri)) {
-      await launchUrl(phoneUri);
+    // Check if widget is still mounted before proceeding
+    if (!mounted) {
+      debugPrint('⚠️ Widget not mounted, skipping call');
+      return;
+    }
+
+    // Use the correct phone number as primary, or fallback to provided number
+    const correctPhoneNumber = '+250788659575';
+    final phoneToUse = phoneNumber.isNotEmpty
+        ? phoneNumber
+        : correctPhoneNumber;
+
+    // Clean the phone number - remove spaces and ensure it starts with +
+    String cleanPhone = phoneToUse.replaceAll(' ', '').replaceAll('-', '');
+    if (!cleanPhone.startsWith('+')) {
+      // If it starts with 0, replace with +250
+      if (cleanPhone.startsWith('0')) {
+        cleanPhone = '+250${cleanPhone.substring(1)}';
+      } else if (cleanPhone.startsWith('250')) {
+        cleanPhone = '+$cleanPhone';
+      } else {
+        cleanPhone = '+250$cleanPhone';
+      }
+    }
+
+    // If the number contains 123456, replace with correct number
+    if (cleanPhone.contains('123456') || cleanPhone.contains('788123')) {
+      cleanPhone = correctPhoneNumber;
+    }
+
+    debugPrint('📞 Attempting to call: $cleanPhone');
+    debugPrint('📞 Original number: $phoneNumber');
+
+    try {
+      final Uri phoneUri = Uri(scheme: 'tel', path: cleanPhone);
+
+      // Use platformDefault first - it's safer and won't crash the app
+      // This keeps the app in foreground while opening dialer
+      try {
+        final launched = await launchUrl(
+          phoneUri,
+          mode: LaunchMode.platformDefault,
+        );
+
+        if (launched) {
+          debugPrint('✅ Phone call launched successfully');
+          // Small delay to ensure the launch completes
+          await Future.delayed(const Duration(milliseconds: 100));
+        } else {
+          throw Exception('Launch returned false');
+        }
+      } catch (e) {
+        debugPrint('⚠️ Platform default failed: $e, trying external');
+
+        // Fallback to externalApplication only if platformDefault fails
+        try {
+          await launchUrl(phoneUri, mode: LaunchMode.externalApplication);
+          debugPrint('✅ Phone call launched with external application');
+          // Small delay to ensure the launch completes
+          await Future.delayed(const Duration(milliseconds: 100));
+        } catch (e2) {
+          debugPrint('❌ External application also failed: $e2');
+
+          // Final fallback: try with different URI format
+          try {
+            final Uri altUri = Uri.parse('tel:$cleanPhone');
+            await launchUrl(altUri, mode: LaunchMode.platformDefault);
+            debugPrint('✅ Phone call launched with alternative URI');
+          } catch (e3) {
+            debugPrint('❌ All launch methods failed: $e3');
+            _showCallError(cleanPhone);
+          }
+        }
+      }
+    } catch (e, stackTrace) {
+      debugPrint('❌ Unexpected error calling phone: $e');
+      debugPrint('❌ Stack trace: $stackTrace');
+      _showCallError(cleanPhone);
+    }
+  }
+
+  void _showCallError(String phoneNumber) {
+    if (!mounted) return;
+
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not launch phone app. Number: $phoneNumber'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'Copy',
+            textColor: Colors.white,
+            onPressed: () {
+              try {
+                Clipboard.setData(ClipboardData(text: phoneNumber));
+              } catch (e) {
+                debugPrint('❌ Error copying to clipboard: $e');
+              }
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('❌ Error showing snackbar: $e');
     }
   }
 
@@ -864,14 +960,13 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           if (!mounted) return;
 
           // Show user-friendly error with alternative options
-          final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l10n.whatsAppNotAvailableTryAlternatives),
+                  const Text('WhatsApp not available. Try these alternatives:'),
                   SizedBox(height: 4.h),
                   const Text('• Call: +250788659575'),
                   const Text('• WhatsApp Web: web.whatsapp.com'),
@@ -880,9 +975,9 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
               backgroundColor: Colors.orange,
               duration: const Duration(seconds: 5),
               action: SnackBarAction(
-                label: l10n.callInstead,
+                label: 'Call Instead',
                 textColor: Colors.white,
-                onPressed: () => _makeCall('+250788659575'),
+                onPressed: () => ('+250788659575'),
               ),
             ),
           );
@@ -892,32 +987,47 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   void _contactAdmin() async {
-    const phoneNumber = '+250788659575';
-    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+    if (!mounted) return;
 
-    if (await canLaunchUrl(phoneUri)) {
-      await launchUrl(phoneUri);
-    } else {
+    const phoneNumber = '+250788659575';
+
+    try {
+      final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+
+      // Use platformDefault first - safer and won't crash
+      try {
+        final launched = await launchUrl(
+          phoneUri,
+          mode: LaunchMode.platformDefault,
+        );
+
+        if (launched) {
+          debugPrint('✅ Admin call launched successfully');
+          await Future.delayed(const Duration(milliseconds: 100));
+        } else {
+          throw Exception('Launch returned false');
+        }
+      } catch (e) {
+        debugPrint('⚠️ Platform default failed: $e, trying external');
+        await launchUrl(phoneUri, mode: LaunchMode.externalApplication);
+        debugPrint('✅ Admin call launched with external application');
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+    } catch (e) {
+      debugPrint('❌ Error calling admin: $e');
       if (!mounted) return;
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.couldNotLaunchPhoneApp),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showCallError(phoneNumber);
     }
   }
 
   void _copyToClipboard(String text) async {
     await Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
-    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.codeCopiedToClipboard),
+      const SnackBar(
+        content: Text('Code copied to clipboard'),
         backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
+        duration: Duration(seconds: 2),
       ),
     );
   }
@@ -930,10 +1040,9 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
       await launchUrl(usdUri);
     } else {
       if (!mounted) return;
-      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.couldNotLaunchPhoneAppPleaseDial(usdCode)),
+          content: Text('Could not launch phone app. Please dial: $usdCode'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 5),
         ),

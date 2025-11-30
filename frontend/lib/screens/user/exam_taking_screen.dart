@@ -3,14 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../../models/exam_model.dart';
 import '../../models/question_model.dart' as question_model;
 import '../../services/exam_service.dart';
 import '../../services/offline_exam_service.dart';
-import '../../l10n/app_localizations.dart';
 import '../../services/exam_sync_service.dart';
 import '../../services/network_service.dart';
 import '../../services/image_cache_service.dart';
@@ -42,6 +43,9 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   final OfflineExamService _offlineService = OfflineExamService();
   final ExamSyncService _syncService = ExamSyncService();
   final NetworkService _networkService = NetworkService();
+
+  // Progress saving key
+  String get _progressKey => 'exam_progress_${widget.exam.id}';
 
   // State variables
   List<question_model.Question> _questions = [];
@@ -162,14 +166,18 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   void _handleAppPaused() {
     if (!_isExamCompleted) {
       _isAppInBackground = true;
+      // Don't auto-submit when screen locks - just track background time
+      // User can resume and continue the exam
       _backgroundTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
         _backgroundTime++;
-        if (_backgroundTime > 30) {
-          // More than 30 seconds in background
-          _autoSubmitExam();
-        }
+        // Removed auto-submit - allow user to continue exam after screen lock
+        debugPrint(
+          '🔒 Security: App in background for $_backgroundTime seconds (no auto-submit)',
+        );
       });
-      debugPrint('🔒 Security: App paused, starting background timer');
+      debugPrint(
+        '🔒 Security: App paused, tracking background time (no auto-submit)',
+      );
     }
   }
 
@@ -180,178 +188,145 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
-        final dialogL10n = AppLocalizations.of(context)!;
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.security, color: AppColors.error, size: 24.sp),
-              SizedBox(width: 8.w),
-              Text(dialogL10n.securityAlert),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                dialogL10n.examPausedDueToBackgroundActivity,
-                style: AppTextStyles.bodyMedium,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.security, color: AppColors.error, size: 24.sp),
+            SizedBox(width: 8.w),
+            const Text('Security Alert'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'The exam was paused due to app switching or background activity.',
+              style: AppTextStyles.bodyMedium,
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              'To maintain exam integrity:',
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.bold,
               ),
-              SizedBox(height: 12.h),
-              Text(
-                dialogL10n.toMaintainExamIntegrity,
-                style: AppTextStyles.bodyMedium.copyWith(
+            ),
+            SizedBox(height: 8.h),
+            const Text(
+              '• Stay in the exam app during the test',
+              style: AppTextStyles.bodySmall,
+            ),
+            const Text(
+              '• Do not switch to other apps',
+              style: AppTextStyles.bodySmall,
+            ),
+            const Text(
+              '• Do not take screenshots',
+              style: AppTextStyles.bodySmall,
+            ),
+            SizedBox(height: 12.h),
+            Container(
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Text(
+                'Repeated violations may result in exam termination.',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.warning,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 8.h),
-              Text(
-                dialogL10n.stayInExamAppDuringTest,
-                style: AppTextStyles.bodySmall,
-              ),
-              Text(
-                dialogL10n.doNotSwitchToOtherApps,
-                style: AppTextStyles.bodySmall,
-              ),
-              Text(
-                dialogL10n.doNotTakeScreenshots,
-                style: AppTextStyles.bodySmall,
-              ),
-              SizedBox(height: 12.h),
-              Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Text(
-                  dialogL10n.repeatedViolationsMayTerminateExam,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.warning,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _securityWarningShown = false;
-              },
-              child: Text(dialogL10n.continueExam),
             ),
           ],
-        );
-      },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _securityWarningShown = false;
+            },
+            child: const Text('Continue Exam'),
+          ),
+        ],
+      ),
     );
   }
 
-  void _autoSubmitExam() {
-    if (_isExamCompleted) return;
-
-    debugPrint(
-      '🔒 Security: Auto-submitting exam due to extended background time',
-    );
-    _isExamCompleted = true;
-    _backgroundTimer?.cancel();
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        final dialogL10n = AppLocalizations.of(context)!;
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.warning, color: AppColors.error, size: 24.sp),
-              SizedBox(width: 8.w),
-              Text(dialogL10n.examTerminated),
-            ],
-          ),
-          content: Text(
-            dialogL10n.examAutoSubmittedDueToBackgroundActivity,
-            style: AppTextStyles.bodyMedium,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _submitExam();
-              },
-              child: Text(dialogL10n.viewResults),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // Removed _autoSubmitExam - no longer auto-submitting when screen locks
+  // Users can now exit and return to continue the exam
 
   void _showExitWarning() {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
-        final dialogL10n = AppLocalizations.of(context)!;
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.exit_to_app, color: AppColors.warning, size: 24.sp),
-              SizedBox(width: 8.w),
-              Text(dialogL10n.exitExam),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                dialogL10n.areYouSureYouWantToExitExam,
-                style: AppTextStyles.bodyMedium,
-              ),
-              SizedBox(height: 12.h),
-              Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Text(
-                  dialogL10n.exitingWillSubmitAnswers,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.error,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(dialogL10n.continueExam),
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.exit_to_app, color: AppColors.warning, size: 24.sp),
+            SizedBox(width: 8.w),
+            const Text('Exit Exam?'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'What would you like to do?',
+              style: AppTextStyles.bodyMedium,
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _submitExam();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.error,
-                foregroundColor: AppColors.white,
+            SizedBox(height: 12.h),
+            Container(
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: AppColors.info.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8.r),
               ),
-              child: Text(dialogL10n.exitAndSubmit),
+              child: Text(
+                'You can exit and return later, or submit your current answers.',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.info,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
-        );
-      },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Continue Exam'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Exit without submitting - user can return later
+              // Save progress before exiting
+              _saveExamProgress();
+              Navigator.pop(context);
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.warning),
+            child: const Text('Exit Without Submitting'),
+          ),
+          // ElevatedButton(
+          //   onPressed: () {
+          //     Navigator.pop(context);
+          //     _submitExam();
+          //   },
+          //   style: ElevatedButton.styleFrom(
+          //     backgroundColor: AppColors.error,
+          //     foregroundColor: AppColors.white,
+          //   ),
+          //   child: const Text('Exit & Submit'),
+          // ),
+        ],
+      ),
     );
   }
 
   Future<void> _loadQuestions() async {
-    final l10n = AppLocalizations.of(context)!;
     try {
       debugPrint('🔍 EXAM TAKING SCREEN DEBUG - Loading questions:');
       debugPrint('   Exam ID: ${widget.exam.id}');
@@ -437,7 +412,8 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
               // Not a free exam, show payment error
               debugPrint('❌ This exam requires payment');
               setState(() {
-                _error = l10n.examRequiresPaymentUpgrade;
+                _error =
+                    'This exam requires payment. Please upgrade to access all exams.';
                 _isLoading = false;
               });
               return;
@@ -494,11 +470,16 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
         String errorMessage;
         if (hasInternet && isFreeExam && !hasAccess) {
           // Free exam blocked by backend - this is a backend issue
-          errorMessage = l10n.unableToLoadFreeExamBackendIssue;
+          errorMessage =
+              'Unable to load this free exam. This appears to be a backend issue. '
+              'Please try again later or contact support. '
+              'The first 2 exams of each language should be free.';
         } else if (hasInternet) {
-          errorMessage = l10n.noQuestionsAvailableContactSupport;
+          errorMessage =
+              'No questions available for this exam. Please contact support if this issue persists.';
         } else {
-          errorMessage = l10n.noOfflineQuestionsConnectInternet;
+          errorMessage =
+              'No offline questions available. Please connect to internet to download this exam.';
         }
 
         setState(() {
@@ -519,15 +500,17 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
       debugPrint('✅ Successfully loaded ${questions.length} questions');
       debugPrint('   Timer set to: ${widget.exam.duration * 60} seconds');
 
+      // Load saved progress if available
+      await _loadExamProgress();
+
       _startTimer();
       _progressController.forward();
       _questionController.forward();
       _timerController.forward();
     } catch (e) {
       debugPrint('❌ EXAM TAKING SCREEN ERROR: $e');
-      final l10n = AppLocalizations.of(context)!;
       setState(() {
-        _error = l10n.failedToLoadQuestions(e.toString());
+        _error = 'Failed to load questions: $e';
         _isLoading = false;
       });
     }
@@ -562,7 +545,6 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   }
 
   void _handleTimeUp() {
-    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _isTimeUp = true;
     });
@@ -572,15 +554,17 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text(l10n.timesUp),
-        content: Text(l10n.examTimeEndedAutoSubmit),
+        title: const Text('Time\'s Up!'),
+        content: const Text(
+          'The exam time has ended. Your answers will be submitted automatically.',
+        ),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _submitExam();
             },
-            child: Text(l10n.submit),
+            child: const Text('Submit'),
           ),
         ],
       ),
@@ -634,6 +618,9 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
       _userAnswers[questionId] = answer;
       _showAnswerFeedback[questionId] = true; // Show feedback immediately
     });
+
+    // Save progress after answering
+    _saveExamProgress();
   }
 
   void _nextQuestion() {
@@ -643,6 +630,8 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
       });
       _questionController.reset();
       _questionController.forward();
+      // Save progress when navigating
+      _saveExamProgress();
     }
   }
 
@@ -653,11 +642,12 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
       });
       _questionController.reset();
       _questionController.forward();
+      // Save progress when navigating
+      _saveExamProgress();
     }
   }
 
   Future<void> _submitExam() async {
-    final l10n = AppLocalizations.of(context)!;
     if (_isSubmitting) return;
 
     setState(() {
@@ -667,6 +657,9 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
 
     _timer?.cancel();
     _backgroundTimer?.cancel();
+
+    // Clear saved progress when submitting
+    await _clearExamProgress();
 
     // Re-enable screenshots after exam completion
     if (Platform.isAndroid) {
@@ -818,13 +811,13 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
       if (!mounted) return;
 
       final message = hasInternet
-          ? l10n.examSubmittedSuccessfully
-          : l10n.examSavedOfflineWillSync;
+          ? 'Exam Submitted Successfully!'
+          : 'Exam saved offline! Will sync when internet is available.';
 
       AppFlashMessage.showSuccess(
         context,
         message,
-        description: l10n.yourScore(score),
+        description: 'Your score: $score%',
       );
 
       // Use callback if provided, otherwise navigate to progress screen
@@ -852,7 +845,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
       if (!mounted) return;
       AppFlashMessage.showError(
         context,
-        l10n.errorSubmittingExam,
+        'Error submitting exam',
         description: e.toString(),
       );
     } finally {
@@ -863,7 +856,6 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   }
 
   void _showSubmissionLoadingDialog() {
-    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -878,14 +870,14 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
               ),
               SizedBox(height: 24.h),
               Text(
-                l10n.submittingExam,
+                'Submitting Exam...',
                 style: AppTextStyles.heading3.copyWith(
                   color: AppColors.grey800,
                 ),
               ),
               SizedBox(height: 12.h),
               Text(
-                l10n.pleaseWaitProcessingAnswers,
+                'Please wait while we process your answers.',
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.grey600,
                 ),
@@ -893,7 +885,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
               ),
               SizedBox(height: 8.h),
               Text(
-                l10n.mayTakeFewSeconds,
+                'This may take a few seconds.',
                 style: AppTextStyles.caption.copyWith(color: AppColors.grey500),
                 textAlign: TextAlign.center,
               ),
@@ -949,7 +941,6 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   }
 
   Widget _buildLoadingWidget() {
-    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -959,7 +950,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
           ),
           SizedBox(height: 24.h),
           Text(
-            l10n.loadingExam,
+            'Loading Exam...',
             style: AppTextStyles.heading3.copyWith(color: AppColors.grey600),
           ),
         ],
@@ -968,7 +959,6 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   }
 
   Widget _buildErrorWidget() {
-    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: EdgeInsets.all(32.w),
@@ -978,7 +968,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             Icon(Icons.error_outline, size: 80.sp, color: AppColors.error),
             SizedBox(height: 24.h),
             Text(
-              l10n.errorLoadingExam,
+              'Error Loading Exam',
               style: AppTextStyles.heading2.copyWith(color: AppColors.error),
             ),
             SizedBox(height: 16.h),
@@ -991,7 +981,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             ),
             SizedBox(height: 32.h),
             CustomButton(
-              text: l10n.goBack,
+              text: 'Go Back',
               onPressed: () => Navigator.pop(context),
               width: 120.w,
             ),
@@ -1010,41 +1000,24 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
           children: [
             Icon(Icons.timer_off, size: 80.sp, color: AppColors.error),
             SizedBox(height: 24.h),
-            Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
-                return Text(
-                  l10n.timesUp,
-                  style: AppTextStyles.heading2.copyWith(
-                    color: AppColors.error,
-                  ),
-                );
-              },
+            Text(
+              'Time\'s Up!',
+              style: AppTextStyles.heading2.copyWith(color: AppColors.error),
             ),
             SizedBox(height: 16.h),
-            Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
-                return Text(
-                  l10n.examTimeEndedAutoSubmit,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.grey600,
-                  ),
-                  textAlign: TextAlign.center,
-                );
-              },
+            Text(
+              'Your exam time has ended. Your answers will be submitted automatically.',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.grey600,
+              ),
+              textAlign: TextAlign.center,
             ),
             SizedBox(height: 32.h),
-            Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
-                return CustomButton(
-                  text: l10n.submitExam,
-                  onPressed: _submitExam,
-                  width: 150.w,
-                  backgroundColor: AppColors.error,
-                );
-              },
+            CustomButton(
+              text: 'Submit Exam',
+              onPressed: _submitExam,
+              width: 150.w,
+              backgroundColor: AppColors.error,
             ),
           ],
         ),
@@ -1112,21 +1085,13 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                       overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(height: 4.h),
-                    Builder(
-                      builder: (context) {
-                        final l10n = AppLocalizations.of(context)!;
-                        return Text(
-                          l10n.questionNumberOfTotal(
-                            _currentQuestionIndex + 1,
-                            _questions.length,
-                          ),
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.grey600,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        );
-                      },
+                    Text(
+                      'Question ${_currentQuestionIndex + 1} of ${_questions.length}',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.grey600,
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -1174,30 +1139,25 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             builder: (context, child) {
               return Column(
                 children: [
-                  Builder(
-                    builder: (context) {
-                      final l10n = AppLocalizations.of(context)!;
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            l10n.progress,
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.grey600,
-                              fontSize: 12.sp,
-                            ),
-                          ),
-                          Text(
-                            '${((_currentQuestionIndex + 1) / _questions.length * 100).round()}%',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12.sp,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Progress',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.grey600,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                      Text(
+                        '${((_currentQuestionIndex + 1) / _questions.length * 100).round()}%',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(height: 4.h),
                   LinearProgressIndicator(
@@ -1463,16 +1423,9 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
               color: AppColors.grey400,
             ),
             SizedBox(height: 4.h),
-            Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
-                return Text(
-                  l10n.imageNotAvailable,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.grey500,
-                  ),
-                );
-              },
+            Text(
+              'Image not available',
+              style: AppTextStyles.caption.copyWith(color: AppColors.grey500),
             ),
           ],
         ),
@@ -1629,10 +1582,6 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   }
 
   Widget _buildNavigationButtons() {
-    final l10n = AppLocalizations.of(context)!;
-    final hasAnswer = _userAnswers.containsKey(
-      _questions[_currentQuestionIndex].id,
-    );
     final isLastQuestion = _currentQuestionIndex == _questions.length - 1;
     final answeredCount = _userAnswers.length;
     final totalQuestions = _questions.length;
@@ -1660,31 +1609,26 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
         child: Column(
           children: [
             // Progress summary
-            Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      l10n.answeredCountOfTotal(answeredCount, totalQuestions),
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.grey600,
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      l10n.timeLabel(_formatTime(_timeRemaining)),
-                      style: AppTextStyles.caption.copyWith(
-                        color: _getTimerColor(),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.sp,
-                      ),
-                    ),
-                  ],
-                );
-              },
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Answered: $answeredCount/$totalQuestions',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.grey600,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Time: ${_formatTime(_timeRemaining)}',
+                  style: AppTextStyles.caption.copyWith(
+                    color: _getTimerColor(),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.sp,
+                  ),
+                ),
+              ],
             ),
 
             SizedBox(height: 30.h),
@@ -1728,7 +1672,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                             : AppColors.grey400,
                       ),
                       label: Text(
-                        l10n.previous,
+                        'Previous',
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
@@ -1743,27 +1687,21 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
 
                 SizedBox(width: 12.w),
 
-                // Next/Submit button
+                // Next/Submit button - allow skipping questions
                 Expanded(
                   flex: 1,
                   child: SizedBox(
                     height: 50.h,
                     child: ElevatedButton.icon(
-                      onPressed: hasAnswer
-                          ? (isLastQuestion
-                                ? _showFinishExamDialog
-                                : _nextQuestion)
-                          : null,
+                      onPressed: isLastQuestion
+                          ? _showFinishExamDialog
+                          : _nextQuestion,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: hasAnswer
-                            ? (isLastQuestion
-                                  ? AppColors.success
-                                  : AppColors.primary)
-                            : AppColors.grey300,
-                        foregroundColor: hasAnswer
-                            ? AppColors.white
-                            : AppColors.grey500,
-                        elevation: hasAnswer ? 4 : 0,
+                        backgroundColor: isLastQuestion
+                            ? AppColors.success
+                            : AppColors.primary,
+                        foregroundColor: AppColors.white,
+                        elevation: 4,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12.r),
                         ),
@@ -1777,16 +1715,14 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                             ? Icons.check_circle
                             : Icons.arrow_forward_ios,
                         size: 18.sp,
-                        color: hasAnswer ? AppColors.white : AppColors.grey500,
+                        color: AppColors.white,
                       ),
                       label: Text(
-                        isLastQuestion ? l10n.submitExam : l10n.next,
+                        isLastQuestion ? 'Submit Exam' : 'Next',
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontSize: 15.sp,
                           fontWeight: FontWeight.bold,
-                          color: hasAnswer
-                              ? AppColors.white
-                              : AppColors.grey500,
+                          color: AppColors.white,
                         ),
                       ),
                     ),
@@ -1816,17 +1752,9 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
           children: [
             Icon(allAnswered ? Icons.check_circle : Icons.warning, size: 12.sp),
             SizedBox(width: 4.w),
-            Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
-                return Text(
-                  allAnswered ? l10n.submitExam : l10n.finishExam,
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                );
-              },
+            Text(
+              allAnswered ? 'Submit Exam' : 'Finish Exam',
+              style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -1838,122 +1766,222 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
     final answeredCount = _userAnswers.length;
     final totalQuestions = _questions.length;
     final unansweredCount = totalQuestions - answeredCount;
+    final allAnswered = unansweredCount == 0;
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Builder(
-        builder: (dialogContext) {
-          final dialogL10n = AppLocalizations.of(dialogContext)!;
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16.r),
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              allAnswered
+                  ? Icons.check_circle
+                  : Icons.warning_amber_rounded,
+              color: allAnswered ? AppColors.success : AppColors.warning,
+              size: 24.sp,
             ),
-            title: Row(
-              children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: AppColors.warning,
-                  size: 24.sp,
-                ),
-                SizedBox(width: 8.w),
-                Text(
-                  dialogL10n.finishExamQuestion,
-                  style: AppTextStyles.heading3.copyWith(
-                    color: AppColors.grey800,
-                  ),
-                ),
-              ],
+            SizedBox(width: 8.w),
+            Text(
+              allAnswered ? 'Submit Exam?' : 'Finish Exam?',
+              style: AppTextStyles.heading3.copyWith(color: AppColors.grey800),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  dialogL10n.areYouSureYouWantToFinishExam,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.grey700,
-                  ),
-                ),
-                SizedBox(height: 16.h),
-                if (unansweredCount > 0) ...[
-                  Container(
-                    padding: EdgeInsets.all(12.w),
-                    decoration: BoxDecoration(
-                      color: AppColors.warning.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(
-                        color: AppColors.warning.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: AppColors.warning,
-                          size: 16.sp,
-                        ),
-                        SizedBox(width: 8.w),
-                        Expanded(
-                          child: Text(
-                            dialogL10n.youHaveUnansweredQuestions(
-                              unansweredCount,
-                              unansweredCount == 1 ? '' : 's',
-                            ),
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.warning,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                ],
-                Text(
-                  dialogL10n.onceSubmittedCannotChange,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.grey600,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  dialogL10n.continueExam,
-                  style: const TextStyle(
-                    color: AppColors.grey600,
-                    fontWeight: FontWeight.w600,
-                  ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (allAnswered) ...[
+              Text(
+                'All questions have been answered. Are you ready to submit?',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.grey700,
                 ),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _submitExam();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.error,
-                  foregroundColor: AppColors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r),
+            ] else ...[
+              Text(
+                'You have unanswered questions. Please answer all questions before submitting.',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.grey700,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(
+                    color: AppColors.error.withValues(alpha: 0.3),
+                    width: 1,
                   ),
                 ),
-                child: Text(
-                  dialogL10n.finishExam,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      color: AppColors.error,
+                      size: 16.sp,
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Text(
+                        'You have $unansweredCount unanswered question${unansweredCount == 1 ? '' : 's'}. Please go back and answer them before submitting.',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
-          );
-        },
+            SizedBox(height: 16.h),
+            Text(
+              'Once submitted, you cannot change your answers.',
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.grey600,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Continue Exam',
+              style: TextStyle(
+                color: AppColors.grey600,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          if (allAnswered)
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _submitExam();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+                foregroundColor: AppColors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+              child: const Text(
+                'Submit Exam',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+        ],
       ),
     );
+  }
+
+  /// Save exam progress to SharedPreferences
+  Future<void> _saveExamProgress() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final progressData = {
+        'currentQuestionIndex': _currentQuestionIndex,
+        'userAnswers': _userAnswers,
+        'timeRemaining': _timeRemaining,
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+      await prefs.setString(_progressKey, json.encode(progressData));
+      debugPrint(
+        '💾 Saved exam progress: Question ${_currentQuestionIndex + 1}/${_questions.length}',
+      );
+    } catch (e) {
+      debugPrint('❌ Error saving exam progress: $e');
+    }
+  }
+
+  /// Load exam progress from SharedPreferences
+  Future<void> _loadExamProgress() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final progressJson = prefs.getString(_progressKey);
+
+      if (progressJson != null) {
+        final progressData = json.decode(progressJson) as Map<String, dynamic>;
+        final savedIndex = progressData['currentQuestionIndex'] as int?;
+        final savedAnswers =
+            progressData['userAnswers'] as Map<String, dynamic>?;
+        final savedTimeRemaining = progressData['timeRemaining'] as int?;
+        final savedTimestamp = progressData['timestamp'] as String?;
+
+        // Check if progress is recent (within 24 hours)
+        if (savedTimestamp != null) {
+          final savedDate = DateTime.parse(savedTimestamp);
+          final now = DateTime.now();
+          final difference = now.difference(savedDate);
+
+          if (difference.inHours > 24) {
+            debugPrint(
+              '⏰ Saved progress is older than 24 hours, starting fresh',
+            );
+            await _clearExamProgress();
+            return;
+          }
+        }
+
+        // Restore progress if valid
+        if (savedIndex != null &&
+            savedIndex >= 0 &&
+            savedIndex < _questions.length &&
+            savedAnswers != null) {
+          setState(() {
+            _currentQuestionIndex = savedIndex;
+            _userAnswers.clear();
+            savedAnswers.forEach((key, value) {
+              _userAnswers[key] = value.toString();
+            });
+
+            // Restore time remaining if available and valid
+            if (savedTimeRemaining != null && savedTimeRemaining > 0) {
+              _timeRemaining = savedTimeRemaining;
+            }
+          });
+
+          debugPrint(
+            '✅ Loaded exam progress: Question ${_currentQuestionIndex + 1}/${_questions.length}',
+          );
+          debugPrint('   Answers saved: ${_userAnswers.length}');
+          debugPrint('   Time remaining: ${_formatTime(_timeRemaining)}');
+
+          // Show a message to user that progress was restored
+          if (mounted) {
+            AppFlashMessage.showInfo(
+              context,
+              'Progress Restored',
+              description:
+                  'Resuming from question ${_currentQuestionIndex + 1}',
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Error loading exam progress: $e');
+    }
+  }
+
+  /// Clear saved exam progress
+  Future<void> _clearExamProgress() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_progressKey);
+      debugPrint('🗑️ Cleared exam progress');
+    } catch (e) {
+      debugPrint('❌ Error clearing exam progress: $e');
+    }
   }
 }
 

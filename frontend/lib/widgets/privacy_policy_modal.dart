@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:learn_traffic_rules/core/theme/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../l10n/app_localizations.dart';
 
 class PrivacyPolicyModal extends StatelessWidget {
   final String title;
@@ -36,7 +35,6 @@ class PrivacyPolicyModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       decoration: BoxDecoration(
@@ -96,28 +94,136 @@ class PrivacyPolicyModal extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(16.w),
                     decoration: BoxDecoration(
-                      color: AppColors.warning.withValues(alpha: 0.1),
+                      color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12.r),
                       border: Border.all(
-                        color: AppColors.warning.withValues(alpha: 0.3),
-                        width: 1,
+                        color: AppColors.error.withValues(alpha: 0.3),
+                        width: 1.5,
                       ),
                     ),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.school_outlined,
-                          color: AppColors.warning,
-                          size: 20.sp,
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Text(
-                            l10n.educationalPurposeOnlyDisclaimer,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.warning,
-                              fontWeight: FontWeight.w600,
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: AppColors.error,
+                              size: 20.sp,
                             ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Text(
+                                '⚠️ IMPORTANT DISCLAIMER',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.error,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 12.h),
+                        Text(
+                          'This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.grey800,
+                            fontWeight: FontWeight.w600,
+                            height: 1.5,
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                        Text(
+                          'Official Source:',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.grey800,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: 6.h),
+                        GestureDetector(
+                          onTap: () async {
+                            const url = 'https://police.gov.rw/home/';
+                            try {
+                              final uri = Uri.parse(url);
+                              debugPrint('🌐 Attempting to open: $url');
+
+                              bool launched = false;
+
+                              // Try inAppWebView first (keeps app running)
+                              try {
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(
+                                    uri,
+                                    mode: LaunchMode.inAppWebView,
+                                  );
+                                  launched = true;
+                                  debugPrint('✅ Opened with inAppWebView');
+                                }
+                              } catch (e) {
+                                debugPrint('⚠️ inAppWebView failed: $e');
+                              }
+
+                              // Fallback to platformDefault
+                              if (!launched) {
+                                try {
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(
+                                      uri,
+                                      mode: LaunchMode.platformDefault,
+                                    );
+                                    launched = true;
+                                    debugPrint('✅ Opened with platformDefault');
+                                  }
+                                } catch (e) {
+                                  debugPrint('⚠️ platformDefault failed: $e');
+                                }
+                              }
+
+                              // Try without canLaunchUrl check
+                              if (!launched) {
+                                try {
+                                  await launchUrl(
+                                    uri,
+                                    mode: LaunchMode.inAppWebView,
+                                  );
+                                  launched = true;
+                                  debugPrint(
+                                    '✅ Opened with inAppWebView (no check)',
+                                  );
+                                } catch (e) {
+                                  debugPrint('⚠️ Direct launch failed: $e');
+                                }
+                              }
+
+                              if (!launched) {
+                                debugPrint(
+                                  '❌ All launch attempts failed for: $url',
+                                );
+                              }
+                            } catch (e) {
+                              debugPrint('❌ Error launching URL: $e');
+                            }
+                          },
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.link_rounded,
+                                color: AppColors.primary,
+                                size: 16.sp,
+                              ),
+                              SizedBox(width: 6.w),
+                              Expanded(
+                                child: Text(
+                                  'Rwanda National Police (Driving License Services): police.gov.rw/home',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -139,24 +245,33 @@ class PrivacyPolicyModal extends StatelessWidget {
 
                   // Data collection section
                   _buildSection(
-                    l10n.privacyPolicyDataCollection,
-                    '${l10n.privacyPolicyPhoneNumber}\n${l10n.privacyPolicyDeviceInfo}\n${l10n.privacyPolicyLearningProgress}\n${l10n.privacyPolicyAppUsage}',
+                    'Data We Collect',
+                    '• Phone number for account creation\n'
+                        '• Device information for security\n'
+                        '• Learning progress and exam results\n'
+                        '• App usage patterns for improvement',
                   ),
 
                   SizedBox(height: 16.h),
 
                   // Data usage section
                   _buildSection(
-                    l10n.privacyPolicySection2Title,
-                    l10n.privacyPolicySection2Content,
+                    'How We Use Your Data',
+                    '• Provide personalized learning experience\n'
+                        '• Track your progress and performance\n'
+                        '• Send educational notifications\n'
+                        '• Improve app functionality',
                   ),
 
                   SizedBox(height: 16.h),
 
                   // Data protection section
                   _buildSection(
-                    l10n.privacyPolicySection4Title,
-                    l10n.privacyPolicySection4Content,
+                    'Data Protection',
+                    '• Your data is encrypted and secure\n'
+                        '• We never share personal information\n'
+                        '• You can delete your account anytime\n'
+                        '• Contact us for data requests',
                   ),
 
                   SizedBox(height: 20.h),
@@ -196,7 +311,7 @@ class PrivacyPolicyModal extends StatelessWidget {
                         ),
                         SizedBox(width: 8.w),
                         Text(
-                          l10n.readFullPrivacyPolicy,
+                          'Read Full Privacy Policy',
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.white,
                             fontWeight: FontWeight.w600,
@@ -211,7 +326,7 @@ class PrivacyPolicyModal extends StatelessWidget {
 
                 // Contact info
                 Text(
-                  l10n.questionsContactUsAt('+250 780 494 000'),
+                  'Questions? Contact us at +250 780 494 000',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.grey600,
                   ),
@@ -259,16 +374,17 @@ class PrivacyPolicyModal extends StatelessWidget {
 
       // Show fallback dialog
       if (buildContext.mounted) {
-        final l10n = AppLocalizations.of(buildContext)!;
         showDialog(
           context: buildContext,
           builder: (context) => AlertDialog(
-            title: Text(l10n.openPrivacyPolicy),
-            content: Text(l10n.unableToOpenBrowserAutomatically(url)),
+            title: const Text('Open Privacy Policy'),
+            content: Text(
+              'Unable to open browser automatically.\n\nPlease visit: $url',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text(l10n.ok),
+                child: const Text('OK'),
               ),
             ],
           ),

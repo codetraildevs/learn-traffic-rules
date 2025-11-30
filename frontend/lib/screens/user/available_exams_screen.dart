@@ -17,7 +17,6 @@ import '../../models/free_exam_model.dart';
 import '../../providers/auth_provider.dart';
 import 'exam_taking_screen.dart';
 import 'exam_progress_screen.dart';
-import '../../l10n/app_localizations.dart';
 
 class AvailableExamsScreen extends ConsumerStatefulWidget {
   final String? initialExamType;
@@ -49,8 +48,8 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Initialize selected exam type from widget parameter
-    _selectedExamType = widget.initialExamType?.toLowerCase();
+    // Initialize selected exam type from widget parameter, default to 'kinyarwanda'
+    _selectedExamType = widget.initialExamType?.toLowerCase() ?? 'kinyarwanda';
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -316,7 +315,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     }
   }
 
-  /// Marks the first 2 exams of each type as free
+  /// Marks the first 1 exam of each type as free
   List<Exam> _markFreeExamsByType(List<Exam> exams) {
     if (exams.isEmpty) return exams;
 
@@ -353,17 +352,17 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       });
     }
 
-    // Create a set of free exam IDs (first 2 of each type)
+    // Create a set of free exam IDs (first 1 of each type)
     final Set<String> freeExamIds = {};
     for (final type in ['kinyarwanda', 'english', 'french']) {
       final examsOfType = examsByType[type.toLowerCase()] ?? [];
-      // Get first 2 exams of this type
-      for (int i = 0; i < examsOfType.length && i < 2; i++) {
+      // Get first 1 exam of this type
+      for (int i = 0; i < examsOfType.length && i < 1; i++) {
         freeExamIds.add(examsOfType[i].id);
       }
     }
 
-    // Mark first 2 exams of each type as free
+    // Mark first 1 exam of each type as free
     final List<Exam> updatedExams = exams.map((exam) {
       final isFree = freeExamIds.contains(exam.id);
       // Use copyWith, but ensure we set isFirstTwo explicitly
@@ -487,7 +486,6 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   Widget _buildErrorWidget() {
-    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -495,7 +493,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           Icon(Icons.error_outline, size: 64.w, color: Colors.red),
           SizedBox(height: 16.h),
           Text(
-            l10n.errorLoadingExams,
+            'Error Loading Exams',
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
@@ -503,24 +501,19 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
             ),
           ),
           SizedBox(height: 24.h),
-          CustomButton(
-            text: l10n.retry,
-            onPressed: _loadFreeExams,
-            width: 120.w,
-          ),
+          CustomButton(text: 'Retry', onPressed: _loadFreeExams, width: 120.w),
         ],
       ),
     );
   }
 
   Widget _buildContent() {
-    final l10n = AppLocalizations.of(context)!;
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
         // Custom App Bar
         SliverAppBar(
-          expandedHeight: 200.h,
+          expandedHeight: 50.h,
           floating: false,
           pinned: true,
           backgroundColor: AppColors.primary,
@@ -529,7 +522,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _freeExamData!.isFreeUser ? l10n.freeExams : l10n.allExams,
+                  _freeExamData!.isFreeUser ? 'Available Exams' : 'All Exams',
                   style: AppTextStyles.heading2.copyWith(
                     color: AppColors.white,
                     fontSize: 20.sp,
@@ -558,73 +551,65 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 ],
               ],
             ),
-            background: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.primary, AppColors.secondary],
-                ),
-              ),
-              child: Stack(
-                children: [
-                  // Background Pattern
-                  Positioned(
-                    top: -50.h,
-                    right: -50.w,
-                    child: Container(
-                      width: 200.w,
-                      height: 200.h,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.white.withValues(alpha: 0.1),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: -30.h,
-                    left: -30.w,
-                    child: Container(
-                      width: 150.w,
-                      height: 150.h,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.white.withValues(alpha: 0.05),
-                      ),
-                    ),
-                  ),
-                  // Content
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.quiz, size: 48.sp, color: AppColors.white),
-                        SizedBox(height: 8.h),
-                        Text(
-                          l10n.testYourTrafficRulesKnowledge,
-                          style: AppTextStyles.bodyLarge.copyWith(
-                            color: AppColors.white.withValues(alpha: 0.9),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // background: Container(
+            //   decoration: const BoxDecoration(
+            //     gradient: LinearGradient(
+            //       begin: Alignment.topLeft,
+            //       end: Alignment.bottomRight,
+            //       colors: [AppColors.primary, AppColors.secondary],
+            //     ),
+            //   ),
+            //   // child:
+            //   //  Stack(
+            //   //   children: [
+            //   //     // Background Pattern
+            //   //     Positioned(
+            //   //       top: -50.h,
+            //   //       right: -50.w,
+            //   //       child: Container(
+            //   //         width: 200.w,
+            //   //         height: 200.h,
+            //   //         decoration: BoxDecoration(
+            //   //           shape: BoxShape.circle,
+            //   //           color: AppColors.white.withValues(alpha: 0.1),
+            //   //         ),
+            //   //       ),
+            //   //     ),
+            //   //     Positioned(
+            //   //       bottom: -30.h,
+            //   //       left: -30.w,
+            //   //       child: Container(
+            //   //         width: 150.w,
+            //   //         height: 150.h,
+            //   //         decoration: BoxDecoration(
+            //   //           shape: BoxShape.circle,
+            //   //           color: AppColors.white.withValues(alpha: 0.05),
+            //   //         ),
+            //   //       ),
+            //   //     ),
+            //   //     // Content
+            //   //     Center(
+            //   //       child: Column(
+            //   //         mainAxisAlignment: MainAxisAlignment.center,
+            //   //         children: [
+            //   //           Icon(Icons.quiz, size: 48.sp, color: AppColors.white),
+            //   //           SizedBox(height: 8.h),
+            //   //           Text(
+            //   //             'Test Your Traffic Rules Knowledge',
+            //   //             style: AppTextStyles.bodyLarge.copyWith(
+            //   //               color: AppColors.white.withValues(alpha: 0.9),
+            //   //             ),
+            //   //           ),
+            //   //         ],
+            //   //       ),
+            //   //     ),
+            //   //   ],
+            //   // ),
+            // ),
           ),
         ),
 
-        // Free user status banner
-        if (_freeExamData!.isFreeUser)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(16.w),
-              child: _buildFreeUserBanner(),
-            ),
-          ),
-
-        // Exam Type Filter
+        // Exam Type Filter (moved to top)
         SliverToBoxAdapter(
           child: FadeTransition(
             opacity: _fadeAnimation,
@@ -638,8 +623,17 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           ),
         ),
 
-        // Exams grouped by type
+        // Exams grouped by type (moved to top, before free banner)
         ..._buildExamsByType(),
+
+        // Free user status banner (moved below exams, made smaller)
+        if (_freeExamData!.isFreeUser)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(16.w),
+              child: _buildFreeUserBanner(),
+            ),
+          ),
 
         // Bottom Padding
         SliverToBoxAdapter(child: SizedBox(height: 100.h)),
@@ -648,7 +642,6 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   Widget _buildExamTypeFilter() {
-    final l10n = AppLocalizations.of(context)!;
     // Get unique exam types from exams
     final examTypes = _freeExamData!.exams
         .map((e) => e.examType?.toLowerCase())
@@ -670,7 +663,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          l10n.filterByLanguage,
+          'Filter by Exam Type',
           style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
         ),
         SizedBox(height: 12.h),
@@ -679,7 +672,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           runSpacing: 8.h,
           children: [
             // All option
-            _buildFilterChip(null, l10n.all),
+            _buildFilterChip(null, 'All'),
             // Type options
             ...availableTypes.map((type) {
               final displayName = type[0].toUpperCase() + type.substring(1);
@@ -763,7 +756,6 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   List<Widget> _buildExamsByType() {
-    final l10n = AppLocalizations.of(context)!;
     // If filtering by type, show filtered list from API
     if (_selectedExamType != null) {
       final filteredExams = _freeExamData!.exams;
@@ -781,14 +773,14 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    l10n.noExamsAvailable,
+                    'No Exams Available',
                     style: AppTextStyles.heading3.copyWith(
                       color: AppColors.grey600,
                     ),
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    l10n.noExamsFoundForLanguage,
+                    'No exams found for this language',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey500,
                     ),
@@ -905,14 +897,14 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 ),
                 SizedBox(height: 16.h),
                 Text(
-                  l10n.noExamsAvailable,
+                  'No Exams Available',
                   style: AppTextStyles.heading3.copyWith(
                     color: AppColors.grey600,
                   ),
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  l10n.checkBackLaterForNewExams,
+                  'Check back later for new traffic rules exams',
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.grey500,
                   ),
@@ -942,7 +934,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 Icon(Icons.language, size: 20.sp, color: AppColors.primary),
                 SizedBox(width: 8.w),
                 Text(
-                  l10n.examsForLanguage(displayName),
+                  '$displayName Exams',
                   style: AppTextStyles.heading3.copyWith(
                     fontSize: 18.sp,
                     color: AppColors.primary,
@@ -985,14 +977,14 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    l10n.noExamsForLanguage(displayName),
+                    'No $displayName Exams',
                     style: AppTextStyles.heading3.copyWith(
                       color: AppColors.grey600,
                     ),
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    l10n.noExamsFoundForLanguage,
+                    'No exams available for this language',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey500,
                     ),
@@ -1031,7 +1023,6 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   Widget _buildExamCard(Exam exam, int index) {
-    final l10n = AppLocalizations.of(context)!;
     // Extract exam number from title (e.g., "exam 21" -> "21")
     final examNumber = exam.title.replaceAll(RegExp(r'[^0-9]'), '');
     final displayTitle = examNumber.isNotEmpty
@@ -1081,7 +1072,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 ),
                 SizedBox(width: 6.w),
                 Text(
-                  l10n.questionsCount(exam.questionCount ?? 0),
+                  '${exam.questionCount ?? 0} Questions',
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.grey700,
                     fontSize: 14.sp,
@@ -1109,29 +1100,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 ),
               ],
             ),
-            SizedBox(height: 8.h),
 
-            // Passing Score
-            Row(
-              children: [
-                Icon(
-                  Icons.trending_up_outlined,
-                  size: 16.sp,
-                  color: AppColors.grey600,
-                ),
-                SizedBox(width: 6.w),
-                Flexible(
-                  child: Text(
-                    l10n.passingScore(exam.passingScore),
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.grey700,
-                      fontSize: 14.sp,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
             SizedBox(height: 16.h),
 
             // Start Exam Button
@@ -1154,9 +1123,9 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                     Icon(Icons.play_arrow, size: 25.sp),
                     SizedBox(width: 8.w),
                     Text(
-                      l10n.startExam,
+                      'Start Exam',
                       style: AppTextStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         fontSize: 15.sp,
                         color: AppColors.white,
                       ),
@@ -1172,77 +1141,65 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   Widget _buildFreeUserBanner() {
-    final l10n = AppLocalizations.of(context)!;
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [AppColors.secondary, AppColors.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(10.r),
         boxShadow: [
           BoxShadow(
-            color: AppColors.secondary.withValues(alpha: 0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: AppColors.secondary.withValues(alpha: 0.2),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Icon(Icons.star, color: Colors.white, size: 24.w),
-              SizedBox(width: 8.w),
-              Text(
-                l10n.freeTrial,
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+          Icon(Icons.star, color: Colors.white, size: 18.sp),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Free Trial: First exam of each type is free',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            l10n.firstTwoExamsFreeUnlimited,
-            style: TextStyle(fontSize: 14.sp, color: Colors.white70),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            l10n.upgradeToAccessAllExams,
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.white,
-              fontWeight: FontWeight.w500,
+                SizedBox(height: 4.h),
+                Text(
+                  'Upgrade to access all exams',
+                  style: TextStyle(fontSize: 11.sp, color: Colors.white70),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              Expanded(
-                child: CustomButton(
-                  text: l10n.viewPlans,
-                  onPressed: () => _showPaymentInstructions(),
-                  width: double.infinity,
-                  backgroundColor: Colors.white,
-                  textColor: AppColors.primary,
-                ),
+          SizedBox(width: 8.w),
+          TextButton(
+            onPressed: () => _showPaymentInstructions(),
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
+            ),
+            child: Text(
+              'View Plans',
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
               ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: CustomButton(
-                  text: l10n.contactAdmin,
-                  onPressed: _contactAdmin,
-                  width: double.infinity,
-                  backgroundColor: AppColors.secondary,
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -1250,7 +1207,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   void _startExam(Exam exam) {
-    // Check if this exam is marked as free (first 2 exams of each type)
+    // Check if this exam is marked as free (first 1 exam of each type)
     // Free status is determined per exam type (English, French, Kinyarwanda)
     final isFreeExam = exam.isFirstTwo ?? false;
 
@@ -1362,8 +1319,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       await launchUrl(phoneUri);
     } else {
       if (!mounted) return;
-      final l10n = AppLocalizations.of(context)!;
-      AppFlashMessage.showError(context, l10n.couldNotLaunchPhoneApp);
+      AppFlashMessage.showError(context, 'Could not launch phone app');
     }
   }
 }

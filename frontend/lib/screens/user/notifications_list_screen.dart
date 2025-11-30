@@ -3,11 +3,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/api_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/simple_notification_service.dart';
-import '../../l10n/app_localizations.dart';
+import '../../services/network_service.dart';
 
 class NotificationsListScreen extends ConsumerStatefulWidget {
   const NotificationsListScreen({super.key});
@@ -23,12 +24,16 @@ class _NotificationsListScreenState
   final NotificationService _notificationService = NotificationService();
   final SimpleNotificationService _simpleNotificationService =
       SimpleNotificationService();
+  final NetworkService _networkService = NetworkService();
   bool _isLoading = false;
   List<Map<String, dynamic>> _notifications = [];
   int _currentPage = 1;
   bool _hasMore = true;
   Timer? _refreshTimer;
   final Set<String> _shownNotificationIds = {}; // Track shown notifications
+  static const String _cacheKeyNotifications = 'cached_notifications';
+  static const String _cacheKeyTimestamp = 'notifications_cache_timestamp';
+  static const Duration _cacheValidityDuration = Duration(hours: 1);
 
   @override
   void initState() {
@@ -63,44 +68,162 @@ class _NotificationsListScreenState
       }
     });
 
+    // Check internet connection
+    final hasInternet = await _networkService.hasInternetConnection();
+
+    // Try to load from cache first if offline or if cache is still valid
+    if (!hasInternet || !refresh) {
+      final cachedNotifications = await _loadCachedNotifications();
+      if (cachedNotifications != null && !refresh) {
+        setState(() {
+          _notifications = cachedNotifications;
+          _isLoading = false;
+        });
+        // If offline, use cache and return
+        if (!hasInternet) {
+          return;
+        }
+        // If online but cache is valid, use cache and refresh in background
+        if (await _isCacheValid()) {
+          // Load fresh data in background
+          _loadFreshNotifications();
+          return;
+        }
+      }
+    }
+
+    // Load fresh data from API
+    if (hasInternet) {
+      try {
+        final response = await _apiService.getNotifications(
+          page: _currentPage,
+          limit: 20,
+        );
+
+        if (response['success']) {
+          final newNotifications = List<Map<String, dynamic>>.from(
+            response['data']['notifications'] ?? [],
+          );
+
+          setState(() {
+            if (refresh) {
+              _notifications = newNotifications;
+            } else {
+              _notifications.addAll(newNotifications);
+            }
+            _currentPage++;
+            _hasMore = newNotifications.length >= 20;
+          });
+
+          // Cache the notifications
+          await _cacheNotifications(_notifications);
+
+          // Show push notifications for new unread notifications
+          if (newNotifications.isNotEmpty) {
+            _showPushNotificationsForNewNotifications(newNotifications);
+          }
+        } else {
+          // Try to load from cache on error
+          final cachedNotifications = await _loadCachedNotifications();
+          if (cachedNotifications != null) {
+            setState(() {
+              _notifications = cachedNotifications;
+              _isLoading = false;
+            });
+          } else {
+            _showErrorSnackBar(
+              response['message'] ?? 'Failed to load notifications',
+            );
+          }
+        }
+      } catch (e) {
+        // Try to load from cache on error
+        final cachedNotifications = await _loadCachedNotifications();
+        if (cachedNotifications != null) {
+          setState(() {
+            _notifications = cachedNotifications;
+            _isLoading = false;
+          });
+        } else {
+          _showErrorSnackBar('Error loading notifications: $e');
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    } else {
+      // No internet and no cache - show empty state
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadFreshNotifications() async {
     try {
-      final response = await _apiService.getNotifications(
-        page: _currentPage,
-        limit: 20,
-      );
+      final response = await _apiService.getNotifications(page: 1, limit: 20);
 
       if (response['success']) {
         final newNotifications = List<Map<String, dynamic>>.from(
           response['data']['notifications'] ?? [],
         );
 
-        setState(() {
-          if (refresh) {
+        if (mounted) {
+          setState(() {
             _notifications = newNotifications;
-          } else {
-            _notifications.addAll(newNotifications);
-          }
-          _currentPage++;
-          _hasMore = newNotifications.length >= 20;
-        });
-
-        // Show push notifications for new unread notifications
-        if (newNotifications.isNotEmpty) {
-          _showPushNotificationsForNewNotifications(newNotifications);
+          });
+          await _cacheNotifications(newNotifications);
         }
-      } else {
-        final l10n = AppLocalizations.of(context)!;
-        _showErrorSnackBar(
-          response['message'] ?? l10n.failedToLoadNotifications,
-        );
       }
     } catch (e) {
-      final l10n = AppLocalizations.of(context)!;
-      _showErrorSnackBar(l10n.errorLoadingNotifications(e.toString()));
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      // Silently fail - user already has cached data
+    }
+  }
+
+  Future<void> _cacheNotifications(
+    List<Map<String, dynamic>> notifications,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_cacheKeyNotifications, jsonEncode(notifications));
+      await prefs.setString(
+        _cacheKeyTimestamp,
+        DateTime.now().toIso8601String(),
+      );
+    } catch (e) {
+      // Silently fail
+    }
+  }
+
+  Future<List<Map<String, dynamic>>?> _loadCachedNotifications() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final notificationsJson = prefs.getString(_cacheKeyNotifications);
+      if (notificationsJson == null) return null;
+
+      final notificationsList = jsonDecode(notificationsJson) as List;
+      return notificationsList
+          .map((json) => json as Map<String, dynamic>)
+          .toList();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<bool> _isCacheValid() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final timestampStr = prefs.getString(_cacheKeyTimestamp);
+      if (timestampStr == null) return false;
+
+      final timestamp = DateTime.parse(timestampStr);
+      final now = DateTime.now();
+      return now.difference(timestamp) < _cacheValidityDuration;
+    } catch (e) {
+      return false;
     }
   }
 
@@ -118,8 +241,7 @@ class _NotificationsListScreenState
         });
       }
     } catch (e) {
-      final l10n = AppLocalizations.of(context)!;
-      _showErrorSnackBar(l10n.errorMarkingNotificationAsRead(e.toString()));
+      _showErrorSnackBar('Error marking notification as read: $e');
     }
   }
 
@@ -146,9 +268,8 @@ class _NotificationsListScreenState
   }
 
   void _showPushNotification(Map<String, dynamic> notification) {
-    final l10n = AppLocalizations.of(context)!;
     final type = notification['type'] ?? '';
-    final title = notification['title'] ?? l10n.newNotification;
+    final title = notification['title'] ?? 'New Notification';
     final message = notification['message'] ?? '';
 
     debugPrint('🔔 Attempting to show push notification: $title ($type)');
@@ -292,7 +413,6 @@ class _NotificationsListScreenState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     // if (_notifications.any((n) => !n['isRead'])) {
     //   IconButton(
     //     onPressed: _markAllAsRead,
@@ -318,14 +438,14 @@ class _NotificationsListScreenState
                     ),
                     SizedBox(height: 16.h),
                     Text(
-                      l10n.noNotificationsYet,
+                      'No notifications yet',
                       style: AppTextStyles.heading3.copyWith(
                         color: Colors.grey,
                       ),
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      l10n.youllSeeYourNotificationsHere,
+                      'You\'ll see your notifications here',
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: Colors.grey,
                       ),
@@ -458,18 +578,17 @@ class _NotificationsListScreenState
       final date = DateTime.parse(dateString);
       final now = DateTime.now();
       final difference = now.difference(date);
-      final l10n = AppLocalizations.of(context)!;
 
       if (difference.inMinutes < 1) {
-        return l10n.justNow;
+        return 'Just now';
       } else if (difference.inHours < 1) {
-        return l10n.minutesAgo(difference.inMinutes);
+        return '$difference.inMinutes m ago';
       } else if (difference.inDays < 1) {
-        return l10n.hoursAgo(difference.inHours);
+        return '$difference.inHours h ago';
       } else if (difference.inDays < 7) {
-        return l10n.daysAgo(difference.inDays);
+        return '$difference.inDays d ago';
       } else {
-        return l10n.dateFormat(date.month, date.day, date.year);
+        return '${date.month}/${date.day}/${date.year}';
       }
     } catch (e) {
       return '';

@@ -250,11 +250,13 @@ class _MyAppState extends ConsumerState<MyApp> {
             debugPrint('🔄 MAIN: Showing HomeScreen');
             return const HomeScreen();
           case AuthStatus.unauthenticated:
+            // Show LoginScreen for unauthenticated users (after logout or initial load)
+            // Users can navigate to RegisterScreen from LoginScreen if needed
             debugPrint('🔄 MAIN: Showing LoginScreen');
             return const LoginScreen();
           case AuthStatus.loading:
             debugPrint('🔄 MAIN: Showing LoginScreen (loading)');
-            // Don't show splash during login - stay on current screen
+            // Don't show splash during loading - stay on current screen
             return const LoginScreen();
         }
       },
