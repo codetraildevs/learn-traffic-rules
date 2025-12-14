@@ -53,6 +53,9 @@ class AppLocalizationsRw extends AppLocalizations {
   String get finish => 'soza';
 
   @override
+  String get previous => 'Subira Inyuma';
+
+  @override
   String get loading => 'Tegereza...';
 
   @override
@@ -1842,11 +1845,11 @@ class AppLocalizationsRw extends AppLocalizations {
 
   // Help & Support - Help Text
   @override
-  String get examHelpText => '''1. Jya ku tabu y\'Amahugurwa
+  String get examHelpText => '''1. Jya ku tabu y'Amahugurwa
 2. Hitamo ikizamini ushaka gukora
 3. Soma ikibazo cyose neza
-4. Kanda ku gice gifite umuzungu w\'igisubizo wahitanye
-5. Koresha buto z\'Inyuma/Imbere kugira ngo wihindure
+4. Kanda ku gice gifite umuzungu w'igisubizo wahitanye
+5. Koresha buto z'Inyuma/Imbere kugira ngo wihindure
 6. Kanda "Gusozwa Icyiciro" igihe warangije
 7. Reba ibyakozwe nawe kandi urebe ibisobanuro byuzuye
 
@@ -1854,27 +1857,27 @@ Inama:
 - Fata igihe cyawe gusoma ikibazo cyose
 - Ntugihutire mu kizamini
 - Reba ibisubizo byawe mbere yo gongera
-- Koresha ikimenyetso cy\'iterambere kugira ngo wumenye aho uri''';
+- Koresha ikimenyetso cy'iterambere kugira ngo wumenye aho uri''';
 
   @override
   String get progressHelpText =>
       '''Iterambere ryawe rikurikiranwa mu nzira nyinshi:
 
-1. Imikorere Yose: Amanota yawe y\'ibanze mu mahugurwa yose
+1. Imikorere Yose: Amanota yawe y'ibanze mu mahugurwa yose
 2. Gukomeza Kwiga: Iminsi ikomeje wakoresheje kwiga
 3. Intsinzi: Ibimenyetso wabonye kubera intsinzi
-4. Imikorere y\'Ibyiciro: Uko ukora neza mu ngingo zitandukanye
+4. Imikorere y'Ibyiciro: Uko ukora neza mu ngingo zitandukanye
 5. Ahantu Hakenewe Guhindura: Ingingo zikenewe kwiyigisha
 
 Kugira ngo wongere iterambere:
 - Kwiga buri gihe
 - Reba ibisubizo byabi
-- Tekereza ku ngingo z\'amabanga
+- Tekereza ku ngingo z'amabanga
 - Kora amahugurwa buri gihe''';
 
   @override
-  String get paymentHelpText => '''Amahitamo y\'Ishyura:
-1. Mobile Money (MTN, Airtel, n\'andi)
+  String get paymentHelpText => '''Amahitamo y'Ishyura:
+1. Mobile Money (MTN, Airtel, n'andi)
 2. Kohereza mu Banki
 3. Karede/Ikarede
 
@@ -1884,9 +1887,9 @@ Code zo Kwinjira:
 - 5000 RWF: Kwinjira iminsi 180
 
 Kugura:
-1. Jya ku Mabwiriza y\'Ishyura
-2. Kurikira inzira z\'ishyura
-3. Ohereza ikimenyetso cy\'ishyura
+1. Jya ku Mabwiriza y'Ishyura
+2. Kurikira inzira z'ishyura
+3. Ohereza ikimenyetso cy'ishyura
 4. Bona code yawe yo kwinjira
 5. Injiza code kugira ngo ufungure amahugurwa
 
@@ -1897,10 +1900,10 @@ Amahugurwa yo ku Buntu:
   @override
   String get accountHelpText => '''Gucunga Konti:
 
-Igenamiterere y\'Umwirondoro:
-- Reba amakuru y\'umwirondoro wawe
+Igenamiterere y'Umwirondoro:
+- Reba amakuru y'umwirondoro wawe
 - Hindura amakuru yawe
-- Cunga amahitamo y\'amakuru
+- Cunga amahitamo y'amakuru
 
 Umutekano:
 - Konti yawe yabitswe na device ID
@@ -1908,7 +1911,7 @@ Umutekano:
 - Hamagare ubuyobozi niba ukeneye guhindura gikoresho
 
 Gucunga Data:
-- Reba amateka y\'amahugurwa yawe
+- Reba amateka y'amahugurwa yawe
 - Kurikirana iterambere ryawe
 - Kohereza ibyakozwe nawe
 - Sibuza konti yawe niba ukeneye
@@ -2211,4 +2214,440 @@ Ubwoba:
   String get pleaseTryAgainLater => 'Nyamuneka ongera ugerageze nyuma';
   @override
   String get noDataAvailable => 'Nta makuru ahari';
+
+  @override
+  String get importantLegalNotice =>
+      'Itangazo Ry’ingenzi Rishingiye ku Mategeko';
+
+  @override
+  String get governmentAffiliation => 'Isano n’Ibigo bya Leta';
+
+  @override
+  String get governmentAffiliationContent =>
+      'Iyi porogaramu NTIFITANYE isano, ntiyemejwe kandi ntifitanye umubano n’ikigo icyo ari cyo cyose cya Leta, DMV, cyangwa urwego rutanga impushya zo gutwara ibinyabiziga.';
+
+  @override
+  String get educationalPurposeOnlyDisclaimer => 'Igenewe Amahugurwa Gusa';
+
+  @override
+  String get educationalPurposeOnlyContent =>
+      'Iyi porogaramu igenewe gusa amahugurwa yo kwiga amategeko y’umuhanda no kwimenyereza ibizamini byo gutwara ibinyabiziga.';
+
+  @override
+  String get noOfficialCertification => 'Nta Cyemezo Cya Leta Itanga';
+
+  @override
+  String get noOfficialCertificationContent =>
+      'Iyi porogaramu NTITANGA impushya zo gutwara ibinyabiziga, NTIYEMEZA gutsinda ibizamini bya Leta, kandi NTISIMBURANA n’inzira za Leta zemewe.';
+
+  @override
+  String get yourResponsibility => 'Inshingano Zawe';
+
+  @override
+  String get yourResponsibilityContent =>
+      'Ugomba kunyura mu nzego za Leta zemewe kugira ngo ubone uruhushya rwo gutwara ibinyabiziga. Iyi porogaramu igenewe kwiga no kwimenyereza gusa.';
+
+  @override
+  String get remember => 'Ibuka:';
+
+  @override
+  String get privateEducationalToolDisclaimer =>
+      'Iyi ni porogaramu yigenga igenewe amahugurwa. Buri gihe genzura amakuru ukoresheje inzego za Leta zemewe.';
+
+  @override
+  String get continueLearning => 'Komeza Kwiga';
+
+  // Privacy Policy Modal – Kinyarwanda
+  @override
+  String get importantDisclaimer => '⚠️ ITANGAZO RY’INGENZI';
+
+  @override
+  String get privacyGovDisclaimer =>
+      'Iyi porogaramu NTIFITANYE isano, ntiyemejwe kandi ntifitanye umubano na Leta y’u Rwanda cyangwa n’urwego urwo ari rwo rwose rutanga ibizamini cyangwa impushya zo gutwara ibinyabiziga. Ni igikoresho cyigenga kigenewe kwiga gusa.';
+
+  @override
+  String get officialSource => 'Isoko yemewe:';
+
+  @override
+  String get rnpDrivingLicense =>
+      'Polisi y’u Rwanda (Serivisi z’Impushya zo Gutwara Ibinyabiziga): police.gov.rw/home';
+
+  @override
+  String get dataWeCollect => 'Amakuru Dukusanya';
+
+  @override
+  String get dataWeCollectContent =>
+      '• Nimero ya telefoni yo gufungura konti\n'
+      '• Amakuru y’igikoresho ku bw’umutekano\n'
+      '• Aho ugeze mu myigire n’ibisubizo by’ibizamini\n'
+      '• Uko ukoresha porogaramu kugira ngo tuyinoze';
+
+  @override
+  String get howWeUseYourData => 'Uko Dukoresha Amakuru Yawe';
+
+  @override
+  String get howWeUseYourDataContent =>
+      '• Gutanga uburambe bwihariye mu myigire\n'
+      '• Gukurikirana aho ugeze n’imikorere yawe\n'
+      '• Kukohereza amatangazo ajyanye n’amasomo\n'
+      '• Kunoza imikorere ya porogaramu';
+
+  @override
+  String get dataProtection => 'Kurinda Amakuru';
+
+  @override
+  String get dataProtectionContent =>
+      '• Amakuru yawe arinzwe kandi arikingiwe\n'
+      '• Ntidusangiza amakuru yawe bwite\n'
+      '• Ushobora gusiba konti yawe igihe icyo ari cyo cyose\n'
+      '• Twandikire mu gihe ukeneye amakuru yawe';
+
+  @override
+  String get readFullPrivacyPolicy => 'Soma Politiki Yuzuye y’Ibanga';
+
+  @override
+  String get contactUsQuestion =>
+      'Ufite ikibazo? Twandikire kuri +250 780 494 000';
+
+  @override
+  String get openPrivacyPolicy => 'Fungura Politiki y’Ibanga';
+
+  @override
+  String get unableToOpenBrowser =>
+      'Ntibishoboye gufungura mushakisha byikora.\n\nNyamuneka sura:';
+
+  // Disclaimer Screen
+  @override
+  String get educationalDisclaimer => 'Icyitonderwa cy\'Uburezi';
+
+  @override
+  String get educationalPurposeOnlyDescription =>
+      'Iyi porogaramu yateguwe gusa kugira ngo ikugufashe kwitegura ikizamini cyawe cya lisansi yo gutwara imodoka.';
+
+  @override
+  String get practiceSimulation => 'Gukina Ikizamini';
+
+  @override
+  String get practiceSimulationDescription =>
+      'Ibyizamini byo kwitegura bigana imiterere y\'ikizamini nyakuri ariko si ibizamini bya leta.';
+
+  @override
+  String get notOfficial => 'Ntabwo ari bya Leta';
+
+  @override
+  String get officialSourceDescription =>
+      'Kugira ngo ubone amategeko y\'umuhanda, amabwiriza, n\'amakuru y\'ibyemezo byo gutwara imodoka (harimo n\'ibyemezo byo gutwara imodoka by\'igihe gito n\'iby\'igihe kirekire), nyamuneka reba ';
+
+  @override
+  String get iUnderstandContinue => 'Ndabyumva - Komeza';
+
+  @override
+  String get iHaveReadAndUnderstoodTheEducationalDisclaimer =>
+      'Nasomye kandi ndabyumva icyitonderwa cy\'uburezi';
+
+  @override
+  String get pleaseAcceptTermsAndConditions =>
+      'Nyamuneka wemere amabwiriza n\'ibisabwa';
+
+  @override
+  String get pleaseCheckTheBoxBelowToAcceptTermsAndConditions =>
+      'Nyamuneka wongereho akamenyetso munsi kugira ngo wemere amabwiriza n\'ibisabwa mbere yo gukomeza';
+
+  @override
+  String get couldNotOpenLinkTapCopyToCopyTheUrl =>
+      'Ntibishoboye gufungura ihuza. Kanda "Gukoporora" kugira ngo ukoporore URL.';
+
+  @override
+  String get urlCopiedToClipboard => 'URL yakoporowe mu clipboard';
+
+  @override
+  String get copyUrl => 'Gukoporora URL';
+
+  @override
+  String errorMessage(String error) => 'Ikosa: $error';
+
+  // Language Selection Screen
+  @override
+  String get chooseYourPreferredLanguage => 'Hitamo ururimi wifuza';
+
+  @override
+  String get ikinyarwanda => 'Ikinyarwanda';
+
+  // Course List Screen
+  @override
+  String get paidCourse => 'Ririshyurwa';
+  @override
+  String get freeCourse => 'Ubuntu';
+
+  // Course Content Viewer Screen
+  @override
+  String contentExistsButFailedToLoad(int count) =>
+      'Ibirimo bihari ($count) ariko ntibyashoboye gukururwa. Nyamuneka gerageza umuyoboro wawe hanyuma wongere ugerageze.';
+
+  @override
+  String get noContentAvailableForThisCourse =>
+      'Nta birimo bihari kuri iyi mahugurwa';
+
+  @override
+  String get failedToLoadCourseContent =>
+      'Ntibyashoboye gukurura ibirimo by\'amahugurwa';
+
+  @override
+  String errorLoadingCourseContent(String error) =>
+      'Ikosa mu gukurura ibirimo by\'amahugurwa: $error';
+
+  @override
+  String get invalidAudioUrl => 'URL y\'amajwi ntabwo ari yo';
+
+  @override
+  String invalidAudioUrlMessage(String url) =>
+      'URL y\'amajwi ntabwo ari yo: $url';
+
+  @override
+  String get audioFileNotFoundOrInvalid =>
+      'Dosiye y\'amajwi ntabwo yabonetse cyangwa ntabwo ari yo. Nyamuneka gerageza ko dosiye iri kuri seriveri.';
+
+  @override
+  String get unableToLoadAudioFile =>
+      'Ntibishoboye gukurura dosiye y\'amajwi. Dosiye ishobora kutabaho cyangwa ikaba mu miterere itazwi.';
+
+  @override
+  String errorPlayingAudio(String error) => 'Ikosa mu gukina amajwi: $error';
+
+  @override
+  String get timeoutLoadingAudioFile =>
+      'Igihe cy\'inyungu cyarangiye mu gukurura dosiye y\'amajwi. Nyamuneka gerageza umuyoboro wawe wa interineti.';
+
+  @override
+  String get audioFileCouldNotBeLoaded =>
+      'Dosiye y\'amajwi ntiyashoboye gukururwa. Dosiye ishobora kutabaho cyangwa ikaba mu miterere itazwi.';
+
+  @override
+  String get errorLoadingAudio => 'Ikosa mu gukurura amajwi';
+
+  @override
+  String get audioFileFormatNotSupported =>
+      'Miterere y\'amajwi itazwi cyangwa dosiye ishobora kuba yononekaye/itari yo. Nyamuneka gerageza ko dosiye y\'amajwi iri kandi ikaba mu miterere izwi (MP3, WAV, M4A, OGG).';
+
+  @override
+  String get cannotLoadAudioFile =>
+      'Ntibishoboye gukurura dosiye y\'amajwi. Nyamuneka gerageza umuyoboro wawe wa interineti.';
+
+  @override
+  String get timeoutLoadingAudioFileSlow =>
+      'Igihe cy\'inyungu cyarangiye mu gukurura dosiye y\'amajwi. Dosiye ishobora kuba nini cyane cyangwa umuyoboro ni wo gato.';
+
+  @override
+  String get audioFileNotFound =>
+      'Dosiye y\'amajwi ntabwo yabonetse. Dosiye ishobora kuba yasibwe cyangwa yahindutse ahantu.';
+
+  @override
+  String get accessDeniedToAudioFile =>
+      'Kwinjira mu dosiye y\'amajwi byanze. Nyamuneka gerageza uburenganzira.';
+
+  @override
+  String get serverReturnedErrorPageForAudio =>
+      'Seriveri yasubije urupapuro rw\'amakosa aho dosiye y\'amajwi. Dosiye ishobora kutabaho kuri URL yashyizweho.';
+
+  @override
+  String errorLoadingAudioWithMessage(String message) =>
+      'Ikosa mu gukurura amajwi: $message';
+
+  @override
+  String couldNotOpenUrl(String url) => 'Ntibishoboye gufungura $url';
+
+  @override
+  String contentNumber(int number) => 'Ibirimo $number';
+
+  @override
+  String get audioContent => 'Ibirimo by\'amajwi';
+
+  @override
+  String get loadingAudio => 'Kurura amajwi...';
+
+  @override
+  String get pleaseWaitWhileWeLoadTheAudioFile =>
+      'Nyamuneka tegereza mu gihe dukurura dosiye y\'amajwi';
+
+  @override
+  String get externalLink => 'Ihuza ryo hanze';
+
+  @override
+  String get openLink => 'Fungura ihuza';
+
+  @override
+  String get noContentAvailable => 'Nta birimo bihari';
+
+  // Course Detail Screen
+  @override
+  String get startCourse => 'Tangira amahugurwa';
+
+  @override
+  String get getAccessToStart => 'Bona uburenganzira bwo gutangira';
+
+  @override
+  String get courseContentBeingPrepared =>
+      'Ibirimo by\'amahugurwa biracyategurwa. Nyamuneka subira nyuma.';
+
+  @override
+  String get difficulty => 'Ingorane';
+
+  @override
+  String contentItemsCount(int count) => '$count Ibirimo';
+
+  @override
+  String get courseContent => 'Ibirimo by\'amahugurwa';
+
+  @override
+  String get errorLoadingCourse => 'Ikosa mu gukurura amahugurwa';
+
+  @override
+  String get failedToLoadCourseDetails =>
+      'Ntibyashoboye gukurura amakuru y\'amahugurwa';
+  @override
+  String get noNotificationsYet => 'Nta makuru ahari';
+
+  @override
+  String get youllSeeYourNotificationsHere =>
+      'Uzajya ubona amakuru y\'amenyesha yose hano';
+
+  // Terms & Conditions Screen - Kinyarwanda
+  @override
+  String get termsConditionsSection1Title => '1. Kwemera Amategeko';
+
+  @override
+  String get termsConditionsSection1Content =>
+      'Mu gukurura (download), gushyira kuri telefone (install), cyangwa gukoresha porogaramu ya Rwanda Traffic Rule 🇷🇼, uba wemeye gukurikiza aya Mategeko n’Amabwiriza. Niba utayemera, nyamuneka ntukoreshe iyi porogaramu.';
+
+  @override
+  String get termsConditionsSection2Title => '2. Ibisobanuro bya Serivisi';
+
+  @override
+  String get termsConditionsSection2Content =>
+      'Rwanda Traffic Rule 🇷🇼 ni porogaramu y’uburezi igenewe:\n\n'
+      '• Ibibazo by’imyitozo n’ibizamini ku mategeko y’umuhanda\n\n'
+      '• Gukurikirana aho ugeze n’isesengura ry’imikorere\n\n'
+      '• Amasomo ajyanye n’amategeko y’umuhanda\n\n'
+      '• Kwiga udakoresheje internet (offline)\n\n'
+      '• Kwerekana intambwe n’ibyagezweho mu myigire';
+
+  @override
+  String get termsConditionsSection3Title => '3. Konti z’Abakoresha';
+
+  @override
+  String get termsConditionsSection3Content =>
+      'Kugira ngo ukoreshe porogaramu yacu, ugomba:\n\n'
+      '• Gutanga amakuru nyayo kandi yuzuye igihe wiyandikisha\n\n'
+      '• Kurinda umutekano wa konti yawe\n\n'
+      '• Kuba ari wowe ubazwa ibikorwa byose bikorwa kuri konti yawe\n\n'
+      '• Kutumenyesha ako kanya igihe hagaragaye ikoreshwa ritabyemerewe\n\n'
+      '• Kuba ufite nibura imyaka 13 kugira ngo ufungure konti';
+
+  @override
+  String get termsConditionsSection4Title => '4. Imikoreshereze Yemewe';
+
+  @override
+  String get termsConditionsSection4Content =>
+      'Wemeye gukoresha porogaramu yacu mu buryo bwemewe n’amategeko kandi bukurikiza aya mabwiriza. Ntibyemewe:\n\n'
+      '• Gukoresha porogaramu mu bikorwa binyuranyije n’amategeko\n\n'
+      '• Kugerageza kwinjira mu buryo butemewe muri sisiteme zacu\n\n'
+      '• Kubangamira cyangwa guhungabanya imikorere ya porogaramu\n\n'
+      '• Gusangiza abandi amakuru ya konti yawe\n\n'
+      '• Gukoresha porogaramu hifashishijwe sisiteme zikorana ubwazo (automated systems)\n\n'
+      '• Gusubiza inyuma (reverse engineer) cyangwa gushaka kode ya porogaramu';
+
+  @override
+  String get termsConditionsSection5Title =>
+      '5. Ibiri muri Porogaramu by’Uburezi';
+
+  @override
+  String get termsConditionsSection5Content =>
+      'Ibikubiye muri iyi porogaramu bigenewe amahugurwa gusa. Nubwo dushyira imbaraga mu gutanga amakuru nyayo:\n\n'
+      '• Amakuru ashobora kudahura n’amategeko agezweho\n\n'
+      '• Amategeko y’aho uherereye ashobora gutandukana kandi akagira agaciro kurusha ibiri muri porogaramu\n\n'
+      '• Abakoresha bagomba kugenzura amakuru bifashishije inzego za Leta zemewe\n\n'
+      '• Ntitubazwa imyanzuro ifashwe hashingiwe ku makuru yo muri porogaramu';
+
+  @override
+  String get termsConditionsSection6Title =>
+      '6. Uburenganzira ku Bihangano (Intellectual Property)';
+
+  @override
+  String get termsConditionsSection6Content =>
+      'Ibikubiye muri porogaramu, imikorere yayo, n’ibindi byose biyiranga ni ibyacu kandi birinzwe n’amategeko arengera uburenganzira ku bihangano. Ntibyemewe:\n\n'
+      '• Gukoporora, guhindura, cyangwa gukwirakwiza ibiri muri porogaramu\n\n'
+      '• Gukoresha ibirango byacu utabyemerewe\n\n'
+      '• Gukora porogaramu ishingiye ku yacu (derivative works)\n\n'
+      '• Gusiba cyangwa guhindura amatangazo arengera uburenganzira';
+
+  @override
+  String get termsConditionsSection7Title => '7. Ibanga n’Umutekano w’Amakuru';
+
+  @override
+  String get termsConditionsSection7Content =>
+      'Ibanga ryawe ni ingenzi kuri twe. Uko dukusanya kandi dukoresha amakuru yawe bigengwa na Politiki y’Ibanga yacu, ifatwa nk’igice cy’aya Mategeko.';
+
+  @override
+  String get termsConditionsSection8Title =>
+      '8. Inshingano n’Imipaka y’Ubwishingizi';
+
+  @override
+  String get termsConditionsSection8Content =>
+      'POROGARAMU ITANGWA NK’UKO IRI, IDAFITE UBWISHINGIZI BW’UBWOKO BWOSE. TWANGA UBWISHINGIZI BWOSE, BURIMO:\n\n'
+      '• Ubwishingizi bw’uko ibicuruzwa bikwiye gukoreshwa (merchantability)\n\n'
+      '• Ubwishingizi bw’uko bikwiye intego runaka\n\n'
+      '• Ubwishingizi bw’uko porogaramu itazagira ibibazo cyangwa amakosa\n\n'
+      '• Ubwishingizi ku kuri no kwizerwa kw’amakuru atangwa';
+
+  @override
+  String get termsConditionsSection9Title => '9. Imipaka y’Inshingano';
+
+  @override
+  String get termsConditionsSection9Content =>
+      'Mu rwego rwemewe n’amategeko, ntitubazwa igihombo icyo ari cyo cyose kitaziguye cyangwa kiziguye, kirimo:\n\n'
+      '• Gutakaza inyungu, amakuru, cyangwa ikoreshwa\n\n'
+      '• Guhagarara kw’imirimo\n\n'
+      '• Gukomereka cyangwa kwangirika kw’imitungo\n\n'
+      '• Igihombo giturutse ku gukoresha cyangwa kudashobora gukoresha porogaramu';
+
+  @override
+  String get termsConditionsSection10Title => '10. Gusesa Konti';
+
+  @override
+  String get termsConditionsSection10Content =>
+      'Dufite uburenganzira bwo guhagarika cyangwa gusiba konti yawe igihe icyo ari cyo cyose kubera:\n\n'
+      '• Kurenga kuri aya mategeko\n\n'
+      '• Ibikorwa by’uburiganya cyangwa binyuranyije n’amategeko\n\n'
+      '• Kutagira igikorwa kuri konti igihe kirekire\n\n'
+      '• Icyemezo gifashwe ku bushake bwacu\n\n'
+      'Nawe ushobora gusaba gusiba konti yawe igihe icyo ari cyo cyose utwandikiye.';
+
+  @override
+  String get termsConditionsSection11Title => '11. Impinduka ku Mategeko';
+
+  @override
+  String get termsConditionsSection11Content =>
+      'Dufite uburenganzira bwo guhindura aya mategeko igihe icyo ari cyo cyose. Impinduka zitangira gukurikizwa ako kanya zimaze gutangazwa. Gukomeza gukoresha porogaramu bisobanura ko wemeye ayo mavugurura.';
+
+  @override
+  String get termsConditionsSection12Title =>
+      '12. Amategeko Agenga Aya Mabwiriza';
+
+  @override
+  String get termsConditionsSection12Content =>
+      'Aya mategeko agengwa kandi asobanurwa hakurikijwe amategeko y’u Rwanda, hatitawe ku itandukaniro ry’amategeko.';
+
+  @override
+  String get termsConditionsSection13Title => '13. Aho Watwandikira';
+
+  @override
+  String get termsConditionsSection13Content =>
+      'Niba ufite ibibazo bijyanye n’aya Mategeko n’Amabwiriza, twandikire kuri:\n\n'
+      'Email: engineers.devs@gmail.com\n\n'
+      'Telefone: +250788659575\n\n'
+      'WhatsApp: +250788659575\n\n'
+      'Live Chat: Irahari amasaha 24/7';
+
+  @override
+  String lastUpdatedDate(String date) => 'Byavuguruwe bwa nyuma: $date';
 }

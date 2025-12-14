@@ -561,93 +561,95 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     SizedBox(height: 8.h),
 
                     // Help section with two phone numbers
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.phone_outlined,
-                          color: AppColors.grey600,
-                          size: 14.sp,
-                        ),
-                        SizedBox(width: 6.w),
-                        Text(
-                          l10n.needHelpCall,
-                          style: AppTextStyles.bodySmall.copyWith(
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.phone_outlined,
                             color: AppColors.grey600,
-                            fontSize: 13.sp,
+                            size: 14.sp,
                           ),
-                        ),
-                        // First phone number
-                        GestureDetector(
-                          onTap: () async {
-                            try {
-                              const phoneNumber = '+250788659575';
-                              final Uri phoneUri = Uri(
-                                scheme: 'tel',
-                                path: phoneNumber,
-                              );
-                              if (await canLaunchUrl(phoneUri)) {
-                                await launchUrl(
-                                  phoneUri,
-                                  mode: LaunchMode.externalApplication,
-                                );
-                              } else {
-                                _showPhoneNumberDialog();
-                              }
-                            } catch (e) {
-                              _showPhoneNumberDialog();
-                            }
-                          },
-                          child: Text(
-                            '0788 659 575',
+                          SizedBox(width: 6.w),
+                          Text(
+                            l10n.needHelpCall,
                             style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.secondary,
+                              color: AppColors.grey600,
                               fontSize: 13.sp,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
                             ),
                           ),
-                        ),
-                        Text(
-                          ' / ',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.grey600,
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        // Second phone number
-                        GestureDetector(
-                          onTap: () async {
-                            try {
-                              const phoneNumber = '+250728877442';
-                              final Uri phoneUri = Uri(
-                                scheme: 'tel',
-                                path: phoneNumber,
-                              );
-                              if (await canLaunchUrl(phoneUri)) {
-                                await launchUrl(
-                                  phoneUri,
-                                  mode: LaunchMode.externalApplication,
+                          // First phone number
+                          GestureDetector(
+                            onTap: () async {
+                              try {
+                                const phoneNumber = '+250788659575';
+                                final Uri phoneUri = Uri(
+                                  scheme: 'tel',
+                                  path: phoneNumber,
                                 );
-                              } else {
+                                if (await canLaunchUrl(phoneUri)) {
+                                  await launchUrl(
+                                    phoneUri,
+                                    mode: LaunchMode.externalApplication,
+                                  );
+                                } else {
+                                  _showPhoneNumberDialog();
+                                }
+                              } catch (e) {
                                 _showPhoneNumberDialog();
                               }
-                            } catch (e) {
-                              _showPhoneNumberDialog();
-                            }
-                          },
-                          child: Text(
-                            '0728 877 442',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.secondary,
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
+                            },
+                            child: Text(
+                              '0788 659 575',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.secondary,
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                          Text(
+                            ' / ',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.grey600,
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          // Second phone number
+                          GestureDetector(
+                            onTap: () async {
+                              try {
+                                const phoneNumber = '+250728877442';
+                                final Uri phoneUri = Uri(
+                                  scheme: 'tel',
+                                  path: phoneNumber,
+                                );
+                                if (await canLaunchUrl(phoneUri)) {
+                                  await launchUrl(
+                                    phoneUri,
+                                    mode: LaunchMode.externalApplication,
+                                  );
+                                } else {
+                                  _showPhoneNumberDialog();
+                                }
+                              } catch (e) {
+                                _showPhoneNumberDialog();
+                              }
+                            },
+                            child: Text(
+                              '0728 877 442',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.secondary,
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

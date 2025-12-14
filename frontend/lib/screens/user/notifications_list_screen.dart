@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:learn_traffic_rules/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/api_service.dart';
@@ -413,14 +414,8 @@ class _NotificationsListScreenState
 
   @override
   Widget build(BuildContext context) {
-    // if (_notifications.any((n) => !n['isRead'])) {
-    //   IconButton(
-    //     onPressed: _markAllAsRead,
-    //     icon: const Icon(Icons.done_all),
-    //     color: Colors.black,
-    //     tooltip: 'Mark all as read',
-    //   );
-    // }
+    final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () => _loadNotifications(refresh: true),
@@ -438,14 +433,14 @@ class _NotificationsListScreenState
                     ),
                     SizedBox(height: 16.h),
                     Text(
-                      'No notifications yet',
+                      l10n.noNotificationsYet,
                       style: AppTextStyles.heading3.copyWith(
                         color: Colors.grey,
                       ),
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      'You\'ll see your notifications here',
+                      l10n.youllSeeYourNotificationsHere,
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: Colors.grey,
                       ),
@@ -550,15 +545,6 @@ class _NotificationsListScreenState
       ),
     );
   }
-
-  // void _testNotification() {
-  //   try {
-  //     NotificationPollingService().testNotification();
-  //     _showSuccessSnackBar('Test notification sent!');
-  //   } catch (e) {
-  //     _showErrorSnackBar('Failed to send test notification: $e');
-  //   }
-  // }
 
   // Method to clear shown notifications (call this when user opens exams)
   void clearShownNotifications() {

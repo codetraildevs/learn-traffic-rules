@@ -250,15 +250,15 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         print('   Full URL: $audioUrl');
 
         // Validate URL format
+        final l10n = AppLocalizations.of(context)!;
         if (!audioUrl.startsWith('http://') &&
             !audioUrl.startsWith('https://')) {
-          throw Exception('Invalid audio URL: $audioUrl');
+          throw Exception(l10n.invalidAudioUrlMessage(audioUrl));
         }
 
         // Validate URL exists and is accessible (non-blocking)
         final isValid = await _validateAudioUrl(audioUrl);
         if (!isValid) {
-          final l10n = AppLocalizations.of(context)!;
           throw Exception(l10n.audioFileNotFoundOrInvalid);
         }
 
@@ -341,7 +341,8 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
               .timeout(
                 const Duration(seconds: 15),
                 onTimeout: () {
-                  final l10n = AppLocalizations.of(context)!;
+                  if (!mounted) return;
+                  final l10n = AppLocalizations.of(context);
                   throw Exception(l10n.timeoutLoadingAudioFile);
                 },
               );
@@ -428,12 +429,9 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.errorPlayingAudio(e.toString()),
-            ),
-          ),
+          SnackBar(content: Text(l10n.errorPlayingAudio(e.toString()))),
         );
       }
     }
@@ -507,13 +505,10 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${AppLocalizations.of(context)!.couldNotOpenUrl}: $fullUrl',
-            ),
-          ),
-        );
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.couldNotOpenUrl(fullUrl))));
       }
     }
   }
@@ -655,7 +650,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
                 Expanded(
                   child: Builder(
                     builder: (context) {
-                      final l10n = AppLocalizations.of(context)!;
+                      final l10n = AppLocalizations.of(context);
                       return CustomButton(
                         text: l10n.previous,
                         onPressed: _currentIndex > 0 ? _goToPrevious : null,
@@ -669,11 +664,11 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
                 Expanded(
                   child: Builder(
                     builder: (context) {
-                      final l10n = AppLocalizations.of(context)!;
+                      final l10n = AppLocalizations.of(context);
                       return CustomButton(
                         text: _currentIndex < _contents.length - 1
                             ? l10n.next
-                            : l10n.complete,
+                            : l10n.finish,
                         onPressed: _currentIndex < _contents.length - 1
                             ? _goToNext
                             : () {
@@ -1091,12 +1086,17 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 16.h),
-          CustomButton(
-            text: 'Open Link',
-            onPressed: () => _handleLink(content.content),
-            backgroundColor: AppColors.primary,
-            textColor: AppColors.white,
-            width: 150.w,
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context);
+              return CustomButton(
+                text: l10n.openLink,
+                onPressed: () => _handleLink(content.content),
+                backgroundColor: AppColors.primary,
+                textColor: AppColors.white,
+                width: 150.w,
+              );
+            },
           ),
         ],
       ),

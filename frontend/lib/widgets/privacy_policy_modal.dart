@@ -1,6 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:learn_traffic_rules/core/theme/app_theme.dart';
+import 'package:learn_traffic_rules/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PrivacyPolicyModal extends StatelessWidget {
@@ -35,6 +38,7 @@ class PrivacyPolicyModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       decoration: BoxDecoration(
@@ -114,7 +118,7 @@ class PrivacyPolicyModal extends StatelessWidget {
                             SizedBox(width: 12.w),
                             Expanded(
                               child: Text(
-                                '⚠️ IMPORTANT DISCLAIMER',
+                                l10n.importantDisclaimer,
                                 style: AppTextStyles.bodyMedium.copyWith(
                                   color: AppColors.error,
                                   fontWeight: FontWeight.bold,
@@ -125,7 +129,7 @@ class PrivacyPolicyModal extends StatelessWidget {
                         ),
                         SizedBox(height: 12.h),
                         Text(
-                          'This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.',
+                          l10n.privacyGovDisclaimer,
                           style: AppTextStyles.bodySmall.copyWith(
                             color: AppColors.grey800,
                             fontWeight: FontWeight.w600,
@@ -134,7 +138,7 @@ class PrivacyPolicyModal extends StatelessWidget {
                         ),
                         SizedBox(height: 12.h),
                         Text(
-                          'Official Source:',
+                          l10n.officialSource,
                           style: AppTextStyles.bodySmall.copyWith(
                             color: AppColors.grey800,
                             fontWeight: FontWeight.w600,
@@ -215,7 +219,7 @@ class PrivacyPolicyModal extends StatelessWidget {
                               SizedBox(width: 6.w),
                               Expanded(
                                 child: Text(
-                                  'Rwanda National Police (Driving License Services): police.gov.rw/home',
+                                  l10n.rnpDrivingLicense,
                                   style: AppTextStyles.bodySmall.copyWith(
                                     color: AppColors.primary,
                                     fontWeight: FontWeight.w600,
@@ -244,34 +248,22 @@ class PrivacyPolicyModal extends StatelessWidget {
                   SizedBox(height: 20.h),
 
                   // Data collection section
-                  _buildSection(
-                    'Data We Collect',
-                    '• Phone number for account creation\n'
-                        '• Device information for security\n'
-                        '• Learning progress and exam results\n'
-                        '• App usage patterns for improvement',
-                  ),
+                  _buildSection(l10n.dataWeCollect, l10n.dataWeCollectContent),
 
                   SizedBox(height: 16.h),
 
                   // Data usage section
                   _buildSection(
-                    'How We Use Your Data',
-                    '• Provide personalized learning experience\n'
-                        '• Track your progress and performance\n'
-                        '• Send educational notifications\n'
-                        '• Improve app functionality',
+                    l10n.howWeUseYourData,
+                    l10n.howWeUseYourDataContent,
                   ),
 
                   SizedBox(height: 16.h),
 
                   // Data protection section
                   _buildSection(
-                    'Data Protection',
-                    '• Your data is encrypted and secure\n'
-                        '• We never share personal information\n'
-                        '• You can delete your account anytime\n'
-                        '• Contact us for data requests',
+                    l10n.dataProtection,
+                    l10n.dataProtectionContent,
                   ),
 
                   SizedBox(height: 20.h),
@@ -311,7 +303,7 @@ class PrivacyPolicyModal extends StatelessWidget {
                         ),
                         SizedBox(width: 8.w),
                         Text(
-                          'Read Full Privacy Policy',
+                          l10n.readFullPrivacyPolicy,
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.white,
                             fontWeight: FontWeight.w600,
@@ -326,7 +318,7 @@ class PrivacyPolicyModal extends StatelessWidget {
 
                 // Contact info
                 Text(
-                  'Questions? Contact us at +250 780 494 000',
+                  l10n.contactUsQuestion,
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.grey600,
                   ),
@@ -364,6 +356,7 @@ class PrivacyPolicyModal extends StatelessWidget {
   }
 
   Future<void> _launchFullPolicy(String url, BuildContext buildContext) async {
+    final l10n = AppLocalizations.of(buildContext);
     try {
       final Uri uri = Uri.parse(url);
 
@@ -377,14 +370,12 @@ class PrivacyPolicyModal extends StatelessWidget {
         showDialog(
           context: buildContext,
           builder: (context) => AlertDialog(
-            title: const Text('Open Privacy Policy'),
-            content: Text(
-              'Unable to open browser automatically.\n\nPlease visit: $url',
-            ),
+            title: Text(l10n.openPrivacyPolicy),
+            content: Text('${l10n.unableToOpenBrowser}: $url'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
+                child: Text(l10n.ok),
               ),
             ],
           ),

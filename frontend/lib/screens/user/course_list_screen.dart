@@ -47,13 +47,15 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
         });
         _applyFilter();
       } else {
-        final l10n = AppLocalizations.of(context)!;
+        if (!mounted) return;
+        final l10n = AppLocalizations.of(context);
         setState(() {
           _error = response.message ?? l10n.errorLoadingCourses;
         });
       }
     } catch (e) {
-      final l10n = AppLocalizations.of(context)!;
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _error = '${l10n.errorLoadingCourses} $e';
       });
@@ -83,7 +85,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
     final authState = ref.watch(authProvider);
     final hasAccess = authState.accessPeriod?.hasAccess ?? false;
 
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.grey50,
       appBar: AppBar(
@@ -126,7 +128,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
   }
 
   Widget _buildFilterSection() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
@@ -174,7 +176,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
           SizedBox(width: 8.w),
           Expanded(
             child: FilterChip(
-              label: Text(l10n.paid),
+              label: Text(l10n.paidCourse),
               selected: _selectedCourseType == CourseType.paid,
               onSelected: (selected) {
                 setState(() {
@@ -192,7 +194,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
   }
 
   Widget _buildCourseCard(Course course, bool hasAccess) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     // Global payment: if user has access, they can access all paid courses
     final canAccess = course.isFree || hasAccess;
 
@@ -449,7 +451,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
   }
 
   Widget _buildEmptyView() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: EdgeInsets.all(20.w),

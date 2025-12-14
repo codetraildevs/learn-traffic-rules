@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../main.dart';
 import '../../services/flash_message_service.dart';
+import '../../l10n/app_localizations.dart';
 import '../auth/register_screen.dart';
 
 class DisclaimerScreen extends ConsumerStatefulWidget {
@@ -22,6 +23,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -63,7 +65,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
 
                       // App Title
                       Text(
-                        'Rwanda Traffic Rule 🇷🇼',
+                        l10n.appName,
                         style: TextStyle(
                           fontSize: 28.sp,
                           fontWeight: FontWeight.bold,
@@ -74,7 +76,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
 
                       // Subtitle
                       Text(
-                        'Provisional Driving License Preparation',
+                        l10n.provisionalDrivingLicense,
                         style: TextStyle(
                           fontSize: 16.sp,
                           color: const Color(0xFF6B7280),
@@ -110,7 +112,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
 
                       // Disclaimer Title
                       Text(
-                        'Educational Disclaimer',
+                        l10n.educationalDisclaimer,
                         style: TextStyle(
                           fontSize: 24.sp,
                           fontWeight: FontWeight.bold,
@@ -134,27 +136,27 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                         child: Column(
                           children: [
                             _buildDisclaimerItem(
+                              l10n,
                               icon: Icons.school,
-                              title: 'Educational Purpose Only',
-                              description:
-                                  'This app is designed for educational purposes to help you prepare for your provisional driving license exam.',
+                              title: l10n.educationalPurposeOnlyDisclaimer,
+                              description: l10n.educationalPurposeOnlyDescription,
                             ),
                             SizedBox(height: 16.h),
                             _buildDisclaimerItem(
+                              l10n,
                               icon: Icons.sim_card,
-                              title: 'Practice Simulation',
-                              description:
-                                  'The practice tests simulate real exam conditions but are not official government examinations.',
+                              title: l10n.practiceSimulation,
+                              description: l10n.practiceSimulationDescription,
                             ),
                             SizedBox(height: 16.h),
                             _buildDisclaimerItem(
+                              l10n,
                               icon: Icons.warning_amber,
-                              title: 'Not Official',
-                              description:
-                                  '⚠️ IMPORTANT: This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool.',
+                              title: l10n.notOfficial,
+                              description: l10n.notAffiliatedNotice,
                             ),
                             SizedBox(height: 16.h),
-                            _buildOfficialSourceItem(),
+                            _buildOfficialSourceItem(context, l10n),
                           ],
                         ),
                       ),
@@ -187,7 +189,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                'I Understand - Continue',
+                                l10n.iUnderstandContinue,
                                 style: TextStyle(
                                   fontSize: 16.sp,
                                   fontWeight: FontWeight.w500,
@@ -227,7 +229,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                           ),
                           Expanded(
                             child: Text(
-                              'I have read and understood the educational disclaimer',
+                              l10n.iHaveReadAndUnderstoodTheEducationalDisclaimer,
                               style: TextStyle(
                                 fontSize: 14.sp,
                                 color: const Color(0xFF6B7280),
@@ -247,7 +249,8 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
     );
   }
 
-  Widget _buildDisclaimerItem({
+  Widget _buildDisclaimerItem(
+    AppLocalizations l10n, {
     required IconData icon,
     required String title,
     required String description,
@@ -293,7 +296,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
     );
   }
 
-  Widget _buildOfficialSourceItem() {
+  Widget _buildOfficialSourceItem(BuildContext context, AppLocalizations l10n) {
     const policeUrl = 'https://police.gov.rw/home/';
 
     return Row(
@@ -314,7 +317,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Official Source',
+                l10n.officialSource,
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w600,
@@ -323,7 +326,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
               ),
               SizedBox(height: 4.h),
               Text(
-                'For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to ',
+                l10n.officialSourceDescription,
                 style: TextStyle(
                   fontSize: 14.sp,
                   color: const Color(0xFF6B7280),
@@ -332,7 +335,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
               ),
               SizedBox(height: 4.h),
               GestureDetector(
-                onTap: () => _openPoliceWebsite(),
+                onTap: () => _openPoliceWebsite(context),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -344,7 +347,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                     SizedBox(width: 4.w),
                     Flexible(
                       child: Text(
-                        'Rwanda National Police (Driving License Services)',
+                        l10n.rnpDrivingLicense,
                         style: TextStyle(
                           fontSize: 14.sp,
                           color: const Color(0xFF4F46E5),
@@ -359,7 +362,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
               ),
               SizedBox(height: 2.h),
               GestureDetector(
-                onTap: () => _openPoliceWebsite(),
+                onTap: () => _openPoliceWebsite(context),
                 child: Text(
                   policeUrl,
                   style: TextStyle(
@@ -377,7 +380,8 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
     );
   }
 
-  Future<void> _openPoliceWebsite() async {
+  Future<void> _openPoliceWebsite(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     const url = 'https://police.gov.rw/home/';
     try {
       final uri = Uri.parse(url);
@@ -439,21 +443,21 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text(
-                'Could not open link. Tap "Copy" to copy the URL.',
+              content: Text(
+                l10n.couldNotOpenLinkTapCopyToCopyTheUrl,
               ),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 4),
               action: SnackBarAction(
-                label: 'Copy',
+                label: l10n.copy,
                 textColor: Colors.white,
                 onPressed: () {
                   Clipboard.setData(const ClipboardData(text: url));
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('URL copied to clipboard'),
-                        duration: Duration(seconds: 2),
+                      SnackBar(
+                        content: Text(l10n.urlCopiedToClipboard),
+                        duration: const Duration(seconds: 2),
                       ),
                     );
                   }
@@ -468,19 +472,19 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text(l10n.errorMessage(e.toString())),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 4),
             action: SnackBarAction(
-              label: 'Copy URL',
+              label: l10n.copyUrl,
               textColor: Colors.white,
               onPressed: () {
                 Clipboard.setData(const ClipboardData(text: url));
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('URL copied to clipboard'),
-                      duration: Duration(seconds: 2),
+                    SnackBar(
+                      content: Text(l10n.urlCopiedToClipboard),
+                      duration: const Duration(seconds: 2),
                     ),
                   );
                 }
@@ -493,14 +497,14 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
   }
 
   Future<void> _proceedToApp() async {
+    final l10n = AppLocalizations.of(context)!;
     // Check if user has accepted the disclaimer
     if (!_hasAcceptedDisclaimer) {
       // Show flash message asking user to accept terms
       AppFlashMessage.showWarning(
         context,
-        'Please accept terms and conditions',
-        description:
-            'Please check the box below to accept the terms and conditions before continuing',
+        l10n.pleaseAcceptTermsAndConditions,
+        description: l10n.pleaseCheckTheBoxBelowToAcceptTermsAndConditions,
       );
 
       // Scroll to checkbox to make it visible

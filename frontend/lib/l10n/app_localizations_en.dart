@@ -51,6 +51,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finish => 'Finish';
+  @override
+  String get previous => 'Previous';
 
   @override
   String get loading => 'Loading...';
@@ -2173,4 +2175,419 @@ Privacy:
   String get pleaseTryAgainLater => 'Please try again later';
   @override
   String get noDataAvailable => 'No data available';
+
+  @override
+  String get importantLegalNotice => 'Important Legal Notice';
+
+  @override
+  String get governmentAffiliation => 'Government Affiliation';
+
+  @override
+  String get governmentAffiliationContent =>
+      'This app is NOT affiliated with, endorsed by, or connected to any government agency, DMV, or official driving license authority.';
+
+  @override
+  String get educationalPurposeOnlyDisclaimer => 'Educational Purpose Only';
+
+  @override
+  String get educationalPurposeOnlyContent =>
+      'This app is designed solely for educational purposes to help you learn traffic rules and practice for driving examinations.';
+
+  @override
+  String get noOfficialCertification => 'No Official Certification';
+
+  @override
+  String get noOfficialCertificationContent =>
+      'This app does NOT provide official driving licenses, does NOT guarantee passing any official examination, and does NOT replace official government procedures.';
+
+  @override
+  String get yourResponsibility => 'Your Responsibility';
+
+  @override
+  String get yourResponsibilityContent =>
+      'You must complete official procedures through government agencies to obtain driving licenses. This app is for learning and practice only.';
+
+  @override
+  String get remember => 'Remember:';
+
+  @override
+  String get privateEducationalToolDisclaimer =>
+      'This is a private educational tool. Always verify information with official government sources.';
+
+  @override
+  String get continueLearning => 'Continue Learning';
+
+  // Privacy Policy Modal – English
+  @override
+  String get importantDisclaimer => '⚠️ IMPORTANT DISCLAIMER';
+  @override
+  String get privacyGovDisclaimer =>
+      'This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.';
+  @override
+  String get officialSource => 'Official Source:';
+  @override
+  String get rnpDrivingLicense =>
+      'Rwanda National Police (Driving License Services): police.gov.rw/home';
+  @override
+  String get dataWeCollect => 'Data We Collect';
+  @override
+  String get dataWeCollectContent =>
+      '• Phone number for account creation\n'
+      '• Device information for security\n'
+      '• Learning progress and exam results\n'
+      '• App usage patterns for improvement';
+  @override
+  String get howWeUseYourData => 'How We Use Your Data';
+  @override
+  String get howWeUseYourDataContent =>
+      '• Provide personalized learning experience\n'
+      '• Track your progress and performance\n'
+      '• Send educational notifications\n'
+      '• Improve app functionality';
+  @override
+  String get dataProtection => 'Data Protection';
+  @override
+  String get dataProtectionContent =>
+      '• Your data is encrypted and secure\n'
+      '• We never share personal information\n'
+      '• You can delete your account anytime\n'
+      '• Contact us for data requests';
+  @override
+  String get readFullPrivacyPolicy => 'Read Full Privacy Policy';
+  @override
+  String get contactUsQuestion => 'Questions? Contact us at +250 780 494 000';
+  @override
+  String get openPrivacyPolicy => 'Open Privacy Policy';
+  @override
+  String get unableToOpenBrowser =>
+      'Unable to open browser automatically.\n\nPlease visit:';
+
+  // Disclaimer Screen
+  @override
+  String get educationalDisclaimer => 'Educational Disclaimer';
+
+  @override
+  String get educationalPurposeOnlyDescription =>
+      'This app is designed for educational purposes to help you prepare for your provisional driving license exam.';
+
+  @override
+  String get practiceSimulation => 'Practice Simulation';
+
+  @override
+  String get practiceSimulationDescription =>
+      'The practice tests simulate real exam conditions but are not official government examinations.';
+
+  @override
+  String get notOfficial => 'Not Official';
+
+  @override
+  String get officialSourceDescription =>
+      'For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to ';
+
+  @override
+  String get iUnderstandContinue => 'I Understand - Continue';
+
+  @override
+  String get iHaveReadAndUnderstoodTheEducationalDisclaimer =>
+      'I have read and understood the educational disclaimer';
+
+  @override
+  String get pleaseAcceptTermsAndConditions =>
+      'Please accept terms and conditions';
+
+  @override
+  String get pleaseCheckTheBoxBelowToAcceptTermsAndConditions =>
+      'Please check the box below to accept the terms and conditions before continuing';
+
+  @override
+  String get couldNotOpenLinkTapCopyToCopyTheUrl =>
+      'Could not open link. Tap "Copy" to copy the URL.';
+
+  @override
+  String get urlCopiedToClipboard => 'URL copied to clipboard';
+
+  @override
+  String get copyUrl => 'Copy URL';
+
+  @override
+  String errorMessage(String error) => 'Error: $error';
+
+  // Language Selection Screen
+  @override
+  String get chooseYourPreferredLanguage => 'Choose your preferred language';
+
+  @override
+  String get ikinyarwanda => 'Ikinyarwanda';
+
+  // Course List Screen
+  @override
+  String get paidCourse => 'Paid';
+  @override
+  String get freeCourse => 'Free';
+
+  // Course Content Viewer Screen
+  @override
+  String contentExistsButFailedToLoad(int count) =>
+      'Content exists ($count items) but failed to load. Please check your connection and try again.';
+
+  @override
+  String get noContentAvailableForThisCourse =>
+      'No content available for this course';
+
+  @override
+  String get failedToLoadCourseContent => 'Failed to load course content';
+
+  @override
+  String errorLoadingCourseContent(String error) =>
+      'Error loading course content: $error';
+
+  @override
+  String get invalidAudioUrl => 'Invalid audio URL';
+
+  @override
+  String invalidAudioUrlMessage(String url) => 'Invalid audio URL: $url';
+
+  @override
+  String get audioFileNotFoundOrInvalid =>
+      'Audio file not found or invalid. Please verify the file exists on the server.';
+
+  @override
+  String get unableToLoadAudioFile =>
+      'Unable to load audio file. The file may not exist or is in an unsupported format.';
+
+  @override
+  String errorPlayingAudio(String error) => 'Error playing audio: $error';
+
+  @override
+  String get timeoutLoadingAudioFile =>
+      'Timeout loading audio file. Please check your internet connection.';
+
+  @override
+  String get audioFileCouldNotBeLoaded =>
+      'Audio file could not be loaded. The file may not exist or is in an unsupported format.';
+
+  @override
+  String get errorLoadingAudio => 'Error loading audio';
+
+  @override
+  String get audioFileFormatNotSupported =>
+      'Audio file format not supported or file may be corrupted/invalid. Please verify the audio file exists and is in a supported format (MP3, WAV, M4A, OGG).';
+
+  @override
+  String get cannotLoadAudioFile =>
+      'Cannot load audio file. Please check your internet connection.';
+
+  @override
+  String get timeoutLoadingAudioFileSlow =>
+      'Timeout loading audio file. The file may be too large or the connection is slow.';
+
+  @override
+  String get audioFileNotFound =>
+      'Audio file not found. The file may have been deleted or moved.';
+
+  @override
+  String get accessDeniedToAudioFile =>
+      'Access denied to audio file. Please check permissions.';
+
+  @override
+  String get serverReturnedErrorPageForAudio =>
+      'Server returned an error page instead of audio file. The file may not exist at the specified URL.';
+
+  @override
+  String errorLoadingAudioWithMessage(String message) =>
+      'Error loading audio: $message';
+
+  @override
+  String couldNotOpenUrl(String url) => 'Could not open $url';
+
+  @override
+  String contentNumber(int number) => 'Content $number';
+
+  @override
+  String get audioContent => 'Audio Content';
+
+  @override
+  String get loadingAudio => 'Loading audio...';
+
+  @override
+  String get pleaseWaitWhileWeLoadTheAudioFile =>
+      'Please wait while we load the audio file';
+
+  @override
+  String get externalLink => 'External Link';
+
+  @override
+  String get openLink => 'Open Link';
+
+  @override
+  String get noContentAvailable => 'No content available';
+
+  // Course Detail Screen
+  @override
+  String get startCourse => 'Start Course';
+
+  @override
+  String get getAccessToStart => 'Get Access to Start';
+
+  @override
+  String get courseContentBeingPrepared =>
+      'Course content is being prepared. Please check back later.';
+
+  @override
+  String get difficulty => 'Difficulty';
+
+  @override
+  String contentItemsCount(int count) => '$count Content Items';
+
+  @override
+  String get courseContent => 'Course Content';
+
+  @override
+  String get errorLoadingCourse => 'Error Loading Course';
+
+  @override
+  String get failedToLoadCourseDetails => 'Failed to load course details';
+
+  @override
+  String get noNotificationsYet => 'No notifications yet';
+
+  @override
+  String get youllSeeYourNotificationsHere =>
+      'You\'ll see your notifications here';
+
+  // Terms & Conditions Screen
+  @override
+  String get termsConditionsSection1Title => '1. Acceptance of Terms';
+
+  @override
+  String get termsConditionsSection1Content =>
+      'By downloading, installing, or using the Rwanda Traffic Rule 🇷🇼 mobile application, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our app.';
+
+  @override
+  String get termsConditionsSection2Title => '2. Description of Service';
+
+  @override
+  String get termsConditionsSection2Content =>
+      'Rwanda Traffic Rule 🇷🇼 is an educational mobile application that provides:\n\n'
+      '• Interactive traffic rules quizzes and practice exams\n\n'
+      '• Progress tracking and performance analytics\n\n'
+      '• Educational content about traffic regulations\n\n'
+      '• Offline study capabilities\n\n'
+      '• Achievement and progress tracking features';
+
+  @override
+  String get termsConditionsSection3Title => '3. User Accounts';
+
+  @override
+  String get termsConditionsSection3Content =>
+      'To use our app, you must:\n\n'
+      '• Provide accurate and complete information during registration\n\n'
+      '• Maintain the security of your account\n\n'
+      '• Be responsible for all activities under your account\n\n'
+      '• Notify us immediately of any unauthorized use\n\n'
+      '• Be at least 13 years old to create an account';
+
+  @override
+  String get termsConditionsSection4Title => '4. Acceptable Use';
+
+  @override
+  String get termsConditionsSection4Content =>
+      'You agree to use our app only for lawful purposes and in accordance with these terms. You may not:\n\n'
+      '• Use the app for any illegal or unauthorized purpose\n\n'
+      '• Attempt to gain unauthorized access to our systems\n\n'
+      '• Interfere with or disrupt the app\'s functionality\n\n'
+      '• Share your account credentials with others\n\n'
+      '• Use automated systems to access the app\n\n'
+      '• Reverse engineer or attempt to extract source code';
+
+  @override
+  String get termsConditionsSection5Title => '5. Educational Content';
+
+  @override
+  String get termsConditionsSection5Content =>
+      'The content provided in our app is for educational purposes only. While we strive for accuracy:\n\n'
+      '• Information may not reflect the most current traffic laws\n\n'
+      '• Local regulations may vary and take precedence\n\n'
+      '• Users should verify information with official sources\n\n'
+      '• We are not responsible for decisions made based on app content';
+
+  @override
+  String get termsConditionsSection6Title => '6. Intellectual Property';
+
+  @override
+  String get termsConditionsSection6Content =>
+      'All content, features, and functionality of the app are owned by us and are protected by copyright, trademark, and other intellectual property laws. You may not:\n\n'
+      '• Copy, modify, or distribute our content\n\n'
+      '• Use our trademarks without permission\n\n'
+      '• Create derivative works based on our app\n\n'
+      '• Remove or alter copyright notices';
+
+  @override
+  String get termsConditionsSection7Title => '7. Privacy and Data Protection';
+
+  @override
+  String get termsConditionsSection7Content =>
+      'Your privacy is important to us. Our collection and use of personal information is governed by our Privacy Policy, which is incorporated into these terms by reference.';
+
+  @override
+  String get termsConditionsSection8Title => '8. Disclaimers and Limitations';
+
+  @override
+  String get termsConditionsSection8Content =>
+      'THE APP IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND. WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO:\n\n'
+      '• WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\n\n'
+      '• WARRANTIES OF NON-INFRINGEMENT\n\n'
+      '• WARRANTIES THAT THE APP WILL BE UNINTERRUPTED OR ERROR-FREE\n\n'
+      '• WARRANTIES REGARDING THE ACCURACY OR RELIABILITY OF CONTENT';
+
+  @override
+  String get termsConditionsSection9Title => '9. Limitation of Liability';
+
+  @override
+  String get termsConditionsSection9Content =>
+      'TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO:\n\n'
+      '• LOSS OF PROFITS, DATA, OR USE\n\n'
+      '• BUSINESS INTERRUPTION\n\n'
+      '• PERSONAL INJURY OR PROPERTY DAMAGE\n\n'
+      '• DAMAGES RESULTING FROM USE OR INABILITY TO USE THE APP';
+
+  @override
+  String get termsConditionsSection10Title => '10. Termination';
+
+  @override
+  String get termsConditionsSection10Content =>
+      'We may terminate or suspend your account at any time for:\n\n'
+      '• Violation of these terms\n\n'
+      '• Fraudulent or illegal activity\n\n'
+      '• Extended periods of inactivity\n\n'
+      '• At our sole discretion\n\n'
+      'You may also terminate your account at any time by contacting us.';
+
+  @override
+  String get termsConditionsSection11Title => '11. Changes to Terms';
+
+  @override
+  String get termsConditionsSection11Content =>
+      'We reserve the right to modify these terms at any time. Changes will be effective immediately upon posting. Your continued use of the app constitutes acceptance of the modified terms.';
+
+  @override
+  String get termsConditionsSection12Title => '12. Governing Law';
+
+  @override
+  String get termsConditionsSection12Content =>
+      'These terms are governed by and construed in accordance with the laws of Rwanda, without regard to conflict of law principles.';
+
+  @override
+  String get termsConditionsSection13Title => '13. Contact Information';
+
+  @override
+  String get termsConditionsSection13Content =>
+      'If you have any questions about these Terms and Conditions, please contact us at:\n\n'
+      'Email: engineers.devs@gmail.com\n\n'
+      'Phone: +250788659575\n\n'
+      'WhatsApp: +250788659575\n\n'
+      'Live Chat: Available 24/7';
+
+  @override
+  String lastUpdatedDate(String date) => 'Last updated: $date';
 }

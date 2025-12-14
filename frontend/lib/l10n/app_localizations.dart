@@ -739,6 +739,142 @@ abstract class AppLocalizations {
   String get somethingWentWrong;
   String get pleaseTryAgainLater;
   String get noDataAvailable;
+  String get importantLegalNotice;
+  String get governmentAffiliation;
+  String get governmentAffiliationContent;
+  String get educationalPurposeOnlyDisclaimer;
+  String get educationalPurposeOnlyContent;
+  String get noOfficialCertification;
+  String get noOfficialCertificationContent;
+  String get yourResponsibility;
+  String get yourResponsibilityContent;
+  String get remember;
+  String get privateEducationalToolDisclaimer;
+  String get continueLearning;
+
+  // Privacy Policy Modal – English
+  String get importantDisclaimer;
+
+  String get privacyGovDisclaimer;
+
+  String get officialSource;
+
+  String get rnpDrivingLicense;
+
+  String get dataWeCollect;
+
+  String get dataWeCollectContent;
+
+  String get howWeUseYourData;
+
+  String get howWeUseYourDataContent;
+
+  String get dataProtection;
+
+  String get dataProtectionContent;
+
+  String get readFullPrivacyPolicy;
+
+  String get contactUsQuestion;
+
+  String get openPrivacyPolicy;
+
+  String get unableToOpenBrowser;
+
+  // Disclaimer Screen
+  String get educationalDisclaimer;
+  String get educationalPurposeOnlyDescription;
+  String get practiceSimulation;
+  String get practiceSimulationDescription;
+  String get notOfficial;
+  String get officialSourceDescription;
+  String get iUnderstandContinue;
+  String get iHaveReadAndUnderstoodTheEducationalDisclaimer;
+  String get pleaseAcceptTermsAndConditions;
+  String get pleaseCheckTheBoxBelowToAcceptTermsAndConditions;
+  String get couldNotOpenLinkTapCopyToCopyTheUrl;
+  String get urlCopiedToClipboard;
+  String get copyUrl;
+  String errorMessage(String error);
+
+  // Language Selection Screen
+  String get chooseYourPreferredLanguage;
+  String get ikinyarwanda;
+
+  // Course List Screen
+  String get paidCourse;
+  String get freeCourse;
+
+  // Course Content Viewer Screen
+  String contentExistsButFailedToLoad(int count);
+  String get noContentAvailableForThisCourse;
+  String get failedToLoadCourseContent;
+  String errorLoadingCourseContent(String error);
+  String get invalidAudioUrl;
+  String invalidAudioUrlMessage(String url);
+  String get audioFileNotFoundOrInvalid;
+  String get unableToLoadAudioFile;
+  String errorPlayingAudio(String error);
+  String get timeoutLoadingAudioFile;
+  String get audioFileCouldNotBeLoaded;
+  String get errorLoadingAudio;
+  String get audioFileFormatNotSupported;
+  String get cannotLoadAudioFile;
+  String get timeoutLoadingAudioFileSlow;
+  String get audioFileNotFound;
+  String get accessDeniedToAudioFile;
+  String get serverReturnedErrorPageForAudio;
+  String errorLoadingAudioWithMessage(String message);
+  String couldNotOpenUrl(String url);
+  String contentNumber(int number);
+  String get audioContent;
+  String get loadingAudio;
+  String get pleaseWaitWhileWeLoadTheAudioFile;
+  String get externalLink;
+  String get openLink;
+  String get noContentAvailable;
+
+  // Course Detail Screen
+  String get startCourse;
+  String get getAccessToStart;
+  String get courseContentBeingPrepared;
+  String get difficulty;
+  String contentItemsCount(int count);
+  String get courseContent;
+  String get errorLoadingCourse;
+  String get failedToLoadCourseDetails;
+  String get previous;
+  String get noNotificationsYet;
+  String get youllSeeYourNotificationsHere;
+
+  // Terms & Conditions Screen
+  String get termsConditionsSection1Title;
+  String get termsConditionsSection1Content;
+  String get termsConditionsSection2Title;
+  String get termsConditionsSection2Content;
+  String get termsConditionsSection3Title;
+  String get termsConditionsSection3Content;
+  String get termsConditionsSection4Title;
+  String get termsConditionsSection4Content;
+  String get termsConditionsSection5Title;
+  String get termsConditionsSection5Content;
+  String get termsConditionsSection6Title;
+  String get termsConditionsSection6Content;
+  String get termsConditionsSection7Title;
+  String get termsConditionsSection7Content;
+  String get termsConditionsSection8Title;
+  String get termsConditionsSection8Content;
+  String get termsConditionsSection9Title;
+  String get termsConditionsSection9Content;
+  String get termsConditionsSection10Title;
+  String get termsConditionsSection10Content;
+  String get termsConditionsSection11Title;
+  String get termsConditionsSection11Content;
+  String get termsConditionsSection12Title;
+  String get termsConditionsSection12Content;
+  String get termsConditionsSection13Title;
+  String get termsConditionsSection13Content;
+  String lastUpdatedDate(String date);
 
   // Factory constructor to get the appropriate localization
   static AppLocalizations of(BuildContext context) {

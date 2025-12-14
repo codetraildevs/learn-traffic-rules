@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/locale_provider.dart';
 import '../../services/locale_service.dart';
+import '../../l10n/app_localizations.dart';
 import '../../main.dart';
 
 class LanguageSelectionScreen extends ConsumerStatefulWidget {
@@ -51,6 +52,7 @@ class _LanguageSelectionScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -84,7 +86,7 @@ class _LanguageSelectionScreenState
 
               // Title
               Text(
-                'Select Language',
+                l10n.selectLanguage,
                 style: TextStyle(
                   fontSize: 28.sp,
                   fontWeight: FontWeight.bold,
@@ -95,7 +97,7 @@ class _LanguageSelectionScreenState
 
               // Subtitle
               Text(
-                'Choose your preferred language',
+                l10n.chooseYourPreferredLanguage,
                 style: TextStyle(
                   fontSize: 16.sp,
                   color: AppColors.grey600,
@@ -106,21 +108,21 @@ class _LanguageSelectionScreenState
               // Language Options
               _buildLanguageOption(
                 languageCode: 'en',
-                languageName: 'English',
+                languageName: l10n.english,
                 flag: '🇬🇧',
                 isSelected: _selectedLanguage == 'en',
               ),
               SizedBox(height: 16.h),
               _buildLanguageOption(
                 languageCode: 'rw',
-                languageName: 'Ikinyarwanda',
+                languageName: l10n.ikinyarwanda,
                 flag: '🇷🇼',
                 isSelected: _selectedLanguage == 'rw',
               ),
               SizedBox(height: 16.h),
               _buildLanguageOption(
                 languageCode: 'fr',
-                languageName: 'Français',
+                languageName: l10n.french,
                 flag: '🇫🇷',
                 isSelected: _selectedLanguage == 'fr',
               ),
