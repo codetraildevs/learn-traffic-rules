@@ -3,16 +3,18 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
+import '../../l10n/app_localizations.dart';
 
 class AboutAppScreen extends StatelessWidget {
   const AboutAppScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.grey50,
       appBar: AppBar(
-        title: const Text('About App'),
+        title: Text(l10n.aboutApp),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         elevation: 0,
@@ -62,7 +64,7 @@ class AboutAppScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 24.h),
                       Text(
-                        'Rwanda Traffic Rule 🇷🇼',
+                        l10n.appName,
                         style: AppTextStyles.heading1.copyWith(
                           fontSize: 28.sp,
                           color: AppColors.white,
@@ -112,14 +114,14 @@ class AboutAppScreen extends StatelessWidget {
                     children: [
                       // About Section
                       _buildSectionCard(
-                        title: 'About This App',
+                        title: l10n.aboutThisApp,
                         icon: Icons.info_rounded,
                         iconColor: AppColors.primary,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Rwanda Traffic Rule 🇷🇼 is a comprehensive educational mobile application designed to help individuals prepare for their provisional driving license examination. This app provides interactive practice tests, comprehensive courses, and study materials with multi-language support to enhance safe driving knowledge development.',
+                              l10n.appDescription,
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: AppColors.grey700,
                                 height: 1.6,
@@ -129,10 +131,10 @@ class AboutAppScreen extends StatelessWidget {
                             _buildInfoBanner(
                               icon: Icons.school_rounded,
                               message:
-                                  '⚠️ IMPORTANT: This app is NOT affiliated with, endorsed by, or associated with the Government of Rwanda or any official driving test authority. This is an independent educational tool.',
+                                  '${l10n.importantNotice} ${l10n.notAffiliatedNotice}',
                             ),
                             SizedBox(height: 16.h),
-                            _buildSourceLinksSection(),
+                            _buildSourceLinksSection(l10n),
                           ],
                         ),
                       ),
@@ -141,7 +143,7 @@ class AboutAppScreen extends StatelessWidget {
 
                       // Features Section
                       _buildSectionCard(
-                        title: 'Key Features',
+                        title: l10n.keyFeatures,
                         icon: Icons.star_rounded,
                         iconColor: AppColors.warning,
                         child: GridView.count(
@@ -154,32 +156,32 @@ class AboutAppScreen extends StatelessWidget {
                           children: [
                             _buildFeatureCard(
                               icon: Icons.quiz_rounded,
-                              title: 'Practice Exams',
+                              title: l10n.practiceExams,
                               color: AppColors.primary,
                             ),
                             _buildFeatureCard(
                               icon: Icons.language_rounded,
-                              title: 'Multi-Language',
+                              title: l10n.multiLanguage,
                               color: AppColors.success,
                             ),
                             _buildFeatureCard(
                               icon: Icons.video_library_rounded,
-                              title: 'Rich Media',
+                              title: l10n.richMedia,
                               color: AppColors.error,
                             ),
                             _buildFeatureCard(
                               icon: Icons.offline_bolt_rounded,
-                              title: 'Offline Mode',
+                              title: l10n.offlineMode,
                               color: AppColors.warning,
                             ),
                             _buildFeatureCard(
                               icon: Icons.track_changes_rounded,
-                              title: 'Progress Tracking',
+                              title: l10n.progressTracking,
                               color: AppColors.primary,
                             ),
                             _buildFeatureCard(
                               icon: Icons.payment_rounded,
-                              title: 'Access Codes',
+                              title: l10n.accessCodes,
                               color: AppColors.success,
                             ),
                           ],
@@ -190,62 +192,62 @@ class AboutAppScreen extends StatelessWidget {
 
                       // All Features List
                       _buildSectionCard(
-                        title: 'Complete Feature List',
+                        title: l10n.completeFeatureList,
                         icon: Icons.list_rounded,
                         iconColor: AppColors.success,
                         child: Column(
                           children: [
                             _buildFeatureListItem(
                               Icons.quiz_rounded,
-                              'Interactive practice exams',
+                              l10n.interactivePracticeExams,
                             ),
                             _buildFeatureListItem(
                               Icons.language_rounded,
-                              'Multi-language support (English, French, Kinyarwanda)',
+                              l10n.multiLanguageSupport,
                             ),
                             _buildFeatureListItem(
                               Icons.video_library_rounded,
-                              'Comprehensive course content with text, images, audio, and video',
+                              l10n.comprehensiveCourseContent,
                             ),
                             _buildFeatureListItem(
                               Icons.play_circle_rounded,
-                              'Audio and video playback for enhanced learning',
+                              l10n.audioAndVideoPlayback,
                             ),
                             _buildFeatureListItem(
                               Icons.analytics_rounded,
-                              'Progress tracking and analytics',
+                              l10n.progressTrackingAndAnalytics,
                             ),
                             _buildFeatureListItem(
                               Icons.help_outline_rounded,
-                              'Detailed explanations for each question',
+                              l10n.detailedExplanations,
                             ),
                             _buildFeatureListItem(
                               Icons.download_rounded,
-                              'Offline study mode - download exams and courses',
+                              l10n.offlineStudyMode,
                             ),
                             _buildFeatureListItem(
                               Icons.sync_rounded,
-                              'Offline exam taking with automatic sync',
+                              l10n.offlineExamTaking,
                             ),
                             _buildFeatureListItem(
                               Icons.emoji_events_rounded,
-                              'Achievement system and progress tracking',
+                              l10n.achievementSystem,
                             ),
                             _buildFeatureListItem(
                               Icons.book_rounded,
-                              'Course management with structured learning paths',
+                              l10n.courseManagement,
                             ),
                             _buildFeatureListItem(
                               Icons.payment_rounded,
-                              'Payment system with access codes',
+                              l10n.paymentSystem,
                             ),
                             _buildFeatureListItem(
                               Icons.lock_open_rounded,
-                              'Global course access (pay once, unlock all)',
+                              l10n.globalCourseAccess,
                             ),
                             _buildFeatureListItem(
                               Icons.update_rounded,
-                              'Regular updates with new questions and courses',
+                              l10n.regularUpdates,
                             ),
                           ],
                         ),
@@ -255,35 +257,35 @@ class AboutAppScreen extends StatelessWidget {
 
                       // Developer Info Section
                       _buildSectionCard(
-                        title: 'Developer Information',
+                        title: l10n.developerInformation,
                         icon: Icons.code_rounded,
                         iconColor: AppColors.primary,
                         child: Column(
                           children: [
                             _buildContactCard(
                               icon: Icons.apps_rounded,
-                              label: 'App Name',
+                              label: l10n.appNameLabel,
                               value: AppConstants.appName,
                               color: AppColors.primary,
                             ),
                             SizedBox(height: 12.h),
                             _buildContactCard(
                               icon: Icons.description_rounded,
-                              label: 'Description',
+                              label: l10n.descriptionLabel,
                               value: AppConstants.appDescription,
                               color: AppColors.success,
                             ),
                             SizedBox(height: 12.h),
                             _buildContactCard(
                               icon: Icons.phone_rounded,
-                              label: 'Phone',
+                              label: l10n.phoneLabel,
                               value: '+250 780 494 000',
                               color: AppColors.success,
                             ),
                             SizedBox(height: 12.h),
                             _buildContactCard(
                               icon: Icons.chat_rounded,
-                              label: 'WhatsApp',
+                              label: l10n.whatsapp,
                               value: '+250 780 494 000',
                               color: AppColors.success,
                             ),
@@ -291,29 +293,29 @@ class AboutAppScreen extends StatelessWidget {
                             SizedBox(height: 12.h),
                             _buildContactCard(
                               icon: Icons.people_rounded,
-                              label: 'Developer',
+                              label: l10n.developerLabel,
                               value: 'Traffic Rules Learning Team',
                               color: AppColors.primary,
                             ),
                             SizedBox(height: 12.h),
                             _buildContactCard(
                               icon: Icons.email_rounded,
-                              label: 'Contact',
+                              label: l10n.contactLabel,
                               value: 'engineers.devs@gmail.com',
                               color: AppColors.error,
                             ),
                             SizedBox(height: 12.h),
                             _buildContactCard(
                               icon: Icons.language_rounded,
-                              label: 'Website',
+                              label: l10n.websiteLabel,
                               value: 'www.cyangugudims.com',
                               color: AppColors.warning,
                             ),
                             SizedBox(height: 12.h),
                             _buildContactCard(
                               icon: Icons.calendar_today_rounded,
-                              label: 'Last Updated',
-                              value: 'November 2025',
+                              label: l10n.lastUpdated('November 2025'),
+                              value: '',
                               color: AppColors.grey600,
                             ),
                           ],
@@ -324,7 +326,7 @@ class AboutAppScreen extends StatelessWidget {
 
                       // Legal & Privacy Section
                       _buildSectionCard(
-                        title: 'Legal & Privacy',
+                        title: l10n.legalPrivacy,
                         icon: Icons.gavel_rounded,
                         iconColor: AppColors.error,
                         child: Column(
@@ -332,17 +334,15 @@ class AboutAppScreen extends StatelessWidget {
                           children: [
                             _buildInfoBox(
                               icon: Icons.info_outline_rounded,
-                              title: 'Legal Notice',
-                              content:
-                                  'This app is designed for educational purposes only. While we strive to provide accurate and up-to-date information, users should always refer to official traffic regulations and consult with local authorities for the most current rules.\n\nFor official driving license information (provisional and permanent), please visit:\n• Rwanda National Police (Driving License Services): police.gov.rw/home',
+                              title: l10n.legalNotice,
+                              content: l10n.legalNoticeContent,
                               color: AppColors.error,
                             ),
                             SizedBox(height: 16.h),
                             _buildInfoBox(
                               icon: Icons.lock_rounded,
-                              title: 'Privacy & Data',
-                              content:
-                                  'Your data is securely stored and synchronized. Exam results and progress are saved locally and synced to the server when connected. We respect your privacy and do not share your personal information with third parties.',
+                              title: l10n.privacyData,
+                              content: l10n.privacyDataContent,
                               color: AppColors.primary,
                             ),
                           ],
@@ -688,7 +688,7 @@ class AboutAppScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSourceLinksSection() {
+  Widget _buildSourceLinksSection(AppLocalizations l10n) {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -707,7 +707,7 @@ class AboutAppScreen extends StatelessWidget {
               Icon(Icons.link_rounded, color: AppColors.error, size: 20.sp),
               SizedBox(width: 8.w),
               Text(
-                'Official Government Sources',
+                l10n.officialGovernmentSources,
                 style: AppTextStyles.bodyLarge.copyWith(
                   fontWeight: FontWeight.bold,
                   color: AppColors.error,

@@ -1315,22 +1315,22 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
 
     for (final result in uniqueResults.values) {
       // Use exam category from the result, or determine from exam title
-      String category = result.exam?.category ?? 'Traffic Rules';
+      String category = result.exam?.category ?? l10n.trafficRules;
 
       // If no category in exam data, try to determine from title
-      if (category == 'Traffic Rules' || category.isEmpty) {
+      if (category == l10n.trafficRules || category.isEmpty) {
         final title = result.exam?.title ?? '';
         if (title.toLowerCase().contains('sign') ||
             title.toLowerCase().contains('signal')) {
-          category = 'Road Signs';
+          category = l10n.roadSigns;
         } else if (title.toLowerCase().contains('safety') ||
             title.toLowerCase().contains('maintenance')) {
-          category = 'Safety';
+          category = l10n.safety;
         } else if (title.toLowerCase().contains('environment') ||
             title.toLowerCase().contains('eco')) {
-          category = 'Environment';
+          category = l10n.environment;
         } else {
-          category = 'Traffic Rules';
+          category = l10n.trafficRules;
         }
       }
 

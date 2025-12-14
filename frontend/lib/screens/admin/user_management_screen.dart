@@ -41,7 +41,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   // Track called users - Map of user ID to call timestamp
   final Map<String, DateTime> _calledUsers = {};
   static const String _calledUsersPrefsKey = 'called_users_tracking';
-  
+
   // Pagination state
   int _currentPage = 1;
   int _totalPages = 1;
@@ -85,10 +85,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     try {
       final pageToLoad = page ?? _currentPage;
       debugPrint('🔄 Loading users (page $pageToLoad)...');
-      
+
       // Convert sort direction to backend format
       final sortOrder = _sortAscending ? 'ASC' : 'DESC';
-      
+
       // Convert filter to role or filter type
       String roleFilter = '';
       String filterType = '';
@@ -98,23 +98,25 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         roleFilter = 'MANAGER';
       } else if (_selectedFilter == 'admin') {
         roleFilter = 'ADMIN';
-      } else if (_selectedFilter == 'with_code' || 
-                 _selectedFilter == 'without_code' ||
-                 _selectedFilter == 'called' ||
-                 _selectedFilter == 'not_called') {
+      } else if (_selectedFilter == 'with_code' ||
+          _selectedFilter == 'without_code' ||
+          _selectedFilter == 'called' ||
+          _selectedFilter == 'not_called') {
         filterType = _selectedFilter;
       }
-      
+
       // Prepare date filters (format as YYYY-MM-DD)
       String? startDateStr;
       String? endDateStr;
       if (_startDate != null) {
-        startDateStr = '${_startDate!.year}-${_startDate!.month.toString().padLeft(2, '0')}-${_startDate!.day.toString().padLeft(2, '0')}';
+        startDateStr =
+            '${_startDate!.year}-${_startDate!.month.toString().padLeft(2, '0')}-${_startDate!.day.toString().padLeft(2, '0')}';
       }
       if (_endDate != null) {
-        endDateStr = '${_endDate!.year}-${_endDate!.month.toString().padLeft(2, '0')}-${_endDate!.day.toString().padLeft(2, '0')}';
+        endDateStr =
+            '${_endDate!.year}-${_endDate!.month.toString().padLeft(2, '0')}-${_endDate!.day.toString().padLeft(2, '0')}';
       }
-      
+
       final response = await _userManagementService.getAllUsers(
         page: pageToLoad,
         limit: _usersPerPage,
@@ -127,9 +129,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         endDate: endDateStr,
         filterByToday: _filterByToday,
       );
-      
+
       debugPrint('🔄 Users response: ${response.data.users.length} users');
-      debugPrint('🔄 Pagination: ${response.data.pagination.total} total, page ${response.data.pagination.page}/${response.data.pagination.totalPages}');
+      debugPrint(
+        '🔄 Pagination: ${response.data.pagination.total} total, page ${response.data.pagination.page}/${response.data.pagination.totalPages}',
+      );
 
       if (response.success) {
         debugPrint('🔄 Users data: ${response.data.users.length} users');
@@ -149,7 +153,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             _applyClientSideFilters();
           });
         }
-        
+
         // Sync call tracking after loading users (to get latest from server)
         _syncCallTrackingWithBackend();
       } else {
@@ -300,12 +304,17 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             children: [
               Icon(Icons.calendar_today, size: 16.sp, color: AppColors.primary),
               SizedBox(width: 8.w),
-              Text(
-                'Date Filter',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13.sp,
-                ),
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return Text(
+                    l10n.dateFilter,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13.sp,
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -493,40 +502,26 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       );
 
       if (response.success) {
-        _showSuccessSnackBar(
-          'Access code generated successfully for ${user.fullName}',
-        );
+        final l10n = AppLocalizations.of(context)!;
+        _showSuccessSnackBar(l10n.accessCodeGeneratedFor(user.fullName));
         _loadUsers(); // Refresh the list
       } else {
+        final l10n = AppLocalizations.of(context)!;
         _showErrorSnackBar(
-          'Failed to generate access code: ${response.message}',
+          '${l10n.failedToGenerateAccessCode}: ${response.message}',
         );
       }
     } catch (e) {
-      _showErrorSnackBar('Error generating access code: $e');
+      final l10n = AppLocalizations.of(context)!;
+      _showErrorSnackBar('${l10n.errorGeneratingAccessCode}: $e');
     }
   }
 
   Future<Map<String, dynamic>?> _showPaymentTierDialog() async {
     final tiers = [
-      {
-        'tier': '1_MONTH',
-        'amount': 1500,
-        'days': 30,
-        'label': '1 Month - 1500 RWF',
-      },
-      {
-        'tier': '3_MONTHS',
-        'amount': 3000,
-        'days': 90,
-        'label': '3 Months - 3000 RWF',
-      },
-      {
-        'tier': '6_MONTHS',
-        'amount': 5000,
-        'days': 180,
-        'label': '6 Months - 5000 RWF',
-      },
+      {'tier': '1_MONTH', 'amount': 1500, 'days': 30},
+      {'tier': '3_MONTHS', 'amount': 3000, 'days': 90},
+      {'tier': '6_MONTHS', 'amount': 5000, 'days': 180},
     ];
 
     return showDialog<Map<String, dynamic>>(
@@ -537,17 +532,22 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           title: Text(l10n.selectPaymentTier, style: AppTextStyles.heading3),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            children: tiers
-                .map(
-                  (tier) => ListTile(
-                    title: Text(
-                      tier['label'] as String,
-                      style: AppTextStyles.bodyMedium,
-                    ),
-                    onTap: () => Navigator.pop(context, tier),
-                  ),
-                )
-                .toList(),
+            children: tiers.map((tier) {
+              final amount = tier['amount'] as int;
+              final days = tier['days'] as int;
+              String label;
+              if (days == 30) {
+                label = '1 Month - $amount RWF';
+              } else if (days == 90) {
+                label = '3 Months - $amount RWF';
+              } else {
+                label = '6 Months - $amount RWF';
+              }
+              return ListTile(
+                title: Text(label, style: AppTextStyles.bodyMedium),
+                onTap: () => Navigator.pop(context, tier),
+              );
+            }).toList(),
           ),
           actions: [
             TextButton(
@@ -597,7 +597,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     SizedBox(width: 8.w),
                     Expanded(
                       child: Text(
-                        'This action cannot be undone. The user and all their data will be permanently removed.',
+                        l10n.thisActionCannotBeUndone,
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.error,
                           fontWeight: FontWeight.w600,
@@ -660,16 +660,18 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     if (confirmed == true) {
       try {
         final response = await _userManagementService.deleteUser(user.id);
+        final l10n = AppLocalizations.of(context)!;
         if (response['success'] == true) {
-          _showSuccessSnackBar('User ${user.fullName} deleted successfully');
+          _showSuccessSnackBar(l10n.userDeletedSuccessfully(user.fullName));
           _loadUsers(); // Refresh the list
         } else {
           _showErrorSnackBar(
-            'Failed to delete user: ${response['message'] ?? 'Unknown error'}',
+            '${l10n.failedToDeleteUser}: ${response['message'] ?? 'Unknown error'}',
           );
         }
       } catch (e) {
-        _showErrorSnackBar('Error deleting user: $e');
+        final l10n = AppLocalizations.of(context)!;
+        _showErrorSnackBar('${l10n.errorDeletingUser}: $e');
       }
     }
   }
@@ -705,28 +707,38 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     return Scaffold(
       backgroundColor: AppColors.grey50,
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('User Management', style: AppTextStyles.heading2),
-            if (_totalUsers > 0)
-              Text(
-                '$_totalUsers users',
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.white.withValues(alpha: 0.8),
-                  fontSize: 12.sp,
-                ),
-              ),
-          ],
+        title: Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.userManagement, style: AppTextStyles.heading2),
+                if (_totalUsers > 0)
+                  Text(
+                    l10n.usersCount(_totalUsers),
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.white.withValues(alpha: 0.8),
+                      fontSize: 12.sp,
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         elevation: 0,
         actions: [
-          IconButton(
-            onPressed: () => _loadUsers(),
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return IconButton(
+                onPressed: () => _loadUsers(),
+                icon: const Icon(Icons.refresh),
+                tooltip: l10n.refresh,
+              );
+            },
           ),
         ],
       ),
@@ -754,13 +766,18 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       color: AppColors.grey400,
                     ),
                     SizedBox(height: 16.h),
-                    Text(
-                      _searchQuery.isNotEmpty
-                          ? 'No users found matching "$_searchQuery"'
-                          : 'No users found',
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        color: AppColors.grey600,
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context)!;
+                        return Text(
+                          _searchQuery.isNotEmpty
+                              ? l10n.noUsersFoundMatching(_searchQuery)
+                              : l10n.noUsersFound,
+                          style: AppTextStyles.bodyLarge.copyWith(
+                            color: AppColors.grey600,
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -839,13 +856,23 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           ),
                           SizedBox(width: 8.w),
                           Expanded(
-                            child: Text(
-                              'BLOCKED${user.blockReason != null && user.blockReason!.isNotEmpty ? ': ${user.blockReason}' : ''}',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.error,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12.sp,
-                              ),
+                            child: Builder(
+                              builder: (context) {
+                                final l10n = AppLocalizations.of(context)!;
+                                return Text(
+                                  user.blockReason != null &&
+                                          user.blockReason!.isNotEmpty
+                                      ? l10n.blockedWithReason(
+                                          user.blockReason!,
+                                        )
+                                      : l10n.blocked,
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.error,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12.sp,
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         ],
@@ -1026,7 +1053,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                               icon: Icons.vpn_key,
                               color: AppColors.warning,
                               onPressed: () => _generateAccessCode(user),
-                              tooltip: 'Generate Access Code',
+                              tooltip: AppLocalizations.of(
+                                context,
+                              )!.generateAccessCode,
                             ),
                             _buildActionButton(
                               icon: user.isBlocked == true
@@ -1037,14 +1066,14 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                   : AppColors.grey700,
                               onPressed: () => _showBlockUserDialog(user),
                               tooltip: user.isBlocked == true
-                                  ? 'Unblock User'
-                                  : 'Block User',
+                                  ? AppLocalizations.of(context)!.unblockUser
+                                  : AppLocalizations.of(context)!.blockUser,
                             ),
                             _buildActionButton(
                               icon: Icons.delete_outline,
                               color: AppColors.error,
                               onPressed: () => _deleteUser(user),
-                              tooltip: 'Delete User',
+                              tooltip: AppLocalizations.of(context)!.deleteUser,
                             ),
                           ],
                         ),
@@ -1059,7 +1088,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           icon: Icons.vpn_key,
                           color: AppColors.warning,
                           onPressed: () => _generateAccessCode(user),
-                          tooltip: 'Generate Access Code',
+                          tooltip: AppLocalizations.of(
+                            context,
+                          )!.generateAccessCode,
                         ),
                         _buildActionButton(
                           icon: user.isBlocked == true
@@ -1070,14 +1101,14 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                               : AppColors.error,
                           onPressed: () => _showBlockUserDialog(user),
                           tooltip: user.isBlocked == true
-                              ? 'Unblock User'
-                              : 'Block User',
+                              ? AppLocalizations.of(context)!.unblockUser
+                              : AppLocalizations.of(context)!.blockUser,
                         ),
                         _buildActionButton(
                           icon: Icons.delete_outline,
                           color: AppColors.grey600,
                           onPressed: () => _deleteUser(user),
-                          tooltip: 'Delete User',
+                          tooltip: AppLocalizations.of(context)!.deleteUser,
                         ),
                       ],
                     ),
@@ -1100,41 +1131,75 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       //   'Last Login: ${user.lastLogin != null ? DateFormat('MMM dd, yyyy').format(user.lastLogin!) : 'Never'}',
                       //   AppColors.success,
                       // ),
-                      _buildStatChip(
-                        Icons.calendar_today,
-                        'Created: ${DateFormat('MMM dd, yyyy').format(user.createdAt)}',
-                        AppColors.info,
+                      Builder(
+                        builder: (context) {
+                          final l10n = AppLocalizations.of(context)!;
+                          return Wrap(
+                            spacing: 8.w,
+                            runSpacing: 8.h,
+                            children: [
+                              _buildStatChip(
+                                Icons.calendar_today,
+                                l10n.createdDate(
+                                  DateFormat(
+                                    'MMM dd, yyyy',
+                                  ).format(user.createdAt),
+                                ),
+                                AppColors.info,
+                              ),
+                              if (user.lastLogin != null)
+                                _buildStatChip(
+                                  Icons.login,
+                                  l10n.lastLoginDate(
+                                    DateFormat(
+                                      'MMM dd, yyyy',
+                                    ).format(user.lastLogin!),
+                                  ),
+                                  AppColors.success,
+                                ),
+                              if (user.remainingDays > 0)
+                                _buildStatChip(
+                                  Icons.schedule,
+                                  l10n.daysLeftCount(user.remainingDays),
+                                  AppColors.warning,
+                                ),
+                              if (user.expiresAt != null)
+                                _buildStatChip(
+                                  Icons.calendar_today,
+                                  l10n.expiresAtDate(
+                                    DateFormat(
+                                      'MMM dd, yyyy',
+                                    ).format(user.expiresAt!),
+                                  ),
+                                  AppColors.grey600,
+                                ),
+                              if (user.isBlocked == true)
+                                _buildStatChip(
+                                  Icons.block,
+                                  user.blockReason != null &&
+                                          user.blockReason!.isNotEmpty
+                                      ? l10n.blockedWithReason(
+                                          user.blockReason!,
+                                        )
+                                      : l10n.blocked,
+                                  AppColors.error,
+                                ),
+                              if (_isUserCalled(user.id))
+                                _buildStatChip(
+                                  Icons.phone_callback,
+                                  _getCallTimestamp(user.id) != null
+                                      ? l10n.calledWithTime(
+                                          _formatCallTime(
+                                            _getCallTimestamp(user.id)!,
+                                          ),
+                                        )
+                                      : l10n.called,
+                                  AppColors.success,
+                                ),
+                            ],
+                          );
+                        },
                       ),
-                      if (user.lastLogin != null)
-                        _buildStatChip(
-                          Icons.login,
-                          'Last Login: ${DateFormat('MMM dd, yyyy').format(user.lastLogin!)}',
-                          AppColors.success,
-                        ),
-                      if (user.remainingDays > 0)
-                        _buildStatChip(
-                          Icons.schedule,
-                          '${user.remainingDays} days left',
-                          AppColors.warning,
-                        ),
-                      if (user.expiresAt != null)
-                        _buildStatChip(
-                          Icons.calendar_today,
-                          'Expires at: ${DateFormat('MMM dd, yyyy').format(user.expiresAt!)}',
-                          AppColors.grey600,
-                        ),
-                      if (user.isBlocked == true)
-                        _buildStatChip(
-                          Icons.block,
-                          'Blocked${user.blockReason != null && user.blockReason!.isNotEmpty ? ': ${user.blockReason}' : ''}',
-                          AppColors.error,
-                        ),
-                      if (_isUserCalled(user.id))
-                        _buildStatChip(
-                          Icons.phone_callback,
-                          'Called${_getCallTimestamp(user.id) != null ? ' ${_formatCallTime(_getCallTimestamp(user.id)!)}' : ''}',
-                          AppColors.success,
-                        ),
                     ],
                   ),
                 ],
@@ -1202,19 +1267,20 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   }
 
   String _formatCallTime(DateTime callTime) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final difference = now.difference(callTime);
 
     if (difference.inMinutes < 1) {
-      return 'just now';
+      return l10n.justNow;
     } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
+      return l10n.minutesAgo(difference.inMinutes);
     } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
+      return l10n.hoursAgo(difference.inHours);
     } else if (difference.inDays == 1) {
-      return 'yesterday';
+      return l10n.yesterday;
     } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
+      return l10n.daysAgo(difference.inDays);
     } else {
       return DateFormat('MMM dd').format(callTime);
     }
@@ -1230,7 +1296,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             controller: _searchController,
             onChanged: _onSearchChanged,
             decoration: InputDecoration(
-              hintText: 'Search users...',
+              hintText: AppLocalizations.of(context)!.searchUsers,
               prefixIcon: const Icon(Icons.search),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
@@ -1264,7 +1330,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             value: _selectedFilter,
                             onChanged: (value) => _onFilterChanged(value!),
                             decoration: InputDecoration(
-                              labelText: 'Filter',
+                              labelText: AppLocalizations.of(context)!.filter,
                               labelStyle: TextStyle(fontSize: 10.sp),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.r),
@@ -1274,34 +1340,48 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                 vertical: 4.h,
                               ),
                             ),
-                            items: const [
+                            items: [
                               DropdownMenuItem(
                                 value: 'all',
-                                child: Text('All Users'),
+                                child: Text(
+                                  AppLocalizations.of(context)!.allUsers,
+                                ),
                               ),
                               DropdownMenuItem(
                                 value: 'user',
-                                child: Text('Users'),
+                                child: Text(
+                                  AppLocalizations.of(context)!.users,
+                                ),
                               ),
                               DropdownMenuItem(
                                 value: 'manager',
-                                child: Text('Managers'),
+                                child: Text(
+                                  AppLocalizations.of(context)!.managers,
+                                ),
                               ),
                               DropdownMenuItem(
                                 value: 'with_code',
-                                child: Text('With Code'),
+                                child: Text(
+                                  AppLocalizations.of(context)!.withCode,
+                                ),
                               ),
                               DropdownMenuItem(
                                 value: 'without_code',
-                                child: Text('No Code'),
+                                child: Text(
+                                  AppLocalizations.of(context)!.noCode,
+                                ),
                               ),
                               DropdownMenuItem(
                                 value: 'called',
-                                child: Text('Called'),
+                                child: Text(
+                                  AppLocalizations.of(context)!.called,
+                                ),
                               ),
                               DropdownMenuItem(
                                 value: 'not_called',
-                                child: Text('Not Called'),
+                                child: Text(
+                                  AppLocalizations.of(context)!.notCalled,
+                                ),
                               ),
                             ],
                           ),
@@ -1316,7 +1396,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             value: _selectedSort,
                             onChanged: (value) => _onSortChanged(value!),
                             decoration: InputDecoration(
-                              labelText: 'Sort',
+                              labelText: AppLocalizations.of(context)!.sort,
                               labelStyle: TextStyle(fontSize: 10.sp),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.r),
@@ -1326,22 +1406,26 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                 vertical: 4.h,
                               ),
                             ),
-                            items: const [
+                            items: [
                               DropdownMenuItem(
                                 value: 'name',
-                                child: Text('Name'),
+                                child: Text(AppLocalizations.of(context)!.name),
                               ),
                               DropdownMenuItem(
                                 value: 'role',
-                                child: Text('Role'),
+                                child: Text(AppLocalizations.of(context)!.role),
                               ),
                               DropdownMenuItem(
                                 value: 'createdAt',
-                                child: Text('Created'),
+                                child: Text(
+                                  AppLocalizations.of(context)!.created,
+                                ),
                               ),
                               DropdownMenuItem(
                                 value: 'lastLogin',
-                                child: Text('Last Login'),
+                                child: Text(
+                                  AppLocalizations.of(context)!.lastLogin,
+                                ),
                               ),
                             ],
                           ),
@@ -1356,7 +1440,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             color: AppColors.primary,
                             size: 16.sp,
                           ),
-                          tooltip: _sortAscending ? 'Ascending' : 'Descending',
+                          tooltip: _sortAscending
+                              ? AppLocalizations.of(context)!.ascending
+                              : AppLocalizations.of(context)!.descending,
                           padding: EdgeInsets.all(4.w),
                           constraints: BoxConstraints(
                             minWidth: 32.w,
@@ -1376,7 +1462,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                         value: _selectedFilter,
                         onChanged: (value) => _onFilterChanged(value!),
                         decoration: InputDecoration(
-                          labelText: 'Filter',
+                          labelText: AppLocalizations.of(context)!.filter,
                           labelStyle: TextStyle(fontSize: 10.sp),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.r),
@@ -1386,35 +1472,40 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             vertical: 2.h,
                           ),
                         ),
-                        items: const [
+                        items: [
                           DropdownMenuItem(
                             value: 'all',
-                            child: Text('All Users'),
+                            child: Text(AppLocalizations.of(context)!.allUsers),
                           ),
-                          DropdownMenuItem(value: 'user', child: Text('Users')),
+                          DropdownMenuItem(
+                            value: 'user',
+                            child: Text(AppLocalizations.of(context)!.users),
+                          ),
                           DropdownMenuItem(
                             value: 'admin',
-                            child: Text('Admins'),
+                            child: Text(AppLocalizations.of(context)!.admins),
                           ),
                           DropdownMenuItem(
                             value: 'manager',
-                            child: Text('Managers'),
+                            child: Text(AppLocalizations.of(context)!.managers),
                           ),
                           DropdownMenuItem(
                             value: 'with_code',
-                            child: Text('With Code'),
+                            child: Text(AppLocalizations.of(context)!.withCode),
                           ),
                           DropdownMenuItem(
                             value: 'without_code',
-                            child: Text('No Code'),
+                            child: Text(AppLocalizations.of(context)!.noCode),
                           ),
                           DropdownMenuItem(
                             value: 'called',
-                            child: Text('Called'),
+                            child: Text(AppLocalizations.of(context)!.called),
                           ),
                           DropdownMenuItem(
                             value: 'not_called',
-                            child: Text('Not Called'),
+                            child: Text(
+                              AppLocalizations.of(context)!.notCalled,
+                            ),
                           ),
                         ],
                       ),
@@ -1426,7 +1517,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                         value: _selectedSort,
                         onChanged: (value) => _onSortChanged(value!),
                         decoration: InputDecoration(
-                          labelText: 'Sort',
+                          labelText: AppLocalizations.of(context)!.sort,
                           labelStyle: TextStyle(fontSize: 10.sp),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.r),
@@ -1436,16 +1527,24 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             vertical: 2.h,
                           ),
                         ),
-                        items: const [
-                          DropdownMenuItem(value: 'name', child: Text('Name')),
-                          DropdownMenuItem(value: 'role', child: Text('Role')),
+                        items: [
+                          DropdownMenuItem(
+                            value: 'name',
+                            child: Text(AppLocalizations.of(context)!.name),
+                          ),
+                          DropdownMenuItem(
+                            value: 'role',
+                            child: Text(AppLocalizations.of(context)!.role),
+                          ),
                           DropdownMenuItem(
                             value: 'createdAt',
-                            child: Text('Created'),
+                            child: Text(AppLocalizations.of(context)!.created),
                           ),
                           DropdownMenuItem(
                             value: 'lastLogin',
-                            child: Text('Last Login'),
+                            child: Text(
+                              AppLocalizations.of(context)!.lastLogin,
+                            ),
                           ),
                         ],
                       ),
@@ -1489,17 +1588,20 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           _calledUsers[user.id] = DateTime.now();
         });
         await _saveCalledUsersToPrefs();
-        
+
         // Sync with backend if online (works offline, syncs when online)
         _syncCallTrackingWithBackend();
-        
-        _showSuccessSnackBar('Calling ${user.fullName}...');
+
+        final l10n = AppLocalizations.of(context)!;
+        _showSuccessSnackBar(l10n.callingUser(user.fullName));
         debugPrint('📞 Marked user ${user.fullName} (${user.id}) as called');
       } else {
-        _showErrorSnackBar('Could not make phone call to $phoneNumber');
+        final l10n = AppLocalizations.of(context)!;
+        _showErrorSnackBar('${l10n.couldNotMakePhoneCall} $phoneNumber');
       }
     } catch (e) {
-      _showErrorSnackBar('Error making phone call: $e');
+      final l10n = AppLocalizations.of(context)!;
+      _showErrorSnackBar('${l10n.errorMakingPhoneCall}: $e');
     }
   }
 
@@ -1537,7 +1639,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     try {
       final hasInternet = await _networkService.hasInternetConnection();
       if (!hasInternet) {
-        debugPrint('📞 No internet - call tracking saved locally, will sync when online');
+        debugPrint(
+          '📞 No internet - call tracking saved locally, will sync when online',
+        );
         return;
       }
 
@@ -1548,8 +1652,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       });
 
       // Sync with backend
-      final syncedCalledUsers = await _userManagementService.syncCallTracking(localCalledUsers);
-      
+      final syncedCalledUsers = await _userManagementService.syncCallTracking(
+        localCalledUsers,
+      );
+
       // Update local state with merged data from server
       setState(() {
         _calledUsers.clear();
@@ -1557,7 +1663,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           try {
             _calledUsers[userId] = DateTime.parse(timestampStr);
           } catch (e) {
-            debugPrint('⚠️ Error parsing synced timestamp for user $userId: $e');
+            debugPrint(
+              '⚠️ Error parsing synced timestamp for user $userId: $e',
+            );
           }
         });
       });
@@ -1606,12 +1714,17 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         children: [
           Icon(Icons.people, color: AppColors.primary, size: 20.sp),
           SizedBox(width: 8.w),
-          Text(
-            'Total Users: $_totalUsers',
-            style: AppTextStyles.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
-            ),
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Text(
+                '${l10n.totalUsersLabel}: $_totalUsers',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -1641,73 +1754,70 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   }
                 : null,
             icon: const Icon(Icons.chevron_left),
-            tooltip: 'Previous page',
+            tooltip: AppLocalizations.of(context)!.previousPage,
           ),
           SizedBox(width: 8.w),
-          
-          // Page numbers
-          ...List.generate(
-            _totalPages > 5 ? 5 : _totalPages,
-            (index) {
-              int pageNumber;
-              if (_totalPages <= 5) {
-                pageNumber = index + 1;
-              } else {
-                // Show current page and 2 pages on each side
-                if (_currentPage <= 3) {
-                  pageNumber = index + 1;
-                } else if (_currentPage >= _totalPages - 2) {
-                  pageNumber = _totalPages - 4 + index;
-                } else {
-                  pageNumber = _currentPage - 2 + index;
-                }
-              }
 
-              final isCurrentPage = pageNumber == _currentPage;
-              return Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4.w),
-                child: InkWell(
-                  onTap: () {
-                    setState(() {
-                      _currentPage = pageNumber;
-                    });
-                    _loadUsers(page: pageNumber);
-                    _scrollToTop();
-                  },
-                  borderRadius: BorderRadius.circular(8.r),
-                  child: Container(
-                    width: 40.w,
-                    height: 40.h,
-                    decoration: BoxDecoration(
+          // Page numbers
+          ...List.generate(_totalPages > 5 ? 5 : _totalPages, (index) {
+            int pageNumber;
+            if (_totalPages <= 5) {
+              pageNumber = index + 1;
+            } else {
+              // Show current page and 2 pages on each side
+              if (_currentPage <= 3) {
+                pageNumber = index + 1;
+              } else if (_currentPage >= _totalPages - 2) {
+                pageNumber = _totalPages - 4 + index;
+              } else {
+                pageNumber = _currentPage - 2 + index;
+              }
+            }
+
+            final isCurrentPage = pageNumber == _currentPage;
+            return Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4.w),
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _currentPage = pageNumber;
+                  });
+                  _loadUsers(page: pageNumber);
+                  _scrollToTop();
+                },
+                borderRadius: BorderRadius.circular(8.r),
+                child: Container(
+                  width: 40.w,
+                  height: 40.h,
+                  decoration: BoxDecoration(
+                    color: isCurrentPage
+                        ? AppColors.primary
+                        : AppColors.grey100,
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(
                       color: isCurrentPage
                           ? AppColors.primary
-                          : AppColors.grey100,
-                      borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(
-                        color: isCurrentPage
-                            ? AppColors.primary
-                            : AppColors.grey300,
-                      ),
+                          : AppColors.grey300,
                     ),
-                    child: Center(
-                      child: Text(
-                        '$pageNumber',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: isCurrentPage
-                              ? AppColors.white
-                              : AppColors.grey800,
-                          fontWeight: isCurrentPage
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$pageNumber',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: isCurrentPage
+                            ? AppColors.white
+                            : AppColors.grey800,
+                        fontWeight: isCurrentPage
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                   ),
                 ),
-              );
-            },
-          ),
-          
+              ),
+            );
+          }),
+
           // Show ellipsis if there are more pages
           if (_totalPages > 5 && _currentPage < _totalPages - 2)
             Padding(
@@ -1719,7 +1829,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 ),
               ),
             ),
-          
+
           // Show last page if not in visible range
           if (_totalPages > 5 && _currentPage < _totalPages - 2)
             Padding(
@@ -1752,9 +1862,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 ),
               ),
             ),
-          
+
           SizedBox(width: 8.w),
-          
+
           // Next button
           IconButton(
             onPressed: _currentPage < _totalPages
@@ -1767,7 +1877,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   }
                 : null,
             icon: const Icon(Icons.chevron_right),
-            tooltip: 'Next page',
+            tooltip: AppLocalizations.of(context)!.nextPage,
           ),
         ],
       ),
@@ -1785,106 +1895,113 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(
-              isCurrentlyBlocked ? Icons.check_circle : Icons.block,
-              color: isCurrentlyBlocked ? AppColors.success : AppColors.error,
-              size: 24.sp,
-            ),
-            SizedBox(width: 8.w),
-            Text(isCurrentlyBlocked ? 'Unblock User' : 'Block User'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              isCurrentlyBlocked
-                  ? 'Are you sure you want to unblock ${user.fullName}?'
-                  : 'Are you sure you want to block ${user.fullName}?',
-            ),
-            SizedBox(height: 8.h),
-            Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color:
-                    (isCurrentlyBlocked ? AppColors.success : AppColors.error)
-                        .withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(
+      builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                isCurrentlyBlocked ? Icons.check_circle : Icons.block,
+                color: isCurrentlyBlocked ? AppColors.success : AppColors.error,
+                size: 24.sp,
+              ),
+              SizedBox(width: 8.w),
+              Text(isCurrentlyBlocked ? l10n.unblockUser : l10n.blockUser),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isCurrentlyBlocked
+                    ? l10n.areYouSureYouWantToUnblockUser(user.fullName)
+                    : l10n.areYouSureYouWantToBlockUser(user.fullName),
+              ),
+              SizedBox(height: 8.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
                   color:
                       (isCurrentlyBlocked ? AppColors.success : AppColors.error)
-                          .withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    isCurrentlyBlocked ? Icons.info : Icons.warning,
-                    color: isCurrentlyBlocked
-                        ? AppColors.success
-                        : AppColors.error,
-                    size: 16.sp,
+                          .withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(
+                    color:
+                        (isCurrentlyBlocked
+                                ? AppColors.success
+                                : AppColors.error)
+                            .withValues(alpha: 0.3),
                   ),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: Text(
-                      isCurrentlyBlocked
-                          ? 'Unblocked users will regain access to the system.'
-                          : 'Blocked users will not be able to access the system.',
-                      style: AppTextStyles.caption.copyWith(
-                        color: isCurrentlyBlocked
-                            ? AppColors.success
-                            : AppColors.error,
-                        fontWeight: FontWeight.w600,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      isCurrentlyBlocked ? Icons.info : Icons.warning,
+                      color: isCurrentlyBlocked
+                          ? AppColors.success
+                          : AppColors.error,
+                      size: 16.sp,
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Text(
+                        isCurrentlyBlocked
+                            ? l10n.unblockedUsersWillRegainAccess
+                            : l10n.blockedUsersWillNotBeAbleToAccess,
+                        style: AppTextStyles.caption.copyWith(
+                          color: isCurrentlyBlocked
+                              ? AppColors.success
+                              : AppColors.error,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            if (!isCurrentlyBlocked) ...[
-              SizedBox(height: 16.h),
-              TextField(
-                controller: reasonController,
-                decoration: InputDecoration(
-                  labelText: 'Reason for blocking (optional)',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
+                  ],
                 ),
-                maxLines: 3,
               ),
+              if (!isCurrentlyBlocked) ...[
+                SizedBox(height: 16.h),
+                TextField(
+                  controller: reasonController,
+                  decoration: InputDecoration(
+                    labelText: l10n.reasonForBlockingOptional,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                  ),
+                  maxLines: 3,
+                ),
+              ],
             ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _blockUser(
-                user,
-                !isCurrentlyBlocked,
-                reasonController.text.trim(),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isCurrentlyBlocked
-                  ? AppColors.success
-                  : AppColors.error,
-              foregroundColor: AppColors.white,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(l10n.cancel),
             ),
-            child: Text(isCurrentlyBlocked ? 'Unblock User' : 'Block User'),
-          ),
-        ],
-      ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _blockUser(
+                  user,
+                  !isCurrentlyBlocked,
+                  reasonController.text.trim(),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isCurrentlyBlocked
+                    ? AppColors.success
+                    : AppColors.error,
+                foregroundColor: AppColors.white,
+              ),
+              child: Text(
+                isCurrentlyBlocked ? l10n.unblockUser : l10n.blockUser,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -1901,19 +2018,23 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         blockReason: blockReason.isNotEmpty ? blockReason : null,
       );
 
+      final l10n = AppLocalizations.of(context)!;
       if (response['success'] == true) {
         _showSuccessSnackBar(
-          'User ${isCurrentlyBlocked ? 'unblocked' : 'blocked'} successfully',
+          isCurrentlyBlocked
+              ? l10n.userUnblockedSuccessfully
+              : l10n.userBlockedSuccessfully,
         );
         _loadUsers(); // Refresh the list
       } else {
         _showErrorSnackBar(
-          'Failed to ${isCurrentlyBlocked ? 'unblock' : 'block'} user: ${response['message'] ?? 'Unknown error'}',
+          '${isCurrentlyBlocked ? l10n.failedToUnblockUser : l10n.failedToBlockUser}: ${response['message'] ?? 'Unknown error'}',
         );
       }
     } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
       _showErrorSnackBar(
-        'Error ${isCurrentlyBlocked ? 'unblocking' : 'blocking'} user: $e',
+        '${isCurrentlyBlocked ? l10n.errorUnblockingUser : l10n.errorBlockingUser}: $e',
       );
     }
   }
@@ -1955,22 +2076,32 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Row(
-        children: [
-          Icon(Icons.vpn_key, color: AppColors.primary, size: 24.sp),
-          SizedBox(width: 8.w),
-          const Text('Generate Access Code'),
-        ],
+      title: Builder(
+        builder: (context) {
+          final l10n = AppLocalizations.of(context)!;
+          return Row(
+            children: [
+              Icon(Icons.vpn_key, color: AppColors.primary, size: 24.sp),
+              SizedBox(width: 8.w),
+              Text(l10n.generateAccessCode),
+            ],
+          );
+        },
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Select payment tier for ${widget.user.fullName}:',
-            style: AppTextStyles.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Text(
+                '${l10n.selectPaymentTier} ${widget.user.fullName}:',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              );
+            },
           ),
           SizedBox(height: 16.h),
           ..._paymentTiers.map((tier) => _buildTierOption(tier)),
@@ -1989,12 +2120,22 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
                 Icon(Icons.info, color: AppColors.primary, size: 16.sp),
                 SizedBox(width: 8.w),
                 Expanded(
-                  child: Text(
-                    'Access code will be valid for ${_paymentTiers.firstWhere((tier) => tier['amount'] == _selectedAmount)['days']} days',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context)!;
+                      final days =
+                          _paymentTiers.firstWhere(
+                                (tier) => tier['amount'] == _selectedAmount,
+                              )['days']
+                              as int;
+                      return Text(
+                        'Access code will be valid for $days days',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -2003,17 +2144,27 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () => widget.onGenerate(_selectedAmount),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.white,
-          ),
-          child: const Text('Generate Code'),
+        Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(l10n.cancel),
+                ),
+                ElevatedButton(
+                  onPressed: () => widget.onGenerate(_selectedAmount),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.white,
+                  ),
+                  child: Text(l10n.generateCode),
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -2079,13 +2230,18 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: Text(
-                  '${tier['duration']} days',
-                  style: AppTextStyles.caption.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 10.sp,
-                  ),
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return Text(
+                      '${tier['days']} ${l10n.daysLeft}',
+                      style: AppTextStyles.caption.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 10.sp,
+                      ),
+                    );
+                  },
                 ),
               ),
             ],

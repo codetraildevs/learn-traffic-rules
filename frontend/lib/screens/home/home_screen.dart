@@ -30,6 +30,7 @@ import '../../services/notification_polling_service.dart';
 import '../../providers/course_provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../../services/network_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -203,8 +204,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       } else {
         // No internet and no cache - show error
         if (mounted) {
+          final l10n = AppLocalizations.of(context)!;
           setState(() {
-            _error = 'No internet connection and no cached data available';
+            _error = l10n.noInternetConnectionAndNoCachedDataAvailable;
             _isLoading = false;
           });
         }
@@ -218,8 +220,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       if (cachedDataLoaded) {
         debugPrint('📦 Error occurred, using cached data as fallback');
       } else if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
-          _error = 'Failed to load dashboard data: $e';
+          _error = '${l10n.failedToLoadDashboardData}: $e';
         });
       }
     } finally {
@@ -596,6 +599,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       });
     }
 
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -636,21 +640,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         items: [
           BottomNavigationBarItem(
             icon: const Icon(Icons.quiz),
-            label: user?.role == 'ADMIN' ? 'Manage Exams' : 'Exams',
+            label: user?.role == 'ADMIN' ? l10n.manageExamsLabel : l10n.exams,
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.dashboard),
+            label: l10n.dashboard,
           ),
           BottomNavigationBarItem(
             icon: user?.role == 'USER'
                 ? const Icon(Icons.analytics)
                 : const Icon(Icons.group),
-            label: user?.role == 'USER' ? 'Progress' : 'Manage Users',
+            label: user?.role == 'USER' ? l10n.progress : l10n.manageUsers,
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.person),
+            label: l10n.profile,
           ),
         ],
       ),
@@ -668,37 +672,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           // Show exit confirmation dialog
           final shouldExit = await showDialog<bool>(
             context: context,
-            builder: (context) => AlertDialog(
-              title: Row(
-                children: [
-                  Icon(
-                    Icons.exit_to_app,
-                    color: AppColors.warning,
-                    size: 24.sp,
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return AlertDialog(
+                title: Row(
+                  children: [
+                    Icon(
+                      Icons.exit_to_app,
+                      color: AppColors.warning,
+                      size: 24.sp,
+                    ),
+                    SizedBox(width: 8.w),
+                    Text(l10n.exitApp),
+                  ],
+                ),
+                content: Text(
+                  l10n.areYouSureYouWantToExitApp,
+                  style: AppTextStyles.bodyMedium,
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: Text(l10n.cancel),
                   ),
-                  SizedBox(width: 8.w),
-                  const Text('Exit App?'),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.error,
+                      foregroundColor: AppColors.white,
+                    ),
+                    child: Text(l10n.exit),
+                  ),
                 ],
-              ),
-              content: const Text(
-                'Are you sure you want to exit the app?',
-                style: AppTextStyles.bodyMedium,
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.error,
-                    foregroundColor: AppColors.white,
-                  ),
-                  child: const Text('Exit'),
-                ),
-              ],
-            ),
+              );
+            },
           );
 
           if (shouldExit == true && mounted) {
@@ -713,7 +720,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Dashboard'),
+          title: Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Text(l10n.dashboard);
+            },
+          ),
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.white,
           actions: [
@@ -798,24 +810,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           children: [
             Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
             SizedBox(height: 16.h),
-            Text(
-              'Error Loading Dashboard',
-              style: AppTextStyles.heading3.copyWith(color: AppColors.error),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              _error,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.grey600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 16.h),
-            CustomButton(
-              text: 'Retry',
-              onPressed: () => _loadDashboardData(forceRefresh: true),
-              backgroundColor: AppColors.primary,
-              width: 120.w,
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Column(
+                  children: [
+                    Text(
+                      l10n.errorLoadingDashboard,
+                      style: AppTextStyles.heading3.copyWith(
+                        color: AppColors.error,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      _error,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.grey600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 16.h),
+                    CustomButton(
+                      text: l10n.retry,
+                      onPressed: () => _loadDashboardData(forceRefresh: true),
+                      backgroundColor: AppColors.primary,
+                      width: 120.w,
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -872,23 +895,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            isAdmin
-                ? 'Admin Dashboard'
-                : 'Welcome back ${user?.fullName ?? 'User'}!',
-            style: AppTextStyles.heading2.copyWith(
-              color: AppColors.white,
-              fontSize: 18.sp,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            isAdmin
-                ? 'Manage your traffic rules learning platform'
-                : 'Ready to master traffic rules?',
-            style: AppTextStyles.bodyLarge.copyWith(
-              color: AppColors.white.withValues(alpha: 0.9),
-            ),
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isAdmin
+                        ? l10n.adminDashboard
+                        : l10n.welcomeBack(user?.fullName ?? 'User'),
+                    style: AppTextStyles.heading2.copyWith(
+                      color: AppColors.white,
+                      fontSize: 18.sp,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    isAdmin
+                        ? l10n.manageYourTrafficRulesLearningPlatform
+                        : l10n.readyToMasterTrafficRules,
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: AppColors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
 
           // Access Period Information for regular users
@@ -933,31 +966,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          accessPeriod?.hasAccess == true &&
-                                  (accessPeriod?.remainingDays ?? 0) > 0
-                              ? 'Access Active - ${accessPeriod?.remainingDays} days left'
-                              : accessPeriod?.hasAccess == true &&
-                                    (accessPeriod?.remainingDays ?? 0) == 0
-                              ? 'Access Expired'
-                              : 'No Access Code',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14.sp,
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context)!;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  accessPeriod?.hasAccess == true &&
+                                          (accessPeriod?.remainingDays ?? 0) > 0
+                                      ? l10n.accessActiveDaysLeft(
+                                          accessPeriod!.remainingDays,
+                                        )
+                                      : accessPeriod?.hasAccess == true &&
+                                            (accessPeriod?.remainingDays ??
+                                                    0) ==
+                                                0
+                                      ? l10n.accessExpired
+                                      : l10n.noAccessCode,
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14.sp,
+                                  ),
+                                ),
+                                if (accessPeriod?.hasAccess == true &&
+                                    (accessPeriod?.remainingDays ?? 0) > 0) ...[
+                                  SizedBox(height: 2.h),
+                                  Text(
+                                    '${l10n.paymentTier} ${accessPeriod?.paymentTier ?? l10n.none}',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
+                                      fontSize: 11.sp,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          },
                         ),
-                        if (accessPeriod?.hasAccess == true &&
-                            (accessPeriod?.remainingDays ?? 0) > 0) ...[
-                          SizedBox(height: 2.h),
-                          Text(
-                            'Payment Tier: ${accessPeriod?.paymentTier ?? 'None'}',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.white.withValues(alpha: 0.8),
-                              fontSize: 11.sp,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),
@@ -967,32 +1016,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ],
 
           SizedBox(height: 16.h),
-          CustomButton(
-            text: isAdmin
-                ? 'Manage Platform'
-                : (accessPeriod?.hasAccess == true &&
-                      (accessPeriod?.remainingDays ?? 0) > 0)
-                ? 'Start Learning'
-                : 'Get Access Code',
-            onPressed: () {
-              if (isAdmin) {
-                setState(() {
-                  _currentIndex = 0; // Switch to exams tab (now first tab)
-                });
-              } else if (accessPeriod?.hasAccess == true &&
-                  (accessPeriod?.remainingDays ?? 0) > 0) {
-                setState(() {
-                  _currentIndex = 0; // Switch to exams tab (now first tab)
-                });
-              } else {
-                // Show access code instructions
-                //_showContactSupportDialog();
-                _showPaymentInstructions();
-              }
+          Builder(
+            builder: (context) {
+              final l10n = AppLocalizations.of(context)!;
+              return CustomButton(
+                text: isAdmin
+                    ? l10n.managePlatform
+                    : (accessPeriod?.hasAccess == true &&
+                          (accessPeriod?.remainingDays ?? 0) > 0)
+                    ? l10n.startLearning
+                    : l10n.getAccessCode,
+                onPressed: () {
+                  if (isAdmin) {
+                    setState(() {
+                      _currentIndex = 0; // Switch to exams tab (now first tab)
+                    });
+                  } else if (accessPeriod?.hasAccess == true &&
+                      (accessPeriod?.remainingDays ?? 0) > 0) {
+                    setState(() {
+                      _currentIndex = 0; // Switch to exams tab (now first tab)
+                    });
+                  } else {
+                    // Show access code instructions
+                    //_showContactSupportDialog();
+                    _showPaymentInstructions();
+                  }
+                },
+                backgroundColor: AppColors.white,
+                textColor: AppColors.primary,
+                width: 150.w,
+              );
             },
-            backgroundColor: AppColors.white,
-            textColor: AppColors.primary,
-            width: 150.w,
           ),
         ],
       ),
@@ -1022,39 +1076,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Admin Actions',
-          style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+        Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Text(
+              l10n.adminActions,
+              style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+            );
+          },
         ),
         SizedBox(height: 16.h),
 
         Row(
           children: [
             Expanded(
-              child: _buildAdminActionCard(
-                'Manage Users',
-                'View, search, and manage all users',
-                Icons.people,
-                AppColors.primary,
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const UserManagementScreen(),
-                  ),
-                ),
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return _buildAdminActionCard(
+                    l10n.manageUsers,
+                    l10n.viewSearchAndManageAllUsers,
+                    Icons.people,
+                    AppColors.primary,
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const UserManagementScreen(),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
             SizedBox(width: 12.w),
             Expanded(
-              child: _buildAdminActionCard(
-                'Manage Exams',
-                'Create, edit, and manage exams',
-                Icons.quiz,
-                AppColors.success,
-                () {
-                  setState(() {
-                    _currentIndex = 0; // Switch to exams tab (now first tab)
-                  });
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return _buildAdminActionCard(
+                    l10n.manageExams,
+                    l10n.createEditAndManageExams,
+                    Icons.quiz,
+                    AppColors.success,
+                    () {
+                      setState(() {
+                        _currentIndex =
+                            0; // Switch to exams tab (now first tab)
+                      });
+                    },
+                  );
                 },
               ),
             ),
@@ -1066,32 +1136,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         Row(
           children: [
             Expanded(
-              child: _buildAdminActionCard(
-                'Access Codes',
-                'Manage access codes and payments',
-                Icons.vpn_key,
-                AppColors.warning,
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AccessCodeManagementScreen(),
-                  ),
-                ),
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return _buildAdminActionCard(
+                    l10n.accessCodes,
+                    l10n.manageAccessCodesAndPayments,
+                    Icons.vpn_key,
+                    AppColors.warning,
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const AccessCodeManagementScreen(),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
             SizedBox(width: 12.w),
             Expanded(
-              child: _buildAdminActionCard(
-                'Manage Courses',
-                'Create, edit, and manage courses',
-                Icons.school,
-                AppColors.secondary,
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CourseManagementScreen(),
-                  ),
-                ),
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return _buildAdminActionCard(
+                    l10n.manageCourses,
+                    l10n.createEditAndManageCourses,
+                    Icons.school,
+                    AppColors.secondary,
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CourseManagementScreen(),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -1106,9 +1187,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Quick Stats',
-          style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+        Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Text(
+              l10n.quickStats,
+              style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+            );
+          },
         ),
         SizedBox(height: 16.h),
 
@@ -1117,20 +1203,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Row(
             children: [
               Expanded(
-                child: _buildStatCard(
-                  'Total Users',
-                  '$_totalUsers',
-                  Icons.people,
-                  AppColors.primary,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.totalUsersLabel,
+                      '$_totalUsers',
+                      Icons.people,
+                      AppColors.primary,
+                    );
+                  },
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _buildStatCard(
-                  'Total Exams',
-                  '$_totalExams',
-                  Icons.quiz,
-                  AppColors.success,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.totalExams,
+                      '$_totalExams',
+                      Icons.quiz,
+                      AppColors.success,
+                    );
+                  },
                 ),
               ),
             ],
@@ -1139,20 +1235,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Row(
             children: [
               Expanded(
-                child: _buildStatCard(
-                  'Total Attempts',
-                  '$_totalExamResults',
-                  Icons.analytics,
-                  AppColors.warning,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.totalAttempts,
+                      '$_totalExamResults',
+                      Icons.analytics,
+                      AppColors.warning,
+                    );
+                  },
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _buildStatCard(
-                  'Avg Score',
-                  '${_averageScore.toStringAsFixed(1)}%',
-                  Icons.trending_up,
-                  AppColors.secondary,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.avgScore,
+                      '${_averageScore.toStringAsFixed(1)}%',
+                      Icons.trending_up,
+                      AppColors.secondary,
+                    );
+                  },
                 ),
               ),
             ],
@@ -1162,20 +1268,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Row(
             children: [
               Expanded(
-                child: _buildStatCard(
-                  'Exams Taken',
-                  '$_totalExamsTaken',
-                  Icons.quiz,
-                  AppColors.primary,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.examsTaken,
+                      '$_totalExamsTaken',
+                      Icons.quiz,
+                      AppColors.primary,
+                    );
+                  },
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _buildStatCard(
-                  'Average Score',
-                  '${_averageScore.toStringAsFixed(1)}%',
-                  Icons.trending_up,
-                  AppColors.success,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.averageScore,
+                      '${_averageScore.toStringAsFixed(1)}%',
+                      Icons.trending_up,
+                      AppColors.success,
+                    );
+                  },
                 ),
               ),
             ],
@@ -1184,20 +1300,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Row(
             children: [
               Expanded(
-                child: _buildStatCard(
-                  'Study Streak',
-                  '$_studyStreak days',
-                  Icons.local_fire_department,
-                  AppColors.warning,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.studyStreak,
+                      l10n.studyStreakDays(_studyStreak),
+                      Icons.local_fire_department,
+                      AppColors.warning,
+                    );
+                  },
                 ),
               ),
               SizedBox(width: 12.w),
               Expanded(
-                child: _buildStatCard(
-                  'Achievements',
-                  '$_achievements',
-                  Icons.emoji_events,
-                  AppColors.secondary,
+                child: Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return _buildStatCard(
+                      l10n.achievements,
+                      '$_achievements',
+                      Icons.emoji_events,
+                      AppColors.secondary,
+                    );
+                  },
                 ),
               ),
             ],
@@ -1270,11 +1396,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       color: AppColors.grey400,
                     ),
                     SizedBox(height: 16.h),
-                    Text(
-                      'No exams available',
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        color: AppColors.grey600,
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context)!;
+                        return Text(
+                          l10n.noExamsAvailable,
+                          style: AppTextStyles.bodyLarge.copyWith(
+                            color: AppColors.grey600,
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -1284,9 +1415,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Available Exams',
-                  style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+                Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return Text(
+                      l10n.availableExams,
+                      style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+                    );
+                  },
                 ),
                 SizedBox(height: 16.h),
                 GridView.builder(
@@ -1425,37 +1561,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Courses',
-              style: AppTextStyles.heading3.copyWith(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CourseListScreen(),
-                  ),
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l10n.courses,
+                      style: AppTextStyles.heading3.copyWith(
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CourseListScreen(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 6.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Text(
+                          l10n.viewAll,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.white,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 );
               },
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Text(
-                  'View All',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.white,
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
             ),
           ],
         ),
@@ -1471,9 +1620,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               color: AppColors.white,
               borderRadius: BorderRadius.circular(16.r),
             ),
-            child: Text(
-              'Error loading courses: ${courseState.error}',
-              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
+            child: Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Text(
+                  '${l10n.errorLoadingCourses} ${courseState.error}',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.error,
+                  ),
+                );
+              },
             ),
           )
         else if (courseState.courses.isEmpty)
@@ -1491,11 +1647,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   color: AppColors.grey400,
                 ),
                 SizedBox(height: 16.h),
-                Text(
-                  'No courses available',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.grey600,
-                  ),
+                Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return Text(
+                      l10n.noCoursesAvailable,
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: AppColors.grey600,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -1635,12 +1796,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           ),
                         ),
                       ),
-                      Text(
-                        '${course.contentCount ?? 0} lessons',
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.grey600,
-                          fontSize: 10.sp,
-                        ),
+                      Builder(
+                        builder: (context) {
+                          final l10n = AppLocalizations.of(context)!;
+                          return Text(
+                            l10n.lessonsCount(course.contentCount ?? 0),
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.grey600,
+                              fontSize: 10.sp,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -1754,12 +1920,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(height: 2.h),
-                    Text(
-                      '${cachedCount ?? exams.length} ${(cachedCount ?? exams.length) == 1 ? 'Exam' : 'Exams'}',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.grey600,
-                        fontSize: 12.sp,
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context)!;
+                        final count = cachedCount ?? exams.length;
+                        return Text(
+                          count == 1
+                              ? '1 ${l10n.exam}'
+                              : '$count ${l10n.exams}',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.grey600,
+                            fontSize: 12.sp,
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -1779,9 +1953,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          isAdmin ? 'Recent Activity' : 'Recent Activity',
-          style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+        Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Text(
+              l10n.recentActivity,
+              style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+            );
+          },
         ),
         SizedBox(height: 16.h),
 
@@ -1804,21 +1983,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               children: [
                 Icon(Icons.history, size: 48.sp, color: AppColors.grey400),
                 SizedBox(height: 16.h),
-                Text(
-                  'No recent activity',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.grey600,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  isAdmin
-                      ? 'No exam attempts recorded yet'
-                      : 'Start taking exams to see your progress here',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.grey500,
-                  ),
-                  textAlign: TextAlign.center,
+                Builder(
+                  builder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return Column(
+                      children: [
+                        Text(
+                          l10n.noRecentActivity,
+                          style: AppTextStyles.bodyLarge.copyWith(
+                            color: AppColors.grey600,
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          isAdmin
+                              ? l10n.noExamAttemptsRecordedYet
+                              : l10n.startTakingExamsToSeeYourProgressHere,
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.grey500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
@@ -1876,12 +2064,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               ),
                             ),
                             SizedBox(height: 4.h),
-                            Text(
-                              'Score: ${result.score}% • ${_formatTimeAgo(result.submittedAt)}',
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.grey600,
-                                fontSize: 12.sp,
-                              ),
+                            Builder(
+                              builder: (context) {
+                                final l10n = AppLocalizations.of(context)!;
+                                return Text(
+                                  '${l10n.examScore(result.score.toString())} • ${_formatTimeAgo(result.submittedAt, context)}',
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.grey600,
+                                    fontSize: 12.sp,
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -1896,16 +2089,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  String _formatTimeAgo(DateTime date) {
+  String _formatTimeAgo(DateTime date, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
     final difference = now.difference(date);
 
     if (difference.inDays == 0) {
-      return 'Today';
+      return l10n.today;
     } else if (difference.inDays == 1) {
-      return 'Yesterday';
+      return l10n.yesterday;
     } else if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
+      return l10n.daysAgo(difference.inDays);
     } else {
       return '${date.month}/${date.day}/${date.year}';
     }
@@ -2030,7 +2224,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     //disble back button when user are on dashboard screen
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context)!;
+            return Text(l10n.profile);
+          },
+        ),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
       ),
@@ -2101,142 +2300,163 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             SizedBox(height: 24.h),
 
             // Settings Options
-            _buildSettingsOption(
-              'View Profile',
-              'View and manage your profile information',
-              Icons.person_outline,
-              () {
-                Navigator.pushNamed(context, '/view-profile');
-              },
-            ),
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return Column(
+                  children: [
+                    _buildSettingsOption(
+                      l10n.viewProfile,
+                      l10n.viewAndManageYourProfileInformation,
+                      Icons.person_outline,
+                      () {
+                        Navigator.pushNamed(context, '/view-profile');
+                      },
+                    ),
 
-            _buildSettingsOption(
-              'Notifications',
-              'Manage your notification preferences',
-              Icons.notifications,
-              () {
-                Navigator.pushNamed(context, '/notifications');
-              },
-            ),
+                    _buildSettingsOption(
+                      l10n.notifications,
+                      l10n.manageYourNotificationPreferences,
+                      Icons.notifications,
+                      () {
+                        Navigator.pushNamed(context, '/notifications');
+                      },
+                    ),
 
-            _buildSettingsOption(
-              'Study Reminders',
-              'Set up study reminders',
-              Icons.schedule,
-              () {
-                Navigator.pushNamed(context, '/study-reminders');
-              },
-            ),
+                    _buildSettingsOption(
+                      l10n.studyReminders,
+                      l10n.setUpStudyReminders,
+                      Icons.schedule,
+                      () {
+                        Navigator.pushNamed(context, '/study-reminders');
+                      },
+                    ),
 
-            _buildSettingsOption(
-              'About App',
-              'Learn more about this application',
-              Icons.info_outline,
-              () {
-                Navigator.pushNamed(context, '/about-app');
-              },
-            ),
+                    _buildSettingsOption(
+                      l10n.aboutApp,
+                      l10n.learnMoreAboutThisApplication,
+                      Icons.info_outline,
+                      () {
+                        Navigator.pushNamed(context, '/about-app');
+                      },
+                    ),
 
-            _buildSettingsOption(
-              'Privacy Policy',
-              'Read our privacy policy',
-              Icons.privacy_tip_outlined,
-              () {
-                Navigator.pushNamed(context, '/privacy-policy');
-              },
-            ),
+                    _buildSettingsOption(
+                      l10n.privacyPolicyLabel,
+                      l10n.readOurPrivacyPolicy,
+                      Icons.privacy_tip_outlined,
+                      () {
+                        Navigator.pushNamed(context, '/privacy-policy');
+                      },
+                    ),
 
-            _buildSettingsOption(
-              'Terms & Conditions',
-              'Read our terms and conditions',
-              Icons.description_outlined,
-              () {
-                Navigator.pushNamed(context, '/terms-conditions');
-              },
-            ),
+                    _buildSettingsOption(
+                      l10n.termsConditionsLabel,
+                      l10n.readOurTermsAndConditions,
+                      Icons.description_outlined,
+                      () {
+                        Navigator.pushNamed(context, '/terms-conditions');
+                      },
+                    ),
 
-            _buildSettingsOption(
-              'Share App',
-              'Share this app with friends and family',
-              Icons.share,
-              () {
-                _shareApp();
-              },
-            ),
+                    _buildSettingsOption(
+                      l10n.shareApp,
+                      l10n.shareThisAppWithFriendsAndFamily,
+                      Icons.share,
+                      () {
+                        _shareApp();
+                      },
+                    ),
 
-            _buildSettingsOption(
-              'Help & Support',
-              'Get help and contact support',
-              Icons.help,
-              () {
-                Navigator.pushNamed(context, '/help-support');
-              },
-            ),
+                    _buildSettingsOption(
+                      l10n.helpSupport,
+                      l10n.getHelpAndContactSupport,
+                      Icons.help,
+                      () {
+                        Navigator.pushNamed(context, '/help-support');
+                      },
+                    ),
 
-            _buildSettingsOption(
-              'Delete Account',
-              'Permanently delete your account',
-              Icons.delete_forever,
-              () {
-                Navigator.pushNamed(context, '/delete-account');
+                    _buildSettingsOption(
+                      l10n.deleteAccount,
+                      l10n.permanentlyDeleteYourAccount,
+                      Icons.delete_forever,
+                      () {
+                        Navigator.pushNamed(context, '/delete-account');
+                      },
+                      isDestructive: true,
+                    ),
+                  ],
+                );
               },
-              isDestructive: true,
             ),
 
             SizedBox(height: 24.h),
 
             // Logout Button
-            CustomButton(
-              text: 'Logout',
-              onPressed: () async {
-                // Show confirmation dialog
-                final shouldLogout = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Row(
-                      children: [
-                        Icon(Icons.logout, color: AppColors.error, size: 24.sp),
-                        SizedBox(width: 8.w),
-                        const Text('Logout'),
-                      ],
-                    ),
-                    content: const Text(
-                      'Are you sure you want to logout?',
-                      style: AppTextStyles.bodyMedium,
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.error,
-                          foregroundColor: AppColors.white,
-                        ),
-                        child: const Text('Logout'),
-                      ),
-                    ],
-                  ),
-                );
-
-                if (shouldLogout == true && mounted) {
-                  // Perform logout
-                  await ref.read(authProvider.notifier).logout();
-
-                  // Navigate to login screen explicitly
-                  if (mounted) {
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      '/login',
-                      (route) => false, // Remove all previous routes
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context)!;
+                return CustomButton(
+                  text: l10n.logout,
+                  onPressed: () async {
+                    // Show confirmation dialog
+                    final shouldLogout = await showDialog<bool>(
+                      context: context,
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context)!;
+                        return AlertDialog(
+                          title: Row(
+                            children: [
+                              Icon(
+                                Icons.logout,
+                                color: AppColors.error,
+                                size: 24.sp,
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(l10n.logout),
+                            ],
+                          ),
+                          content: Text(
+                            l10n.areYouSureYouWantToLogout,
+                            style: AppTextStyles.bodyMedium,
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text(l10n.cancel),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.error,
+                                foregroundColor: AppColors.white,
+                              ),
+                              child: Text(l10n.logout),
+                            ),
+                          ],
+                        );
+                      },
                     );
-                  }
-                }
+
+                    if (shouldLogout == true && mounted) {
+                      // Perform logout
+                      await ref.read(authProvider.notifier).logout();
+
+                      // Navigate to login screen explicitly
+                      if (mounted) {
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/login',
+                          (route) => false, // Remove all previous routes
+                        );
+                      }
+                    }
+                  },
+                  backgroundColor: AppColors.error,
+                  width: double.infinity,
+                );
               },
-              backgroundColor: AppColors.error,
-              width: double.infinity,
             ),
           ],
         ),

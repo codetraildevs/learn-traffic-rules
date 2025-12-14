@@ -8,7 +8,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.privacyPolicy),
@@ -44,7 +44,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    l10n.lastUpdated('October 2025'),
+                    l10n?.lastUpdated('December 2025') ?? '',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey600,
                     ),

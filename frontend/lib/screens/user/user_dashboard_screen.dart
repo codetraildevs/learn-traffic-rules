@@ -101,7 +101,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
           IconButton(
             onPressed: _loadRemainingDays,
             icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
+            tooltip: l10n.refresh,
           ),
         ],
       ),
@@ -171,14 +171,14 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Welcome Back!',
+                                        l10n.welcomeBackExclamation,
                                         style: AppTextStyles.heading2.copyWith(
                                           color: AppColors.white,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                       Text(
-                                        'Track your access and progress',
+                                        l10n.trackYourAccessAndProgress,
                                         style: AppTextStyles.bodyMedium
                                             .copyWith(
                                               color: AppColors.white.withValues(
@@ -219,7 +219,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                               ),
                               SizedBox(width: 8.w),
                               Text(
-                                'Access Status',
+                                l10n.accessStatus,
                                 style: AppTextStyles.heading3.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -253,7 +253,7 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                                       ),
                                       SizedBox(width: 8.w),
                                       Text(
-                                        'Active Access',
+                                        l10n.activeAccess,
                                         style: AppTextStyles.bodyLarge.copyWith(
                                           color: AppColors.success,
                                           fontWeight: FontWeight.bold,
@@ -263,14 +263,18 @@ class _UserDashboardScreenState extends ConsumerState<UserDashboardScreen> {
                                   ),
                                   SizedBox(height: 8.h),
                                   Text(
-                                    'You have $_remainingDaysData days remaining',
+                                    l10n.youHaveDaysRemaining(
+                                      _remainingDaysData!.remainingDays,
+                                    ),
                                     style: AppTextStyles.bodyMedium.copyWith(
                                       color: AppColors.grey700,
                                     ),
                                   ),
                                   if (_remainingDaysData!.activeCodesCount > 1)
                                     Text(
-                                      '${_remainingDaysData!.activeCodesCount} active access codes',
+                                      l10n.activeAccessCodesCount(
+                                        _remainingDaysData!.activeCodesCount,
+                                      ),
                                       style: AppTextStyles.caption.copyWith(
                                         color: AppColors.grey600,
                                       ),

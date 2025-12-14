@@ -623,7 +623,9 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             child: LinearProgressIndicator(
               value: (_currentIndex + 1) / _contents.length,
               backgroundColor: AppColors.grey200,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppColors.primary,
+              ),
             ),
           ),
 
@@ -925,7 +927,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
 
             // Play/Pause Button
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.primary,
               ),

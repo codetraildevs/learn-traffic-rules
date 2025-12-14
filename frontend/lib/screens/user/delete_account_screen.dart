@@ -118,7 +118,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                     user?.phoneNumber ?? l10n.notProvided,
                   ),
                   //_buildInfoRow('User ID', user?.id ?? 'Not available'),
-                  _buildInfoRow(l10n.accountStatus, user?.role ?? 'USER'),
+                  _buildInfoRow(l10n.accountStatus, user?.role ?? l10n.userRole),
                 ],
               ),
             ),
@@ -234,7 +234,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                     ),
                     onChanged: (value) {
                       setState(() {
-                        _confirmDeletion = value.toUpperCase() == 'DELETE';
+                        _confirmDeletion = value.toUpperCase() == l10n.deleteConfirmationWord.toUpperCase();
                       });
                     },
                   ),
@@ -269,7 +269,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                           setState(() {
                             _confirmDeletion = value ?? false;
                             if (_confirmDeletion) {
-                              _confirmationController.text = 'DELETE';
+                              _confirmationController.text = l10n.deleteConfirmationWord.toUpperCase();
                             } else {
                               _confirmationController.clear();
                             }

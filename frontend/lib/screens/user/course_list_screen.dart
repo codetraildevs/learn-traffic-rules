@@ -47,13 +47,15 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
         });
         _applyFilter();
       } else {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
-          _error = response.message ?? 'Failed to load courses';
+          _error = response.message ?? l10n.errorLoadingCourses;
         });
       }
     } catch (e) {
+      final l10n = AppLocalizations.of(context)!;
       setState(() {
-        _error = 'Error loading courses: $e';
+        _error = '${l10n.errorLoadingCourses} $e';
       });
     } finally {
       setState(() {
@@ -190,6 +192,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
   }
 
   Widget _buildCourseCard(Course course, bool hasAccess) {
+    final l10n = AppLocalizations.of(context)!;
     // Global payment: if user has access, they can access all paid courses
     final canAccess = course.isFree || hasAccess;
 
@@ -332,7 +335,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
                     children: [
                       _buildStatChip(
                         Icons.article,
-                        '${course.contentCount ?? 0} Content',
+                        l10n.contentCount(course.contentCount ?? 0),
                         AppColors.primary,
                       ),
                       SizedBox(width: 8.w),
@@ -348,7 +351,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
 
                   // Action Button
                   CustomButton(
-                    text: canAccess ? 'View Course' : 'Get Access',
+                    text: canAccess ? l10n.viewCourse : l10n.getAccess,
                     onPressed: () {
                       if (canAccess) {
                         Navigator.push(
@@ -411,6 +414,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
   }
 
   Widget _buildErrorView() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: EdgeInsets.all(20.w),
@@ -420,12 +424,12 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
             Icon(Icons.error_outline, size: 64.sp, color: AppColors.error),
             SizedBox(height: 16.h),
             Text(
-              'Error Loading Courses',
+              l10n.errorLoadingCourses,
               style: AppTextStyles.heading3.copyWith(color: AppColors.error),
             ),
             SizedBox(height: 8.h),
             Text(
-              _error ?? 'Unknown error occurred',
+              _error ?? l10n.unknownErrorOccurred,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.grey600,
               ),
@@ -433,7 +437,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
             ),
             SizedBox(height: 16.h),
             CustomButton(
-              text: 'Retry',
+              text: l10n.retry,
               onPressed: _loadCourses,
               backgroundColor: AppColors.primary,
               width: 120.w,
@@ -445,6 +449,7 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
   }
 
   Widget _buildEmptyView() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: EdgeInsets.all(20.w),
@@ -454,12 +459,12 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
             Icon(Icons.school_outlined, size: 64.sp, color: AppColors.grey400),
             SizedBox(height: 16.h),
             Text(
-              'No Courses Available',
+              l10n.noCoursesAvailable,
               style: AppTextStyles.heading3.copyWith(color: AppColors.grey600),
             ),
             SizedBox(height: 8.h),
             Text(
-              'Check back later for new courses',
+              l10n.checkBackLaterForNewCourses,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.grey500,
               ),

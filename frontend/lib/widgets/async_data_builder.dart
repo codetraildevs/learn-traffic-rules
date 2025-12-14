@@ -85,7 +85,7 @@ class AsyncDataBuilder<T> extends StatelessWidget {
         // Fallback
         return Builder(
           builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
+            final l10n = AppLocalizations.of(context);
             return Center(child: Text(l10n.noDataAvailable));
           },
         );

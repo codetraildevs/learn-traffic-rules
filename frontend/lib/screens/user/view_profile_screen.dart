@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/language_selector.dart';
 import '../../l10n/app_localizations.dart';
 
 class ViewProfileScreen extends ConsumerWidget {
@@ -67,7 +66,7 @@ class ViewProfileScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(16.r),
                     ),
                     child: Text(
-                      user?.role ?? 'USER',
+                      user?.role ?? l10n.userRole,
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w600,
@@ -81,8 +80,8 @@ class ViewProfileScreen extends ConsumerWidget {
             SizedBox(height: 24.h),
 
             // Language Settings
-            const LanguageSelector(),
-
+            // TODO: Add LanguageSelector widget when available
+            // const LanguageSelector(),
             SizedBox(height: 24.h),
 
             // Profile Details

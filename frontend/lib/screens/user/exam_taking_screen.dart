@@ -19,6 +19,7 @@ import '../../services/flash_message_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../models/exam_result_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../l10n/app_localizations.dart';
 import 'exam_progress_screen.dart';
 
 class ExamTakingScreen extends ConsumerStatefulWidget {
@@ -258,6 +259,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   // Users can now exit and return to continue the exam
 
   void _showExitWarning() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -266,15 +268,15 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
           children: [
             Icon(Icons.exit_to_app, color: AppColors.warning, size: 24.sp),
             SizedBox(width: 8.w),
-            const Text('Exit Exam?'),
+            Text(l10n.exitExam),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'What would you like to do?',
+            Text(
+              l10n.whatWouldYouLikeToDo,
               style: AppTextStyles.bodyMedium,
             ),
             SizedBox(height: 12.h),
@@ -285,7 +287,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(
-                'You can exit and return later, or submit your current answers.',
+                l10n.youCanExitAndReturnLater,
                 style: AppTextStyles.caption.copyWith(
                   color: AppColors.info,
                   fontWeight: FontWeight.w600,
@@ -297,7 +299,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Continue Exam'),
+            child: Text(l10n.continueExam),
           ),
           TextButton(
             onPressed: () {
@@ -308,7 +310,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
               Navigator.pop(context);
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.warning),
-            child: const Text('Exit Without Submitting'),
+            child: Text(l10n.exitWithoutSubmitting),
           ),
           // ElevatedButton(
           //   onPressed: () {
@@ -564,7 +566,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
               Navigator.pop(context);
               _submitExam();
             },
-            child: const Text('Submit'),
+            child: Text(AppLocalizations.of(context)!.submitExam),
           ),
         ],
       ),
@@ -1763,6 +1765,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   }
 
   void _showFinishExamDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final answeredCount = _userAnswers.length;
     final totalQuestions = _questions.length;
     final unansweredCount = totalQuestions - answeredCount;
@@ -1786,7 +1789,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             ),
             SizedBox(width: 8.w),
             Text(
-              allAnswered ? 'Submit Exam?' : 'Finish Exam?',
+              allAnswered ? l10n.submitExamQuestion : l10n.finishExam,
               style: AppTextStyles.heading3.copyWith(color: AppColors.grey800),
             ),
           ],
@@ -1797,14 +1800,14 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
           children: [
             if (allAnswered) ...[
               Text(
-                'All questions have been answered. Are you ready to submit?',
+                l10n.allQuestionsHaveBeenAnswered,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.grey700,
                 ),
               ),
             ] else ...[
               Text(
-                'You have unanswered questions. Please answer all questions before submitting.',
+                l10n.youHaveUnansweredQuestions,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.grey700,
                 ),
@@ -1830,7 +1833,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                     SizedBox(width: 8.w),
                     Expanded(
                       child: Text(
-                        'You have $unansweredCount unanswered question${unansweredCount == 1 ? '' : 's'}. Please go back and answer them before submitting.',
+                        l10n.youHaveUnansweredQuestionsCount(unansweredCount),
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.error,
                           fontWeight: FontWeight.w600,
@@ -1843,7 +1846,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             ],
             SizedBox(height: 16.h),
             Text(
-              'Once submitted, you cannot change your answers.',
+              l10n.onceSubmittedYouCannotChangeAnswers,
               style: AppTextStyles.caption.copyWith(
                 color: AppColors.grey600,
                 fontStyle: FontStyle.italic,
@@ -1854,8 +1857,8 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Continue Exam',
+            child: Text(
+              l10n.continueExam,
               style: TextStyle(
                 color: AppColors.grey600,
                 fontWeight: FontWeight.w600,
@@ -1875,8 +1878,8 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                   borderRadius: BorderRadius.circular(8.r),
                 ),
               ),
-              child: const Text(
-                'Submit Exam',
+              child: Text(
+                l10n.submitExam,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),

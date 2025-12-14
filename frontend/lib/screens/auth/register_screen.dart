@@ -13,6 +13,7 @@ import '../../services/device_service.dart';
 import '../../services/debug_service.dart';
 import '../../services/flash_message_service.dart';
 import 'package:flash_message/flash_message.dart';
+import '../../l10n/app_localizations.dart';
 import '../../screens/home/home_screen.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -99,6 +100,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   }
 
   void _showPhoneNumberDialog() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -108,7 +110,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               Icon(Icons.phone, color: AppColors.secondary, size: 24.sp),
               SizedBox(width: 8.w),
               Text(
-                'Need Help?',
+                l10n.needHelp,
                 style: AppTextStyles.heading3.copyWith(
                   color: AppColors.secondary,
                 ),
@@ -120,7 +122,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Contact our support team:',
+                l10n.contactSupport,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.grey700,
                 ),
@@ -152,7 +154,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               ),
               SizedBox(height: 8.h),
               Text(
-                'Available 24/7 for your support',
+                l10n.available247,
                 style: AppTextStyles.caption.copyWith(
                   color: AppColors.grey600,
                   fontStyle: FontStyle.italic,
@@ -164,7 +166,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                'Close',
+                l10n.close,
                 style: AppTextStyles.link.copyWith(color: AppColors.grey600),
               ),
             ),
@@ -218,12 +220,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                         if (mounted) {
                           ScaffoldMessenger.of(this.context).showSnackBar(
                             SnackBar(
-                              content: const Text(
-                                'Phone number: +250 788 659 575',
-                              ),
+                              content: Text(l10n.phoneNumber),
                               backgroundColor: AppColors.secondary,
                               action: SnackBarAction(
-                                label: 'Copy',
+                                label: l10n.copy,
                                 onPressed: () {},
                                 // Copy functionality could be added
                               ),
@@ -238,8 +238,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   // If still fails, show a snackbar
                   if (!mounted) return;
                   ScaffoldMessenger.of(this.context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Phone number: +250 788 659 575'),
+                    SnackBar(
+                      content: Text(l10n.phoneNumber),
                       backgroundColor: AppColors.secondary,
                     ),
                   );
@@ -252,7 +252,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   borderRadius: BorderRadius.circular(8.r),
                 ),
               ),
-              child: const Text('Call Now'),
+              child: Text(l10n.callNow),
             ),
           ],
         );
@@ -286,10 +286,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         },
       });
 
+      final l10n = AppLocalizations.of(context);
       AppFlashMessage.show(
         context: context,
-        message: 'Please check your information',
-        description: 'Make sure all fields are filled correctly',
+        message: l10n.pleaseCheckYourInformation,
+        description: l10n.makeSureAllFieldsFilled,
         type: FlashMessageType.warning,
       );
       return;
@@ -345,10 +346,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             'timestamp': DateTime.now().toIso8601String(),
           });
 
+          final l10n = AppLocalizations.of(context);
           AppFlashMessage.show(
             context: context,
-            message: 'Registration Successful!',
-            description: 'Welcome to Traffic Rules Master!',
+            message: l10n.registrationSuccessful,
+            description: l10n.welcomeToApp,
             type: FlashMessageType.success,
             duration: const Duration(seconds: 2),
           );
@@ -362,7 +364,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             await Future.delayed(const Duration(milliseconds: 50));
             final authState = ref.read(authProvider);
             if (authState.status == AuthStatus.authenticated) {
-              debugPrint('✅ Auth state confirmed as authenticated, navigating...');
+              debugPrint(
+                '✅ Auth state confirmed as authenticated, navigating...',
+              );
               if (mounted) {
                 // Navigate directly to HomeScreen to ensure proper state
                 Navigator.pushAndRemoveUntil(
@@ -375,7 +379,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             }
             attempts++;
           }
-          
+
           // Fallback: navigate even if state check didn't work (shouldn't happen)
           if (mounted) {
             debugPrint('⚠️ Navigating to dashboard (fallback)');
@@ -398,9 +402,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           });
 
           // Show enhanced error message with specific handling for common errors
-          String errorMessage = 'Registration Failed';
-          String errorDescription =
-              'Please check your information and try again';
+          final l10n = AppLocalizations.of(context);
+          String errorMessage = l10n.registerFailed;
+          String errorDescription = l10n.pleaseCheckYourInformation;
           String errorIcon = '❌';
 
           // Debug the actual error message
@@ -416,9 +420,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               errorString.contains('phone already exists') ||
               errorString.contains('user already exists') ||
               errorString.contains('phone number already')) {
-            errorMessage = 'Phone Number Already Registered';
-            errorDescription =
-                'This phone number is already registered. Please login instead.';
+            errorMessage = l10n.phoneNumberAlreadyRegistered;
+            errorDescription = l10n.phoneNumberAlreadyRegisteredDescription;
             errorIcon = '📱';
           } else if (errorString.contains('device is already registered') ||
               errorString.contains('device already registered') ||
@@ -429,11 +432,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               errorString.contains('device conflict')) {
             // Check if user exists by attempting a login check
             // This handles the case where device is registered but user doesn't exist
-            errorMessage = 'Device Already Registered';
-            errorDescription =
-                'This device appears to be registered, but we need to verify your account.\n\n'
-                'Please try logging in first. If login fails, contact support to reset your device binding.\n\n'
-                'Support: +250 788 659 575';
+            errorMessage = l10n.deviceAlreadyRegistered;
+            errorDescription = l10n.deviceAlreadyRegisteredDescription;
             errorIcon = '📱';
 
             // Try to check if user exists by attempting login
@@ -442,54 +442,47 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           } else if (errorString.contains('invalid phone') ||
               errorString.contains('phone number invalid') ||
               errorString.contains('invalid phone number')) {
-            errorMessage = 'Invalid Phone Number';
-            errorDescription =
-                'Please enter a valid phone number (10 digits starting with 07).';
+            errorMessage = l10n.invalidPhoneNumber;
+            errorDescription = l10n.invalidPhoneNumberDescription;
             errorIcon = '📞';
           } else if (errorString.contains('name too short') ||
               errorString.contains('invalid name') ||
               errorString.contains('name required')) {
-            errorMessage = 'Invalid Name';
-            errorDescription =
-                'Please enter a valid full name (at least 3 characters).';
+            errorMessage = l10n.invalidName;
+            errorDescription = l10n.invalidNameDescription;
             errorIcon = '✏️';
           } else if (errorString.contains('network') ||
               errorString.contains('connection') ||
               errorString.contains('timeout') ||
               errorString.contains('unreachable')) {
-            errorMessage = 'Network Error';
-            errorDescription =
-                'Please check your internet connection and try again.';
+            errorMessage = l10n.networkError;
+            errorDescription = l10n.networkError;
             errorIcon = '🌐';
           } else if (errorString.contains('server') ||
               errorString.contains('api error') ||
               errorString.contains('internal server') ||
               errorString.contains('500')) {
-            errorMessage = 'Server Error';
-            errorDescription =
-                'There was a problem with the server. Please try again in a few moments.';
+            errorMessage = l10n.serverError;
+            errorDescription = l10n.serverError;
             errorIcon = '⚠️';
           } else if (errorString.contains('rate limit') ||
               errorString.contains('too many requests') ||
               errorString.contains('429')) {
-            errorMessage = 'Too Many Requests';
-            errorDescription =
-                'You are making requests too quickly. Please wait a moment and try again.';
+            errorMessage = l10n.tooManyRequests;
+            errorDescription = l10n.tooManyRequestsDescription;
             errorIcon = '⏱️';
           } else if (errorString.contains('unauthorized') ||
               errorString.contains('forbidden') ||
               errorString.contains('401') ||
               errorString.contains('403')) {
-            errorMessage = 'Access Denied';
-            errorDescription =
-                'You do not have permission to perform this action.';
+            errorMessage = l10n.accessDenied;
+            errorDescription = l10n.accessDeniedDescription;
             errorIcon = '🔐';
           } else {
             // Generic error with the actual error message
-            errorMessage = 'Registration Failed';
+            errorMessage = l10n.registerFailed;
             errorDescription =
-                error?.toString() ??
-                'Please check your information and try again';
+                error?.toString() ?? l10n.pleaseCheckYourInformation;
             errorIcon = '❌';
           }
 
@@ -526,10 +519,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       if (mounted) {
         setState(() => _isLoading = false);
 
+        final l10n = AppLocalizations.of(context);
         AppFlashMessage.show(
           context: context,
-          message: 'Network Error',
-          description: 'Please check your internet connection and try again',
+          message: l10n.networkError,
+          description: l10n.networkError,
           type: FlashMessageType.error,
           duration: const Duration(seconds: 4),
         );
@@ -550,23 +544,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   SizedBox(height: 20.h),
 
                   // App Title with Creative Styling
-                  Text(
-                    'Start Learning Journey 🇷🇼',
-                    style: AppTextStyles.heading2.copyWith(
-                      color: AppColors.black,
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 10.h),
-
-                  Text(
-                    'Learn • Practice • Master 🚗',
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      color: AppColors.grey700,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  Builder(
+                    builder: (context) {
+                      final l10n = AppLocalizations.of(context);
+                      return Column(
+                        children: [
+                          Text(
+                            l10n.startLearningJourney,
+                            style: AppTextStyles.heading2.copyWith(
+                              color: AppColors.black,
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 10.h),
+                          Text(
+                            l10n.learnPracticeMaster,
+                            style: AppTextStyles.bodyLarge.copyWith(
+                              color: AppColors.grey700,
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
@@ -593,113 +595,128 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                           size: 16.sp,
                         ),
                         SizedBox(width: 8.w),
-                        Text(
-                          'Important Information',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.secondary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14.sp,
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context);
+                            return Text(
+                              l10n.importantInformation,
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: AppColors.secondary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14.sp,
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
                     SizedBox(height: 8.h),
-                    Text(
-                      'Fill in your details below to create your account. Your device will be automatically detected for security purposes.',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.grey700,
-                        fontSize: 13.sp,
-                        height: 1.4,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.phone_outlined,
-                          color: AppColors.grey600,
-                          size: 14.sp,
-                        ),
-                        SizedBox(width: 6.w),
-                        Text(
-                          'Need help? Call ',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.grey600,
-                            fontSize: 13.sp,
-                          ),
-                        ),
-                        // First phone number
-                        GestureDetector(
-                          onTap: () async {
-                            try {
-                              const phoneNumber = '+250788659575';
-                              final Uri phoneUri = Uri(
-                                scheme: 'tel',
-                                path: phoneNumber,
-                              );
-                              if (await canLaunchUrl(phoneUri)) {
-                                await launchUrl(
-                                  phoneUri,
-                                  mode: LaunchMode.externalApplication,
-                                );
-                              } else {
-                                _showPhoneNumberDialog();
-                              }
-                            } catch (e) {
-                              _showPhoneNumberDialog();
-                            }
-                          },
-                          child: Text(
-                            '0788 659 575',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.secondary,
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.fillDetailsToCreateAccount,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.grey700,
+                                fontSize: 13.sp,
+                                height: 1.4,
+                              ),
                             ),
-                          ),
-                        ),
-                        Text(
-                          ' / ',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.grey600,
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        // Second phone number
-                        GestureDetector(
-                          onTap: () async {
-                            try {
-                              const phoneNumber = '+250728877442';
-                              final Uri phoneUri = Uri(
-                                scheme: 'tel',
-                                path: phoneNumber,
-                              );
-                              if (await canLaunchUrl(phoneUri)) {
-                                await launchUrl(
-                                  phoneUri,
-                                  mode: LaunchMode.externalApplication,
-                                );
-                              } else {
-                                _showPhoneNumberDialog();
-                              }
-                            } catch (e) {
-                              _showPhoneNumberDialog();
-                            }
-                          },
-                          child: Text(
-                            '0728 877 442',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.secondary,
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
+                            SizedBox(height: 8.h),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.phone_outlined,
+                                  color: AppColors.grey600,
+                                  size: 14.sp,
+                                ),
+                                SizedBox(width: 6.w),
+                                Text(
+                                  l10n.needHelpCall,
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.grey600,
+                                    fontSize: 13.sp,
+                                  ),
+                                ),
+                                // First phone number
+                                GestureDetector(
+                                  onTap: () async {
+                                    try {
+                                      const phoneNumber = '+250788659575';
+                                      final Uri phoneUri = Uri(
+                                        scheme: 'tel',
+                                        path: phoneNumber,
+                                      );
+                                      if (await canLaunchUrl(phoneUri)) {
+                                        await launchUrl(
+                                          phoneUri,
+                                          mode: LaunchMode.externalApplication,
+                                        );
+                                      } else {
+                                        _showPhoneNumberDialog();
+                                      }
+                                    } catch (e) {
+                                      _showPhoneNumberDialog();
+                                    }
+                                  },
+                                  child: Text(
+                                    '0788 659 575',
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: AppColors.secondary,
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.w600,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  ' / ',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.grey600,
+                                    fontSize: 13.sp,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                // Second phone number
+                                GestureDetector(
+                                  onTap: () async {
+                                    try {
+                                      const phoneNumber = '+250728877442';
+                                      final Uri phoneUri = Uri(
+                                        scheme: 'tel',
+                                        path: phoneNumber,
+                                      );
+                                      if (await canLaunchUrl(phoneUri)) {
+                                        await launchUrl(
+                                          phoneUri,
+                                          mode: LaunchMode.externalApplication,
+                                        );
+                                      } else {
+                                        _showPhoneNumberDialog();
+                                      }
+                                    } catch (e) {
+                                      _showPhoneNumberDialog();
+                                    }
+                                  },
+                                  child: Text(
+                                    '0728 877 442',
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: AppColors.secondary,
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.w600,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ),
-                      ],
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -725,66 +742,79 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        'Fill in your details below to create your account.',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.grey600,
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w400,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
+                      Builder(
+                        builder: (context) {
+                          final l10n = AppLocalizations.of(context);
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                l10n.fillDetailsBelow,
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.grey600,
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w400,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
 
-                      SizedBox(height: 12.h),
+                              SizedBox(height: 12.h),
 
-                      // Full Name Field
-                      CustomTextField(
-                        controller: _fullNameController,
-                        label: 'Full Name',
-                        hint: 'Enter your full name',
-                        prefixIcon: Icons.person_outline,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Full name is required';
-                          }
-                          if (value.length < AppConstants.minNameLength) {
-                            return 'Name must be at least ${AppConstants.minNameLength} characters';
-                          }
-                          return null;
+                              // Full Name Field
+                              CustomTextField(
+                                controller: _fullNameController,
+                                label: l10n.fullName,
+                                hint: l10n.enterYourFullName,
+                                prefixIcon: Icons.person_outline,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return l10n.fullNameIsRequired;
+                                  }
+                                  if (value.length <
+                                      AppConstants.minNameLength) {
+                                    return l10n.nameMustBeAtLeast(
+                                      AppConstants.minNameLength,
+                                    );
+                                  }
+                                  return null;
+                                },
+                              ),
+
+                              SizedBox(height: 12.h),
+
+                              // Phone Number Field
+                              CustomTextField(
+                                controller: _phoneController,
+                                label: l10n.phoneNumberLabel,
+                                hint: l10n.enterYourPhoneNumber,
+                                prefixIcon: Icons.phone_outlined,
+                                keyboardType: TextInputType.phone,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return l10n.phoneNumberIsRequired;
+                                  }
+                                  if (value.length < 10) {
+                                    return l10n.enterValidPhoneNumber;
+                                  }
+                                  return null;
+                                },
+                              ),
+
+                              SizedBox(height: 16.h),
+
+                              // Register Button
+                              CustomButton(
+                                text: l10n.createAccount,
+                                icon: Icons.person_add,
+                                onPressed: _isLoading ? null : _handleRegister,
+                                isLoading: _isLoading,
+                                height: 50.h,
+                                backgroundColor: AppColors.primary,
+                                textColor: Colors.white,
+                              ),
+                            ],
+                          );
                         },
-                      ),
-
-                      SizedBox(height: 12.h),
-
-                      // Phone Number Field
-                      CustomTextField(
-                        controller: _phoneController,
-                        label: 'Phone Number',
-                        hint: 'Enter your phone number',
-                        prefixIcon: Icons.phone_outlined,
-                        keyboardType: TextInputType.phone,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Phone number is required';
-                          }
-                          if (value.length < 10) {
-                            return 'Please enter a valid phone number';
-                          }
-                          return null;
-                        },
-                      ),
-
-                      SizedBox(height: 16.h),
-
-                      // Register Button
-                      CustomButton(
-                        text: 'Create Account',
-                        icon: Icons.person_add,
-                        onPressed: _isLoading ? null : _handleRegister,
-                        isLoading: _isLoading,
-                        height: 50.h,
-                        backgroundColor: AppColors.primary,
-                        textColor: Colors.white,
                       ),
                     ],
                   ),
@@ -794,31 +824,36 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               SizedBox(height: 10.h),
 
               // Login Link with Creative Design
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Already have an account?',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.grey700,
-                      fontSize: 14.sp,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      // Navigate to login screen explicitly
-                      Navigator.pushReplacementNamed(context, '/login');
-                    },
-                    child: Text(
-                      'Sign In',
-                      style: AppTextStyles.link.copyWith(
-                        color: AppColors.primary,
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.bold,
+              Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        l10n.alreadyHaveAccount,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.grey700,
+                          fontSize: 14.sp,
+                        ),
                       ),
-                    ),
-                  ),
-                ],
+                      TextButton(
+                        onPressed: () {
+                          // Navigate to login screen explicitly
+                          Navigator.pushReplacementNamed(context, '/login');
+                        },
+                        child: Text(
+                          l10n.signIn,
+                          style: AppTextStyles.link.copyWith(
+                            color: AppColors.primary,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
 
               SizedBox(height: 20.h),
@@ -834,48 +869,57 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                 ),
                 child: Column(
                   children: [
-                    Text(
-                      'By creating an account, you agree to our',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.grey600,
-                        fontSize: 12.sp,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 8.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        TextButton(
-                          onPressed: () => _showPrivacyPolicyModal(),
-                          child: Text(
-                            'Privacy Policy',
-                            style: AppTextStyles.link.copyWith(
-                              color: AppColors.primary,
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
+                    Builder(
+                      builder: (context) {
+                        final l10n = AppLocalizations.of(context);
+                        return Column(
+                          children: [
+                            Text(
+                              l10n.byCreatingAccountYouAgree,
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.grey600,
+                                fontSize: 12.sp,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                          ),
-                        ),
-                        Text(
-                          ' and ',
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.grey600,
-                            fontSize: 12.sp,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () => _showTermsConditionsModal(),
-                          child: Text(
-                            'Terms & Conditions',
-                            style: AppTextStyles.link.copyWith(
-                              color: AppColors.primary,
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
+                            SizedBox(height: 8.h),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                TextButton(
+                                  onPressed: () => _showPrivacyPolicyModal(),
+                                  child: Text(
+                                    l10n.privacyPolicy,
+                                    style: AppTextStyles.link.copyWith(
+                                      color: AppColors.primary,
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  l10n.and,
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.grey600,
+                                    fontSize: 12.sp,
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () => _showTermsConditionsModal(),
+                                  child: Text(
+                                    l10n.termsConditions,
+                                    style: AppTextStyles.link.copyWith(
+                                      color: AppColors.primary,
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ),
-                      ],
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -889,42 +933,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
   // Show Privacy Policy Modal
   void _showPrivacyPolicyModal() {
+    final l10n = AppLocalizations.of(context);
     PrivacyPolicyModal.show(
       context,
-      title: 'Privacy Policy',
-      content:
-          'Rwanda Traffic Rule 🇷🇼 is an educational application designed to help users prepare for provisional driving license examinations.\n\n'
-          '⚠️ IMPORTANT: This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.\n\n'
-          'Official Source: For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to Rwanda National Police (Driving License Services): https://police.gov.rw/home/\n\n'
-          'We collect minimal data necessary to provide our educational services:\n'
-          '• Phone number for account creation and security\n'
-          '• Device information for fraud prevention\n'
-          '• Learning progress to personalize your experience\n'
-          '• App usage data to improve our services\n\n'
-          'Your privacy is important to us. We use industry-standard security measures to protect your data and never share your personal information with third parties.',
+      title: l10n.privacyPolicyTitle,
+      content: l10n.privacyPolicyContent,
       fullPolicyUrl: 'https://traffic.cyangugudims.com/privacy-policy',
     );
   }
 
   // Show Terms & Conditions Modal
   void _showTermsConditionsModal() {
+    final l10n = AppLocalizations.of(context);
     PrivacyPolicyModal.show(
       context,
-      title: 'Terms & Conditions',
-      content:
-          'By using Rwanda Traffic Rule 🇷🇼, you agree to these terms:\n\n'
-          '⚠️ IMPORTANT DISCLAIMER:\n'
-          'This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.\n\n'
-          'Official Source: For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to Rwanda National Police (Driving License Services): https://police.gov.rw/home/\n\n'
-          'Educational Purpose: This app is designed for educational practice only. While we provide comprehensive study materials, users must complete official government procedures to obtain driving licenses. Always verify information with official sources and consult local authorities.\n\n'
-          'User Responsibilities:\n'
-          '• Provide accurate information during registration\n'
-          '• Use the app for educational purposes only\n'
-          '• Respect intellectual property rights\n'
-          '• Not attempt to reverse engineer the app\n'
-          '• Verify all information with official government sources\n\n'
-          'Service Availability: We strive to maintain service availability but cannot guarantee uninterrupted access.\n\n'
-          'Account Termination: You may delete your account at any time. We reserve the right to suspend accounts that violate these terms.',
+      title: l10n.termsConditionsTitle,
+      content: l10n.termsConditionsContent,
       fullPolicyUrl: 'https://traffic.cyangugudims.com/terms-conditions',
     );
   }
@@ -971,18 +995,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
           if (mounted) {
             // Show special error message for this scenario
+            final l10n = AppLocalizations.of(context);
             AppFlashMessage.show(
               context: context,
-              message: 'Device Binding Issue 🔧',
-              description:
-                  'Your device is registered but your account doesn\'t exist.\n\n'
-                  'This usually happens if:\n'
-                  '• Registration was interrupted\n'
-                  '• Account was deleted\n'
-                  '• Database issue occurred\n\n'
-                  'Please contact support to reset your device binding:\n'
-                  '📞 +250 788 659 575\n\n'
-                  'Or try again in a few moments.',
+              message: l10n.deviceBindingIssue,
+              description: l10n.deviceBindingIssueDescription,
               type: FlashMessageType.error,
               duration: const Duration(seconds: 10),
             );
@@ -997,6 +1014,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
   // Show Login Confirmation Dialog
   void _showLoginConfirmationDialog() {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1006,7 +1024,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               Icon(Icons.login, color: AppColors.primary, size: 24.sp),
               SizedBox(width: 8.w),
               Text(
-                'Go to Login',
+                l10n.goToLogin,
                 style: AppTextStyles.heading3.copyWith(
                   color: AppColors.primary,
                 ),
@@ -1018,7 +1036,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'It looks like you already have an account on this device.',
+                l10n.itLooksLikeYouAlreadyHaveAccount,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.grey700,
                 ),
@@ -1045,7 +1063,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                         ),
                         SizedBox(width: 6.w),
                         Text(
-                          'What to do:',
+                          l10n.whatToDo,
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.bold,
@@ -1055,9 +1073,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      '• Use the same phone number you registered with\n'
-                      '• Your device is already linked to your account\n'
-                      '• Just enter your phone number to login',
+                      l10n.useSamePhoneNumber,
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.grey700,
                         height: 1.4,
@@ -1072,7 +1088,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                'Stay Here',
+                l10n.stayHere,
                 style: AppTextStyles.link.copyWith(color: AppColors.grey600),
               ),
             ),
@@ -1089,7 +1105,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   borderRadius: BorderRadius.circular(8.r),
                 ),
               ),
-              child: const Text('Go to Login'),
+              child: Text(l10n.goToLogin),
             ),
           ],
         );

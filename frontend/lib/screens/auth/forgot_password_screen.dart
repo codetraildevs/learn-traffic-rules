@@ -53,7 +53,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     if (mounted) {
       setState(() => _isLoading = false);
 
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = AppLocalizations.of(context);
       if (success) {
         setState(() => _codeSent = true);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -66,7 +66,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         final error = ref.read(authProvider).error;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(error ?? l10n.failedToSendResetCode),
+            content: Text(error ?? l10n.registerFailed),
             backgroundColor: AppColors.error,
           ),
         );
@@ -76,7 +76,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.forgotPassword),
@@ -170,7 +170,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         // Phone Number Field
                         CustomTextField(
                           controller: _phoneController,
-                          label: l10n.phoneNumber,
+                          label: l10n.phoneNumberLabel,
                           hint: l10n.pleaseEnterYourPhoneNumber,
                           prefixIcon: Icons.phone,
                           keyboardType: TextInputType.phone,
@@ -192,7 +192,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
                         // Send Code Button
                         CustomButton(
-                          text: 'Send Reset Code',
+                          text: l10n.sendResetCode,
                           onPressed: _isLoading ? null : _handleForgotPassword,
                           isLoading: _isLoading,
                         ),
@@ -217,7 +217,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                 ),
                                 SizedBox(height: 8.h),
                                 Text(
-                                  'Reset code sent successfully!',
+                                  l10n.resetCodeSentSuccessfully,
                                   style: AppTextStyles.bodyMedium.copyWith(
                                     color: AppColors.success,
                                     fontWeight: FontWeight.w600,
@@ -225,7 +225,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                                 ),
                                 SizedBox(height: 8.h),
                                 Text(
-                                  'Check the console/terminal for the 6-digit code.',
+                                  l10n.checkConsoleForCode,
                                   style: AppTextStyles.caption.copyWith(
                                     color: AppColors.success,
                                   ),
@@ -247,7 +247,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Remember your password? ',
+                      l10n.rememberYourPassword,
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.white.withValues(alpha: 0.9),
                       ),
@@ -257,7 +257,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         Navigator.pop(context);
                       },
                       child: Text(
-                        'Login',
+                        l10n.login,
                         style: AppTextStyles.link.copyWith(
                           color: AppColors.white,
                           fontSize: 14.sp,

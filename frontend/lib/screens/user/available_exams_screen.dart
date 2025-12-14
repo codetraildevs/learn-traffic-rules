@@ -15,6 +15,7 @@ import '../../services/exam_sync_service.dart';
 import '../../services/network_service.dart';
 import '../../models/free_exam_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../l10n/app_localizations.dart';
 import 'exam_taking_screen.dart';
 import 'exam_progress_screen.dart';
 
@@ -486,6 +487,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   Widget _buildErrorWidget() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -493,7 +495,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           Icon(Icons.error_outline, size: 64.w, color: Colors.red),
           SizedBox(height: 16.h),
           Text(
-            'Error Loading Exams',
+            l10n.errorLoadingDashboard,
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
@@ -501,13 +503,18 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
             ),
           ),
           SizedBox(height: 24.h),
-          CustomButton(text: 'Retry', onPressed: _loadFreeExams, width: 120.w),
+          CustomButton(
+            text: l10n.retry,
+            onPressed: _loadFreeExams,
+            width: 120.w,
+          ),
         ],
       ),
     );
   }
 
   Widget _buildContent() {
+    final l10n = AppLocalizations.of(context)!;
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
@@ -522,7 +529,9 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _freeExamData!.isFreeUser ? 'Available Exams' : 'All Exams',
+                  _freeExamData!.isFreeUser
+                      ? l10n.availableExams
+                      : l10n.allExams,
                   style: AppTextStyles.heading2.copyWith(
                     color: AppColors.white,
                     fontSize: 20.sp,
@@ -642,6 +651,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   Widget _buildExamTypeFilter() {
+    final l10n = AppLocalizations.of(context)!;
     // Get unique exam types from exams
     final examTypes = _freeExamData!.exams
         .map((e) => e.examType?.toLowerCase())
@@ -663,7 +673,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Filter by Exam Type',
+          l10n.filterByExamType,
           style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
         ),
         SizedBox(height: 12.h),
@@ -672,7 +682,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           runSpacing: 8.h,
           children: [
             // All option
-            _buildFilterChip(null, 'All'),
+            _buildFilterChip(null, l10n.all),
             // Type options
             ...availableTypes.map((type) {
               final displayName = type[0].toUpperCase() + type.substring(1);
@@ -756,6 +766,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   List<Widget> _buildExamsByType() {
+    final l10n = AppLocalizations.of(context)!;
     // If filtering by type, show filtered list from API
     if (_selectedExamType != null) {
       final filteredExams = _freeExamData!.exams;
@@ -773,14 +784,14 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    'No Exams Available',
+                    l10n.noExamsAvailable,
                     style: AppTextStyles.heading3.copyWith(
                       color: AppColors.grey600,
                     ),
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    'No exams found for this language',
+                    l10n.noExamsFoundForThisLanguage,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey500,
                     ),
@@ -897,14 +908,14 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 ),
                 SizedBox(height: 16.h),
                 Text(
-                  'No Exams Available',
+                  l10n.noExamsAvailable,
                   style: AppTextStyles.heading3.copyWith(
                     color: AppColors.grey600,
                   ),
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  'Check back later for new traffic rules exams',
+                  l10n.checkBackLaterForNewTrafficRulesExams,
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.grey500,
                   ),
@@ -934,7 +945,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 Icon(Icons.language, size: 20.sp, color: AppColors.primary),
                 SizedBox(width: 8.w),
                 Text(
-                  '$displayName Exams',
+                  l10n.examTypeExams(displayName),
                   style: AppTextStyles.heading3.copyWith(
                     fontSize: 18.sp,
                     color: AppColors.primary,
@@ -977,14 +988,14 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    'No $displayName Exams',
+                    l10n.examTypeExams('No $displayName'),
                     style: AppTextStyles.heading3.copyWith(
                       color: AppColors.grey600,
                     ),
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    'No exams available for this language',
+                    l10n.noExamsAvailableForThisLanguage,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey500,
                     ),
@@ -1023,6 +1034,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   Widget _buildExamCard(Exam exam, int index) {
+    final l10n = AppLocalizations.of(context)!;
     // Extract exam number from title (e.g., "exam 21" -> "21")
     final examNumber = exam.title.replaceAll(RegExp(r'[^0-9]'), '');
     final displayTitle = examNumber.isNotEmpty
@@ -1072,7 +1084,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 ),
                 SizedBox(width: 6.w),
                 Text(
-                  '${exam.questionCount ?? 0} Questions',
+                  l10n.questionsCount(exam.questionCount ?? 0),
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.grey700,
                     fontSize: 14.sp,
@@ -1092,7 +1104,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 ),
                 SizedBox(width: 6.w),
                 Text(
-                  '${exam.duration}m',
+                  l10n.durationMinutes(exam.duration),
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.grey700,
                     fontSize: 14.sp,
@@ -1123,7 +1135,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                     Icon(Icons.play_arrow, size: 25.sp),
                     SizedBox(width: 8.w),
                     Text(
-                      'Start Exam',
+                      l10n.startExam,
                       style: AppTextStyles.bodyMedium.copyWith(
                         fontWeight: FontWeight.w500,
                         fontSize: 15.sp,
@@ -1141,6 +1153,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   Widget _buildFreeUserBanner() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
       decoration: BoxDecoration(
@@ -1168,7 +1181,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Free Trial: First exam of each type is free',
+                  l10n.freeTrialFirstExamOfEachTypeIsFree,
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w600,
@@ -1177,7 +1190,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  'Upgrade to access all exams',
+                  l10n.upgradeToAccessAllExams,
                   style: TextStyle(fontSize: 11.sp, color: Colors.white70),
                 ),
               ],
@@ -1193,7 +1206,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               backgroundColor: Colors.white.withValues(alpha: 0.2),
             ),
             child: Text(
-              'View Plans',
+              l10n.viewPlans,
               style: TextStyle(
                 fontSize: 11.sp,
                 fontWeight: FontWeight.w600,

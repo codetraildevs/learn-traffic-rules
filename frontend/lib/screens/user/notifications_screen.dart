@@ -49,7 +49,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.notifications),
@@ -282,31 +282,6 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
 
                 SizedBox(height: 32.h),
 
-                // Test Notification Buttons
-                // CustomButton(
-                //   text: 'Test Push Notification',
-                //   onPressed: _testPushNotification,
-                //   backgroundColor: AppColors.secondary,
-                //   width: double.infinity,
-                // ),
-
-                // SizedBox(height: 12.h),
-
-                // CustomButton(
-                //   text: 'Test Study Reminder',
-                //   onPressed: _testStudyReminder,
-                //   backgroundColor: AppColors.primary.withValues(alpha: 0.8),
-                //   width: double.infinity,
-                // ),
-
-                // SizedBox(height: 12.h),
-
-                // CustomButton(
-                //   text: 'Test Simple Notification',
-                //   onPressed: _testSimpleNotification,
-                //   backgroundColor: AppColors.grey600,
-                //   width: double.infinity,
-                // ),
                 SizedBox(height: 8.h),
 
                 // Save Button
@@ -397,7 +372,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
   }
 
   Future<void> _savePreferences() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _isLoading = true;
     });

@@ -602,90 +602,22 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
   }
 
   String _getExamHelpText() {
-    return '''
-1. Go to the Exams tab
-2. Select an exam you want to take
-3. Read each question carefully
-4. Click on the circle next to your chosen answer
-5. Use the Next/Previous buttons to navigate
-6. Click "Finish Exam" when you're done
-7. Review your results and see detailed explanations
-
-Tips:
-- Take your time to read each question
-- Don't rush through the exam
-- Review your answers before submitting
-- Use the progress indicator to track your position
-''';
+    final l10n = AppLocalizations.of(context)!;
+    return l10n.examHelpText;
   }
 
   String _getProgressHelpText() {
-    return '''
-Your progress is tracked in several ways:
-
-1. Overall Performance: Your average score across all exams
-2. Study Streak: Consecutive days you've studied
-3. Achievements: Badges earned for milestones
-4. Category Performance: How well you do in different topics
-5. Areas of Improvement: Topics that need more practice
-
-To improve your progress:
-- Study regularly
-- Review incorrect answers
-- Focus on weak areas
-- Take practice exams frequently
-''';
+    final l10n = AppLocalizations.of(context)!;
+    return l10n.progressHelpText;
   }
 
   String _getPaymentHelpText() {
-    return '''
-Payment Options:
-1. Mobile Money (MTN, Airtel, etc.)
-2. Bank Transfer
-3. Credit/Debit Card
-
-Access Codes:
-- 1500 RWF: 30 days access
-- 3000 RWF: 90 days access  
-- 5000 RWF: 180 days access
-
-To purchase:
-1. Go to Payment Instructions
-2. Follow the payment steps
-3. Send proof of payment
-4. Receive your access code
-5. Enter the code to unlock exams
-
-Free Exams:
-- First 2 exams are always free for users without access codes
-- Unlimited attempts on free exams
-''';
+    final l10n = AppLocalizations.of(context)!;
+    return l10n.paymentHelpText;
   }
 
   String _getAccountHelpText() {
-    return '''
-Account Management:
-
-Profile Settings:
-- View your profile information
-- Update personal details
-- Manage notification preferences
-
-Security:
-- Your account is secured with device ID
-- No password required (device-based authentication)
-- Contact support if you need to change devices
-
-Data Management:
-- View your exam history
-- Track your progress
-- Export your results
-- Delete your account if needed
-
-Privacy:
-- Your data is encrypted and secure
-- We don't share your information
-- You can request data deletion anytime
-''';
+    final l10n = AppLocalizations.of(context)!;
+    return l10n.accountHelpText;
   }
 }
