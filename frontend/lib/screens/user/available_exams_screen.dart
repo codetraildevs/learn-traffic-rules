@@ -13,10 +13,13 @@ import '../../services/user_management_service.dart';
 import '../../services/offline_exam_service.dart';
 import '../../services/exam_sync_service.dart';
 import '../../services/network_service.dart';
+import '../../services/image_cache_service.dart';
 import '../../models/free_exam_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../core/constants/app_constants.dart';
+import 'dart:io';
 import 'exam_taking_screen.dart';
 import 'exam_progress_screen.dart';
 
@@ -127,6 +130,8 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         final currentLocale = ref.read(localeProvider);
         _selectedExamType = _mapLocaleToExamType(currentLocale.languageCode);
       }
+      // Initialize image cache service for offline support
+      ImageCacheService.instance.initialize();
       _loadFreeExams();
       _setupConnectivityListener();
     });
@@ -237,6 +242,25 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
             // Use forceDownload=false to only download new/updated exams
             _networkService.hasInternetConnection().then((stillOnline) {
               if (stillOnline) {
+                // Initialize image cache service
+                ImageCacheService.instance.initialize().then((_) {
+                  // Cache exam images in background
+                  for (final exam in examsWithFreeMarked) {
+                    if (exam.examImgUrl != null &&
+                        exam.examImgUrl!.isNotEmpty) {
+                      // Construct full image URL
+                      final imageUrl = exam.examImgUrl!.startsWith('http')
+                          ? exam.examImgUrl!
+                          : '/uploads/images-exams/${exam.examImgUrl}';
+                      ImageCacheService.instance
+                          .cacheImage(imageUrl)
+                          .catchError((e) {
+                            debugPrint('⚠️ Failed to cache exam image: $e');
+                          });
+                    }
+                  }
+                });
+
                 _syncService.downloadAllExams(forceDownload: false).catchError((
                   e,
                 ) {
@@ -894,6 +918,13 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         ? 'exam $examNumber'
         : exam.title;
 
+    // Get exam image URL - construct full path if it's just a filename
+    final imageUrl = exam.examImgUrl != null && exam.examImgUrl!.isNotEmpty
+        ? (exam.examImgUrl!.startsWith('http')
+              ? exam.examImgUrl!
+              : '/uploads/images-exams/${exam.examImgUrl}')
+        : null;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -916,6 +947,85 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Exam Image
+            if (imageUrl != null)
+              FutureBuilder<String>(
+                future: ImageCacheService.instance.getImagePath(imageUrl),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                    final imagePath = snapshot.data!;
+                    final isLocalFile = !imagePath.startsWith('http');
+
+                    if (isLocalFile) {
+                      // Check if file exists
+                      return FutureBuilder<bool>(
+                        future: File(
+                          imagePath,
+                        ).exists().catchError((e) => false),
+                        builder: (context, fileSnapshot) {
+                          if (fileSnapshot.hasData &&
+                              fileSnapshot.data == true) {
+                            // Image is cached, load from file
+                            return ClipRRect(
+                              borderRadius: BorderRadius.circular(8.r),
+                              child: Image.file(
+                                File(imagePath),
+                                width: double.infinity,
+                                height: 120.h,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return _buildImagePlaceholder();
+                                },
+                              ),
+                            );
+                          } else {
+                            // File doesn't exist, try network if online
+                            if (!_isOffline) {
+                              return ClipRRect(
+                                borderRadius: BorderRadius.circular(8.r),
+                                child: Image.network(
+                                  '${AppConstants.baseUrlImage}$imageUrl',
+                                  width: double.infinity,
+                                  height: 120.h,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return _buildImagePlaceholder();
+                                  },
+                                ),
+                              );
+                            } else {
+                              return _buildImagePlaceholder();
+                            }
+                          }
+                        },
+                      );
+                    } else {
+                      // Network URL
+                      if (_isOffline) {
+                        return _buildImagePlaceholder();
+                      }
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(8.r),
+                        child: Image.network(
+                          imagePath,
+                          width: double.infinity,
+                          height: 120.h,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return _buildImagePlaceholder();
+                          },
+                        ),
+                      );
+                    }
+                  }
+                  // Loading or no data
+                  return _buildImagePlaceholder();
+                },
+              )
+            else
+              _buildImagePlaceholder(),
+            SizedBox(height: 12.h),
+
             // Exam Title
             Text(
               displayTitle,
@@ -924,6 +1034,8 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 color: AppColors.grey800,
                 fontWeight: FontWeight.bold,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             SizedBox(height: 12.h),
 
@@ -1200,5 +1312,17 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       if (!mounted) return;
       AppFlashMessage.showError(context, 'Could not launch phone app');
     }
+  }
+
+  Widget _buildImagePlaceholder() {
+    return Container(
+      width: double.infinity,
+      height: 120.h,
+      decoration: BoxDecoration(
+        color: AppColors.grey200,
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Icon(Icons.quiz_outlined, size: 48.sp, color: AppColors.grey400),
+    );
   }
 }
