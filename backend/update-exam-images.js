@@ -5,8 +5,9 @@ const path = require('path');
 
 /**
  * Script to update exam images in the database
- * Assigns images from /uploads/images-exams/exam1.png to exam21.png
+ * Assigns images from exam1.png to exam21.png (filename only, no path)
  * Each exam type (kinyarwanda, english, french) uses the same set of 21 images
+ * The frontend will construct the full path: /uploads/images-exams/{filename}
  */
 async function updateExamImages() {
   try {
@@ -105,16 +106,15 @@ async function updateExamImages() {
         const exam = typeExams[i];
         // Cycle through images (1-21), repeating if there are more than 21 exams
         const imageIndex = i % imageFiles.length;
-        const imageFileName = imageFiles[imageIndex];
-        const imageUrl = `/uploads/images-exams/${imageFileName}`;
+        const imageFileName = imageFiles[imageIndex]; // Just the filename: exam1.png, exam2.png, etc.
         
-        // Update exam image
+        // Update exam image with just the filename (frontend will construct the full path)
         await exam.update({
-          examImgUrl: imageUrl
+          examImgUrl: imageFileName
         });
         
         console.log(`   ✅ Updated exam "${exam.title}" (ID: ${exam.id})`);
-        console.log(`      Image: ${imageUrl}`);
+        console.log(`      Image: ${imageFileName}`);
         totalUpdated++;
       }
     }
@@ -130,7 +130,7 @@ async function updateExamImages() {
           const imageIndex = index % imageFiles.length;
           const imageFileName = imageFiles[imageIndex];
           console.log(`      ${index + 1}. ${exam.title}`);
-          console.log(`         Image: /uploads/images-exams/${imageFileName}`);
+          console.log(`         Image: ${imageFileName}`);
         });
       }
     }

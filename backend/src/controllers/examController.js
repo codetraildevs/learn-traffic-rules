@@ -51,8 +51,10 @@ class ExamController {
       const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
       const examsWithFullUrls = examsWithQuestionCounts.map(examData => {
         if (examData.examImgUrl && !examData.examImgUrl.startsWith('http')) {
-          // If it's a relative path, make it a full URL
-          if (examData.examImgUrl.startsWith('/uploads/')) {
+          // If it's just a filename (e.g., "exam1.png"), construct the full path
+          if (!examData.examImgUrl.startsWith('/') && !examData.examImgUrl.startsWith('uploads/')) {
+            examData.examImgUrl = `${baseUrl}/uploads/images-exams/${examData.examImgUrl}`;
+          } else if (examData.examImgUrl.startsWith('/uploads/')) {
             examData.examImgUrl = `${baseUrl}${examData.examImgUrl}`;
           } else if (examData.examImgUrl.startsWith('uploads/')) {
             examData.examImgUrl = `${baseUrl}/${examData.examImgUrl}`;
@@ -100,8 +102,10 @@ class ExamController {
       const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
       const examData = exam.toJSON();
       if (examData.examImgUrl && !examData.examImgUrl.startsWith('http')) {
-        // If it's a relative path, make it a full URL
-        if (examData.examImgUrl.startsWith('/uploads/')) {
+        // If it's just a filename (e.g., "exam1.png"), construct the full path
+        if (!examData.examImgUrl.startsWith('/') && !examData.examImgUrl.startsWith('uploads/')) {
+          examData.examImgUrl = `${baseUrl}/uploads/images-exams/${examData.examImgUrl}`;
+        } else if (examData.examImgUrl.startsWith('/uploads/')) {
           examData.examImgUrl = `${baseUrl}${examData.examImgUrl}`;
         } else if (examData.examImgUrl.startsWith('uploads/')) {
           examData.examImgUrl = `${baseUrl}/${examData.examImgUrl}`;
