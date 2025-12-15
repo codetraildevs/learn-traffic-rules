@@ -13,6 +13,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/exam_provider.dart';
+import '../../providers/locale_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../services/exam_service.dart';
 import '../../services/user_management_service.dart';
@@ -1333,16 +1334,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
+  /// Map locale code to exam type
+  String _mapLocaleToExamType(String localeCode) {
+    switch (localeCode.toLowerCase()) {
+      case 'rw':
+        return 'kinyarwanda';
+      case 'en':
+        return 'english';
+      case 'fr':
+        return 'french';
+      default:
+        return 'kinyarwanda'; // Default to kinyarwanda
+    }
+  }
+
   Widget _buildExamsByType() {
-    // Group exams by type
-    final Map<String, List<Exam>> examsByType = {};
+    // Get current locale and filter by selected language
+    final currentLocale = ref.watch(localeProvider);
+    final selectedExamType = _mapLocaleToExamType(currentLocale.languageCode);
 
-    // Get unique exam types from database
-    final activeExams = _exams.where((exam) => exam.isActive).toList();
+    // Filter exams by selected language
+    final activeExams = _exams.where((exam) {
+      if (!exam.isActive) return false;
 
-    for (final exam in activeExams) {
-      // Handle null examType: default to 'english' if null
-      // Also try to infer from title if it contains language keywords
+      // Get exam type
       String type = exam.examType?.toLowerCase() ?? 'english';
 
       // If examType is null or 'unknown', try to infer from title
@@ -1358,6 +1373,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         }
       }
 
+      // Only include exams matching the selected language
+      return type == selectedExamType.toLowerCase();
+    }).toList();
+
+    // Group filtered exams by type (should only be one type now)
+    final Map<String, List<Exam>> examsByType = {};
+    for (final exam in activeExams) {
+      String type = exam.examType?.toLowerCase() ?? 'english';
+      if (exam.examType == null || type == 'unknown') {
+        final titleLower = exam.title.toLowerCase();
+        if (titleLower.contains('kiny') || titleLower.contains('kinyarwanda')) {
+          type = 'kinyarwanda';
+        } else if (titleLower.contains('french') ||
+            titleLower.contains('français')) {
+          type = 'french';
+        } else {
+          type = 'english';
+        }
+      }
       examsByType.putIfAbsent(type, () => []).add(exam);
     }
 
@@ -1368,13 +1402,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         builder: (context, snapshot) {
           if (snapshot.hasData && snapshot.data!.isNotEmpty) {
             final cachedCounts = snapshot.data!;
-            // Create exam type cards from cached counts
-            final orderedTypes = ['kinyarwanda', 'english', 'french'];
-            final availableTypes = orderedTypes
-                .where((type) => cachedCounts.containsKey(type))
-                .toList();
+            // Only show card for selected language
+            final count = cachedCounts[selectedExamType] ?? 0;
 
-            if (availableTypes.isEmpty) {
+            if (count == 0) {
               return Container(
                 padding: EdgeInsets.all(20.w),
                 decoration: BoxDecoration(
@@ -1398,7 +1429,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     SizedBox(height: 16.h),
                     Builder(
                       builder: (context) {
-                        final l10n = AppLocalizations.of(context)!;
+                        final l10n = AppLocalizations.of(context);
                         return Text(
                           l10n.noExamsAvailable,
                           style: AppTextStyles.bodyLarge.copyWith(
@@ -1417,7 +1448,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               children: [
                 Builder(
                   builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
+                    final l10n = AppLocalizations.of(context);
                     return Text(
                       l10n.availableExams,
                       style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
@@ -1425,22 +1456,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   },
                 ),
                 SizedBox(height: 16.h),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 1.6,
-                    crossAxisSpacing: 12.w,
-                    mainAxisSpacing: 12.h,
-                  ),
-                  itemCount: availableTypes.length,
-                  itemBuilder: (context, index) {
-                    final type = availableTypes[index];
-                    final count = cachedCounts[type] ?? 0;
-                    return _buildExamTypeCard(type, [], cachedCount: count);
-                  },
-                ),
+                // Show only one card for selected language
+                _buildExamTypeCard(selectedExamType, [], cachedCount: count),
               ],
             );
           }
@@ -1480,13 +1497,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       );
     }
 
-    // Order: kinyarwanda, english, french
-    final orderedTypes = ['kinyarwanda', 'english', 'french'];
-    final availableTypes = orderedTypes
-        .where((type) => examsByType.containsKey(type))
-        .toList();
-
-    if (availableTypes.isEmpty) {
+    // Only show card for selected language
+    if (examsByType.isEmpty || !examsByType.containsKey(selectedExamType)) {
       return Container(
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
@@ -1504,47 +1516,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           children: [
             Icon(Icons.quiz_outlined, size: 48.sp, color: AppColors.grey400),
             SizedBox(height: 16.h),
-            Text(
-              'No exams available',
-              style: AppTextStyles.bodyLarge.copyWith(color: AppColors.grey600),
+            Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return Text(
+                  l10n.noExamsAvailable,
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: AppColors.grey600,
+                  ),
+                );
+              },
             ),
           ],
         ),
       );
     }
 
+    final exams = examsByType[selectedExamType] ?? [];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Available Exams',
-          style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+        Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context);
+            return Text(
+              l10n.availableExams,
+              style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
+            );
+          },
         ),
         SizedBox(height: 16.h),
-        // Show exam type cards in a grid
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 1.6,
-            crossAxisSpacing: 12.w,
-            mainAxisSpacing: 12.h,
-          ),
-          itemCount: availableTypes.length,
-          itemBuilder: (context, index) {
-            final type = availableTypes[index];
-            final exams = examsByType[type] ?? [];
-            return FutureBuilder<Map<String, int>?>(
-              future: _loadCachedExamCounts(),
-              builder: (context, snapshot) {
-                final cachedCount = snapshot.data?[type];
-                return _buildExamTypeCard(
-                  type,
-                  exams,
-                  cachedCount: cachedCount,
-                );
-              },
+        // Show only one card for selected language
+        FutureBuilder<Map<String, int>?>(
+          future: _loadCachedExamCounts(),
+          builder: (context, snapshot) {
+            final cachedCount = snapshot.data?[selectedExamType];
+            return _buildExamTypeCard(
+              selectedExamType,
+              exams,
+              cachedCount: cachedCount,
             );
           },
         ),

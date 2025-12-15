@@ -747,7 +747,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nextPage => 'Next page';
-
+  @override
+  String get continueText => 'Continue';
   @override
   String accessCodeGeneratedFor(String name) =>
       'Access code generated successfully for $name';

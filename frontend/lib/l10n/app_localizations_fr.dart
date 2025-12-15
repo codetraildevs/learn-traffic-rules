@@ -2538,6 +2538,9 @@ Confidentialité:
   String get youllSeeYourNotificationsHere =>
       'Vous verrez vos notifications ici';
 
+  @override
+  String get continueText => 'Continuer';
+
   // Terms & Conditions Screen
   @override
   String get termsConditionsSection1Title => '1. Acceptation des conditions';

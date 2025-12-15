@@ -29,7 +29,7 @@ abstract class AppLocalizations {
   String get ok;
   String get yes;
   String get no;
-
+  String get continueText;
   // Auth strings
   String get loginSuccess;
   String get loginFailed;
@@ -879,7 +879,7 @@ abstract class AppLocalizations {
   // Factory constructor to get the appropriate localization
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations) ??
-        AppLocalizationsEn();
+        AppLocalizationsRw();
   }
 
   // Delegate for MaterialApp
@@ -899,13 +899,13 @@ class _AppLocalizationsDelegate
   @override
   Future<AppLocalizations> load(Locale locale) async {
     switch (locale.languageCode) {
-      case 'rw':
-        return AppLocalizationsRw();
+      case 'en':
+        return AppLocalizationsEn();
       case 'fr':
         return AppLocalizationsFr();
-      case 'en':
+      case 'rw':
       default:
-        return AppLocalizationsEn();
+        return AppLocalizationsRw();
     }
   }
 

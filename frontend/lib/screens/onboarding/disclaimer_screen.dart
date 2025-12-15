@@ -19,11 +19,11 @@ class DisclaimerScreen extends ConsumerStatefulWidget {
 }
 
 class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
-  bool _hasAcceptedDisclaimer = false;
+  bool _hasAcceptedDisclaimer = true; // Default to checked
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -43,13 +43,11 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                         width: 120.w,
                         height: 120.w,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF4F46E5),
+                          color: AppColors.secondary,
                           borderRadius: BorderRadius.circular(24.r),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(
-                                0xFF4F46E5,
-                              ).withValues(alpha: 0.3),
+                              color: AppColors.primary.withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -67,9 +65,12 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                       Text(
                         l10n.appName,
                         style: TextStyle(
-                          fontSize: 28.sp,
+                          fontSize: 24.sp,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFF1F2937),
+                          color: AppColors.grey800,
+                          fontFamily: 'Poppins',
+                          fontStyle: FontStyle.normal,
+                          letterSpacing: 0.5,
                         ),
                       ),
                       SizedBox(height: 8.h),
@@ -139,7 +140,8 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                               l10n,
                               icon: Icons.school,
                               title: l10n.educationalPurposeOnlyDisclaimer,
-                              description: l10n.educationalPurposeOnlyDescription,
+                              description:
+                                  l10n.educationalPurposeOnlyDescription,
                             ),
                             SizedBox(height: 16.h),
                             _buildDisclaimerItem(
@@ -381,7 +383,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
   }
 
   Future<void> _openPoliceWebsite(BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     const url = 'https://police.gov.rw/home/';
     try {
       final uri = Uri.parse(url);
@@ -443,9 +445,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                l10n.couldNotOpenLinkTapCopyToCopyTheUrl,
-              ),
+              content: Text(l10n.couldNotOpenLinkTapCopyToCopyTheUrl),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 4),
               action: SnackBarAction(
@@ -497,7 +497,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
   }
 
   Future<void> _proceedToApp() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     // Check if user has accepted the disclaimer
     if (!_hasAcceptedDisclaimer) {
       // Show flash message asking user to accept terms

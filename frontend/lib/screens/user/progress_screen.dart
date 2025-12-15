@@ -41,6 +41,10 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
     'com.trafficrules.master/security',
   );
 
+  // Track app lifecycle to prevent unnecessary refreshes on screenshots
+  DateTime? _lastBackgroundTime;
+  static const _minBackgroundDuration = Duration(seconds: 3);
+
   Future<void> _disableScreenshots() async {
     if (Platform.isAndroid) {
       try {
@@ -116,28 +120,60 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.resumed) {
-      // When app resumes, check connectivity and sync if needed
-      _networkService.hasInternetConnection().then((hasInternet) {
-        if (hasInternet && mounted) {
+
+    // Only reload if app was in background for a meaningful duration
+    // This prevents refresh when taking screenshots (which briefly triggers inactive/resumed)
+    // Screenshots trigger: inactive -> resumed (very quickly, < 1 second)
+    // Real background: paused -> resumed (usually > 3 seconds)
+    if (state == AppLifecycleState.paused) {
+      // Only track paused state, not inactive (screenshots trigger inactive)
+      _lastBackgroundTime = DateTime.now();
+      debugPrint('🔄 App paused, tracking background time');
+    } else if (state == AppLifecycleState.resumed) {
+      // Only reload if app was paused (in background) for at least 3 seconds
+      // Ignore inactive->resumed transitions (screenshots)
+      if (_lastBackgroundTime != null) {
+        final backgroundDuration = DateTime.now().difference(
+          _lastBackgroundTime!,
+        );
+        if (backgroundDuration >= _minBackgroundDuration) {
           debugPrint(
-            '🔄 App resumed with internet, checking for unsynced results...',
+            '🔄 App resumed after ${backgroundDuration.inSeconds}s, reloading data',
           );
-          // Sync unsynced results
-          _syncService
-              .syncExamResults()
-              .then((_) {
-                debugPrint('✅ Results synced after app resume');
-                // Reload results to show updated data
-                if (mounted) {
-                  _loadExamResults();
-                }
-              })
-              .catchError((e) {
-                debugPrint('⚠️ Failed to sync results on resume: $e');
-              });
+          // When app resumes, check connectivity and sync if needed
+          _networkService.hasInternetConnection().then((hasInternet) {
+            if (hasInternet && mounted) {
+              debugPrint(
+                '🔄 App resumed with internet, checking for unsynced results...',
+              );
+              // Sync unsynced results
+              _syncService
+                  .syncExamResults()
+                  .then((_) {
+                    debugPrint('✅ Results synced after app resume');
+                    // Reload results to show updated data
+                    if (mounted) {
+                      _loadExamResults();
+                    }
+                  })
+                  .catchError((e) {
+                    debugPrint('⚠️ Failed to sync results on resume: $e');
+                  });
+            }
+          });
+        } else {
+          debugPrint(
+            '🔄 App resumed quickly (${backgroundDuration.inSeconds}s), skipping reload (likely screenshot)',
+          );
         }
-      });
+        _lastBackgroundTime = null;
+      }
+    } else if (state == AppLifecycleState.inactive) {
+      // Screenshots trigger inactive state - don't track this
+      // Only track if we were already paused
+      if (_lastBackgroundTime == null) {
+        debugPrint('🔄 App inactive (likely screenshot), ignoring');
+      }
     }
   }
 
@@ -1163,23 +1199,36 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                     fontWeight: FontWeight.bold,
                     color: color,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 SizedBox(height: 4.h),
                 Text(
                   description,
                   style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          TextButton(
-            onPressed: onTap,
-            child: Text(
-              action,
-              style: TextStyle(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.bold,
-                color: color,
+          Flexible(
+            child: TextButton(
+              onPressed: onTap,
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                action,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),

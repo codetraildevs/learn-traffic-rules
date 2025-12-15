@@ -292,6 +292,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
                   width: double.infinity,
                   isLoading: _isLoading,
                 ),
+                SizedBox(height: 32.h),
               ],
             ),
           ),

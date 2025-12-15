@@ -15,6 +15,7 @@ import '../../services/exam_sync_service.dart';
 import '../../services/network_service.dart';
 import '../../models/free_exam_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/locale_provider.dart';
 import '../../l10n/app_localizations.dart';
 import 'exam_taking_screen.dart';
 import 'exam_progress_screen.dart';
@@ -49,8 +50,8 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Initialize selected exam type from widget parameter, default to 'kinyarwanda'
-    _selectedExamType = widget.initialExamType?.toLowerCase() ?? 'kinyarwanda';
+    // Initialize selected exam type from widget parameter or current locale
+    _selectedExamType = widget.initialExamType?.toLowerCase();
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -121,9 +122,28 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     super.didChangeDependencies();
     // Load free exams after the widget tree is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Set exam type based on current locale if not already set
+      if (_selectedExamType == null) {
+        final currentLocale = ref.read(localeProvider);
+        _selectedExamType = _mapLocaleToExamType(currentLocale.languageCode);
+      }
       _loadFreeExams();
       _setupConnectivityListener();
     });
+  }
+
+  /// Map locale code to exam type
+  String _mapLocaleToExamType(String localeCode) {
+    switch (localeCode.toLowerCase()) {
+      case 'rw':
+        return 'kinyarwanda';
+      case 'en':
+        return 'english';
+      case 'fr':
+        return 'french';
+      default:
+        return 'kinyarwanda'; // Default to kinyarwanda
+    }
   }
 
   void _setupConnectivityListener() {
@@ -425,38 +445,49 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       return;
     }
 
-    // Free exams are already marked in _allExams, just filter by type
-    // Use the same type inference logic as _markFreeExamsByType
-    List<Exam> filteredExams;
+    // Get exam type from locale if not set
+    String examTypeToFilter;
     if (_selectedExamType != null && _selectedExamType!.isNotEmpty) {
-      filteredExams = _allExams.where((exam) {
-        // Get exam type using same logic as _markFreeExamsByType
-        String type = exam.examType?.toLowerCase() ?? 'english';
-
-        // If examType is null, try to infer from title
-        if (exam.examType == null) {
-          final titleLower = exam.title.toLowerCase();
-          if (titleLower.contains('kiny') ||
-              titleLower.contains('kinyarwanda')) {
-            type = 'kinyarwanda';
-          } else if (titleLower.contains('french') ||
-              titleLower.contains('français')) {
-            type = 'french';
-          } else {
-            type = 'english'; // Default to english
-          }
-        }
-
-        // Match against selected type
-        return type == _selectedExamType!.toLowerCase();
-      }).toList();
-      debugPrint(
-        '✅ Filtered by type: ${filteredExams.length} exams match $_selectedExamType',
-      );
+      examTypeToFilter = _selectedExamType!;
     } else {
-      filteredExams = List.from(_allExams);
-      debugPrint('✅ Showing all exams: ${filteredExams.length} exams');
+      // Get from current locale
+      final currentLocale = ref.read(localeProvider);
+      examTypeToFilter = _mapLocaleToExamType(currentLocale.languageCode);
+      // Update state for next build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _selectedExamType = examTypeToFilter;
+          });
+        }
+      });
     }
+
+    // Always filter by selected language (from locale)
+    final filteredExams = _allExams.where((exam) {
+      // Get exam type using same logic as _markFreeExamsByType
+      String type = exam.examType?.toLowerCase() ?? 'english';
+
+      // If examType is null, try to infer from title
+      if (exam.examType == null) {
+        final titleLower = exam.title.toLowerCase();
+        if (titleLower.contains('kiny') || titleLower.contains('kinyarwanda')) {
+          type = 'kinyarwanda';
+        } else if (titleLower.contains('french') ||
+            titleLower.contains('français')) {
+          type = 'french';
+        } else {
+          type = 'english'; // Default to english
+        }
+      }
+
+      // Match against selected type
+      return type == examTypeToFilter.toLowerCase();
+    }).toList();
+
+    debugPrint(
+      '✅ Filtered by type: ${filteredExams.length} exams match $examTypeToFilter',
+    );
 
     setState(() {
       _freeExamData = FreeExamData(
@@ -467,7 +498,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       );
     });
     debugPrint(
-      '🔄 Filtered to ${filteredExams.length} exams for type: $_selectedExamType',
+      '🔄 Filtered to ${filteredExams.length} exams for type: $examTypeToFilter',
     );
   }
 
@@ -528,13 +559,17 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
             title: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  _freeExamData!.isFreeUser
-                      ? l10n.availableExams
-                      : l10n.allExams,
-                  style: AppTextStyles.heading2.copyWith(
-                    color: AppColors.white,
-                    fontSize: 20.sp,
+                Flexible(
+                  child: Text(
+                    _freeExamData!.isFreeUser
+                        ? l10n.availableExams
+                        : l10n.allExams,
+                    style: AppTextStyles.heading2.copyWith(
+                      color: AppColors.white,
+                      fontSize: 20.sp,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 if (_isOffline) ...[
@@ -618,21 +653,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           ),
         ),
 
-        // Exam Type Filter (moved to top)
-        SliverToBoxAdapter(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: Padding(
-                padding: EdgeInsets.all(16.w),
-                child: _buildExamTypeFilter(),
-              ),
-            ),
-          ),
-        ),
-
-        // Exams grouped by type (moved to top, before free banner)
+        // Exams filtered by selected language (no filter UI, no grouping)
         ..._buildExamsByType(),
 
         // Free user status banner (moved below exams, made smaller)
@@ -766,82 +787,28 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   List<Widget> _buildExamsByType() {
-    final l10n = AppLocalizations.of(context)!;
-    // If filtering by type, show filtered list from API
-    if (_selectedExamType != null) {
-      final filteredExams = _freeExamData!.exams;
-      if (filteredExams.isEmpty) {
-        return [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(32.w),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.quiz_outlined,
-                    size: 80.sp,
-                    color: AppColors.grey400,
-                  ),
-                  SizedBox(height: 16.h),
-                  Text(
-                    l10n.noExamsAvailable,
-                    style: AppTextStyles.heading3.copyWith(
-                      color: AppColors.grey600,
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    l10n.noExamsFoundForThisLanguage,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.grey500,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ];
-      }
+    final l10n = AppLocalizations.of(context);
 
-      return [
-        SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w),
-          sliver: SliverGrid(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.75,
-              crossAxisSpacing: 12.w,
-              mainAxisSpacing: 12.h,
-            ),
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final exam = _freeExamData!.exams[index];
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: _buildExamCard(exam, index),
-                ),
-              );
-            }, childCount: _freeExamData!.exams.length),
-          ),
-        ),
-      ];
+    // Always filter by selected language (from locale)
+    // Get current locale if _selectedExamType is not set
+    String examTypeToFilter;
+    if (_selectedExamType != null) {
+      examTypeToFilter = _selectedExamType!;
+    } else {
+      final currentLocale = ref.read(localeProvider);
+      examTypeToFilter = _mapLocaleToExamType(currentLocale.languageCode);
+      // Update state for next build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _selectedExamType = examTypeToFilter;
+          });
+        }
+      });
     }
 
-    // Group exams by type - always show all sections, even if filtered
-    // If a filter is selected, show empty state for non-matching sections
-    final Map<String, List<Exam>> examsByType = {};
-
-    // Use _allExams instead of _freeExamData!.exams to ensure all exams are considered
-    // This ensures all exam type sections are visible even when filtering
-    final examsToGroup = _selectedExamType != null
-        ? _allExams // When filtering, use all exams to show all sections
-        : _freeExamData!.exams; // When not filtering, use filtered exams
-
-    for (final exam in examsToGroup) {
-      // Handle null examType: default to 'english' if null
-      // Also try to infer from title if it contains language keywords
+    // Filter exams by the selected language
+    final filteredExams = _freeExamData!.exams.where((exam) {
       String type = exam.examType?.toLowerCase() ?? 'english';
 
       // If examType is null, try to infer from title
@@ -853,48 +820,14 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
             titleLower.contains('français')) {
           type = 'french';
         } else {
-          type = 'english'; // Default to english
+          type = 'english';
         }
       }
 
-      examsByType.putIfAbsent(type, () => []).add(exam);
-    }
+      return type == examTypeToFilter.toLowerCase();
+    }).toList();
 
-    // If filtering, only show exams that match the selected type
-    if (_selectedExamType != null) {
-      for (final type in examsByType.keys.toList()) {
-        if (type != _selectedExamType!.toLowerCase()) {
-          // Keep the section but mark it as empty (will show empty state)
-          examsByType[type] = [];
-        } else {
-          // Filter exams to only show those matching the selected type
-          examsByType[type] = examsByType[type]!.where((exam) {
-            String examType = exam.examType?.toLowerCase() ?? 'english';
-            if (exam.examType == null) {
-              final titleLower = exam.title.toLowerCase();
-              if (titleLower.contains('kiny') ||
-                  titleLower.contains('kinyarwanda')) {
-                examType = 'kinyarwanda';
-              } else if (titleLower.contains('french') ||
-                  titleLower.contains('français')) {
-                examType = 'french';
-              } else {
-                examType = 'english';
-              }
-            }
-            return examType == _selectedExamType!.toLowerCase();
-          }).toList();
-        }
-      }
-    }
-
-    // Order: kinyarwanda, english, french
-    final orderedTypes = ['kinyarwanda', 'english', 'french'];
-    final availableTypes = orderedTypes
-        .where((type) => examsByType.containsKey(type))
-        .toList();
-
-    if (availableTypes.isEmpty) {
+    if (filteredExams.isEmpty) {
       return [
         SliverToBoxAdapter(
           child: Padding(
@@ -915,7 +848,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  l10n.checkBackLaterForNewTrafficRulesExams,
+                  l10n.noExamsFoundForThisLanguage,
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.grey500,
                   ),
@@ -928,109 +861,29 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       ];
     }
 
-    final List<Widget> slivers = [];
-
-    // Add section headers and exams for each type
-    for (final type in availableTypes) {
-      final exams = examsByType[type]!;
-      final displayName = type[0].toUpperCase() + type.substring(1);
-
-      // Section header
-      slivers.add(
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 12.h),
-            child: Row(
-              children: [
-                Icon(Icons.language, size: 20.sp, color: AppColors.primary),
-                SizedBox(width: 8.w),
-                Text(
-                  l10n.examTypeExams(displayName),
-                  style: AppTextStyles.heading3.copyWith(
-                    fontSize: 18.sp,
-                    color: AppColors.primary,
-                  ),
-                ),
-                SizedBox(width: 8.w),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Text(
-                    '${exams.length}',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+    return [
+      SliverPadding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
+        sliver: SliverGrid(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.75,
+            crossAxisSpacing: 12.w,
+            mainAxisSpacing: 12.h,
           ),
-        ),
-      );
-
-      // Exams for this type
-      if (exams.isEmpty) {
-        // Show empty state for this type when filtering
-        slivers.add(
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(32.w),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.quiz_outlined,
-                    size: 48.sp,
-                    color: AppColors.grey400,
-                  ),
-                  SizedBox(height: 16.h),
-                  Text(
-                    l10n.examTypeExams('No $displayName'),
-                    style: AppTextStyles.heading3.copyWith(
-                      color: AppColors.grey600,
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    l10n.noExamsAvailableForThisLanguage,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.grey500,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final exam = filteredExams[index];
+            return FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: _buildExamCard(exam, index),
               ),
-            ),
-          ),
-        );
-      } else {
-        slivers.add(
-          SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final exam = exams[index];
-                return FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: Padding(
-                      padding: EdgeInsets.only(bottom: 16.h),
-                      child: _buildExamCard(exam, index),
-                    ),
-                  ),
-                );
-              }, childCount: exams.length),
-            ),
-          ),
-        );
-      }
-    }
-
-    return slivers;
+            );
+          }, childCount: filteredExams.length),
+        ),
+      ),
+    ];
   }
 
   Widget _buildExamCard(Exam exam, int index) {
@@ -1083,11 +936,15 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                   color: AppColors.grey600,
                 ),
                 SizedBox(width: 6.w),
-                Text(
-                  l10n.questionsCount(exam.questionCount ?? 0),
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.grey700,
-                    fontSize: 14.sp,
+                Expanded(
+                  child: Text(
+                    l10n.questionsCount(exam.questionCount ?? 0),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.grey700,
+                      fontSize: 14.sp,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -1103,11 +960,15 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                   color: AppColors.grey600,
                 ),
                 SizedBox(width: 6.w),
-                Text(
-                  l10n.durationMinutes(exam.duration),
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.grey700,
-                    fontSize: 14.sp,
+                Expanded(
+                  child: Text(
+                    l10n.durationMinutes(exam.duration),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.grey700,
+                      fontSize: 14.sp,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -1131,15 +992,20 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.play_arrow, size: 25.sp),
-                    SizedBox(width: 8.w),
-                    Text(
-                      l10n.startExam,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 15.sp,
-                        color: AppColors.white,
+                    Icon(Icons.play_arrow, size: 20.sp),
+                    SizedBox(width: 4.w),
+                    Flexible(
+                      child: Text(
+                        l10n.startExam,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 12.sp,
+                          color: AppColors.white,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -1153,7 +1019,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   Widget _buildFreeUserBanner() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
       decoration: BoxDecoration(

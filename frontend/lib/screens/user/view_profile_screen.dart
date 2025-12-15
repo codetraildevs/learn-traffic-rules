@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../widgets/language_selector.dart';
 
 class ViewProfileScreen extends ConsumerWidget {
   const ViewProfileScreen({super.key});
@@ -80,8 +81,7 @@ class ViewProfileScreen extends ConsumerWidget {
             SizedBox(height: 24.h),
 
             // Language Settings
-            // TODO: Add LanguageSelector widget when available
-            // const LanguageSelector(),
+            const LanguageSelector(),
             SizedBox(height: 24.h),
 
             // Profile Details
@@ -150,6 +150,8 @@ class ViewProfileScreen extends ConsumerWidget {
                 color: AppColors.grey600,
                 fontWeight: FontWeight.w500,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           Expanded(
@@ -159,6 +161,8 @@ class ViewProfileScreen extends ConsumerWidget {
                 color: AppColors.grey800,
                 fontWeight: FontWeight.w600,
               ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

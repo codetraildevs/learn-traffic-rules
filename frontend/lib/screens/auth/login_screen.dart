@@ -557,99 +557,107 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         fontSize: 13.sp,
                         height: 1.4,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(height: 8.h),
 
                     // Help section with two phone numbers
-                    Expanded(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.phone_outlined,
-                            color: AppColors.grey600,
-                            size: 14.sp,
-                          ),
-                          SizedBox(width: 6.w),
-                          Text(
-                            l10n.needHelpCall,
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.grey600,
-                              fontSize: 13.sp,
-                            ),
-                          ),
-                          // First phone number
-                          GestureDetector(
-                            onTap: () async {
-                              try {
-                                const phoneNumber = '+250788659575';
-                                final Uri phoneUri = Uri(
-                                  scheme: 'tel',
-                                  path: phoneNumber,
-                                );
-                                if (await canLaunchUrl(phoneUri)) {
-                                  await launchUrl(
-                                    phoneUri,
-                                    mode: LaunchMode.externalApplication,
-                                  );
-                                } else {
-                                  _showPhoneNumberDialog();
-                                }
-                              } catch (e) {
-                                _showPhoneNumberDialog();
-                              }
-                            },
-                            child: Text(
-                              '0788 659 575',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.secondary,
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w600,
-                                decoration: TextDecoration.underline,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.phone_outlined,
+                          color: AppColors.grey600,
+                          size: 14.sp,
+                        ),
+                        SizedBox(width: 6.w),
+                        Expanded(
+                          child: Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 4.w,
+                            children: [
+                              Text(
+                                l10n.needHelpCall,
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.grey600,
+                                  fontSize: 13.sp,
+                                ),
                               ),
-                            ),
-                          ),
-                          Text(
-                            ' / ',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.grey600,
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          // Second phone number
-                          GestureDetector(
-                            onTap: () async {
-                              try {
-                                const phoneNumber = '+250728877442';
-                                final Uri phoneUri = Uri(
-                                  scheme: 'tel',
-                                  path: phoneNumber,
-                                );
-                                if (await canLaunchUrl(phoneUri)) {
-                                  await launchUrl(
-                                    phoneUri,
-                                    mode: LaunchMode.externalApplication,
-                                  );
-                                } else {
-                                  _showPhoneNumberDialog();
-                                }
-                              } catch (e) {
-                                _showPhoneNumberDialog();
-                              }
-                            },
-                            child: Text(
-                              '0728 877 442',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.secondary,
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w600,
-                                decoration: TextDecoration.underline,
+                              // First phone number
+                              GestureDetector(
+                                onTap: () async {
+                                  try {
+                                    const phoneNumber = '+250788659575';
+                                    final Uri phoneUri = Uri(
+                                      scheme: 'tel',
+                                      path: phoneNumber,
+                                    );
+                                    if (await canLaunchUrl(phoneUri)) {
+                                      await launchUrl(
+                                        phoneUri,
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    } else {
+                                      _showPhoneNumberDialog();
+                                    }
+                                  } catch (e) {
+                                    _showPhoneNumberDialog();
+                                  }
+                                },
+                                child: Text(
+                                  '0788 659 575',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.secondary,
+                                    fontSize: 13.sp,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
                               ),
-                            ),
+                              Text(
+                                ' / ',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.grey600,
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              // Second phone number
+                              GestureDetector(
+                                onTap: () async {
+                                  try {
+                                    const phoneNumber = '+250728877442';
+                                    final Uri phoneUri = Uri(
+                                      scheme: 'tel',
+                                      path: phoneNumber,
+                                    );
+                                    if (await canLaunchUrl(phoneUri)) {
+                                      await launchUrl(
+                                        phoneUri,
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    } else {
+                                      _showPhoneNumberDialog();
+                                    }
+                                  } catch (e) {
+                                    _showPhoneNumberDialog();
+                                  }
+                                },
+                                child: Text(
+                                  '0728 877 442',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.secondary,
+                                    fontSize: 13.sp,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -684,6 +692,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           fontWeight: FontWeight.w500,
                           fontStyle: FontStyle.italic,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       SizedBox(height: 8.h),
 
@@ -772,22 +782,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       l10n.byUsingThisAppYouAgree,
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.grey600,
-                        fontSize: 16.sp,
+                        fontSize: 12.sp,
                       ),
                       textAlign: TextAlign.center,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(height: 8.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        TextButton(
-                          onPressed: () => _showPrivacyPolicyModal(),
-                          child: Text(
-                            l10n.privacyPolicy,
-                            style: AppTextStyles.link.copyWith(
-                              color: AppColors.primary,
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => _showPrivacyPolicyModal(),
+                            child: Text(
+                              l10n.privacyPolicy,
+                              style: AppTextStyles.link.copyWith(
+                                color: AppColors.primary,
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
@@ -798,14 +812,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             fontSize: 12.sp,
                           ),
                         ),
-                        TextButton(
-                          onPressed: () => _showTermsConditionsModal(),
-                          child: Text(
-                            l10n.termsConditions,
-                            style: AppTextStyles.link.copyWith(
-                              color: AppColors.primary,
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => _showTermsConditionsModal(),
+                            child: Text(
+                              l10n.termsConditions,
+                              style: AppTextStyles.link.copyWith(
+                                color: AppColors.primary,
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),

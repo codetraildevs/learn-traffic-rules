@@ -8,7 +8,7 @@ final localeProvider = StateNotifierProvider<LocaleNotifier, Locale>(
 );
 
 class LocaleNotifier extends StateNotifier<Locale> {
-  LocaleNotifier() : super(const Locale('en')) {
+  LocaleNotifier() : super(const Locale('rw')) {
     loadSavedLocale();
   }
 
@@ -21,7 +21,7 @@ class LocaleNotifier extends StateNotifier<Locale> {
       }
     } catch (e) {
       debugPrint('Error loading saved locale: $e');
-      // Keep default locale (English)
+      // Keep default locale (Kinyarwanda)
     }
   }
 
@@ -39,4 +39,3 @@ class LocaleNotifier extends StateNotifier<Locale> {
   /// Get current locale
   Locale get currentLocale => state;
 }
-

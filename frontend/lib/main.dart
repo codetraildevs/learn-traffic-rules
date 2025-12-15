@@ -154,8 +154,8 @@ class _MyAppState extends ConsumerState<MyApp> {
             FallbackCupertinoLocalizationsDelegate(), // Wrapper with fallback for rw
           ],
           supportedLocales: const [
+            Locale('rw'), // Kinyarwanda (default)
             Locale('en'), // English
-            Locale('rw'), // Kinyarwanda
             Locale('fr'), // French
           ],
           localeResolutionCallback: (locale, supportedLocales) {

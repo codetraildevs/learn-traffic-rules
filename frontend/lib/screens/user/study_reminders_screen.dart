@@ -323,7 +323,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                           color: AppColors.primary,
                           size: 20.sp,
                         ),
-                        SizedBox(width: 12.w),
+                        SizedBox(width: 5.w),
                         Text(
                           l10n.minutesPerDayValue(_studyGoal),
                           style: AppTextStyles.bodyLarge.copyWith(
@@ -344,7 +344,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
                             backgroundColor: AppColors.grey100,
                           ),
                         ),
-                        SizedBox(width: 8.w),
+                        SizedBox(width: 2.w),
                         IconButton(
                           onPressed: () {
                             if (_studyGoal < 120) {
@@ -379,6 +379,8 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
               width: double.infinity,
               isLoading: _isLoading,
             ),
+
+            SizedBox(height: 42.h),
           ],
         ),
       ),
@@ -471,7 +473,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
         if (response['success'] == true) {
           _reminderId = response['data']['id'];
           if (mounted) {
-            final l10n = AppLocalizations.of(context)!;
+            final l10n = AppLocalizations.of(context);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(l10n.studyReminderCreatedSuccessfully),

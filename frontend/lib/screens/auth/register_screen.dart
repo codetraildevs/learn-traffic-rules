@@ -624,6 +624,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 fontSize: 13.sp,
                                 height: 1.4,
                               ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             SizedBox(height: 8.h),
                             Row(
@@ -635,81 +637,96 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                   size: 14.sp,
                                 ),
                                 SizedBox(width: 6.w),
-                                Text(
-                                  l10n.needHelpCall,
-                                  style: AppTextStyles.bodySmall.copyWith(
-                                    color: AppColors.grey600,
-                                    fontSize: 13.sp,
-                                  ),
-                                ),
-                                // First phone number
-                                GestureDetector(
-                                  onTap: () async {
-                                    try {
-                                      const phoneNumber = '+250788659575';
-                                      final Uri phoneUri = Uri(
-                                        scheme: 'tel',
-                                        path: phoneNumber,
-                                      );
-                                      if (await canLaunchUrl(phoneUri)) {
-                                        await launchUrl(
-                                          phoneUri,
-                                          mode: LaunchMode.externalApplication,
-                                        );
-                                      } else {
-                                        _showPhoneNumberDialog();
-                                      }
-                                    } catch (e) {
-                                      _showPhoneNumberDialog();
-                                    }
-                                  },
-                                  child: Text(
-                                    '0788 659 575',
-                                    style: AppTextStyles.bodySmall.copyWith(
-                                      color: AppColors.secondary,
-                                      fontSize: 13.sp,
-                                      fontWeight: FontWeight.w600,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  ' / ',
-                                  style: AppTextStyles.bodySmall.copyWith(
-                                    color: AppColors.grey600,
-                                    fontSize: 13.sp,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                // Second phone number
-                                GestureDetector(
-                                  onTap: () async {
-                                    try {
-                                      const phoneNumber = '+250728877442';
-                                      final Uri phoneUri = Uri(
-                                        scheme: 'tel',
-                                        path: phoneNumber,
-                                      );
-                                      if (await canLaunchUrl(phoneUri)) {
-                                        await launchUrl(
-                                          phoneUri,
-                                          mode: LaunchMode.externalApplication,
-                                        );
-                                      } else {
-                                        _showPhoneNumberDialog();
-                                      }
-                                    } catch (e) {
-                                      _showPhoneNumberDialog();
-                                    }
-                                  },
-                                  child: Text(
-                                    '0728 877 442',
-                                    style: AppTextStyles.bodySmall.copyWith(
-                                      color: AppColors.secondary,
-                                      fontSize: 13.sp,
-                                      fontWeight: FontWeight.w600,
-                                      decoration: TextDecoration.underline,
-                                    ),
+                                Expanded(
+                                  child: Wrap(
+                                    crossAxisAlignment:
+                                        WrapCrossAlignment.center,
+                                    spacing: 4.w,
+                                    children: [
+                                      Text(
+                                        l10n.needHelpCall,
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                          color: AppColors.grey600,
+                                          fontSize: 13.sp,
+                                        ),
+                                      ),
+                                      // First phone number
+                                      GestureDetector(
+                                        onTap: () async {
+                                          try {
+                                            const phoneNumber = '+250788659575';
+                                            final Uri phoneUri = Uri(
+                                              scheme: 'tel',
+                                              path: phoneNumber,
+                                            );
+                                            if (await canLaunchUrl(phoneUri)) {
+                                              await launchUrl(
+                                                phoneUri,
+                                                mode: LaunchMode
+                                                    .externalApplication,
+                                              );
+                                            } else {
+                                              _showPhoneNumberDialog();
+                                            }
+                                          } catch (e) {
+                                            _showPhoneNumberDialog();
+                                          }
+                                        },
+                                        child: Text(
+                                          '0788 659 575',
+                                          style: AppTextStyles.bodySmall
+                                              .copyWith(
+                                                color: AppColors.secondary,
+                                                fontSize: 13.sp,
+                                                fontWeight: FontWeight.w600,
+                                                decoration:
+                                                    TextDecoration.underline,
+                                              ),
+                                        ),
+                                      ),
+                                      Text(
+                                        ' / ',
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                          color: AppColors.grey600,
+                                          fontSize: 13.sp,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      // Second phone number
+                                      GestureDetector(
+                                        onTap: () async {
+                                          try {
+                                            const phoneNumber = '+250728877442';
+                                            final Uri phoneUri = Uri(
+                                              scheme: 'tel',
+                                              path: phoneNumber,
+                                            );
+                                            if (await canLaunchUrl(phoneUri)) {
+                                              await launchUrl(
+                                                phoneUri,
+                                                mode: LaunchMode
+                                                    .externalApplication,
+                                              );
+                                            } else {
+                                              _showPhoneNumberDialog();
+                                            }
+                                          } catch (e) {
+                                            _showPhoneNumberDialog();
+                                          }
+                                        },
+                                        child: Text(
+                                          '0728 877 442',
+                                          style: AppTextStyles.bodySmall
+                                              .copyWith(
+                                                color: AppColors.secondary,
+                                                fontSize: 13.sp,
+                                                fontWeight: FontWeight.w600,
+                                                decoration:
+                                                    TextDecoration.underline,
+                                              ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -756,6 +773,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                   fontWeight: FontWeight.w400,
                                   fontStyle: FontStyle.italic,
                                 ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
 
                               SizedBox(height: 12.h),
@@ -827,31 +846,40 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               Builder(
                 builder: (context) {
                   final l10n = AppLocalizations.of(context);
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        l10n.alreadyHaveAccount,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.grey700,
-                          fontSize: 14.sp,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          // Navigate to login screen explicitly
-                          Navigator.pushReplacementNamed(context, '/login');
-                        },
-                        child: Text(
-                          l10n.signIn,
-                          style: AppTextStyles.link.copyWith(
-                            color: AppColors.primary,
+                  return Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 4.w,
+                      children: [
+                        Text(
+                          l10n.alreadyHaveAccount,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.grey700,
                             fontSize: 14.sp,
-                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
-                    ],
+                        TextButton(
+                          onPressed: () {
+                            // Navigate to login screen explicitly
+                            Navigator.pushReplacementNamed(context, '/login');
+                          },
+                          child: Text(
+                            l10n.signIn,
+                            style: AppTextStyles.link.copyWith(
+                              color: AppColors.primary,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),
@@ -860,8 +888,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
               // Privacy Policy and Terms & Conditions Links
               Container(
-                margin: EdgeInsets.symmetric(horizontal: 24.w),
-                padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
                   color: AppColors.grey50,
                   borderRadius: BorderRadius.circular(12.r),
@@ -881,10 +907,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 fontSize: 12.sp,
                               ),
                               textAlign: TextAlign.center,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             SizedBox(height: 8.h),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 4.w,
                               children: [
                                 TextButton(
                                   onPressed: () => _showPrivacyPolicyModal(),
