@@ -248,14 +248,15 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                   for (final exam in examsWithFreeMarked) {
                     if (exam.examImgUrl != null &&
                         exam.examImgUrl!.isNotEmpty) {
-                      // Construct full image URL
+                      // Construct full image URL using baseUrlImage
                       final imageUrl = exam.examImgUrl!.startsWith('http')
                           ? exam.examImgUrl!
-                          : '/uploads/images-exams/${exam.examImgUrl}';
+                          : '${AppConstants.baseUrlImage}${exam.examImgUrl}';
                       ImageCacheService.instance
                           .cacheImage(imageUrl)
                           .catchError((e) {
                             debugPrint('⚠️ Failed to cache exam image: $e');
+                            return null;
                           });
                     }
                   }
@@ -569,7 +570,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   Widget _buildContent() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
@@ -922,7 +923,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     final imageUrl = exam.examImgUrl != null && exam.examImgUrl!.isNotEmpty
         ? (exam.examImgUrl!.startsWith('http')
               ? exam.examImgUrl!
-              : '/uploads/images-exams/${exam.examImgUrl}')
+              : '${AppConstants.baseUrlImage}${exam.examImgUrl}')
         : null;
 
     return Container(
@@ -942,7 +943,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(16.w),
+        padding: EdgeInsets.all(12.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -971,7 +972,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                               child: Image.file(
                                 File(imagePath),
                                 width: double.infinity,
-                                height: 120.h,
+                                height: 90.h,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return _buildImagePlaceholder();
@@ -984,9 +985,9 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                               return ClipRRect(
                                 borderRadius: BorderRadius.circular(8.r),
                                 child: Image.network(
-                                  '${AppConstants.baseUrlImage}$imageUrl',
+                                  imageUrl,
                                   width: double.infinity,
-                                  height: 120.h,
+                                  height: 90.h,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return _buildImagePlaceholder();
@@ -1009,7 +1010,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                         child: Image.network(
                           imagePath,
                           width: double.infinity,
-                          height: 120.h,
+                          height: 90.h,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return _buildImagePlaceholder();
@@ -1024,36 +1025,36 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               )
             else
               _buildImagePlaceholder(),
-            SizedBox(height: 12.h),
+            SizedBox(height: 8.h),
 
             // Exam Title
             Text(
               displayTitle,
               style: AppTextStyles.heading3.copyWith(
-                fontSize: 18.sp,
+                fontSize: 16.sp,
                 color: AppColors.grey800,
                 fontWeight: FontWeight.bold,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: 8.h),
 
             // Questions Count
             Row(
               children: [
                 Icon(
                   Icons.quiz_outlined,
-                  size: 16.sp,
+                  size: 14.sp,
                   color: AppColors.grey600,
                 ),
-                SizedBox(width: 6.w),
+                SizedBox(width: 4.w),
                 Expanded(
                   child: Text(
                     l10n.questionsCount(exam.questionCount ?? 0),
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey700,
-                      fontSize: 14.sp,
+                      fontSize: 12.sp,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1061,23 +1062,23 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 ),
               ],
             ),
-            SizedBox(height: 8.h),
+            SizedBox(height: 4.h),
 
             // Duration
             Row(
               children: [
                 Icon(
                   Icons.timer_outlined,
-                  size: 16.sp,
+                  size: 14.sp,
                   color: AppColors.grey600,
                 ),
-                SizedBox(width: 6.w),
+                SizedBox(width: 4.w),
                 Expanded(
                   child: Text(
                     l10n.durationMinutes(exam.duration),
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey700,
-                      fontSize: 14.sp,
+                      fontSize: 12.sp,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1086,7 +1087,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               ],
             ),
 
-            SizedBox(height: 16.h),
+            const Spacer(),
 
             // Start Exam Button
             SizedBox(
@@ -1096,7 +1097,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.grey800,
-                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  padding: EdgeInsets.symmetric(vertical: 10.h),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.r),
                   ),
@@ -1106,17 +1107,17 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.play_arrow, size: 20.sp),
+                    Icon(Icons.play_arrow, size: 18.sp),
                     SizedBox(width: 4.w),
                     Flexible(
                       child: Text(
                         l10n.startExam,
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w500,
-                          fontSize: 12.sp,
+                          fontSize: 11.sp,
                           color: AppColors.white,
                         ),
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -1317,12 +1318,12 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   Widget _buildImagePlaceholder() {
     return Container(
       width: double.infinity,
-      height: 120.h,
+      height: 90.h,
       decoration: BoxDecoration(
         color: AppColors.grey200,
         borderRadius: BorderRadius.circular(8.r),
       ),
-      child: Icon(Icons.quiz_outlined, size: 48.sp, color: AppColors.grey400),
+      child: Icon(Icons.quiz_outlined, size: 36.sp, color: AppColors.grey400),
     );
   }
 }
