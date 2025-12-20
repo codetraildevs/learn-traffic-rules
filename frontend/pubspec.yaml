@@ -1,21 +1,8 @@
 name: learn_traffic_rules
 description: Educational app for provisional driving license preparation. Learn traffic rules, road signs, and driving regulations through interactive practice tests. Designed to help learners prepare for their provisional driving license exam with comprehensive study materials and realistic practice questions. This educational tool supports safe driving knowledge development.
 
-# The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-# The version number is three numbers separated by dots, like 1.2.43
-# followed by an optional build number separated by a +.
-# Both the version and the builder number may be overridden in flutter
-# build by specifying --build-name and --build-number, respectively.
-# In Android, build-name is used as versionName while build-number used as versionCode.
-# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
-# Read more about iOS versioning at
-# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-# In Windows, build-name is used as the major, minor, and patch parts
-# of the product and file versions while build-number is used as the build suffix.
 version: 1.1.1+31
 
 environment:
@@ -80,6 +67,7 @@ dependencies:
   
   # Security
   crypto: ^3.0.3
+  flutter_launcher_icons: ^0.14.4
 
 
 dev_dependencies:
@@ -88,7 +76,6 @@ dev_dependencies:
   flutter_lints: ^3.0.0
   json_serializable: ^6.7.1
   build_runner: ^2.4.7
-  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -100,32 +87,25 @@ flutter:
   # Enable localization
   generate: true
   
-  # Image optimization settings
-  # Use WebP format for better compression
-  # Place optimized images in assets/images/
-  # Recommended sizes:
-  # - Icons: 24x24, 48x48, 96x96 (WebP)
-  # - Images: Max 1024x1024 (WebP)
-  # - App icon: 512x512 (PNG for Play Store)
 
 # Flutter Launcher Icons Configuration
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icons/app-icon.png"
+  image_path: "assets/icons/app-logo.png"
   min_sdk_android: 21
   adaptive_icon_background: "#4F46E5"  # Purple gradient start
-  adaptive_icon_foreground: "assets/icons/app-icon.png"
+  adaptive_icon_foreground: "assets/icons/app-logo.png"
   web:
     generate: true
-    image_path: "assets/icons/app-icon.png"
+    image_path: "assets/icons/app-logo.png"
     background_color: "#4F46E5"
     theme_color: "#7C3AED"
   windows:
     generate: true
-    image_path: "assets/icons/app-icon.png"
+    image_path: "assets/icons/app-logo.png"
     icon_size: 48
   macos:
     generate: true
-    image_path: "assets/icons/app-icon.png"
+    image_path: "assets/icons/app-logo.png"
   

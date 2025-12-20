@@ -3,7 +3,8 @@ class AppConstants {
   static const String baseUrl = 'https://traffic.cyangugudims.com/api';
   //static const String baseUrl = 'http://10.102.183.116:3000/api';
   //static const String baseUrlImage = 'http://10.102.183.116:3000';
-  static const String baseUrlImage = 'https://traffic.cyangugudims.com';
+  static const String baseUrlImage =
+      'https://traffic.cyangugudims.com/uploads/images-exams/';
 
   // Image Paths
   static const String defaultQuestionImagePath = '/uploads/question-images/';

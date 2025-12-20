@@ -44,7 +44,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 8.h),
                   Text(
-                    l10n?.lastUpdated('December 2025') ?? '',
+                    l10n.lastUpdated('December 2025'),
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey600,
                     ),
