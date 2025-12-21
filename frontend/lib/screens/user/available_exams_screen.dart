@@ -46,6 +46,13 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   bool _isOffline = false;
   bool _isSyncing = false;
   String? _selectedExamType;
+  // Cache for image paths - key is imageUrl, value is cached path
+  final Map<String, String?> _imagePathCache = {};
+  // Track which images are being preloaded
+  final Set<String> _preloadingImages = {};
+  // Search query for filtering exams
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -77,6 +84,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _animationController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -158,6 +166,20 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     }
   }
 
+  /// Map exam type to language display name
+  String _mapExamTypeToLanguageName(String examType) {
+    switch (examType.toLowerCase()) {
+      case 'kinyarwanda':
+        return 'Kinyarwanda';
+      case 'english':
+        return 'English';
+      case 'french':
+        return 'French';
+      default:
+        return examType;
+    }
+  }
+
   void _setupConnectivityListener() {
     // Listen for connectivity changes
     _networkService.connectivityStream.listen((connectivityResult) async {
@@ -232,17 +254,41 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               );
             }
 
+            // Store all exams first, then filter
+            _allExams = examsWithFreeMarked;
+
+            // Filter by selected exam type
+            final filteredExams = _allExams.where((exam) {
+              String type = exam.examType?.toLowerCase() ?? 'english';
+              if (exam.examType == null) {
+                final titleLower = exam.title.toLowerCase();
+                if (titleLower.contains('kiny') ||
+                    titleLower.contains('kinyarwanda')) {
+                  type = 'kinyarwanda';
+                } else if (titleLower.contains('french') ||
+                    titleLower.contains('français')) {
+                  type = 'french';
+                }
+              }
+              final examTypeToFilter =
+                  _selectedExamType ??
+                  _mapLocaleToExamType(ref.read(localeProvider).languageCode);
+              return type == examTypeToFilter.toLowerCase();
+            }).toList();
+
             setState(() {
-              _allExams =
-                  examsWithFreeMarked; // Cache all exams with free marked
               _freeExamData = FreeExamData(
-                exams: examsWithFreeMarked,
+                exams: filteredExams, // Set filtered exams directly
                 isFreeUser: response.data.isFreeUser,
                 freeExamsRemaining: response.data.freeExamsRemaining,
                 paymentInstructions: response.data.paymentInstructions,
               );
               _isLoadingFreeExams = false;
             });
+
+            debugPrint(
+              '🌐 Online: Filtered to ${filteredExams.length} exams for type: ${_selectedExamType ?? _mapLocaleToExamType(ref.read(localeProvider).languageCode)}',
+            );
 
             // Download ALL exams for offline use in background (not just free exams)
             // Only start download if we still have internet
@@ -281,8 +327,8 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               }
             });
 
-            // Filter after loading
-            _filterExamsClientSide();
+            // Preload all image paths for the filtered exams
+            _preloadImagePaths();
           } else {
             debugPrint('❌ Failed to load free exams: ${response.message}');
             // Fallback to offline data
@@ -308,11 +354,97 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
 
   Future<void> _loadOfflineExams() async {
     try {
+      // If we already have exams cached in _allExams, use those instead of reloading from DB
+      // This preserves all exams that were loaded when online
+      if (_allExams.isNotEmpty) {
+        debugPrint(
+          '📱 Offline: Using ${_allExams.length} cached exams from memory (not reloading from DB)',
+        );
+
+        // Ensure _selectedExamType is set before filtering
+        if (_selectedExamType == null) {
+          final currentLocale = ref.read(localeProvider);
+          _selectedExamType = _mapLocaleToExamType(currentLocale.languageCode);
+          debugPrint('📱 Set _selectedExamType to: $_selectedExamType');
+        }
+
+        // Check user access from authProvider (stored in SharedPreferences)
+        final authState = ref.read(authProvider);
+        final hasAccess = authState.accessPeriod?.hasAccess ?? false;
+        final isFreeUser = !hasAccess; // User is free if they don't have access
+
+        // Load payment instructions from offline storage if available
+        PaymentInstructions? offlinePaymentInstructions;
+        if (isFreeUser) {
+          offlinePaymentInstructions = await _loadPaymentInstructionsOffline();
+        }
+
+        debugPrint('📱 Offline: Total exams in cache: ${_allExams.length}');
+        debugPrint('📱 Offline: Selected exam type: $_selectedExamType');
+
+        // Group exams by type for debugging
+        final Map<String, List<Exam>> examsByTypeDebug = {};
+        for (final exam in _allExams) {
+          String type = exam.examType?.toLowerCase() ?? 'english';
+          if (exam.examType == null) {
+            final titleLower = exam.title.toLowerCase();
+            if (titleLower.contains('kiny') ||
+                titleLower.contains('kinyarwanda')) {
+              type = 'kinyarwanda';
+            } else if (titleLower.contains('french') ||
+                titleLower.contains('français')) {
+              type = 'french';
+            }
+          }
+          examsByTypeDebug.putIfAbsent(type, () => []).add(exam);
+        }
+        for (final entry in examsByTypeDebug.entries) {
+          debugPrint(
+            '📱 Offline: Type "${entry.key}": ${entry.value.length} exams',
+          );
+        }
+
+        // Now filter and set state - filter by selected exam type
+        final filteredExams = _allExams.where((exam) {
+          String type = exam.examType?.toLowerCase() ?? 'english';
+          if (exam.examType == null) {
+            final titleLower = exam.title.toLowerCase();
+            if (titleLower.contains('kiny') ||
+                titleLower.contains('kinyarwanda')) {
+              type = 'kinyarwanda';
+            } else if (titleLower.contains('french') ||
+                titleLower.contains('français')) {
+              type = 'french';
+            }
+          }
+          return type == _selectedExamType!.toLowerCase();
+        }).toList();
+
+        debugPrint(
+          '📱 Offline: After filtering by type "$_selectedExamType": ${filteredExams.length} exams',
+        );
+
+        setState(() {
+          _freeExamData = FreeExamData(
+            exams: filteredExams, // Set filtered exams directly
+            isFreeUser: isFreeUser,
+            freeExamsRemaining: 0,
+            paymentInstructions: offlinePaymentInstructions,
+          );
+          _isLoadingFreeExams = false;
+        });
+
+        // Preload all image paths for the filtered exams
+        _preloadImagePaths();
+        return; // Exit early since we used cached exams
+      }
+
+      // If _allExams is empty, load from offline database
       final offlineExams = await _offlineService.getAllExams();
 
       if (offlineExams.isNotEmpty) {
         debugPrint(
-          '📱 Loaded ${offlineExams.length} exams from offline storage',
+          '📱 Loaded ${offlineExams.length} exams from offline database',
         );
 
         // Ensure _selectedExamType is set before filtering
@@ -349,18 +481,69 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           offlinePaymentInstructions = await _loadPaymentInstructionsOffline();
         }
 
+        // Store all exams first
+        _allExams = examsWithFreeMarked;
+
+        debugPrint(
+          '📱 Offline: Total exams loaded from DB: ${examsWithFreeMarked.length}',
+        );
+        debugPrint('📱 Offline: Selected exam type: $_selectedExamType');
+
+        // Group exams by type for debugging
+        final Map<String, List<Exam>> examsByTypeDebug2 = {};
+        for (final exam in examsWithFreeMarked) {
+          String type = exam.examType?.toLowerCase() ?? 'english';
+          if (exam.examType == null) {
+            final titleLower = exam.title.toLowerCase();
+            if (titleLower.contains('kiny') ||
+                titleLower.contains('kinyarwanda')) {
+              type = 'kinyarwanda';
+            } else if (titleLower.contains('french') ||
+                titleLower.contains('français')) {
+              type = 'french';
+            }
+          }
+          examsByTypeDebug2.putIfAbsent(type, () => []).add(exam);
+        }
+        for (final entry in examsByTypeDebug2.entries) {
+          debugPrint(
+            '📱 Offline: Type "${entry.key}": ${entry.value.length} exams',
+          );
+        }
+
+        // Now filter and set state
+        // Filter by selected exam type first
+        final filteredExams = _allExams.where((exam) {
+          String type = exam.examType?.toLowerCase() ?? 'english';
+          if (exam.examType == null) {
+            final titleLower = exam.title.toLowerCase();
+            if (titleLower.contains('kiny') ||
+                titleLower.contains('kinyarwanda')) {
+              type = 'kinyarwanda';
+            } else if (titleLower.contains('french') ||
+                titleLower.contains('français')) {
+              type = 'french';
+            }
+          }
+          return type == _selectedExamType!.toLowerCase();
+        }).toList();
+
+        debugPrint(
+          '📱 Offline: After filtering by type "$_selectedExamType": ${filteredExams.length} exams',
+        );
+
         setState(() {
-          _allExams = examsWithFreeMarked;
           _freeExamData = FreeExamData(
-            exams: examsWithFreeMarked,
+            exams: filteredExams, // Set filtered exams directly
             isFreeUser: isFreeUser,
             freeExamsRemaining: 0,
             paymentInstructions: offlinePaymentInstructions,
           );
           _isLoadingFreeExams = false;
         });
-        // Filter after loading
-        _filterExamsClientSide();
+
+        // Preload all image paths for the filtered exams
+        _preloadImagePaths();
       } else {
         debugPrint('📱 No offline exams available');
         setState(() {
@@ -503,7 +686,8 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     }
 
     // Always filter by selected language (from locale)
-    final filteredExams = _allExams.where((exam) {
+    // Then apply search filter if search query is not empty
+    var filteredExams = _allExams.where((exam) {
       // Get exam type using same logic as _markFreeExamsByType
       String type = exam.examType?.toLowerCase() ?? 'english';
 
@@ -524,9 +708,17 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       return type == examTypeToFilter.toLowerCase();
     }).toList();
 
+    // Note: Search filter is applied in _buildExamsByType() for real-time filtering
+    // This ensures search works immediately when user types without needing to refilter
+
     debugPrint(
       '✅ Filtered by type: ${filteredExams.length} exams match $examTypeToFilter',
     );
+    if (filteredExams.isNotEmpty) {
+      debugPrint(
+        '   Exam titles: ${filteredExams.take(5).map((e) => e.title).join(", ")}${filteredExams.length > 5 ? "..." : ""}',
+      );
+    }
 
     setState(() {
       _freeExamData = FreeExamData(
@@ -537,8 +729,70 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       );
     });
     debugPrint(
-      '🔄 Filtered to ${filteredExams.length} exams for type: $examTypeToFilter',
+      '🔄 Filtered to ${filteredExams.length} exams for type: $examTypeToFilter (total in _allExams: ${_allExams.length})',
     );
+
+    // Preload image paths after filtering
+    _preloadImagePaths();
+  }
+
+  /// Preload all image paths for currently filtered exams
+  Future<void> _preloadImagePaths() async {
+    if (_freeExamData == null || _freeExamData!.exams.isEmpty) {
+      return;
+    }
+
+    debugPrint(
+      '🖼️ Preloading image paths for ${_freeExamData!.exams.length} exams',
+    );
+
+    // Collect all unique image URLs
+    final Set<String> imageUrls = {};
+    for (final exam in _freeExamData!.exams) {
+      if (exam.examImgUrl != null && exam.examImgUrl!.isNotEmpty) {
+        final imageUrl = exam.examImgUrl!.startsWith('http')
+            ? exam.examImgUrl!
+            : '${AppConstants.baseUrlImage}${exam.examImgUrl}';
+        imageUrls.add(imageUrl);
+      }
+    }
+
+    // Preload all image paths concurrently
+    final List<Future<void>> preloadFutures = [];
+    for (final imageUrl in imageUrls) {
+      // Skip if already cached or being preloaded
+      if (_imagePathCache.containsKey(imageUrl) ||
+          _preloadingImages.contains(imageUrl)) {
+        continue;
+      }
+
+      _preloadingImages.add(imageUrl);
+      preloadFutures.add(
+        ImageCacheService.instance
+            .getImagePath(imageUrl)
+            .then((path) {
+              if (mounted) {
+                setState(() {
+                  _imagePathCache[imageUrl] = path;
+                  _preloadingImages.remove(imageUrl);
+                });
+              }
+            })
+            .catchError((e) {
+              debugPrint('⚠️ Failed to preload image path for $imageUrl: $e');
+              if (mounted) {
+                setState(() {
+                  _imagePathCache[imageUrl] = null;
+                  _preloadingImages.remove(imageUrl);
+                });
+              }
+            }),
+      );
+    }
+
+    // Wait for all preloads to complete
+    await Future.wait(preloadFutures);
+    debugPrint('🖼️ Finished preloading ${imageUrls.length} image paths');
   }
 
   @override
@@ -593,7 +847,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           expandedHeight: 50.h,
           floating: false,
           pinned: true,
-          backgroundColor: AppColors.secondary,
+          backgroundColor: AppColors.primary,
           flexibleSpace: FlexibleSpaceBar(
             title: Row(
               mainAxisSize: MainAxisSize.min,
@@ -700,7 +954,15 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           ),
         ),
 
-        // Exams filtered by selected language (no filter UI, no grouping)
+        // Search Bar Section
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            child: _buildSearchBar(),
+          ),
+        ),
+
+        // Exams filtered by selected language and search query
         ..._buildExamsByType(),
 
         // Free user status banner (moved below exams, made smaller)
@@ -802,16 +1064,61 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               final localeNotifier = ref.read(localeProvider.notifier);
               await localeNotifier.setLocale(Locale(localeCode));
 
-              // Update selected exam type before reloading
+              // Clear image cache when language changes to reload images for new language
               setState(() {
                 _selectedExamType = newExamType;
+                _imagePathCache
+                    .clear(); // Clear cache to reload images for new language
               });
 
-              // Reload exams with new language filter
-              // _loadFreeExams will handle:
-              // - Online: Load from API and filter by language
-              // - Offline: Load from local database and filter by language
-              await _loadFreeExams(forceReload: true);
+              // Check if we're offline
+              final hasInternet = await _networkService.hasInternetConnection();
+
+              // If we have cached exams, filter them immediately
+              if (_allExams.isNotEmpty && _freeExamData != null) {
+                debugPrint(
+                  '🔄 Language changed: Filtering cached exams immediately',
+                );
+                debugPrint(
+                  '📱 _allExams has ${_allExams.length} exams before filtering',
+                );
+                // Log exams by type for debugging
+                final Map<String, int> examsByTypeCount = {};
+                for (final exam in _allExams) {
+                  String type = exam.examType?.toLowerCase() ?? 'english';
+                  if (exam.examType == null) {
+                    final titleLower = exam.title.toLowerCase();
+                    if (titleLower.contains('kiny') ||
+                        titleLower.contains('kinyarwanda')) {
+                      type = 'kinyarwanda';
+                    } else if (titleLower.contains('french') ||
+                        titleLower.contains('français')) {
+                      type = 'french';
+                    }
+                  }
+                  examsByTypeCount[type] = (examsByTypeCount[type] ?? 0) + 1;
+                }
+                for (final entry in examsByTypeCount.entries) {
+                  debugPrint(
+                    '📱 _allExams: ${entry.value} exams of type "${entry.key}"',
+                  );
+                }
+                _filterExamsClientSide();
+
+                // Only reload from source if online (to get latest data)
+                // If offline, don't reload because it will overwrite cache with limited offline data
+                if (hasInternet) {
+                  debugPrint('🌐 Online: Reloading from API in background');
+                  _loadFreeExams(forceReload: true);
+                } else {
+                  debugPrint(
+                    '📱 Offline: Using cached exams, not reloading from DB',
+                  );
+                }
+              } else {
+                // No cached exams, reload from source (API if online, DB if offline)
+                await _loadFreeExams(forceReload: true);
+              }
             },
             icon: const Icon(Icons.arrow_drop_down, color: AppColors.primary),
             dropdownColor: AppColors.white,
@@ -825,12 +1132,89 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     );
   }
 
+  Widget _buildSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.grey200, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Search exams by title, type or language...',
+          hintStyle: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.grey500,
+            fontSize: 14.sp,
+          ),
+          prefixIcon: Icon(Icons.search, color: AppColors.grey600, size: 24.sp),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: Icon(
+                    Icons.clear,
+                    color: AppColors.grey600,
+                    size: 20.sp,
+                  ),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchQuery = '';
+                    });
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 16.w,
+            vertical: 12.h,
+          ),
+        ),
+        style: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.grey800,
+          fontSize: 14.sp,
+        ),
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
+      ),
+    );
+  }
+
   List<Widget> _buildExamsByType() {
     final l10n = AppLocalizations.of(context);
 
-    // Use exams already filtered by _filterExamsClientSide
-    // No need to filter again as they're already filtered by selected language
-    final filteredExams = _freeExamData!.exams;
+    // Get exams filtered by language (from _filterExamsClientSide)
+    var filteredExams = _freeExamData!.exams;
+
+    // Apply search filter if search query is not empty
+    if (_searchQuery.isNotEmpty) {
+      final queryLower = _searchQuery.toLowerCase();
+      filteredExams = filteredExams.where((exam) {
+        // Search in title
+        final titleMatch = exam.title.toLowerCase().contains(queryLower);
+
+        // Search in exam type
+        final typeMatch =
+            exam.examType?.toLowerCase().contains(queryLower) ?? false;
+
+        // Search in language name (map exam type to language name)
+        final languageName = _mapExamTypeToLanguageName(
+          exam.examType?.toLowerCase() ?? 'english',
+        );
+        final languageMatch = languageName.toLowerCase().contains(queryLower);
+
+        return titleMatch || typeMatch || languageMatch;
+      }).toList();
+    }
 
     if (filteredExams.isEmpty) {
       return [
@@ -911,7 +1295,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         color: AppColors.white,
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: Colors.amber.withValues(alpha: 0.2),
+          color: AppColors.primary.withValues(alpha: 0.2),
           width: 1,
         ),
         boxShadow: [
@@ -929,81 +1313,9 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Exam Image
+            // Exam Image - use cached path if available
             if (imageUrl != null)
-              FutureBuilder<String>(
-                future: ImageCacheService.instance.getImagePath(imageUrl),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                    final imagePath = snapshot.data!;
-                    final isLocalFile = !imagePath.startsWith('http');
-
-                    if (isLocalFile) {
-                      // Check if file exists
-                      return FutureBuilder<bool>(
-                        future: File(
-                          imagePath,
-                        ).exists().catchError((e) => false),
-                        builder: (context, fileSnapshot) {
-                          if (fileSnapshot.hasData &&
-                              fileSnapshot.data == true) {
-                            // Image is cached, load from file
-                            return ClipRRect(
-                              borderRadius: BorderRadius.circular(8.r),
-                              child: Image.file(
-                                File(imagePath),
-                                width: double.infinity,
-                                height: 85.h,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return _buildImagePlaceholder();
-                                },
-                              ),
-                            );
-                          } else {
-                            // File doesn't exist, try network if online
-                            if (!_isOffline) {
-                              return ClipRRect(
-                                borderRadius: BorderRadius.circular(8.r),
-                                child: Image.network(
-                                  imageUrl,
-                                  width: double.infinity,
-                                  height: 85.h,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return _buildImagePlaceholder();
-                                  },
-                                ),
-                              );
-                            } else {
-                              return _buildImagePlaceholder();
-                            }
-                          }
-                        },
-                      );
-                    } else {
-                      // Network URL
-                      if (_isOffline) {
-                        return _buildImagePlaceholder();
-                      }
-                      return ClipRRect(
-                        borderRadius: BorderRadius.circular(8.r),
-                        child: Image.network(
-                          imagePath,
-                          width: double.infinity,
-                          height: 85.h,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return _buildImagePlaceholder();
-                          },
-                        ),
-                      );
-                    }
-                  }
-                  // Loading or no data
-                  return _buildImagePlaceholder();
-                },
-              )
+              _buildExamImage(imageUrl)
             else
               _buildImagePlaceholder(),
             SizedBox(height: 6.h),
@@ -1076,8 +1388,8 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               child: ElevatedButton(
                 onPressed: () => _startExam(exam),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.grey800,
+                  backgroundColor: AppColors.primaryLight,
+                  foregroundColor: AppColors.white,
                   padding: EdgeInsets.symmetric(vertical: 8.h),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.r),
@@ -1282,6 +1594,67 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
             PaymentInstructionsScreen(cachedInstructions: paymentInstructions),
       ),
     );
+  }
+
+  Widget _buildExamImage(String imageUrl) {
+    // Check if we have cached path
+    final cachedPath = _imagePathCache[imageUrl];
+
+    if (cachedPath != null && cachedPath.isNotEmpty) {
+      final isLocalFile = !cachedPath.startsWith('http');
+
+      if (isLocalFile) {
+        // Use cached local file
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(8.r),
+          child: Image.file(
+            File(cachedPath),
+            width: double.infinity,
+            height: 85.h,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return _buildImagePlaceholder();
+            },
+          ),
+        );
+      } else {
+        // Network URL from cache
+        if (_isOffline) {
+          return _buildImagePlaceholder();
+        }
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(8.r),
+          child: Image.network(
+            cachedPath,
+            width: double.infinity,
+            height: 85.h,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return _buildImagePlaceholder();
+            },
+          ),
+        );
+      }
+    } else {
+      // Path not yet cached, try to load directly
+      if (_isOffline) {
+        // Offline and not cached, show placeholder
+        return _buildImagePlaceholder();
+      }
+      // Online, try network image
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8.r),
+        child: Image.network(
+          imageUrl,
+          width: double.infinity,
+          height: 85.h,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return _buildImagePlaceholder();
+          },
+        ),
+      );
+    }
   }
 
   Widget _buildImagePlaceholder() {

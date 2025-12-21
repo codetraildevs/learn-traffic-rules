@@ -404,7 +404,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen>
           );
         }
       } else {
-        throw Exception(response['message'] ?? 'Failed to save preferences');
+        throw Exception(response['message'] ?? l10n.failedToSavePreferences);
       }
     } catch (e) {
       if (mounted) {

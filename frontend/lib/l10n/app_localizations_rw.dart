@@ -1,3 +1,5 @@
+import 'package:learn_traffic_rules/core/constants/app_constants.dart';
+
 import 'app_localizations.dart';
 
 class AppLocalizationsRw extends AppLocalizations {
@@ -162,6 +164,31 @@ class AppLocalizationsRw extends AppLocalizations {
 
   @override
   String get french => 'Igifaransa';
+
+  @override
+  String get appTheme => 'Ishusho';
+
+  @override
+  String get systemDefault => 'Sisitemu Mburabuzi';
+
+  @override
+  String get lightTheme => 'Umweru';
+
+  @override
+  String get darkTheme => 'Umukara';
+
+  @override
+  String get followDeviceTheme => 'Kurikira ishusho ry\'igikoresho';
+
+  @override
+  String get alwaysUseLightTheme => 'Gukoresha ishusho ry\'umweru buri gihe';
+
+  @override
+  String get alwaysUseDarkTheme => 'Gukoresha ishusho ry\'umukara buri gihe';
+
+  @override
+  String themeChangedTo(String themeName) =>
+      'Ishusho ryahindutse kuri $themeName';
 
   @override
   String get disclaimer => 'Icyemezo';
@@ -396,7 +423,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get cancelPayment => 'Hagarika Kwishyura';
 
   @override
-  String get dialMoMo => 'Ishyira kuri MoMo';
+  String get dialMoMo => 'Ishyura kuri MoMo';
 
   @override
   String get contactAlexis => 'Andikira Alexis';
@@ -884,7 +911,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get startLearning => 'Tangira Kwiga';
 
   @override
-  String get getAccessCode => 'Bona kode yo Kwinjira';
+  String get getAccessCode => 'Saba gufungurirwa ibizamini';
 
   @override
   String get adminActions => 'Ibikorwa by\'adimini';
@@ -945,13 +972,13 @@ class AppLocalizationsRw extends AppLocalizations {
   String get achievements => 'Intsinzi';
 
   @override
-  String get availableExams => 'Ibizamini Bihari';
+  String get availableExams => 'Ibizamini Bibazwa/Babaza';
 
   @override
   String get viewAll => 'Reba yose';
 
   @override
-  String get noExamsAvailable => 'Nta bizamini bihari birajyamo vuba';
+  String get noExamsAvailable => 'Nta bizamini bihari';
 
   @override
   String get noCoursesAvailable => 'Nta amasomo ahari';
@@ -960,10 +987,10 @@ class AppLocalizationsRw extends AppLocalizations {
   String get errorLoadingCourses => 'Ikosa mu kuzana amasomo:';
 
   @override
-  String get lessons => 'amasomo';
+  String get lessons => 'Ishuri online';
 
   @override
-  String lessonsCount(int count) => 'Amashuri $count';
+  String lessonsCount(int count) => 'Amasomo $count';
 
   @override
   String get recentActivity => 'Ibikorwa bya vuba';
@@ -972,7 +999,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get noRecentActivity => 'Nta bikorwa bya vuba';
 
   @override
-  String get noExamAttemptsRecordedYet => 'Nta inshuro zakozwe ku bizamini';
+  String get noExamAttemptsRecordedYet => 'Nta inshuro zakozwe ku kizamini';
 
   @override
   String get startTakingExamsToSeeYourProgressHere =>
@@ -1005,7 +1032,7 @@ class AppLocalizationsRw extends AppLocalizations {
 
   @override
   String get viewAndManageYourProfileInformation =>
-      'Reba kandi ucunge amakuru yawe ya profili yawe';
+      'Reba kandi ucunge amakuru ya profili yawe';
 
   @override
   String get manageYourNotificationPreferences => 'Gucunga amakuru yawe';
@@ -1044,7 +1071,7 @@ class AppLocalizationsRw extends AppLocalizations {
 
   @override
   String get getHelpAndContactSupport =>
-      'Bona ubufasha kandi uhamagare abagufasha';
+      'Aka ubufasha uhamagara cg utwandikira';
 
   @override
   String get deleteAccount => 'Gusiba Konti';
@@ -1454,7 +1481,7 @@ class AppLocalizationsRw extends AppLocalizations {
 
   @override
   String get toPayViaMoMoDialThisCode =>
-      'Kugira ngo wishyure ukoresheje MoMo, hamagare code iyi';
+      'Kugira ngo wishyure ukoresheje MoMo, kanda  iyi kode ${AppConstants.paymentCode} $amount #';
 
   @override
   String get afterPaymentContactAdminToVerify =>
@@ -1622,13 +1649,13 @@ class AppLocalizationsRw extends AppLocalizations {
       'Amabwiriza y\'ishyura ntiboneka nta internet. Nyamuneka wihujwe na internet kugira ngo urebe gahunda z\'ishyura.';
 
   @override
-  String get howToGetFullAccess => 'Uko Wabona Kwinjira Buzuye';
+  String get howToGetFullAccess => 'Uko Wasaba gufungurirwa ibizamini';
 
   @override
   String get chooseAPlan => 'Hitamo Gahunda';
 
   @override
-  String get makePayment => 'Wishyure';
+  String get makePayment => 'Kwishyura';
 
   @override
   String get chooseYourPlan => 'Hitamo Gahunda Yawe';

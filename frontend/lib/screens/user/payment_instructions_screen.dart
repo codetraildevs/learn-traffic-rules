@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:learn_traffic_rules/core/constants/app_constants.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -180,7 +181,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -204,7 +205,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildErrorWidget() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     // Check if error is due to no internet
     final isNetworkError =
         _error != null &&
@@ -259,27 +260,19 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
     if (_paymentData == null) return const SizedBox();
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(4.w),
+      padding: EdgeInsets.all(16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-          //_buildHeader(),
-          SizedBox(height: 8.h),
-
-          // Quick Access to Free Exams
-          // _buildQuickAccessSection(),
-          SizedBox(height: 8.h),
-
           // Simplified Payment Steps
           _buildSimplifiedPaymentSteps(),
 
-          SizedBox(height: 8.h),
+          SizedBox(height: 24.h),
 
           // Payment Plans
           _buildPaymentTiers(),
 
-          SizedBox(height: 8.h),
+          SizedBox(height: 24.h),
 
           // Contact Admin
           _buildContactInfo(),
@@ -289,181 +282,42 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
     );
   }
 
-  // Widget _buildHeader() {
-  //   return Container(
-  //     padding: EdgeInsets.all(8.w),
-  //     decoration: BoxDecoration(
-  //       gradient: const LinearGradient(
-  //         colors: [AppColors.primary, AppColors.secondary],
-  //         begin: Alignment.topLeft,
-  //         end: Alignment.bottomRight,
-  //       ),
-  //       borderRadius: BorderRadius.circular(8.r),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: AppColors.primary.withValues(alpha: 0.1),
-  //           blurRadius: 4,
-  //           offset: const Offset(0, 2),
-  //         ),
-  //       ],
-  //     ),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         Row(
-  //           children: [
-  //             Icon(Icons.star, color: Colors.white, size: 18.w),
-  //             SizedBox(width: 4.w),
-  //             // Expanded(
-  //             //   child: Text(
-  //             //     _paymentData!.title,
-  //             //     style: TextStyle(
-  //             //       fontSize: 14.sp,
-  //             //       fontWeight: FontWeight.bold,
-  //             //       color: Colors.white,
-  //             //     ),
-  //             //   ),
-  //             // ),
-  //             // Add a visible indicator that changes are applied
-  //             // Container(
-  //             //   padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-  //             //   decoration: BoxDecoration(
-  //             //     color: Colors.orange,
-  //             //     borderRadius: BorderRadius.circular(4.r),
-  //             //   ),
-  //             //   child: Text(
-  //             //     'OPTIMIZED',
-  //             //     style: TextStyle(
-  //             //       fontSize: 8.sp,
-  //             //       fontWeight: FontWeight.bold,
-  //             //       color: Colors.white,
-  //             //     ),
-  //             //   ),
-  //             // ),
-  //           ],
-  //         ),
-  //         SizedBox(height: 4.h),
-  //         Text(
-  //           _paymentData!.description,
-  //           style: TextStyle(fontSize: 10.sp, color: Colors.white70),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  // Widget _buildQuickAccessSection() {
-  //   return Container(
-  //     padding: EdgeInsets.all(12.w),
-  //     decoration: BoxDecoration(
-  //       gradient: const LinearGradient(
-  //         colors: [AppColors.primary, AppColors.secondary],
-  //         begin: Alignment.topLeft,
-  //         end: Alignment.bottomRight,
-  //       ),
-  //       borderRadius: BorderRadius.circular(10.r),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: AppColors.secondary.withValues(alpha: 0.15),
-  //           blurRadius: 6,
-  //           offset: const Offset(0, 3),
-  //         ),
-  //       ],
-  //     ),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         Row(
-  //           children: [
-  //             Icon(Icons.school, color: Colors.white, size: 20.w),
-  //             SizedBox(width: 6.w),
-  //             Text(
-  //               'Start Learning Now',
-  //               style: TextStyle(
-  //                 fontSize: 16.sp,
-  //                 fontWeight: FontWeight.bold,
-  //                 color: Colors.white,
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //         SizedBox(height: 8.h),
-  //         Text(
-  //           'You can start with FREE practice exams while you get your access code!',
-  //           style: TextStyle(
-  //             fontSize: 12.sp,
-  //             color: Colors.white70,
-  //             height: 1.2,
-  //           ),
-  //         ),
-  //         SizedBox(height: 12.h),
-  //         Row(
-  //           children: [
-  //             Expanded(
-  //               child: ElevatedButton.icon(
-  //                 onPressed: () {
-  //                   // Navigate to available exams
-  //                   Navigator.push(
-  //                     context,
-  //                     MaterialPageRoute(
-  //                       builder: (context) => const AvailableExamsScreen(),
-  //                     ),
-  //                   );
-  //                 },
-  //                 icon: Icon(Icons.quiz, size: 14.w),
-  //                 label: const Text('Take Free Exams'),
-  //                 style: ElevatedButton.styleFrom(
-  //                   backgroundColor: Colors.white,
-  //                   foregroundColor: const Color(0xFF2196F3),
-  //                   padding: EdgeInsets.symmetric(vertical: 8.h),
-  //                   shape: RoundedRectangleBorder(
-  //                     borderRadius: BorderRadius.circular(6.r),
-  //                   ),
-  //                 ),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   Widget _buildSimplifiedPaymentSteps() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           l10n.howToGetFullAccess,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 16.sp,
-
+          style: AppTextStyles.heading3.copyWith(
+            fontSize: 18.sp,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
+            color: AppColors.grey800,
           ),
         ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 16.h),
         _buildSimpleStepItem(
           '1',
           l10n.chooseAPlan,
-          'Select from 1 Month =31 days, 3 Months = 93 days, or 6 Months = 186 days',
+          l10n.chooseYourPlan,
           Icons.credit_card,
+          AppColors.primary,
         ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 12.h),
         _buildSimpleStepItem(
           '2',
           l10n.makePayment,
-          'Send money via MoMo using the payment code:329494  after selecting a plan by dialing *182*8*1*329494*FRW#',
+          l10n.toPayViaMoMoDialThisCode,
           Icons.payment,
+          AppColors.success,
         ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 12.h),
         _buildSimpleStepItem(
           '3',
           l10n.getAccessCode,
-          'Contact admin (Alexis:0788659575) or whatsapp (Alexis:0788659575) if exams access is not granted after payment in 5-10 minutes',
+          l10n.afterPaymentContactAdminToVerify,
           Icons.vpn_key,
+          AppColors.warning,
         ),
       ],
     );
@@ -474,35 +328,40 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
     String title,
     String description,
     IconData icon,
+    Color iconColor,
   ) {
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: Colors.grey[200]!),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            blurRadius: 3,
-            offset: const Offset(0, 1),
+            color: AppColors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 32.w,
             height: 32.w,
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: iconColor,
               borderRadius: BorderRadius.circular(16.r),
             ),
             child: Center(
               child: Text(
                 number,
-                style: TextStyle(
-                  color: Colors.white,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 14.sp,
                 ),
@@ -510,28 +369,27 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
             ),
           ),
           SizedBox(width: 12.w),
-          Icon(icon, size: 20.w, color: AppColors.primary),
-          SizedBox(width: 8.w),
+          Icon(icon, size: 20.sp, color: iconColor),
+          SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[800],
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.grey800,
                   ),
                 ),
-                SizedBox(height: 2.h),
+                SizedBox(height: 4.h),
                 Text(
                   description,
-                  style: TextStyle(
+                  style: AppTextStyles.bodyMedium.copyWith(
                     fontSize: 12.sp,
-                    color: Colors.grey[600],
-                    height: 1.2,
-                    fontStyle: FontStyle.italic,
+                    color: AppColors.grey600,
+                    height: 1.4,
                   ),
                 ),
               ],
@@ -543,16 +401,16 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildPaymentTiers() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           l10n.chooseYourPlan,
-          style: TextStyle(
-            fontSize: 16.sp,
+          style: AppTextStyles.heading3.copyWith(
+            fontSize: 18.sp,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
+            color: AppColors.grey800,
           ),
         ),
         SizedBox(height: 16.h),
@@ -560,13 +418,29 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         if (_paymentData!.paymentTiers.isNotEmpty)
           ..._paymentData!.paymentTiers
               .take(3)
-              .map((tier) => _buildSimplePaymentTierCard(tier))
+              .map(
+                (tier) => Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: _buildSimplePaymentTierCard(tier),
+                ),
+              )
         else
-          Padding(
+          Container(
             padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
             child: Text(
-              'No payment plans available at the moment.',
-              style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+              l10n.noCoursesAvailable,
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontSize: 14.sp,
+                color: AppColors.grey600,
+              ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -575,25 +449,25 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildSimplePaymentTierCard(PaymentTier tier) {
+    final l10n = AppLocalizations.of(context);
     final isPopular = tier.amount == 1500; // 1 month plan
 
     return Container(
-      margin: EdgeInsets.only(bottom: 8.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: isPopular ? AppColors.primary : Colors.white,
-        borderRadius: BorderRadius.circular(10.r),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: isPopular ? AppColors.primary : Colors.grey[300]!,
+          color: isPopular
+              ? AppColors.primaryLight
+              : AppColors.primary.withValues(alpha: 0.2),
           width: isPopular ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: isPopular
-                ? AppColors.primary.withValues(alpha: 0.15)
-                : Colors.grey.withValues(alpha: 0.08),
-            blurRadius: 3,
-            offset: const Offset(0, 1),
+            color: AppColors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -601,39 +475,39 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
         children: [
           if (isPopular)
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: AppColors.secondary,
-                borderRadius: BorderRadius.circular(6.r),
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(
-                AppLocalizations.of(context)!.popular,
-                style: TextStyle(
+                l10n.popular,
+                style: AppTextStyles.caption.copyWith(
                   fontSize: 10.sp,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: AppColors.white,
                 ),
               ),
             ),
-          if (isPopular) SizedBox(width: 6.w),
+          if (isPopular) SizedBox(width: 8.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   tier.formattedAmount,
-                  style: TextStyle(
+                  style: AppTextStyles.heading3.copyWith(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.bold,
-                    color: isPopular ? Colors.white : Colors.grey[800],
+                    color: AppColors.grey800,
                   ),
                 ),
-                SizedBox(height: 2.h),
+                SizedBox(height: 4.h),
                 Text(
                   tier.durationText,
-                  style: TextStyle(
+                  style: AppTextStyles.bodyMedium.copyWith(
                     fontSize: 12.sp,
-                    color: isPopular ? Colors.white70 : Colors.grey[600],
+                    color: AppColors.grey600,
                   ),
                 ),
               ],
@@ -642,16 +516,21 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           ElevatedButton(
             onPressed: () => _selectPlan(tier),
             style: ElevatedButton.styleFrom(
-              backgroundColor: isPopular ? Colors.white : AppColors.primary,
-              foregroundColor: isPopular ? AppColors.primary : Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.white,
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6.r),
+                borderRadius: BorderRadius.circular(8.r),
               ),
+              elevation: 0,
             ),
             child: Text(
-              AppLocalizations.of(context)!.select,
-              style: TextStyle(fontSize: 12.sp),
+              l10n.select,
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.w600,
+                color: AppColors.white,
+              ),
             ),
           ),
         ],
@@ -660,27 +539,37 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   Widget _buildContactInfo() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Container(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: Colors.blue[50],
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.blue[200]!),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.contact_phone, color: AppColors.secondary, size: 20.w),
-              SizedBox(width: 6.w),
+              Icon(Icons.contact_phone, color: AppColors.primary, size: 20.sp),
+              SizedBox(width: 8.w),
               Text(
                 l10n.contactAdmin,
-                style: TextStyle(
+                style: AppTextStyles.heading3.copyWith(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.secondary,
+                  color: AppColors.grey800,
                 ),
               ),
             ],
@@ -688,48 +577,48 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           SizedBox(height: 12.h),
           Text(
             l10n.afterMakingPaymentContactAdmin,
-            style: TextStyle(
+            style: AppTextStyles.bodyMedium.copyWith(
               fontSize: 12.sp,
-              color: Colors.grey[700],
-              height: 1.3,
-              fontStyle: FontStyle.italic,
+              color: AppColors.grey600,
+              height: 1.4,
             ),
           ),
-          SizedBox(height: 12.h),
+          SizedBox(height: 16.h),
           Row(
             children: [
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // Always use the correct phone number
                     _makeCall('+250788659575');
                   },
-                  icon: Icon(Icons.phone, size: 16.w),
+                  icon: Icon(Icons.phone, size: 16.sp),
                   label: Text(l10n.call),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 10.h),
+                    foregroundColor: AppColors.white,
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.r),
                     ),
+                    elevation: 0,
                   ),
                 ),
               ),
-              SizedBox(width: 8.w),
+              SizedBox(width: 12.w),
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () =>
                       _openWhatsApp(_paymentData!.contactInfo.whatsapp),
-                  icon: Icon(Icons.chat, size: 16.w),
+                  icon: Icon(Icons.chat, size: 16.sp),
                   label: Text(l10n.whatsapp),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.secondary,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 10.h),
+                    backgroundColor: AppColors.success,
+                    foregroundColor: AppColors.white,
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.r),
                     ),
+                    elevation: 0,
                   ),
                 ),
               ),
@@ -741,7 +630,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   void _selectPlan(PaymentTier tier) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -755,7 +644,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
             ),
             SizedBox(height: 16.h),
             Text(
-              '${l10n.toPayViaMoMoDialThisCode} *182*8*1*329494*${tier.amount}#:',
+              '${l10n.toPayViaMoMoDialThisCode} ${AppConstants.paymentCode}${tier.amount}#',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 8.h),
@@ -770,7 +659,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      '*182*8*1*329494*${tier.amount}#',
+                      '${AppConstants.paymentCode}${tier.amount}#',
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.bold,
@@ -780,8 +669,9 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () =>
-                        _copyToClipboard('*182*8*1*329494*${tier.amount}#'),
+                    onPressed: () => _copyToClipboard(
+                      '${AppConstants.paymentCode}${tier.amount}#',
+                    ),
                     icon: Icon(Icons.copy, color: Colors.blue[600]),
                     tooltip: l10n.copyCode,
                   ),
@@ -912,7 +802,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '${AppLocalizations.of(context)!.couldNotLaunchPhoneApp} Number: $phoneNumber',
+            '${AppLocalizations.of(context).couldNotLaunchPhoneApp} Number: $phoneNumber',
           ),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 4),
@@ -977,16 +867,20 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(AppLocalizations.of(context)!.whatsappNotAvailableTryAlternatives),
+                  Text(
+                    AppLocalizations.of(
+                      context,
+                    ).whatsappNotAvailableTryAlternatives,
+                  ),
                   SizedBox(height: 4.h),
-                  Text('• ${AppLocalizations.of(context)!.call}: +250788659575'),
-                  Text('• WhatsApp Web: web.whatsapp.com'),
+                  Text('• ${AppLocalizations.of(context).call}: +250788659575'),
+                  const Text('• WhatsApp Web: web.whatsapp.com'),
                 ],
               ),
               backgroundColor: Colors.orange,
               duration: const Duration(seconds: 5),
               action: SnackBarAction(
-                label: AppLocalizations.of(context)!.callInstead,
+                label: AppLocalizations.of(context).callInstead,
                 textColor: Colors.white,
                 onPressed: () => ('+250788659575'),
               ),
@@ -1032,20 +926,20 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   }
 
   void _copyToClipboard(String text) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     await Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(l10n.codeCopiedToClipboard),
         backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
 
   void _dialMoMoPayment(int amount) async {
-    final usdCode = '*182*8*1*329494*$amount#';
+    final usdCode = '${AppConstants.paymentCode}$amount#';
     final Uri usdUri = Uri(scheme: 'tel', path: usdCode);
 
     if (await canLaunchUrl(usdUri)) {
@@ -1054,7 +948,9 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${AppLocalizations.of(context)!.couldNotLaunchPhoneAppPleaseDial} $usdCode'),
+          content: Text(
+            '${AppLocalizations.of(context).couldNotLaunchPhoneAppPleaseDial} $usdCode',
+          ),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 5),
         ),

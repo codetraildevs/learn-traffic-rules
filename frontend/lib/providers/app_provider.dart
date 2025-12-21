@@ -1,24 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/theme_service.dart';
 
 // Theme Mode Provider
+
 class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   ThemeModeNotifier() : super(ThemeMode.system) {
-    _loadThemeMode();
+    loadSavedThemeMode();
   }
 
-  Future<void> _loadThemeMode() async {
-    final prefs = await SharedPreferences.getInstance();
-    final themeIndex = prefs.getInt('theme_mode') ?? 0;
-    state = ThemeMode.values[themeIndex];
+  /// Load saved theme mode from storage
+  Future<void> loadSavedThemeMode() async {
+    try {
+      final savedThemeMode = await ThemeService.getSavedThemeMode();
+      state = savedThemeMode;
+      debugPrint('Theme mode loaded: $savedThemeMode');
+    } catch (e) {
+      debugPrint('Error loading saved theme mode: $e');
+      // Keep default theme (system)
+    }
   }
 
+  /// Set theme mode and save to storage
   Future<void> setThemeMode(ThemeMode mode) async {
-    state = mode;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('theme_mode', mode.index);
+    try {
+      await ThemeService.saveThemeMode(mode);
+      state = mode;
+      debugPrint('Theme mode changed to: $mode');
+    } catch (e) {
+      debugPrint('Error saving theme mode: $e');
+    }
   }
+
+  /// Get current theme mode
+  ThemeMode get currentThemeMode => state;
 }
 
 final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((

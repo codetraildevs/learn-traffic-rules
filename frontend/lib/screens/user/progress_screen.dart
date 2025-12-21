@@ -8,16 +8,13 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:learn_traffic_rules/core/constants/app_constants.dart';
 import 'package:learn_traffic_rules/core/theme/app_theme.dart';
 import 'package:learn_traffic_rules/screens/user/available_exams_screen.dart';
-import 'package:learn_traffic_rules/screens/user/exam_progress_screen.dart';
 import '../../models/exam_result_model.dart';
-import '../../models/exam_model.dart';
 import '../../services/exam_service.dart';
 import '../../services/offline_exam_service.dart';
 import '../../services/network_service.dart';
 import '../../services/exam_sync_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/app_localizations.dart';
-import 'exam_taking_screen.dart';
 
 class ProgressScreen extends ConsumerStatefulWidget {
   const ProgressScreen({super.key});
@@ -319,16 +316,16 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.grey50,
       appBar: AppBar(
         title: Text(
           l10n.myProgress,
-          style: TextStyle(
+          style: AppTextStyles.heading2.copyWith(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: AppColors.white,
           ),
         ),
         backgroundColor: AppColors.primary,
@@ -348,16 +345,16 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   Widget _buildLoadingView() {
     return const Center(
       child: CircularProgressIndicator(
-        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2E7D32)),
+        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
       ),
     );
   }
 
   Widget _buildErrorView() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return RefreshIndicator(
       onRefresh: _loadExamResults,
-      color: const Color(0xFF2E7D32),
+      color: AppColors.primary,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: SizedBox(
@@ -368,20 +365,27 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 80.w, color: Colors.red),
+                  Icon(
+                    Icons.error_outline,
+                    size: 80.sp,
+                    color: AppColors.error,
+                  ),
                   SizedBox(height: 24.h),
                   Text(
                     l10n.errorLoadingProgress,
-                    style: TextStyle(
+                    style: AppTextStyles.heading3.copyWith(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.bold,
-                      color: Colors.red,
+                      color: AppColors.error,
                     ),
                   ),
                   SizedBox(height: 12.h),
                   Text(
                     _error ?? l10n.unknownErrorOccurred,
-                    style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontSize: 14.sp,
+                      color: AppColors.grey600,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   if (_isOffline) ...[
@@ -389,25 +393,27 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                     Container(
                       padding: EdgeInsets.all(12.w),
                       decoration: BoxDecoration(
-                        color: Colors.orange[50],
+                        color: AppColors.white,
                         borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(color: Colors.orange[200]!),
+                        border: Border.all(
+                          color: AppColors.warning.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Icons.wifi_off,
-                            color: Colors.orange[700],
-                            size: 16.w,
+                            color: AppColors.warning,
+                            size: 16.sp,
                           ),
                           SizedBox(width: 8.w),
                           Flexible(
                             child: Text(
                               l10n.offlineModeShowingCachedResultsOnly,
-                              style: TextStyle(
+                              style: AppTextStyles.caption.copyWith(
                                 fontSize: 12.sp,
-                                color: Colors.orange[700],
+                                color: AppColors.grey600,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -427,12 +433,13 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                           icon: const Icon(Icons.refresh),
                           label: Text(l10n.retry),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2E7D32),
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(vertical: 16.h),
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: AppColors.white,
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.r),
+                              borderRadius: BorderRadius.circular(8.r),
                             ),
+                            elevation: 0,
                           ),
                         ),
                       ),
@@ -454,9 +461,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.primary,
                             side: const BorderSide(color: AppColors.primary),
-                            padding: EdgeInsets.symmetric(vertical: 16.h),
+                            padding: EdgeInsets.symmetric(vertical: 12.h),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.r),
+                              borderRadius: BorderRadius.circular(8.r),
                             ),
                           ),
                         ),
@@ -473,10 +480,10 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   Widget _buildEmptyView() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return RefreshIndicator(
       onRefresh: _loadExamResults,
-      color: const Color(0xFF2E7D32),
+      color: AppColors.primary,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         child: SizedBox(
@@ -490,35 +497,35 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                   children: [
                     // Progress tracking icon
                     Container(
-                      width: 120.w,
-                      height: 120.w,
+                      width: 100.w,
+                      height: 100.w,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(60.r),
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(50.r),
                       ),
                       child: Icon(
                         Icons.analytics_outlined,
-                        size: 60.w,
-                        color: const Color(0xFF2E7D32),
+                        size: 50.sp,
+                        color: AppColors.primary,
                       ),
                     ),
-                    SizedBox(height: 32.h),
+                    SizedBox(height: 24.h),
 
                     Text(
                       l10n.progressTracking,
-                      style: TextStyle(
+                      style: AppTextStyles.heading2.copyWith(
                         fontSize: 24.sp,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
+                        color: AppColors.grey800,
                       ),
                     ),
                     SizedBox(height: 12.h),
 
                     Text(
                       l10n.yourProgressAndAnalyticsWillAppearHere,
-                      style: TextStyle(
+                      style: AppTextStyles.bodyLarge.copyWith(
                         fontSize: 16.sp,
-                        color: Colors.grey[600],
+                        color: AppColors.grey600,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -526,102 +533,40 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
 
                     Text(
                       l10n.takeYourFirstExamToStartTrackingYourPerformance,
-                      style: TextStyle(
+                      style: AppTextStyles.bodyMedium.copyWith(
                         fontSize: 14.sp,
-                        color: Colors.grey[500],
+                        color: AppColors.grey500,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    SizedBox(height: 40.h),
-
-                    // Features preview
-                    Container(
-                      padding: EdgeInsets.all(20.w),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(16.r),
-                        border: Border.all(color: Colors.grey[200]!),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            l10n.whatYouWillSeeHere,
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                          SizedBox(height: 16.h),
-
-                          _buildFeaturePreview(
-                            icon: Icons.trending_up,
-                            title: l10n.performanceTrends,
-                            description: l10n.trackYourImprovementOverTime,
-                          ),
-                          SizedBox(height: 12.h),
-
-                          _buildFeaturePreview(
-                            icon: Icons.analytics,
-                            title: l10n.detailedAnalytics,
-                            description: l10n.seeYourStrengthsAndWeaknesses,
-                          ),
-                          SizedBox(height: 12.h),
-
-                          _buildFeaturePreview(
-                            icon: Icons.lightbulb,
-                            title: l10n.studyRecommendations,
-                            description: l10n.getPersonalizedStudyTips,
-                          ),
-                        ],
-                      ),
-                    ),
                     SizedBox(height: 32.h),
 
-                    // Action buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              // Navigate to exams tab
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const AvailableExamsScreen(),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.quiz),
-                            label: Text(l10n.startExam),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(vertical: 16.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
+                    // Action button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          // Navigate to exams tab
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const AvailableExamsScreen(),
                             ),
+                          );
+                        },
+                        icon: const Icon(Icons.quiz),
+                        label: Text(l10n.startExam),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.white,
+                          padding: EdgeInsets.symmetric(vertical: 14.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.r),
                           ),
+                          elevation: 0,
                         ),
-                        SizedBox(width: 16.w),
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: _loadExamResults,
-                            icon: const Icon(Icons.refresh),
-                            label: Text(l10n.retry),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.primary,
-                              side: const BorderSide(color: AppColors.primary),
-                              padding: EdgeInsets.symmetric(vertical: 16.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12.r),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
@@ -634,17 +579,27 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   Widget _buildOfflineBanner() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: Colors.orange[50],
-        borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: Colors.orange[200]!),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Icon(Icons.wifi_off, color: Colors.orange[700], size: 20.w),
+          Icon(Icons.wifi_off, color: AppColors.warning, size: 20.sp),
           SizedBox(width: 12.w),
           Expanded(
             child: Column(
@@ -652,15 +607,19 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
               children: [
                 Text(
                   l10n.offlineMode,
-                  style: TextStyle(
+                  style: AppTextStyles.bodyMedium.copyWith(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: Colors.orange[700],
+                    color: AppColors.grey800,
                   ),
                 ),
+                SizedBox(height: 2.h),
                 Text(
                   l10n.showingCachedResultsResultsWillSyncWhenInternetIsAvailable,
-                  style: TextStyle(fontSize: 12.sp, color: Colors.orange[600]),
+                  style: AppTextStyles.caption.copyWith(
+                    fontSize: 12.sp,
+                    color: AppColors.grey600,
+                  ),
                 ),
               ],
             ),
@@ -670,69 +629,20 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
     );
   }
 
-  Widget _buildFeaturePreview({
-    required IconData icon,
-    required String title,
-    required String description,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, color: const Color(0xFF2E7D32), size: 20.w),
-        SizedBox(width: 12.w),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[700],
-                ),
-              ),
-              Text(
-                description,
-                style: TextStyle(fontSize: 12.sp, color: Colors.grey[500]),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildProgressView() {
     return RefreshIndicator(
       onRefresh: _loadExamResults,
-      color: const Color(0xFF2E7D32),
+      color: AppColors.primary,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.all(20.w),
+        padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Offline/Sync Status Banner
-            if (_isOffline) _buildOfflineBanner(),
-            SizedBox(height: _isOffline ? 16.h : 0),
+            if (_isOffline) ...[_buildOfflineBanner(), SizedBox(height: 16.h)],
             // Performance Overview
             _buildPerformanceOverview(),
-            SizedBox(height: 24.h),
-
-            // Areas of Improvement
-            _buildAreasOfImprovement(),
-            SizedBox(height: 24.h),
-
-            // Performance Trends
-            _buildPerformanceTrends(),
-            SizedBox(height: 24.h),
-
-            // Category Performance
-            _buildCategoryPerformance(),
-            SizedBox(height: 24.h),
-
-            // Study Recommendations
-            _buildStudyRecommendations(),
             SizedBox(height: 24.h),
 
             // Recent Results
@@ -744,7 +654,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   Widget _buildPerformanceOverview() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     // Count unique exams (not total attempts)
     final uniqueExamIds = _examResults.map((result) => result.examId).toSet();
     final totalExams = uniqueExamIds.length;
@@ -756,87 +666,66 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
         .toSet();
     final passedExams = passedExamIds.length;
 
-    // final averageScore = _examResults.isNotEmpty
-    //     ? _examResults.map((result) => result.score).reduce((a, b) => a + b) /
-    //           _examResults.length
-    //     : 0.0;
     final totalTimeSpent = _examResults.isNotEmpty
         ? _examResults.map((result) => result.timeSpent).reduce((a, b) => a + b)
         : 0;
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.yourStatistics,
+          style: AppTextStyles.heading3.copyWith(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+            color: AppColors.grey800,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.yourStatistics,
-            style: TextStyle(
-              fontSize: 18.sp,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF2E7D32),
+        ),
+        SizedBox(height: 16.h),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                icon: Icons.quiz,
+                label: l10n.totalExams,
+                value: '$totalExams',
+                color: AppColors.primary,
+              ),
             ),
-          ),
-          SizedBox(height: 20.h),
-
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  icon: Icons.quiz,
-                  label: l10n.totalExams,
-                  value: '$totalExams',
-                  color: const Color(0xFF2196F3),
-                ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: _buildStatCard(
+                icon: Icons.check_circle,
+                label: l10n.passed,
+                value: '$passedExams',
+                color: AppColors.success,
               ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: _buildStatCard(
-                  icon: Icons.check_circle,
-                  label: l10n.passed,
-                  value: '$passedExams',
-                  color: const Color(0xFF4CAF50),
-                ),
+            ),
+          ],
+        ),
+        SizedBox(height: 12.h),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                icon: Icons.trending_up,
+                label: l10n.averageScore,
+                value: '${_calculateAverageScore().toStringAsFixed(1)}%',
+                color: AppColors.warning,
               ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  icon: Icons.trending_up,
-                  label: l10n.averageScore,
-                  value: '${_calculateAverageScore().toStringAsFixed(1)}%',
-                  color: const Color(0xFFFF9800),
-                ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: _buildStatCard(
+                icon: Icons.timer,
+                label: l10n.totalTime,
+                value: _formatTime(totalTimeSpent),
+                color: AppColors.secondary,
               ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: _buildStatCard(
-                  icon: Icons.timer,
-                  label: l10n.totalTime,
-                  value: _formatTime(totalTimeSpent),
-                  color: const Color(0xFF9C27B0),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -849,17 +738,27 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 24.w),
+          Icon(icon, color: color, size: 24.sp),
           SizedBox(height: 8.h),
           Text(
             value,
-            style: TextStyle(
+            style: AppTextStyles.heading3.copyWith(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
               color: color,
@@ -868,9 +767,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
           SizedBox(height: 4.h),
           Text(
             label,
-            style: TextStyle(
+            style: AppTextStyles.caption.copyWith(
               fontSize: 12.sp,
-              color: Colors.grey[600],
+              color: AppColors.grey600,
               fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,
@@ -881,16 +780,16 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   Widget _buildRecentResults() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           l10n.recentResults,
-          style: TextStyle(
+          style: AppTextStyles.heading3.copyWith(
             fontSize: 18.sp,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFF2E7D32),
+            color: AppColors.grey800,
           ),
         ),
         SizedBox(height: 16.h),
@@ -901,17 +800,21 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   }
 
   Widget _buildResultCard(ExamResultData result) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: AppColors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -919,104 +822,119 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
         onTap: () => _viewExamResult(result),
         borderRadius: BorderRadius.circular(12.r),
         child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: Row(
+          padding: EdgeInsets.all(12.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Score Circle
-              Container(
-                width: 50.w,
-                height: 50.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: result.passed
-                      ? const Color(0xFF4CAF50).withValues(alpha: 0.1)
-                      : const Color(0xFFFF5722).withValues(alpha: 0.1),
-                  border: Border.all(
-                    color: result.passed
-                        ? const Color(0xFF4CAF50)
-                        : const Color(0xFFFF5722),
-                    width: 2,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    '${result.score}%',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.bold,
-                      color: result.passed
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFFFF5722),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 12.w),
-
-              // Exam Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      result.exam?.title ?? l10n.examResult,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      l10n.correctAnswersCount(
-                        result.correctAnswers,
-                        result.questionResults?.length ?? 0,
-                      ),
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      _formatDateTime(result.submittedAt),
-                      style: TextStyle(
-                        fontSize: 11.sp,
-                        color: Colors.grey[500],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Status and Action
-              Column(
+              Row(
                 children: [
+                  // Score Badge
                   Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 4.h,
+                      horizontal: 12.w,
+                      vertical: 6.h,
                     ),
                     decoration: BoxDecoration(
                       color: result.passed
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFFFF5722),
-                      borderRadius: BorderRadius.circular(12.r),
+                          ? AppColors.success
+                          : AppColors.error,
+                      borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Text(
-                      result.passed ? l10n.passed : l10n.failed,
-                      style: TextStyle(
-                        fontSize: 10.sp,
+                      '${result.score}%',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontSize: 14.sp,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: AppColors.white,
                       ),
                     ),
                   ),
-                  SizedBox(height: 8.h),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      result.exam?.title ?? l10n.examResult,
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        fontSize: 15.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.grey800,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              Row(
+                children: [
                   Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16.w,
-                    color: Colors.grey[400],
+                    Icons.check_circle,
+                    size: 14.sp,
+                    color: AppColors.success,
+                  ),
+                  SizedBox(width: 4.w),
+                  Text(
+                    l10n.correctAnswersCount(
+                      result.correctAnswers,
+                      result.questionResults?.length ?? result.totalQuestions,
+                    ),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontSize: 12.sp,
+                      color: AppColors.grey600,
+                    ),
+                  ),
+                  SizedBox(width: 12.w),
+                  Icon(
+                    Icons.timer_outlined,
+                    size: 14.sp,
+                    color: AppColors.grey600,
+                  ),
+                  SizedBox(width: 4.w),
+                  Text(
+                    _formatTime(result.timeSpent),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontSize: 12.sp,
+                      color: AppColors.grey600,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 6.h),
+              Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today,
+                    size: 12.sp,
+                    color: AppColors.grey500,
+                  ),
+                  SizedBox(width: 4.w),
+                  Text(
+                    _formatDateTime(result.submittedAt),
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 11.sp,
+                      color: AppColors.grey500,
+                    ),
+                  ),
+                  const Spacer(),
+                  Row(
+                    children: [
+                      Text(
+                        result.passed ? l10n.passed : l10n.failed,
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600,
+                          color: result.passed
+                              ? AppColors.success
+                              : AppColors.error,
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 12.sp,
+                        color: AppColors.grey400,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -1061,708 +979,6 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
     if (_examResults.isEmpty) return 0.0;
     return _examResults.map((result) => result.score).reduce((a, b) => a + b) /
         _examResults.length;
-  }
-
-  // ==================== NEW COMPREHENSIVE ANALYTICS METHODS ====================
-
-  Widget _buildAreasOfImprovement() {
-    final l10n = AppLocalizations.of(context)!;
-    if (_examResults.isEmpty) return const SizedBox.shrink();
-
-    // Get unique failed results (most recent attempt for each exam)
-    final failedResults = <String, ExamResultData>{};
-    for (final result in _examResults.where((result) => !result.passed)) {
-      if (!failedResults.containsKey(result.examId) ||
-          result.submittedAt.isAfter(
-            failedResults[result.examId]!.submittedAt,
-          )) {
-        failedResults[result.examId] = result;
-      }
-    }
-    final uniqueFailedResults = failedResults.values.toList();
-
-    // Get unique low score results (most recent attempt for each exam)
-    final lowScoreResults = <String, ExamResultData>{};
-    for (final result in _examResults.where((result) => result.score < 70)) {
-      if (!lowScoreResults.containsKey(result.examId) ||
-          result.submittedAt.isAfter(
-            lowScoreResults[result.examId]!.submittedAt,
-          )) {
-        lowScoreResults[result.examId] = result;
-      }
-    }
-    final uniqueLowScoreResults = lowScoreResults.values.toList();
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.trending_down, color: Colors.red[600], size: 24.w),
-              SizedBox(width: 8.w),
-              Text(
-                l10n.areasOfImprovement,
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red[600],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-
-          if (uniqueFailedResults.isNotEmpty) ...[
-            _buildImprovementCard(
-              icon: Icons.warning,
-              title: l10n.failedExamsTitle,
-              description: l10n.youHaveFailedExams(
-                uniqueFailedResults.length,
-                uniqueFailedResults.length == 1 ? '' : 's',
-              ),
-              color: Colors.red,
-              action: l10n.retakeFailedExams,
-              onTap: () => _showFailedExams(uniqueFailedResults),
-            ),
-            SizedBox(height: 12.h),
-          ],
-
-          if (uniqueLowScoreResults.isNotEmpty) ...[
-            _buildImprovementCard(
-              icon: Icons.speed,
-              title: l10n.lowPerformance,
-              description: l10n.examsWithLowScores(
-                uniqueLowScoreResults.length,
-                uniqueLowScoreResults.length == 1 ? '' : 's',
-              ),
-              color: Colors.orange,
-              action: l10n.reviewTopics,
-              onTap: () => _showLowScoreExams(uniqueLowScoreResults),
-            ),
-            SizedBox(height: 12.h),
-          ],
-
-          _buildImprovementCard(
-            icon: Icons.analytics,
-            title: l10n.studyStrategy,
-            description: l10n.focusOnConsistentPractice,
-            color: Colors.blue,
-            action: l10n.studyTips,
-            onTap: _showStudyTips,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildImprovementCard({
-    required IconData icon,
-    required String title,
-    required String description,
-    required Color color,
-    required String action,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 24.w),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  description,
-                  style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          Flexible(
-            child: TextButton(
-              onPressed: onTap,
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(
-                action,
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPerformanceTrends() {
-    final l10n = AppLocalizations.of(context)!;
-    if (_examResults.length < 2) return const SizedBox.shrink();
-
-    // Sort results by date
-    final sortedResults = List<ExamResultData>.from(_examResults)
-      ..sort((a, b) => a.submittedAt.compareTo(b.submittedAt));
-
-    final recentScores = sortedResults
-        .take(5)
-        .map((result) => result.score)
-        .toList();
-    final isImproving =
-        recentScores.length >= 2 && recentScores.last > recentScores.first;
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                isImproving ? Icons.trending_up : Icons.trending_down,
-                color: isImproving ? Colors.green : Colors.red,
-                size: 24.w,
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                l10n.performanceTrend,
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: isImproving ? Colors.green[600] : Colors.red[600],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-
-          // Trend visualization
-          SizedBox(
-            height: 100.h,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: recentScores.asMap().entries.map((entry) {
-                final index = entry.key;
-                final score = entry.value;
-                final height = (score / 100) * 80.h;
-
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      width: 20.w,
-                      height: height,
-                      decoration: BoxDecoration(
-                        color: isImproving ? Colors.green : Colors.red,
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      '$score%',
-                      style: TextStyle(
-                        fontSize: 10.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                    Text(
-                      '${index + 1}',
-                      style: TextStyle(fontSize: 8.sp, color: Colors.grey[500]),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-
-          SizedBox(height: 12.h),
-          Text(
-            isImproving
-                ? l10n.greatJobPerformanceImproving
-                : l10n.performanceNeedsAttention,
-            style: TextStyle(
-              fontSize: 12.sp,
-              color: Colors.grey[600],
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryPerformance() {
-    final l10n = AppLocalizations.of(context)!;
-    // Get unique results first (most recent attempt for each exam)
-    final uniqueResults = <String, ExamResultData>{};
-    for (final result in _examResults) {
-      if (!uniqueResults.containsKey(result.examId) ||
-          result.submittedAt.isAfter(
-            uniqueResults[result.examId]!.submittedAt,
-          )) {
-        uniqueResults[result.examId] = result;
-      }
-    }
-
-    // Group unique results by category
-    final categories = <String, List<ExamResultData>>{};
-
-    for (final result in uniqueResults.values) {
-      // Use exam category from the result, or determine from exam title
-      String category = result.exam?.category ?? l10n.trafficRules;
-
-      // If no category in exam data, try to determine from title
-      if (category == l10n.trafficRules || category.isEmpty) {
-        final title = result.exam?.title ?? '';
-        if (title.toLowerCase().contains('sign') ||
-            title.toLowerCase().contains('signal')) {
-          category = l10n.roadSigns;
-        } else if (title.toLowerCase().contains('safety') ||
-            title.toLowerCase().contains('maintenance')) {
-          category = l10n.safety;
-        } else if (title.toLowerCase().contains('environment') ||
-            title.toLowerCase().contains('eco')) {
-          category = l10n.environment;
-        } else {
-          category = l10n.trafficRules;
-        }
-      }
-
-      categories[category] = categories[category] ?? [];
-      categories[category]!.add(result);
-    }
-
-    if (categories.isEmpty) return const SizedBox.shrink();
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.category, color: Colors.blue[600], size: 24.w),
-              SizedBox(width: 8.w),
-              Text(
-                l10n.categoryPerformance,
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue[600],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-
-          ...categories.entries.map((entry) {
-            final category = entry.key;
-            final results = entry.value;
-            final avgScore =
-                results.map((r) => r.score).reduce((a, b) => a + b) /
-                results.length;
-            final passedCount = results.where((r) => r.passed).length;
-
-            return Container(
-              margin: EdgeInsets.only(bottom: 12.h),
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: Colors.grey[200]!),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          category,
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[800],
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          l10n.examsCountWithPassed(
-                            results.length,
-                            results.length == 1 ? '' : 's',
-                            passedCount,
-                          ),
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 4.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: avgScore >= 70 ? Colors.green : Colors.red,
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Text(
-                      '${avgScore.toStringAsFixed(1)}%',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStudyRecommendations() {
-    final totalExams = _examResults.length;
-    final passedExams = _examResults.where((result) => result.passed).length;
-    final averageScore = totalExams > 0
-        ? _examResults.map((result) => result.score).reduce((a, b) => a + b) /
-              totalExams
-        : 0.0;
-
-    List<String> recommendations = [];
-
-    final l10n = AppLocalizations.of(context)!;
-    if (totalExams < 3) {
-      recommendations.add(l10n.takeMorePracticeExams);
-    }
-
-    if (averageScore < 70) {
-      recommendations.add(l10n.focusOnUnderstandingMaterial);
-    }
-
-    if (passedExams < totalExams * 0.7) {
-      recommendations.add(l10n.reviewFailedExamTopics);
-    }
-
-    if (averageScore >= 80) {
-      recommendations.add(l10n.excellentPerformanceConsiderAdvanced);
-    }
-
-    if (recommendations.isEmpty) {
-      recommendations.add(l10n.keepPracticingRegularly);
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.lightbulb, color: Colors.amber[600], size: 24.w),
-              SizedBox(width: 8.w),
-              Text(
-                l10n.studyRecommendations,
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.amber[600],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-
-          ...recommendations.map(
-            (recommendation) => Container(
-              margin: EdgeInsets.only(bottom: 8.h),
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: Colors.amber[50],
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: Colors.amber[200]!),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    color: Colors.amber[600],
-                    size: 16.w,
-                  ),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: Text(
-                      recommendation,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Helper methods for improvement actions
-  void _showFailedExams(List<ExamResultData> failedResults) {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.failedExams(failedResults.length)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: failedResults
-                .map(
-                  (result) => ListTile(
-                    title: Text(
-                      result.exam?.title ??
-                          '${l10n.exam} ${failedResults.indexOf(result) + 1}',
-                    ),
-                    subtitle: Text(l10n.latestScore(result.score)),
-                    trailing: TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _retakeExam(result.examId);
-                      },
-                      child: Text(l10n.retakeExam),
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.close),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showLowScoreExams(List<ExamResultData> lowScoreResults) {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.lowPerformanceExams(lowScoreResults.length)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: lowScoreResults
-                .map(
-                  (result) => ListTile(
-                    title: Text(
-                      result.exam?.title ??
-                          '${l10n.exam} ${lowScoreResults.indexOf(result) + 1}',
-                    ),
-                    subtitle: Text(l10n.latestScore(result.score)),
-                    trailing: TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _viewExamResult(result);
-                      },
-                      child: Text(l10n.viewAnswer),
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.close),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showStudyTips() {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.studyTips),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l10n.studyStrategies),
-              SizedBox(height: 8.h),
-              Text(l10n.reviewMaterialBeforeTakingExams),
-              Text(l10n.takePracticeExamsRegularly),
-              Text(l10n.focusOnWeakAreasIdentifiedInResults),
-              Text(l10n.useSpacedRepetitionForBetterRetention),
-              SizedBox(height: 16.h),
-              Text(l10n.examTips),
-              SizedBox(height: 8.h),
-              Text(l10n.readQuestionsCarefully),
-              Text(l10n.eliminateObviouslyWrongAnswers),
-              Text(l10n.manageYourTimeEffectively),
-              Text(l10n.stayCalmAndFocused),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.gotIt),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _retakeExam(String examId) async {
-    try {
-      // Find the exam data for this examId
-      final examResult = _examResults.firstWhere(
-        (result) => result.examId == examId,
-      );
-
-      // Create a proper Exam object from the exam result
-      final l10n = AppLocalizations.of(context)!;
-      final exam = Exam(
-        id: examResult.examId,
-        title: examResult.exam?.title ?? l10n.exam,
-        description: l10n.retakeThisExam,
-        category: examResult.exam?.category ?? 'General',
-        difficulty: examResult.exam?.difficulty ?? 'Medium',
-        duration: 20,
-        passingScore: 60,
-        isActive: true,
-      );
-
-      // Navigate to exam taking screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ExamTakingScreen(
-            exam: exam,
-            isFreeExam: true, // Allow retakes for free
-            onExamCompleted: (result) {
-              // Navigate to exam progress screen to show results
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ExamProgressScreen(
-                    exam: exam,
-                    examResult: result,
-                    isFreeExam: true,
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      );
-    } catch (e) {
-      debugPrint('Error navigating to retake exam: $e');
-      // Show error message
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.errorCouldNotStartExamRetake),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
 }
 
@@ -1828,148 +1044,179 @@ class _SecureDetailedAnswersModalState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20.r),
-          topRight: Radius.circular(20.r),
+    final l10n = AppLocalizations.of(context);
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20.r),
+            topRight: Radius.circular(20.r),
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          // Header with security warning
-          Container(
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2E7D32),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20.r),
-                topRight: Radius.circular(20.r),
+        child: Column(
+          children: [
+            // Handle bar
+            Container(
+              margin: EdgeInsets.only(top: 8.h),
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: AppColors.grey300,
+                borderRadius: BorderRadius.circular(2.r),
               ),
             ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      widget.examResult.passed
-                          ? Icons.check_circle
-                          : Icons.cancel,
-                      color: Colors.white,
-                      size: 24.sp,
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.examResult.exam?.title ?? l10n.examResult,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            l10n.scoreWithCorrectCount(
-                              widget.examResult.score,
-                              widget.examResult.correctAnswers,
-                              widget.examResult.questionResults?.length ?? 0,
-                            ),
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14.sp,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close, color: Colors.white),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8.h),
-                Container(
-                  padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(
-                    color: Colors.red[50],
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(color: Colors.red[200]!),
-                  ),
-                  child: Row(
+
+            // Header with security warning
+            Padding(
+              padding: EdgeInsets.all(20.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.security, color: Colors.red[600], size: 16.w),
+                      Icon(Icons.security, color: AppColors.error, size: 20.sp),
                       SizedBox(width: 8.w),
                       Expanded(
                         child: Text(
-                          l10n.screenshotsDisabledToProtectIntegrity,
-                          style: TextStyle(
+                          l10n.secureView,
+                          style: AppTextStyles.caption.copyWith(
                             fontSize: 12.sp,
-                            color: Colors.red[700],
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.error,
+                            letterSpacing: 1.0,
                           ),
                         ),
                       ),
+
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Icon(Icons.close, color: AppColors.grey600),
+                      ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
 
-          // Content
-          Expanded(
-            child:
-                widget.examResult.questionResults == null ||
-                    widget.examResult.questionResults!.isEmpty
-                ? _buildSecureNoResultsView()
-                : ListView.builder(
-                    padding: EdgeInsets.all(16.w),
-                    itemCount: widget.examResult.questionResults!.length,
-                    itemBuilder: (context, index) {
-                      final questionResult =
-                          widget.examResult.questionResults![index];
-                      return _buildSecureQuestionResultCard(
-                        questionResult,
-                        index + 1,
-                      );
-                    },
+                  SizedBox(height: 12.h),
+                  Text(
+                    l10n.detailedAnswersFor(
+                      widget.examResult.exam?.title ?? l10n.exam,
+                    ),
+                    style: AppTextStyles.heading3.copyWith(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.grey800,
+                    ),
                   ),
-          ),
-        ],
+                  SizedBox(height: 8.h),
+
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.warning,
+                          color: AppColors.error,
+                          size: 16.sp,
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            l10n.screenshotsAreDisabledToProtectAnswerIntegrity,
+                            style: AppTextStyles.caption.copyWith(
+                              fontSize: 12.sp,
+                              color: AppColors.error,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Content
+            Expanded(
+              child:
+                  widget.examResult.questionResults == null ||
+                      widget.examResult.questionResults!.isEmpty
+                  ? _buildSecureNoResultsView()
+                  : ListView.builder(
+                      controller: scrollController,
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      itemCount: widget.examResult.questionResults!.length,
+                      itemBuilder: (context, index) {
+                        final questionResult =
+                            widget.examResult.questionResults![index];
+                        return _buildSecureQuestionResultCard(
+                          questionResult,
+                          index + 1,
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildSecureNoResultsView() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.quiz_outlined, size: 64.sp, color: Colors.grey[400]),
-          SizedBox(height: 16.h),
-          Text(
-            l10n.noDetailedResultsAvailable,
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
+      child: Padding(
+        padding: EdgeInsets.all(40.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.quiz_outlined, size: 64.sp, color: AppColors.grey400),
+            SizedBox(height: 16.h),
+            Text(
+              l10n.noDetailedResultsAvailable,
+              style: AppTextStyles.heading3.copyWith(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: AppColors.grey600,
+              ),
             ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            l10n.questionBreakdownNotAvailable,
-            style: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            SizedBox(height: 8.h),
+            Text(
+              l10n.questionByQuestionResultsNotAvailable,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontSize: 14.sp,
+                color: AppColors.grey500,
+              ),
+            ),
+            SizedBox(height: 24.h),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: Icon(Icons.close, size: 20.sp),
+              label: Text(l10n.close),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.grey600,
+                foregroundColor: AppColors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1978,237 +1225,231 @@ class _SecureDetailedAnswersModalState
     QuestionResult questionResult,
     int questionNumber,
   ) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
+    final isCorrect = questionResult.isCorrect;
+
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isCorrect
+            ? AppColors.success.withValues(alpha: 0.1)
+            : AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: questionResult.isCorrect
-              ? const Color(0xFF4CAF50).withValues(alpha: 0.3)
-              : const Color(0xFFFF5722).withValues(alpha: 0.3),
-          width: 2,
+          color: isCorrect ? AppColors.success : AppColors.error,
+          width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Question header
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: 32.w,
-                height: 32.w,
-                decoration: BoxDecoration(
-                  color: questionResult.isCorrect
-                      ? const Color(0xFF4CAF50).withValues(alpha: 0.1)
-                      : const Color(0xFFFF5722).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16.r),
-                ),
-                child: Center(
-                  child: Text(
-                    '$questionNumber',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.bold,
-                      color: questionResult.isCorrect
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFFFF5722),
-                    ),
-                  ),
-                ),
-              ),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: questionResult.isCorrect
-                      ? const Color(0xFF4CAF50)
-                      : const Color(0xFFFF5722),
-                  borderRadius: BorderRadius.circular(12.r),
+                  color: isCorrect ? AppColors.success : AppColors.error,
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      questionResult.isCorrect ? Icons.check : Icons.close,
-                      color: Colors.white,
-                      size: 16.sp,
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      questionResult.isCorrect ? l10n.correct : l10n.wrong,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Q$questionNumber',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.white,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Icon(
+                isCorrect ? Icons.check_circle : Icons.cancel,
+                color: isCorrect ? AppColors.success : AppColors.error,
+                size: 20.sp,
+              ),
+              SizedBox(width: 8.w),
+              Text(
+                isCorrect ? l10n.correct : l10n.incorrect,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: isCorrect ? AppColors.success : AppColors.error,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${questionResult.points} point${questionResult.points > 1 ? 's' : ''}',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.grey600,
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
 
-          SizedBox(height: 8.h),
+          SizedBox(height: 12.h),
 
           // Question text
-          if (questionResult.questionText != null) ...[
+          if (questionResult.questionText != null &&
+              questionResult.questionText!.isNotEmpty)
             Container(
               width: double.infinity,
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: AppColors.primary.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: Colors.blue[200]!),
-              ),
-              child: Text(
-                questionResult.questionText!,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.blue[800],
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2),
                 ),
               ),
-            ),
-            SizedBox(height: 12.h),
-          ],
-
-          // Question image
-          if (questionResult.questionImgUrl != null &&
-              questionResult.questionImgUrl!.isNotEmpty) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8.r),
-              child: Image.network(
-                '${AppConstants.baseUrlImage}${questionResult.questionImgUrl!}',
-                width: double.infinity,
-                height: 120.h,
-                fit: BoxFit.contain,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return const Center(child: CircularProgressIndicator());
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: 120.h,
-                    color: Colors.grey[200],
-                    child: Center(
-                      child: Icon(
-                        Icons.image_not_supported,
-                        color: Colors.grey[400],
-                        size: 40.sp,
-                      ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Question:',
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
                     ),
-                  );
-                },
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    questionResult.questionText!,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontSize: 14.sp,
+                      color: AppColors.grey800,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
+
+          if (questionResult.questionText != null &&
+              questionResult.questionText!.isNotEmpty)
             SizedBox(height: 12.h),
-          ],
 
-          // Options
-          if (questionResult.options != null) ...[
-            ...questionResult.options!.entries.map((entry) {
-              final letter = entry.key;
-              final optionText = entry.value;
-              final isUserAnswer = questionResult.userAnswerLetter == letter;
-              final isCorrectAnswer =
-                  questionResult.correctAnswerLetter == letter;
-
-              return Container(
-                margin: EdgeInsets.only(bottom: 8.h),
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: isCorrectAnswer
-                      ? const Color(0xFF4CAF50).withValues(alpha: 0.1)
-                      : isUserAnswer && !questionResult.isCorrect
-                      ? const Color(0xFFFF5722).withValues(alpha: 0.1)
-                      : Colors.grey[50],
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(
-                    color: isCorrectAnswer
-                        ? const Color(0xFF4CAF50)
-                        : isUserAnswer && !questionResult.isCorrect
-                        ? const Color(0xFFFF5722)
-                        : Colors.grey[300]!,
-                    width:
-                        isCorrectAnswer ||
-                            (isUserAnswer && !questionResult.isCorrect)
-                        ? 2
-                        : 1,
-                  ),
+          // All options
+          if (questionResult.options != null &&
+              questionResult.options!.isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: AppColors.grey50,
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(
+                  color: AppColors.grey300.withValues(alpha: 0.5),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 24.w,
-                      height: 24.w,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Options:',
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.grey700,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  ...questionResult.options!.entries.map((entry) {
+                    final optionKey = entry.key;
+                    final optionText = entry.value;
+                    final isUserAnswer =
+                        questionResult.userAnswer == optionText;
+                    final isCorrectAnswer =
+                        questionResult.correctAnswer == optionText;
+
+                    return Container(
+                      margin: EdgeInsets.only(bottom: 6.h),
+                      padding: EdgeInsets.all(8.w),
                       decoration: BoxDecoration(
                         color: isCorrectAnswer
-                            ? const Color(0xFF4CAF50)
-                            : isUserAnswer && !questionResult.isCorrect
-                            ? const Color(0xFFFF5722)
-                            : Colors.grey[400],
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Center(
-                        child: Text(
-                          letter,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Text(
-                        optionText,
-                        style: TextStyle(
-                          fontSize: 14.sp,
+                            ? AppColors.success.withValues(alpha: 0.1)
+                            : isUserAnswer && !isCorrectAnswer
+                            ? AppColors.error.withValues(alpha: 0.1)
+                            : AppColors.grey100,
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(
                           color: isCorrectAnswer
-                              ? const Color(0xFF4CAF50)
-                              : isUserAnswer && !questionResult.isCorrect
-                              ? const Color(0xFFFF5722)
-                              : Colors.grey[700],
-                          fontWeight:
-                              isCorrectAnswer ||
-                                  (isUserAnswer && !questionResult.isCorrect)
-                              ? FontWeight.w600
-                              : FontWeight.normal,
+                              ? AppColors.success
+                              : isUserAnswer && !isCorrectAnswer
+                              ? AppColors.error
+                              : AppColors.grey300,
+                          width: 1,
                         ),
                       ),
-                    ),
-                    if (isCorrectAnswer) ...[
-                      Icon(
-                        Icons.check_circle,
-                        color: const Color(0xFF4CAF50),
-                        size: 20.sp,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 24.w,
+                            height: 24.w,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isCorrectAnswer
+                                  ? AppColors.success
+                                  : isUserAnswer && !isCorrectAnswer
+                                  ? AppColors.error
+                                  : AppColors.grey300,
+                            ),
+                            child: Center(
+                              child: Text(
+                                optionKey.toUpperCase(),
+                                style: AppTextStyles.caption.copyWith(
+                                  color:
+                                      isCorrectAnswer ||
+                                          (isUserAnswer && !isCorrectAnswer)
+                                      ? AppColors.white
+                                      : AppColors.grey600,
+                                  fontSize: 10.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: Text(
+                              optionText,
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                fontSize: 13.sp,
+                                color: isCorrectAnswer
+                                    ? AppColors.success
+                                    : isUserAnswer && !isCorrectAnswer
+                                    ? AppColors.error
+                                    : AppColors.grey700,
+                                fontWeight:
+                                    isCorrectAnswer ||
+                                        (isUserAnswer && !isCorrectAnswer)
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                          if (isCorrectAnswer)
+                            Icon(
+                              Icons.check_circle,
+                              color: AppColors.success,
+                              size: 16.sp,
+                            ),
+                          if (isUserAnswer && !isCorrectAnswer)
+                            Icon(
+                              Icons.cancel,
+                              color: AppColors.error,
+                              size: 16.sp,
+                            ),
+                        ],
                       ),
-                    ] else if (isUserAnswer && !questionResult.isCorrect) ...[
-                      Icon(
-                        Icons.cancel,
-                        color: const Color(0xFFFF5722),
-                        size: 20.sp,
-                      ),
-                    ],
-                  ],
-                ),
-              );
-            }),
-            SizedBox(height: 16.h),
-          ],
+                    );
+                  }),
+                ],
+              ),
+            ),
         ],
       ),
     );

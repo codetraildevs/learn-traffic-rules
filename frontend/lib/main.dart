@@ -132,6 +132,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         _initializeDisclaimerStatus(ref);
         _initializeLocale(ref);
         _initializeLanguageSelection(ref);
+        _initializeThemeMode(ref);
       });
     }
 
@@ -293,6 +294,17 @@ class _MyAppState extends ConsumerState<MyApp> {
       debugPrint('✅ Language selection initialized: $isSelected');
     } catch (e) {
       debugPrint('⚠️ Failed to initialize language selection: $e');
+    }
+  }
+
+  // Initialize theme mode on app start
+  Future<void> _initializeThemeMode(WidgetRef ref) async {
+    try {
+      final themeNotifier = ref.read(themeModeProvider.notifier);
+      await themeNotifier.loadSavedThemeMode();
+      debugPrint('✅ Theme mode initialized');
+    } catch (e) {
+      debugPrint('⚠️ Failed to initialize theme mode: $e');
     }
   }
 

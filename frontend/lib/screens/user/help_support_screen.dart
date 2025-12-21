@@ -25,12 +25,14 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
+      backgroundColor: AppColors.grey50,
       appBar: AppBar(
         title: Text(l10n.helpSupport),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.w),
@@ -42,71 +44,76 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
               padding: EdgeInsets.all(20.w),
               decoration: BoxDecoration(
                 color: AppColors.white,
-                borderRadius: BorderRadius.circular(16.r),
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                  width: 1,
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: AppColors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
-                    offset: const Offset(0, 5),
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: Column(
                 children: [
-                  Icon(
-                    Icons.help_outline,
-                    size: 48.sp,
-                    color: AppColors.primary,
+                  Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.help_outline,
+                      size: 40.sp,
+                      color: AppColors.primary,
+                    ),
                   ),
                   SizedBox(height: 16.h),
                   Text(
                     l10n.helpSupport,
-                    style: AppTextStyles.heading2.copyWith(fontSize: 24.sp),
+                    style: AppTextStyles.heading3.copyWith(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 8.h),
                   Text(
                     l10n.weAreHereToHelpYouSucceed,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey600,
+                      fontSize: 13.sp,
                     ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
 
-            SizedBox(height: 24.h),
+            SizedBox(height: 16.h),
 
             // Quick Help
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(20.w),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
+            _buildSectionCard(
+              title: l10n.quickHelp,
+              icon: Icons.help_rounded,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l10n.quickHelp,
-                    style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
-                  ),
-                  SizedBox(height: 16.h),
-
                   _buildHelpItem(
                     l10n.howToTakeAnExam,
                     l10n.learnTheBasicsOfTakingExams,
                     Icons.quiz,
-                    () => _showHelpDialog(
+                    () => _showHelpModal(
+                      context,
                       l10n.howToTakeAnExam,
                       _getExamHelpText(),
+                      Icons.quiz,
                     ),
                   ),
 
@@ -114,9 +121,11 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                     l10n.understandingYourProgress,
                     l10n.trackYourLearningJourney,
                     Icons.analytics,
-                    () => _showHelpDialog(
+                    () => _showHelpModal(
+                      context,
                       l10n.understandingYourProgress,
                       _getProgressHelpText(),
+                      Icons.analytics,
                     ),
                   ),
 
@@ -124,51 +133,25 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                     l10n.paymentAndAccessCodes,
                     l10n.learnAboutPaymentOptions,
                     Icons.payment,
-                    () => _showHelpDialog(
+                    () => _showHelpModal(
+                      context,
                       l10n.paymentAndAccessCodes,
                       _getPaymentHelpText(),
-                    ),
-                  ),
-
-                  _buildHelpItem(
-                    l10n.accountManagement,
-                    l10n.manageYourProfileAndSettings,
-                    Icons.person,
-                    () => _showHelpDialog(
-                      l10n.accountManagement,
-                      _getAccountHelpText(),
+                      Icons.payment,
                     ),
                   ),
                 ],
               ),
             ),
 
-            SizedBox(height: 24.h),
+            SizedBox(height: 16.h),
 
             // Contact Support
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(20.w),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
+            _buildSectionCard(
+              title: l10n.contactSupport,
+              icon: Icons.phone_rounded,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l10n.contactSupport,
-                    style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
-                  ),
-                  SizedBox(height: 16.h),
-
                   _buildContactItem(
                     l10n.emailSupport,
                     'engineers.devs@gmail.com',
@@ -189,106 +172,18 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                     Icons.chat,
                     () => _launchWhatsApp(),
                   ),
-
-                  _buildContactItem(
-                    l10n.liveChat,
-                    l10n.available247,
-                    Icons.chat_bubble,
-                    () => _showLiveChatDialog(),
-                  ),
                 ],
               ),
             ),
 
-            SizedBox(height: 24.h),
-
-            // Send Message
-            // Container(
-            //   width: double.infinity,
-            //   padding: EdgeInsets.all(20.w),
-            //   decoration: BoxDecoration(
-            //     color: AppColors.white,
-            //     borderRadius: BorderRadius.circular(16.r),
-            //     boxShadow: [
-            //       BoxShadow(
-            //         color: AppColors.black.withValues(alpha: 0.05),
-            //         blurRadius: 10,
-            //         offset: const Offset(0, 5),
-            //       ),
-            //     ],
-            //   ),
-            //   child: Column(
-            //     crossAxisAlignment: CrossAxisAlignment.start,
-            //     children: [
-            //       Text(
-            //         'Send us a Message',
-            //         style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
-            //       ),
-            //       SizedBox(height: 16.h),
-
-            //       TextField(
-            //         controller: _subjectController,
-            //         decoration: InputDecoration(
-            //           labelText: 'Subject',
-            //           hintText: 'What can we help you with?',
-            //           border: OutlineInputBorder(
-            //             borderRadius: BorderRadius.circular(8.r),
-            //           ),
-            //         ),
-            //       ),
-
-            //       SizedBox(height: 16.h),
-
-            //       TextField(
-            //         controller: _messageController,
-            //         maxLines: 4,
-            //         decoration: InputDecoration(
-            //           labelText: 'Message',
-            //           hintText: 'Describe your issue or question...',
-            //           border: OutlineInputBorder(
-            //             borderRadius: BorderRadius.circular(8.r),
-            //           ),
-            //         ),
-            //       ),
-
-            //       SizedBox(height: 20.h),
-
-            //       CustomButton(
-            //         text: 'Send Message',
-            //         onPressed: _sendMessage,
-            //         backgroundColor: AppColors.primary,
-            //         width: double.infinity,
-            //       ),
-            //     ],
-            //   ),
-            // ),
-
-            // SizedBox(height: 24.h),
+            SizedBox(height: 16.h),
 
             // FAQ
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(20.w),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
+            _buildSectionCard(
+              title: l10n.frequentlyAskedQuestions,
+              icon: Icons.question_answer_rounded,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l10n.frequentlyAskedQuestions,
-                    style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
-                  ),
-                  SizedBox(height: 16.h),
-
                   _buildFAQItem(
                     l10n.faqHowDoIResetMyProgress,
                     l10n.faqHowDoIResetMyProgressAnswer,
@@ -311,8 +206,60 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                 ],
               ),
             ),
+
+            SizedBox(height: 16.h),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: AppColors.primary, size: 22.sp),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTextStyles.heading3.copyWith(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          child,
+        ],
       ),
     );
   }
@@ -323,37 +270,51 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
     IconData icon,
     VoidCallback onTap,
   ) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
-      child: InkWell(
-        onTap: onTap,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12.r),
+      child: Container(
+        padding: EdgeInsets.all(12.w),
+        margin: EdgeInsets.only(bottom: 12.h),
+        decoration: BoxDecoration(
+          color: AppColors.grey50,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppColors.grey200, width: 1),
+        ),
         child: Row(
           children: [
             Container(
-              padding: EdgeInsets.all(8.w),
+              padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8.r),
+                borderRadius: BorderRadius.circular(10.r),
               ),
-              child: Icon(icon, color: AppColors.primary, size: 20.sp),
+              child: Icon(icon, color: AppColors.primary, size: 22.sp),
             ),
-            SizedBox(width: 16.w),
+            SizedBox(width: 12.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: AppTextStyles.bodyLarge.copyWith(
+                    style: AppTextStyles.bodyMedium.copyWith(
                       fontWeight: FontWeight.w600,
+                      fontSize: 14.sp,
+                      color: AppColors.grey800,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 4.h),
                   Text(
                     subtitle,
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.grey600,
+                      fontSize: 12.sp,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -375,37 +336,51 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
     IconData icon,
     VoidCallback onTap,
   ) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
-      child: InkWell(
-        onTap: onTap,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12.r),
+      child: Container(
+        padding: EdgeInsets.all(12.w),
+        margin: EdgeInsets.only(bottom: 12.h),
+        decoration: BoxDecoration(
+          color: AppColors.grey50,
+          borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppColors.grey200, width: 1),
+        ),
         child: Row(
           children: [
             Container(
-              padding: EdgeInsets.all(8.w),
+              padding: EdgeInsets.all(10.w),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8.r),
+                borderRadius: BorderRadius.circular(10.r),
               ),
-              child: Icon(icon, color: AppColors.primary, size: 20.sp),
+              child: Icon(icon, color: AppColors.primary, size: 22.sp),
             ),
-            SizedBox(width: 16.w),
+            SizedBox(width: 12.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: AppTextStyles.bodyLarge.copyWith(
+                    style: AppTextStyles.bodyMedium.copyWith(
                       fontWeight: FontWeight.w600,
+                      fontSize: 14.sp,
+                      color: AppColors.grey800,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 4.h),
                   Text(
                     subtitle,
                     style: AppTextStyles.bodySmall.copyWith(
                       color: AppColors.grey600,
+                      fontSize: 12.sp,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -422,21 +397,33 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
   }
 
   Widget _buildFAQItem(String question, String answer) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16.h),
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      decoration: BoxDecoration(
+        color: AppColors.grey50,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.grey200, width: 1),
+      ),
       child: ExpansionTile(
+        tilePadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+        childrenPadding: EdgeInsets.fromLTRB(12.w, 0, 12.w, 12.h),
         title: Text(
           question,
-          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+          style: AppTextStyles.bodyMedium.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 14.sp,
+            color: AppColors.grey800,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
         children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
-            child: Text(
-              answer,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.grey700,
-              ),
+          Text(
+            answer,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.grey700,
+              fontSize: 13.sp,
+              height: 1.5,
             ),
           ),
         ],
@@ -444,42 +431,195 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
     );
   }
 
-  void _showHelpDialog(String title, String content) {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog(
+  void _showHelpModal(
+    BuildContext context,
+    String title,
+    String content,
+    IconData icon,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: SingleChildScrollView(child: Text(content)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.close),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20.r),
+            topRight: Radius.circular(20.r),
           ),
-        ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: EdgeInsets.only(top: 12.h),
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: AppColors.grey300,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+            // Content
+            Flexible(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(20.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Icon and Title
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(12.w),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Icon(
+                            icon,
+                            color: AppColors.primary,
+                            size: 28.sp,
+                          ),
+                        ),
+                        SizedBox(width: 16.w),
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: AppTextStyles.heading3.copyWith(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20.h),
+                    // Content with formatted steps
+                    _buildFormattedContent(content),
+                  ],
+                ),
+              ),
+            ),
+            // Close Button
+            Padding(
+              padding: EdgeInsets.all(20.w),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.white,
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    l10n.close,
+                    style: AppTextStyles.button.copyWith(fontSize: 15.sp),
+                  ),
+                ),
+              ),
+            ),
+
+            SizedBox(height: 32.h),
+          ],
+        ),
       ),
     );
   }
 
-  void _showLiveChatDialog() {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.liveChat),
-        content: Text(l10n.liveChatCurrentlyUnavailable),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.ok),
+  Widget _buildFormattedContent(String content) {
+    // Split content by lines and format numbered steps
+    final lines = content.split('\n');
+    final List<Widget> widgets = [];
+
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty) {
+        widgets.add(SizedBox(height: 12.h));
+        continue;
+      }
+
+      // Check if line starts with a number (step)
+      final stepMatch = RegExp(r'^(\d+)\.?\s*(.+)$').firstMatch(line);
+      if (stepMatch != null) {
+        widgets.add(
+          Padding(
+            padding: EdgeInsets.only(bottom: 12.h),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 28.w,
+                  height: 28.w,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      stepMatch.group(1)!,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13.sp,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Text(
+                    stepMatch.group(2)!,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.grey800,
+                      fontSize: 14.sp,
+                      height: 1.6,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        );
+      } else {
+        // Regular paragraph
+        widgets.add(
+          Padding(
+            padding: EdgeInsets.only(bottom: 12.h),
+            child: Text(
+              line,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.grey700,
+                fontSize: 14.sp,
+                height: 1.6,
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: widgets,
     );
   }
 
   void _launchEmail() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final Uri emailUri = Uri(
       scheme: 'mailto',
       path: 'engineers.devs@gmail.com',
@@ -504,7 +644,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
         if (!mounted) return;
 
         // Show user-friendly error with alternative options
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Column(
@@ -574,7 +714,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
           if (!mounted) return;
 
           // Show user-friendly error with alternative options
-          final l10n = AppLocalizations.of(context)!;
+          final l10n = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Column(
@@ -602,22 +742,22 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
   }
 
   String _getExamHelpText() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return l10n.examHelpText;
   }
 
   String _getProgressHelpText() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return l10n.progressHelpText;
   }
 
   String _getPaymentHelpText() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return l10n.paymentHelpText;
   }
 
   String _getAccountHelpText() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return l10n.accountHelpText;
   }
 }

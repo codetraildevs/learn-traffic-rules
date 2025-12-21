@@ -43,7 +43,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                         width: 120.w,
                         height: 120.w,
                         decoration: BoxDecoration(
-                          color: AppColors.secondary,
+                          color: AppColors.primary,
                           borderRadius: BorderRadius.circular(24.r),
                           boxShadow: [
                             BoxShadow(

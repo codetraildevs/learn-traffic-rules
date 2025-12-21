@@ -107,7 +107,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             '   - contents is empty: ${course.contents != null && course.contents!.isEmpty}',
           );
 
-          final l10n = AppLocalizations.of(context)!;
+          final l10n = AppLocalizations.of(context);
           setState(() {
             _contents = [];
             _isLoading = false;
@@ -118,7 +118,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         }
       } else {
         print('❌ API Error: ${response.message}');
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         setState(() {
           _contents = [];
           _isLoading = false;
@@ -128,7 +128,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
     } catch (e, stackTrace) {
       print('❌ Exception loading course contents: $e');
       print('Stack trace: $stackTrace');
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _contents = [];
         _isLoading = false;
@@ -250,7 +250,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         print('   Full URL: $audioUrl');
 
         // Validate URL format
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         if (!audioUrl.startsWith('http://') &&
             !audioUrl.startsWith('https://')) {
           throw Exception(l10n.invalidAudioUrlMessage(audioUrl));
@@ -280,7 +280,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
                     _audioPlayer!.duration == null &&
                     _audioPlayer!.playerState.processingState ==
                         ProcessingState.idle) {
-                  final l10n = AppLocalizations.of(context)!;
+                  final l10n = AppLocalizations.of(context);
                   setState(() {
                     _error = l10n.unableToLoadAudioFile;
                     _audioPlayer?.dispose();
@@ -324,7 +324,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
           onError: (error) {
             print('❌ AUDIO PLAYBACK ERROR: $error');
             if (mounted) {
-              final l10n = AppLocalizations.of(context)!;
+              final l10n = AppLocalizations.of(context);
               setState(() {
                 _error = l10n.errorPlayingAudio(error.toString());
                 _audioPlayer?.dispose();
@@ -357,7 +357,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
               // Check player state
               final state = _audioPlayer!.playerState;
               if (state.processingState == ProcessingState.idle) {
-                final l10n = AppLocalizations.of(context)!;
+                final l10n = AppLocalizations.of(context);
                 throw Exception(l10n.audioFileCouldNotBeLoaded);
               }
             } else {
@@ -372,7 +372,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         print('❌ AUDIO ERROR: $e');
         print('   Stack trace: $stackTrace');
         if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
+          final l10n = AppLocalizations.of(context);
           String errorMessage = l10n.errorLoadingAudio;
           final errorStr = e.toString().toLowerCase();
 
@@ -429,7 +429,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.errorPlayingAudio(e.toString()))),
         );
@@ -505,7 +505,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.couldNotOpenUrl(fullUrl))));
@@ -553,7 +553,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
                 SizedBox(height: 16.h),
                 Builder(
                   builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
+                    final l10n = AppLocalizations.of(context);
                     return Text(
                       _error ?? l10n.noContentAvailable,
                       style: AppTextStyles.heading3.copyWith(
@@ -566,7 +566,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
                 SizedBox(height: 16.h),
                 Builder(
                   builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
+                    final l10n = AppLocalizations.of(context);
                     return CustomButton(
                       text: l10n.retry,
                       onPressed: _loadCourseContents,
@@ -590,7 +590,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
       appBar: AppBar(
         title: Builder(
           builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
+            final l10n = AppLocalizations.of(context);
             return Text(content.title ?? l10n.contentNumber(_currentIndex + 1));
           },
         ),
@@ -802,7 +802,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
           SizedBox(height: 16.h),
           Builder(
             builder: (context) {
-              final l10n = AppLocalizations.of(context)!;
+              final l10n = AppLocalizations.of(context);
               return Text(
                 content.title ?? l10n.audioContent,
                 style: AppTextStyles.heading3,
@@ -859,7 +859,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
               children: [
                 Builder(
                   builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
+                    final l10n = AppLocalizations.of(context);
                     return CustomButton(
                       text: l10n.retry,
                       onPressed: () {
@@ -943,7 +943,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             SizedBox(height: 16.h),
             Builder(
               builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
+                final l10n = AppLocalizations.of(context);
                 return Column(
                   children: [
                     Text(
@@ -1069,7 +1069,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
           SizedBox(height: 16.h),
           Builder(
             builder: (context) {
-              final l10n = AppLocalizations.of(context)!;
+              final l10n = AppLocalizations.of(context);
               return Text(
                 content.title ?? l10n.externalLink,
                 style: AppTextStyles.heading3,

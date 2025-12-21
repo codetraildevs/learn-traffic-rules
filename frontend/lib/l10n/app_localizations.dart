@@ -67,6 +67,17 @@ abstract class AppLocalizations {
   String get english;
   String get kinyarwanda;
   String get french;
+  String get ikinyarwanda;
+
+  // Theme selection
+  String get appTheme;
+  String get systemDefault;
+  String get lightTheme;
+  String get darkTheme;
+  String get followDeviceTheme;
+  String get alwaysUseLightTheme;
+  String get alwaysUseDarkTheme;
+  String themeChangedTo(String themeName);
 
   // Disclaimer
   String get disclaimer;
@@ -799,7 +810,6 @@ abstract class AppLocalizations {
 
   // Language Selection Screen
   String get chooseYourPreferredLanguage;
-  String get ikinyarwanda;
 
   // Course List Screen
   String get paidCourse;

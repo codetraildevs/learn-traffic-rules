@@ -49,7 +49,8 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
         });
       }
     } catch (e) {
-      final l10n = AppLocalizations.of(context)!;
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       setState(() {
         _error = l10n.failedToLoadExams(e.toString());
         _isLoading = false;
@@ -59,7 +60,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -83,7 +84,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   }
 
   Widget _buildErrorWidget() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -116,7 +117,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   }
 
   Widget _buildContent() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (_freeExamData == null) return const SizedBox();
 
     return SingleChildScrollView(
@@ -157,7 +158,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   }
 
   Widget _buildFreeUserBanner() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -229,7 +230,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   }
 
   Widget _buildExamCard(Exam exam, int index) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
@@ -401,7 +402,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   }
 
   Widget _buildNoExamsWidget() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -427,7 +428,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   }
 
   Widget _buildPaymentInstructionsCard() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -484,7 +485,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   }
 
   void _startExam(Exam exam) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     // Navigate to exam screen
     // This would be implemented based on your exam taking flow
     ScaffoldMessenger.of(context).showSnackBar(
@@ -508,7 +509,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
     const phoneNumber = '+250788659575';
     final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
 
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (await canLaunchUrl(phoneUri)) {
       await launchUrl(phoneUri);
     } else {

@@ -306,7 +306,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               SizedBox(width: 8.w),
               Builder(
                 builder: (context) {
-                  final l10n = AppLocalizations.of(context)!;
+                  final l10n = AppLocalizations.of(context);
                   return Text(
                     l10n.dateFilter,
                     style: AppTextStyles.bodyMedium.copyWith(
@@ -326,7 +326,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               // Today Filter Button
               Builder(
                 builder: (context) {
-                  final l10n = AppLocalizations.of(context)!;
+                  final l10n = AppLocalizations.of(context);
                   return FilterChip(
                     label: Text(l10n.today),
                     selected: _filterByToday,
@@ -368,7 +368,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       SizedBox(width: 6.w),
                       Builder(
                         builder: (context) {
-                          final l10n = AppLocalizations.of(context)!;
+                          final l10n = AppLocalizations.of(context);
                           return Text(
                             _startDate != null
                                 ? DateFormat('MMM dd, yyyy').format(_startDate!)
@@ -391,7 +391,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               // End Date
               Builder(
                 builder: (context) {
-                  final l10n = AppLocalizations.of(context)!;
+                  final l10n = AppLocalizations.of(context);
                   return InkWell(
                     onTap: _selectEndDate,
                     child: Container(
@@ -461,7 +461,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                         SizedBox(width: 6.w),
                         Builder(
                           builder: (context) {
-                            final l10n = AppLocalizations.of(context)!;
+                            final l10n = AppLocalizations.of(context);
                             return Text(
                               l10n.clear,
                               style: AppTextStyles.bodySmall.copyWith(
@@ -502,17 +502,17 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       );
 
       if (response.success) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         _showSuccessSnackBar(l10n.accessCodeGeneratedFor(user.fullName));
         _loadUsers(); // Refresh the list
       } else {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         _showErrorSnackBar(
           '${l10n.failedToGenerateAccessCode}: ${response.message}',
         );
       }
     } catch (e) {
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = AppLocalizations.of(context);
       _showErrorSnackBar('${l10n.errorGeneratingAccessCode}: $e');
     }
   }
@@ -527,7 +527,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     return showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         return AlertDialog(
           title: Text(l10n.selectPaymentTier, style: AppTextStyles.heading3),
           content: Column(
@@ -564,7 +564,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         return AlertDialog(
           title: Row(
             children: [
@@ -660,7 +660,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     if (confirmed == true) {
       try {
         final response = await _userManagementService.deleteUser(user.id);
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         if (response['success'] == true) {
           _showSuccessSnackBar(l10n.userDeletedSuccessfully(user.fullName));
           _loadUsers(); // Refresh the list
@@ -670,7 +670,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           );
         }
       } catch (e) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         _showErrorSnackBar('${l10n.errorDeletingUser}: $e');
       }
     }
@@ -709,7 +709,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       appBar: AppBar(
         title: Builder(
           builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
+            final l10n = AppLocalizations.of(context);
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -732,7 +732,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         actions: [
           Builder(
             builder: (context) {
-              final l10n = AppLocalizations.of(context)!;
+              final l10n = AppLocalizations.of(context);
               return IconButton(
                 onPressed: () => _loadUsers(),
                 icon: const Icon(Icons.refresh),
@@ -768,7 +768,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     SizedBox(height: 16.h),
                     Builder(
                       builder: (context) {
-                        final l10n = AppLocalizations.of(context)!;
+                        final l10n = AppLocalizations.of(context);
                         return Text(
                           _searchQuery.isNotEmpty
                               ? l10n.noUsersFoundMatching(_searchQuery)
@@ -858,7 +858,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           Expanded(
                             child: Builder(
                               builder: (context) {
-                                final l10n = AppLocalizations.of(context)!;
+                                final l10n = AppLocalizations.of(context);
                                 return Text(
                                   user.blockReason != null &&
                                           user.blockReason!.isNotEmpty
@@ -1066,14 +1066,14 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                   : AppColors.grey700,
                               onPressed: () => _showBlockUserDialog(user),
                               tooltip: user.isBlocked == true
-                                  ? AppLocalizations.of(context)!.unblockUser
-                                  : AppLocalizations.of(context)!.blockUser,
+                                  ? AppLocalizations.of(context).unblockUser
+                                  : AppLocalizations.of(context).blockUser,
                             ),
                             _buildActionButton(
                               icon: Icons.delete_outline,
                               color: AppColors.error,
                               onPressed: () => _deleteUser(user),
-                              tooltip: AppLocalizations.of(context)!.deleteUser,
+                              tooltip: AppLocalizations.of(context).deleteUser,
                             ),
                           ],
                         ),
@@ -1101,14 +1101,14 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                               : AppColors.error,
                           onPressed: () => _showBlockUserDialog(user),
                           tooltip: user.isBlocked == true
-                              ? AppLocalizations.of(context)!.unblockUser
-                              : AppLocalizations.of(context)!.blockUser,
+                              ? AppLocalizations.of(context).unblockUser
+                              : AppLocalizations.of(context).blockUser,
                         ),
                         _buildActionButton(
                           icon: Icons.delete_outline,
                           color: AppColors.grey600,
                           onPressed: () => _deleteUser(user),
-                          tooltip: AppLocalizations.of(context)!.deleteUser,
+                          tooltip: AppLocalizations.of(context).deleteUser,
                         ),
                       ],
                     ),
@@ -1133,7 +1133,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       // ),
                       Builder(
                         builder: (context) {
-                          final l10n = AppLocalizations.of(context)!;
+                          final l10n = AppLocalizations.of(context);
                           return Wrap(
                             spacing: 8.w,
                             runSpacing: 8.h,
@@ -1267,7 +1267,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   }
 
   String _formatCallTime(DateTime callTime) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
     final difference = now.difference(callTime);
 
@@ -1296,7 +1296,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             controller: _searchController,
             onChanged: _onSearchChanged,
             decoration: InputDecoration(
-              hintText: AppLocalizations.of(context)!.searchUsers,
+              hintText: AppLocalizations.of(context).searchUsers,
               prefixIcon: const Icon(Icons.search),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
@@ -1330,7 +1330,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             value: _selectedFilter,
                             onChanged: (value) => _onFilterChanged(value!),
                             decoration: InputDecoration(
-                              labelText: AppLocalizations.of(context)!.filter,
+                              labelText: AppLocalizations.of(context).filter,
                               labelStyle: TextStyle(fontSize: 10.sp),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.r),
@@ -1344,43 +1344,41 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                               DropdownMenuItem(
                                 value: 'all',
                                 child: Text(
-                                  AppLocalizations.of(context)!.allUsers,
+                                  AppLocalizations.of(context).allUsers,
                                 ),
                               ),
                               DropdownMenuItem(
                                 value: 'user',
-                                child: Text(
-                                  AppLocalizations.of(context)!.users,
-                                ),
+                                child: Text(AppLocalizations.of(context).users),
                               ),
                               DropdownMenuItem(
                                 value: 'manager',
                                 child: Text(
-                                  AppLocalizations.of(context)!.managers,
+                                  AppLocalizations.of(context).managers,
                                 ),
                               ),
                               DropdownMenuItem(
                                 value: 'with_code',
                                 child: Text(
-                                  AppLocalizations.of(context)!.withCode,
+                                  AppLocalizations.of(context).withCode,
                                 ),
                               ),
                               DropdownMenuItem(
                                 value: 'without_code',
                                 child: Text(
-                                  AppLocalizations.of(context)!.noCode,
+                                  AppLocalizations.of(context).noCode,
                                 ),
                               ),
                               DropdownMenuItem(
                                 value: 'called',
                                 child: Text(
-                                  AppLocalizations.of(context)!.called,
+                                  AppLocalizations.of(context).called,
                                 ),
                               ),
                               DropdownMenuItem(
                                 value: 'not_called',
                                 child: Text(
-                                  AppLocalizations.of(context)!.notCalled,
+                                  AppLocalizations.of(context).notCalled,
                                 ),
                               ),
                             ],
@@ -1396,7 +1394,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             value: _selectedSort,
                             onChanged: (value) => _onSortChanged(value!),
                             decoration: InputDecoration(
-                              labelText: AppLocalizations.of(context)!.sort,
+                              labelText: AppLocalizations.of(context).sort,
                               labelStyle: TextStyle(fontSize: 10.sp),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.r),
@@ -1409,22 +1407,22 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             items: [
                               DropdownMenuItem(
                                 value: 'name',
-                                child: Text(AppLocalizations.of(context)!.name),
+                                child: Text(AppLocalizations.of(context).name),
                               ),
                               DropdownMenuItem(
                                 value: 'role',
-                                child: Text(AppLocalizations.of(context)!.role),
+                                child: Text(AppLocalizations.of(context).role),
                               ),
                               DropdownMenuItem(
                                 value: 'createdAt',
                                 child: Text(
-                                  AppLocalizations.of(context)!.created,
+                                  AppLocalizations.of(context).created,
                                 ),
                               ),
                               DropdownMenuItem(
                                 value: 'lastLogin',
                                 child: Text(
-                                  AppLocalizations.of(context)!.lastLogin,
+                                  AppLocalizations.of(context).lastLogin,
                                 ),
                               ),
                             ],
@@ -1441,8 +1439,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             size: 16.sp,
                           ),
                           tooltip: _sortAscending
-                              ? AppLocalizations.of(context)!.ascending
-                              : AppLocalizations.of(context)!.descending,
+                              ? AppLocalizations.of(context).ascending
+                              : AppLocalizations.of(context).descending,
                           padding: EdgeInsets.all(4.w),
                           constraints: BoxConstraints(
                             minWidth: 32.w,
@@ -1462,7 +1460,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                         value: _selectedFilter,
                         onChanged: (value) => _onFilterChanged(value!),
                         decoration: InputDecoration(
-                          labelText: AppLocalizations.of(context)!.filter,
+                          labelText: AppLocalizations.of(context).filter,
                           labelStyle: TextStyle(fontSize: 10.sp),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.r),
@@ -1475,37 +1473,35 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                         items: [
                           DropdownMenuItem(
                             value: 'all',
-                            child: Text(AppLocalizations.of(context)!.allUsers),
+                            child: Text(AppLocalizations.of(context).allUsers),
                           ),
                           DropdownMenuItem(
                             value: 'user',
-                            child: Text(AppLocalizations.of(context)!.users),
+                            child: Text(AppLocalizations.of(context).users),
                           ),
                           DropdownMenuItem(
                             value: 'admin',
-                            child: Text(AppLocalizations.of(context)!.admins),
+                            child: Text(AppLocalizations.of(context).admins),
                           ),
                           DropdownMenuItem(
                             value: 'manager',
-                            child: Text(AppLocalizations.of(context)!.managers),
+                            child: Text(AppLocalizations.of(context).managers),
                           ),
                           DropdownMenuItem(
                             value: 'with_code',
-                            child: Text(AppLocalizations.of(context)!.withCode),
+                            child: Text(AppLocalizations.of(context).withCode),
                           ),
                           DropdownMenuItem(
                             value: 'without_code',
-                            child: Text(AppLocalizations.of(context)!.noCode),
+                            child: Text(AppLocalizations.of(context).noCode),
                           ),
                           DropdownMenuItem(
                             value: 'called',
-                            child: Text(AppLocalizations.of(context)!.called),
+                            child: Text(AppLocalizations.of(context).called),
                           ),
                           DropdownMenuItem(
                             value: 'not_called',
-                            child: Text(
-                              AppLocalizations.of(context)!.notCalled,
-                            ),
+                            child: Text(AppLocalizations.of(context).notCalled),
                           ),
                         ],
                       ),
@@ -1514,10 +1510,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     Expanded(
                       flex: 2,
                       child: DropdownButtonFormField<String>(
-                        value: _selectedSort,
+                        initialValue: _selectedSort,
                         onChanged: (value) => _onSortChanged(value!),
                         decoration: InputDecoration(
-                          labelText: AppLocalizations.of(context)!.sort,
+                          labelText: AppLocalizations.of(context).sort,
                           labelStyle: TextStyle(fontSize: 10.sp),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.r),
@@ -1530,21 +1526,19 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                         items: [
                           DropdownMenuItem(
                             value: 'name',
-                            child: Text(AppLocalizations.of(context)!.name),
+                            child: Text(AppLocalizations.of(context).name),
                           ),
                           DropdownMenuItem(
                             value: 'role',
-                            child: Text(AppLocalizations.of(context)!.role),
+                            child: Text(AppLocalizations.of(context).role),
                           ),
                           DropdownMenuItem(
                             value: 'createdAt',
-                            child: Text(AppLocalizations.of(context)!.created),
+                            child: Text(AppLocalizations.of(context).created),
                           ),
                           DropdownMenuItem(
                             value: 'lastLogin',
-                            child: Text(
-                              AppLocalizations.of(context)!.lastLogin,
-                            ),
+                            child: Text(AppLocalizations.of(context).lastLogin),
                           ),
                         ],
                       ),
@@ -1592,15 +1586,15 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         // Sync with backend if online (works offline, syncs when online)
         _syncCallTrackingWithBackend();
 
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         _showSuccessSnackBar(l10n.callingUser(user.fullName));
         debugPrint('📞 Marked user ${user.fullName} (${user.id}) as called');
       } else {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         _showErrorSnackBar('${l10n.couldNotMakePhoneCall} $phoneNumber');
       }
     } catch (e) {
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = AppLocalizations.of(context);
       _showErrorSnackBar('${l10n.errorMakingPhoneCall}: $e');
     }
   }
@@ -1716,7 +1710,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           SizedBox(width: 8.w),
           Builder(
             builder: (context) {
-              final l10n = AppLocalizations.of(context)!;
+              final l10n = AppLocalizations.of(context);
               return Text(
                 '${l10n.totalUsersLabel}: $_totalUsers',
                 style: AppTextStyles.bodyMedium.copyWith(
@@ -1754,7 +1748,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   }
                 : null,
             icon: const Icon(Icons.chevron_left),
-            tooltip: AppLocalizations.of(context)!.previousPage,
+            tooltip: AppLocalizations.of(context).previousPage,
           ),
           SizedBox(width: 8.w),
 
@@ -1877,7 +1871,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   }
                 : null,
             icon: const Icon(Icons.chevron_right),
-            tooltip: AppLocalizations.of(context)!.nextPage,
+            tooltip: AppLocalizations.of(context).nextPage,
           ),
         ],
       ),
@@ -1896,7 +1890,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         return AlertDialog(
           title: Row(
             children: [
@@ -2018,7 +2012,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         blockReason: blockReason.isNotEmpty ? blockReason : null,
       );
 
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = AppLocalizations.of(context);
       if (response['success'] == true) {
         _showSuccessSnackBar(
           isCurrentlyBlocked
@@ -2032,7 +2026,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         );
       }
     } catch (e) {
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = AppLocalizations.of(context);
       _showErrorSnackBar(
         '${isCurrentlyBlocked ? l10n.errorUnblockingUser : l10n.errorBlockingUser}: $e',
       );
@@ -2078,7 +2072,7 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
     return AlertDialog(
       title: Builder(
         builder: (context) {
-          final l10n = AppLocalizations.of(context)!;
+          final l10n = AppLocalizations.of(context);
           return Row(
             children: [
               Icon(Icons.vpn_key, color: AppColors.primary, size: 24.sp),
@@ -2094,7 +2088,7 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
         children: [
           Builder(
             builder: (context) {
-              final l10n = AppLocalizations.of(context)!;
+              final l10n = AppLocalizations.of(context);
               return Text(
                 '${l10n.selectPaymentTier} ${widget.user.fullName}:',
                 style: AppTextStyles.bodyMedium.copyWith(
@@ -2122,7 +2116,7 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
                 Expanded(
                   child: Builder(
                     builder: (context) {
-                      final l10n = AppLocalizations.of(context)!;
+                      final l10n = AppLocalizations.of(context);
                       final days =
                           _paymentTiers.firstWhere(
                                 (tier) => tier['amount'] == _selectedAmount,
@@ -2146,7 +2140,7 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
       actions: [
         Builder(
           builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
+            final l10n = AppLocalizations.of(context);
             return Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -2232,7 +2226,7 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
                 ),
                 child: Builder(
                   builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
+                    final l10n = AppLocalizations.of(context);
                     return Text(
                       '${tier['days']} ${l10n.daysLeft}',
                       style: AppTextStyles.caption.copyWith(

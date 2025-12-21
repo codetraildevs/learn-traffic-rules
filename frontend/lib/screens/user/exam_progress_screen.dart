@@ -55,22 +55,23 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.grey50,
       appBar: AppBar(
         title: Text(
-          'Result of ${widget.exam.title}',
-          style: TextStyle(
+          '${l10n.examResult}: ${widget.exam.title}',
+          style: AppTextStyles.heading2.copyWith(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: AppColors.white,
           ),
         ),
         backgroundColor: AppColors.primary,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: AppColors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -80,45 +81,45 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
 
   Widget _buildResultsView() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.all(16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Card
-          // _buildHeaderCard(),
-          // SizedBox(height: 24.h),
-
           // Score Overview
           _buildScoreOverview(),
-          SizedBox(height: 24.h),
+          SizedBox(height: 16.h),
 
           // Detailed Results
           _buildDetailedResults(),
-          SizedBox(height: 24.h),
+          SizedBox(height: 16.h),
 
           // Action Buttons
           _buildActionButtons(),
-          SizedBox(height: 30.h),
+          SizedBox(height: 16.h),
         ],
       ),
     );
   }
 
   Widget _buildScoreOverview() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final score = widget.examResult.score;
     final isPassed = widget.examResult.passed;
     final passingScore = widget.exam.passingScore;
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppColors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -126,47 +127,30 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
       ),
       child: Column(
         children: [
-          // Score Circle
+          // Score Badge
           Container(
-            width: 120.w,
-            height: 120.w,
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: isPassed
-                    ? [const Color(0xFF4CAF50), const Color(0xFF2E7D32)]
-                    : [const Color(0xFFFF5722), const Color(0xFFD32F2F)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: (isPassed ? Colors.green : Colors.red).withValues(
-                    alpha: 0.3,
-                  ),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
+              color: isPassed ? AppColors.success : AppColors.error,
+              borderRadius: BorderRadius.circular(12.r),
             ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   '$score%',
-                  style: TextStyle(
-                    fontSize: 32.sp,
+                  style: AppTextStyles.heading2.copyWith(
+                    fontSize: 36.sp,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppColors.white,
                   ),
                 ),
+                SizedBox(height: 4.h),
                 Text(
                   isPassed ? l10n.passed : l10n.failed,
-                  style: TextStyle(
-                    fontSize: 12.sp,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontSize: 14.sp,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                    letterSpacing: 1.2,
+                    color: AppColors.white,
                   ),
                 ),
               ],
@@ -181,18 +165,18 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
               _buildScoreDetail(
                 label: l10n.correct,
                 value: '${widget.examResult.correctAnswers}',
-                color: const Color(0xFF4CAF50),
+                color: AppColors.success,
               ),
               _buildScoreDetail(
                 label: l10n.incorrect,
                 value:
                     '${widget.examResult.totalQuestions - widget.examResult.correctAnswers}',
-                color: const Color(0xFFFF5722),
+                color: AppColors.error,
               ),
               _buildScoreDetail(
                 label: l10n.passingScore,
                 value: '$passingScore%',
-                color: const Color(0xFF2196F3),
+                color: AppColors.primary,
               ),
             ],
           ),
@@ -210,7 +194,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
       children: [
         Text(
           value,
-          style: TextStyle(
+          style: AppTextStyles.heading3.copyWith(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
             color: color,
@@ -219,9 +203,9 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
         SizedBox(height: 4.h),
         Text(
           label,
-          style: TextStyle(
+          style: AppTextStyles.caption.copyWith(
             fontSize: 12.sp,
-            color: Colors.grey[600],
+            color: AppColors.grey600,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -230,16 +214,20 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
   }
 
   Widget _buildDetailedResults() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppColors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -250,13 +238,13 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
         children: [
           Text(
             l10n.examSummary,
-            style: TextStyle(
+            style: AppTextStyles.heading3.copyWith(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
-              color: AppColors.primary,
+              color: AppColors.grey800,
             ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 12.h),
 
           _buildResultRow(
             icon: Icons.quiz,
@@ -267,22 +255,22 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
             icon: Icons.check_circle,
             label: l10n.correctAnswers,
             value: '${widget.examResult.correctAnswers}',
-            color: const Color(0xFF4CAF50),
+            color: AppColors.success,
           ),
           _buildResultRow(
             icon: Icons.cancel,
             label: l10n.incorrectAnswers,
             value:
                 '${widget.examResult.totalQuestions - widget.examResult.correctAnswers}',
-            color: const Color(0xFFFF5722),
+            color: AppColors.error,
           ),
           _buildResultRow(
-            icon: Icons.timer,
+            icon: Icons.timer_outlined,
             label: l10n.timeSpent,
             value: _formatTime(widget.examResult.timeSpent),
           ),
           _buildResultRow(
-            icon: Icons.schedule,
+            icon: Icons.calendar_today,
             label: l10n.completedAt,
             value: _formatDateTime(widget.examResult.submittedAt),
           ),
@@ -291,7 +279,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
               icon: Icons.free_breakfast,
               label: l10n.exam,
               value: l10n.freeExam,
-              color: const Color(0xFF2196F3),
+              color: AppColors.primary,
             ),
         ],
       ),
@@ -308,23 +296,23 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
       padding: EdgeInsets.symmetric(vertical: 8.h),
       child: Row(
         children: [
-          Icon(icon, color: color ?? Colors.grey[600], size: 20.w),
+          Icon(icon, color: color ?? AppColors.grey600, size: 20.sp),
           SizedBox(width: 12.w),
           Expanded(
             child: Text(
               label,
-              style: TextStyle(
+              style: AppTextStyles.bodyMedium.copyWith(
                 fontSize: 14.sp,
-                color: Colors.grey[700],
+                color: AppColors.grey700,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
           Text(
             value,
-            style: TextStyle(
+            style: AppTextStyles.bodyMedium.copyWith(
               fontSize: 14.sp,
-              color: color ?? Colors.grey[800],
+              color: color ?? AppColors.grey800,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -334,50 +322,27 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
   }
 
   Widget _buildActionButtons() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
-        // Check Answers Button
-        // SizedBox(
-        //   width: double.infinity,
-        //   height: 50.h,
-        //   child: ElevatedButton.icon(
-        //     onPressed: _showDetailedAnswers,
-        //     icon: Icon(Icons.quiz, size: 20.w),
-        //     label: Text(
-        //       'Check Answers',
-        //       style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
-        //     ),
-        //     style: ElevatedButton.styleFrom(
-        //       backgroundColor: AppColors.primary,
-        //       foregroundColor: Colors.white,
-        //       shape: RoundedRectangleBorder(
-        //         borderRadius: BorderRadius.circular(12.r),
-        //       ),
-        //       elevation: 4,
-        //     ),
-        //   ),
-        // ),
-        SizedBox(height: 12.h),
-
         // Retake Button
         SizedBox(
           width: double.infinity,
           height: 50.h,
           child: ElevatedButton.icon(
             onPressed: _retakeExam,
-            icon: Icon(Icons.refresh, size: 20.w),
+            icon: Icon(Icons.refresh, size: 20.sp),
             label: Text(
               l10n.retakeExam,
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+              style: AppTextStyles.button.copyWith(fontSize: 16.sp),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.secondary,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.r),
               ),
-              elevation: 4,
+              elevation: 0,
             ),
           ),
         ),
@@ -389,14 +354,17 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
           height: 50.h,
           child: OutlinedButton.icon(
             onPressed: _backToExams,
-            icon: Icon(Icons.list, size: 20.w),
+            icon: Icon(Icons.list, size: 20.sp),
             label: Text(
               l10n.backToExams,
-              style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+              style: AppTextStyles.button.copyWith(
+                fontSize: 16.sp,
+                color: AppColors.primary,
+              ),
             ),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
-              side: const BorderSide(color: Color(0xFF2E7D32), width: 2),
+              side: BorderSide(color: AppColors.primary, width: 2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.r),
               ),
@@ -455,71 +423,6 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
     // Ensure we're using the local timezone for correct display
     final localTime = dateTime.toLocal();
     return '${localTime.month}/${localTime.day}/${localTime.year} at ${localTime.hour.toString().padLeft(2, '0')}:${localTime.minute.toString().padLeft(2, '0')}';
-  }
-
-  void _showDetailedAnswers() async {
-    // Disable screenshots before showing detailed answers
-    await _disableScreenshots();
-
-    // Debug: Print the exam result data
-    debugPrint('=== DEBUG: Exam Result Data ===');
-    debugPrint('Total Questions: ${widget.examResult.totalQuestions}');
-    debugPrint('Correct Answers: ${widget.examResult.correctAnswers}');
-    debugPrint(
-      'Incorrect Answers: ${widget.examResult.totalQuestions - widget.examResult.correctAnswers}',
-    );
-    debugPrint('Score: ${widget.examResult.score}%');
-    debugPrint('Passed: ${widget.examResult.passed}');
-    debugPrint(
-      'Question Results Length: ${widget.examResult.questionResults?.length ?? 0}',
-    );
-    debugPrint('Exam Result ID: ${widget.examResult.id}');
-    debugPrint('Exam ID: ${widget.examResult.examId}');
-    debugPrint('User ID: ${widget.examResult.userId}');
-    debugPrint('Score: ${widget.examResult.score}');
-    debugPrint('Passed: ${widget.examResult.passed}');
-    debugPrint('Is Free Exam: ${widget.examResult.isFreeExam}');
-    debugPrint('Submitted At: ${widget.examResult.submittedAt}');
-
-    if (widget.examResult.questionResults != null) {
-      debugPrint('Question Results Details:');
-      for (int i = 0; i < widget.examResult.questionResults!.length; i++) {
-        debugPrint(
-          '  Question ${widget.examResult.questionResults![i].questionId}:',
-        );
-        debugPrint(
-          '    ID: ${widget.examResult.questionResults![i].questionId}',
-        );
-        debugPrint(
-          '    User Answer: ${widget.examResult.questionResults![i].userAnswer}',
-        );
-        debugPrint(
-          '    Correct Answer: ${widget.examResult.questionResults![i].correctAnswer}',
-        );
-        debugPrint(
-          '    Is Correct: ${widget.examResult.questionResults![i].isCorrect}',
-        );
-        debugPrint(
-          '    Points: ${widget.examResult.questionResults![i].points}',
-        );
-      }
-    } else {
-      debugPrint('❌ Question Results is NULL!');
-    }
-    debugPrint('=== END DEBUG ===');
-    if (!mounted) return;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _SecureDetailedAnswersModal(
-        examResult: widget.examResult,
-        onClose: () async {
-          // Re-enable screenshots when closing
-          await _enableScreenshots();
-        },
-      ),
-    );
   }
 }
 
@@ -585,7 +488,7 @@ class _SecureDetailedAnswersModalState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
       minChildSize: 0.5,
@@ -606,7 +509,7 @@ class _SecureDetailedAnswersModalState
               width: 40.w,
               height: 4.h,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.grey300,
                 borderRadius: BorderRadius.circular(2.r),
               ),
             ),
@@ -620,21 +523,23 @@ class _SecureDetailedAnswersModalState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.security, color: Colors.red[600], size: 20.w),
+                      Icon(Icons.security, color: AppColors.error, size: 20.sp),
                       SizedBox(width: 8.w),
-                      Text(
-                        l10n.secureView,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red[600],
-                          letterSpacing: 1.0,
+                      Expanded(
+                        child: Text(
+                          l10n.secureView,
+                          style: AppTextStyles.caption.copyWith(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.error,
+                            letterSpacing: 1.0,
+                          ),
                         ),
                       ),
 
                       IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: Icon(Icons.close, color: Colors.grey[600]),
+                        icon: Icon(Icons.close, color: AppColors.grey600),
                       ),
                     ],
                   ),
@@ -644,10 +549,10 @@ class _SecureDetailedAnswersModalState
                     l10n.detailedAnswersFor(
                       widget.examResult.exam?.title ?? l10n.exam,
                     ),
-                    style: TextStyle(
+                    style: AppTextStyles.heading3.copyWith(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
+                      color: AppColors.grey800,
                     ),
                   ),
                   SizedBox(height: 8.h),
@@ -655,20 +560,26 @@ class _SecureDetailedAnswersModalState
                   Container(
                     padding: EdgeInsets.all(12.w),
                     decoration: BoxDecoration(
-                      color: Colors.red[50],
+                      color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(color: Colors.red[200]!),
+                      border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.warning, color: Colors.red[600], size: 16.w),
+                        Icon(
+                          Icons.warning,
+                          color: AppColors.error,
+                          size: 16.sp,
+                        ),
                         SizedBox(width: 8.w),
                         Expanded(
                           child: Text(
                             l10n.screenshotsAreDisabledToProtectAnswerIntegrity,
-                            style: TextStyle(
+                            style: AppTextStyles.caption.copyWith(
                               fontSize: 12.sp,
-                              color: Colors.red[700],
+                              color: AppColors.error,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -707,41 +618,45 @@ class _SecureDetailedAnswersModalState
   }
 
   Widget _buildSecureNoResultsView() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: EdgeInsets.all(40.w),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.quiz_outlined, size: 64.w, color: Colors.grey[400]),
+            Icon(Icons.quiz_outlined, size: 64.sp, color: AppColors.grey400),
             SizedBox(height: 16.h),
             Text(
               l10n.noDetailedResultsAvailable,
-              style: TextStyle(
+              style: AppTextStyles.heading3.copyWith(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[600],
+                color: AppColors.grey600,
               ),
             ),
             SizedBox(height: 8.h),
             Text(
               l10n.questionByQuestionResultsNotAvailable,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontSize: 14.sp,
+                color: AppColors.grey500,
+              ),
             ),
             SizedBox(height: 24.h),
             ElevatedButton.icon(
               onPressed: () => Navigator.pop(context),
-              icon: Icon(Icons.close, size: 20.w),
+              icon: Icon(Icons.close, size: 20.sp),
               label: Text(l10n.close),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[600],
-                foregroundColor: Colors.white,
+                backgroundColor: AppColors.grey600,
+                foregroundColor: AppColors.white,
                 padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
+                  borderRadius: BorderRadius.circular(12.r),
                 ),
+                elevation: 0,
               ),
             ),
           ],
@@ -754,20 +669,20 @@ class _SecureDetailedAnswersModalState
     QuestionResult questionResult,
     int questionNumber,
   ) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final isCorrect = questionResult.isCorrect;
 
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
         color: isCorrect
-            ? Colors.green.withValues(alpha: 0.1)
-            : Colors.red.withValues(alpha: 0.1),
+            ? AppColors.success.withValues(alpha: 0.1)
+            : AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: isCorrect ? Colors.green : Colors.red,
-          width: 1.w,
+          color: isCorrect ? AppColors.success : AppColors.error,
+          width: 1,
         ),
       ),
       child: Column(
@@ -779,13 +694,13 @@ class _SecureDetailedAnswersModalState
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: isCorrect ? Colors.green : Colors.red,
-                  borderRadius: BorderRadius.circular(12.r),
+                  color: isCorrect ? AppColors.success : AppColors.error,
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Text(
                   'Q$questionNumber',
-                  style: TextStyle(
-                    color: Colors.white,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.white,
                     fontSize: 12.sp,
                     fontWeight: FontWeight.bold,
                   ),
@@ -794,14 +709,14 @@ class _SecureDetailedAnswersModalState
               SizedBox(width: 8.w),
               Icon(
                 isCorrect ? Icons.check_circle : Icons.cancel,
-                color: isCorrect ? Colors.green : Colors.red,
-                size: 20.w,
+                color: isCorrect ? AppColors.success : AppColors.error,
+                size: 20.sp,
               ),
               SizedBox(width: 8.w),
               Text(
                 isCorrect ? l10n.correct : l10n.incorrect,
-                style: TextStyle(
-                  color: isCorrect ? Colors.green : Colors.red,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: isCorrect ? AppColors.success : AppColors.error,
                   fontSize: 14.sp,
                   fontWeight: FontWeight.bold,
                 ),
@@ -809,8 +724,8 @@ class _SecureDetailedAnswersModalState
               const Spacer(),
               Text(
                 '${questionResult.points} point${questionResult.points > 1 ? 's' : ''}',
-                style: TextStyle(
-                  color: Colors.grey[600],
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.grey600,
                   fontSize: 12.sp,
                   fontWeight: FontWeight.w500,
                 ),
@@ -827,27 +742,29 @@ class _SecureDetailedAnswersModalState
               width: double.infinity,
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.05),
+                color: AppColors.primary.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.2),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Question:',
-                    style: TextStyle(
+                    style: AppTextStyles.caption.copyWith(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue[700],
+                      color: AppColors.primary,
                     ),
                   ),
                   SizedBox(height: 4.h),
                   Text(
                     questionResult.questionText!,
-                    style: TextStyle(
+                    style: AppTextStyles.bodyMedium.copyWith(
                       fontSize: 14.sp,
-                      color: Colors.blue[800],
+                      color: AppColors.grey800,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -866,19 +783,21 @@ class _SecureDetailedAnswersModalState
               width: double.infinity,
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: Colors.grey[50],
+                color: AppColors.grey50,
                 borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.grey300.withValues(alpha: 0.5),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Options:',
-                    style: TextStyle(
+                    style: AppTextStyles.caption.copyWith(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[700],
+                      color: AppColors.grey700,
                     ),
                   ),
                   SizedBox(height: 8.h),
@@ -895,46 +814,42 @@ class _SecureDetailedAnswersModalState
                       padding: EdgeInsets.all(8.w),
                       decoration: BoxDecoration(
                         color: isCorrectAnswer
-                            ? Colors.green.withValues(alpha: 0.1)
+                            ? AppColors.success.withValues(alpha: 0.1)
                             : isUserAnswer && !isCorrectAnswer
-                            ? Colors.red.withValues(alpha: 0.1)
-                            : Colors.grey.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(6.r),
+                            ? AppColors.error.withValues(alpha: 0.1)
+                            : AppColors.grey100,
+                        borderRadius: BorderRadius.circular(8.r),
                         border: Border.all(
                           color: isCorrectAnswer
-                              ? Colors.green
+                              ? AppColors.success
                               : isUserAnswer && !isCorrectAnswer
-                              ? Colors.red
-                              : Colors.grey.withValues(alpha: 0.3),
-                          width:
-                              isCorrectAnswer ||
-                                  (isUserAnswer && !isCorrectAnswer)
-                              ? 1.w
-                              : 1.w,
+                              ? AppColors.error
+                              : AppColors.grey300,
+                          width: 1,
                         ),
                       ),
                       child: Row(
                         children: [
                           Container(
-                            width: 20.w,
-                            height: 20.w,
+                            width: 24.w,
+                            height: 24.w,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: isCorrectAnswer
-                                  ? Colors.green
+                                  ? AppColors.success
                                   : isUserAnswer && !isCorrectAnswer
-                                  ? Colors.red
-                                  : Colors.grey[300],
+                                  ? AppColors.error
+                                  : AppColors.grey300,
                             ),
                             child: Center(
                               child: Text(
                                 optionKey.toUpperCase(),
-                                style: TextStyle(
+                                style: AppTextStyles.caption.copyWith(
                                   color:
                                       isCorrectAnswer ||
                                           (isUserAnswer && !isCorrectAnswer)
-                                      ? Colors.white
-                                      : Colors.grey[600],
+                                      ? AppColors.white
+                                      : AppColors.grey600,
                                   fontSize: 10.sp,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -945,13 +860,13 @@ class _SecureDetailedAnswersModalState
                           Expanded(
                             child: Text(
                               optionText,
-                              style: TextStyle(
+                              style: AppTextStyles.bodyMedium.copyWith(
                                 fontSize: 13.sp,
                                 color: isCorrectAnswer
-                                    ? Colors.green[800]
+                                    ? AppColors.success
                                     : isUserAnswer && !isCorrectAnswer
-                                    ? Colors.red[800]
-                                    : Colors.grey[700],
+                                    ? AppColors.error
+                                    : AppColors.grey700,
                                 fontWeight:
                                     isCorrectAnswer ||
                                         (isUserAnswer && !isCorrectAnswer)
@@ -963,11 +878,15 @@ class _SecureDetailedAnswersModalState
                           if (isCorrectAnswer)
                             Icon(
                               Icons.check_circle,
-                              color: Colors.green,
-                              size: 16.w,
+                              color: AppColors.success,
+                              size: 16.sp,
                             ),
                           if (isUserAnswer && !isCorrectAnswer)
-                            Icon(Icons.cancel, color: Colors.red, size: 16.w),
+                            Icon(
+                              Icons.cancel,
+                              color: AppColors.error,
+                              size: 16.sp,
+                            ),
                         ],
                       ),
                     );

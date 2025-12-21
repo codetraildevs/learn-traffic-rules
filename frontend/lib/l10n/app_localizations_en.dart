@@ -1,3 +1,5 @@
+import 'package:learn_traffic_rules/core/constants/app_constants.dart';
+
 import 'app_localizations.dart';
 
 class AppLocalizationsEn extends AppLocalizations {
@@ -161,6 +163,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get french => 'French';
+
+  @override
+  String get appTheme => 'Theme';
+
+  @override
+  String get systemDefault => 'System Default';
+
+  @override
+  String get lightTheme => 'Light';
+
+  @override
+  String get darkTheme => 'Dark';
+
+  @override
+  String get followDeviceTheme => 'Follow device theme';
+
+  @override
+  String get alwaysUseLightTheme => 'Always use light theme';
+
+  @override
+  String get alwaysUseDarkTheme => 'Always use dark theme';
+
+  @override
+  String themeChangedTo(String themeName) => 'Theme changed to $themeName';
 
   @override
   String get disclaimer => 'Disclaimer';
@@ -1431,7 +1457,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get duration => 'Duration:';
 
   @override
-  String get toPayViaMoMoDialThisCode => 'To pay via MoMo, dial this code';
+  String get toPayViaMoMoDialThisCode =>
+      'To pay via MoMo, dial this code ${AppConstants.paymentCode} $amount #';
 
   @override
   String get afterPaymentContactAdminToVerify =>

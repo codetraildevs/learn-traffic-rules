@@ -63,7 +63,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.studyReminders),
@@ -495,7 +495,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
 
         if (response['success'] == true) {
           if (mounted) {
-            final l10n = AppLocalizations.of(context)!;
+            final l10n = AppLocalizations.of(context);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(l10n.studyReminderUpdatedSuccessfully),
@@ -509,7 +509,7 @@ class _StudyRemindersScreenState extends ConsumerState<StudyRemindersScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${l10n.failedToSaveReminder}: $e'),

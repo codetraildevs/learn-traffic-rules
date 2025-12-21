@@ -5,11 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:learn_traffic_rules/models/user_model.dart';
-import 'package:learn_traffic_rules/screens/user/payment_instructions_screen.dart';
+import 'package:learn_traffic_rules/screens/user/payment_instructions_screen.dart'
+    as payment_screen;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:learn_traffic_rules/screens/user/progress_screen.dart';
+import 'package:learn_traffic_rules/screens/user/progress_screen.dart'
+    as progress_screen;
 import 'package:share_plus/share_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/exam_provider.dart';
@@ -24,14 +27,16 @@ import '../admin/exam_management_screen.dart';
 import '../admin/user_management_screen.dart';
 import '../admin/access_code_management_screen.dart';
 import '../admin/course_management_screen.dart';
-import '../user/available_exams_screen.dart';
-import '../user/course_list_screen.dart';
-import '../user/course_detail_screen.dart';
+import '../user/available_exams_screen.dart' as exams_screen;
+import '../user/course_list_screen.dart' as courses_list_screen;
+import '../user/course_detail_screen.dart' as course_detail_screen;
 import '../../services/notification_polling_service.dart';
 import '../../providers/course_provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../../services/network_service.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/image_cache_service.dart';
+import '../../services/document_cache_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -475,9 +480,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final examCountsJson = prefs.getString(_cacheKeyExamCountsByType);
       if (examCountsJson != null) {
         try {
-          final examCounts = jsonDecode(examCountsJson) as Map<String, dynamic>;
-          // Store exam counts for use in _buildExamsByType
+          // Exam counts are cached for use in _buildAvailableServicesCard
           // This will be used to show counts even when offline
+          jsonDecode(examCountsJson) as Map<String, dynamic>;
         } catch (e) {
           // Ignore parse errors
         }
@@ -723,7 +728,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         appBar: AppBar(
           title: Builder(
             builder: (context) {
-              final l10n = AppLocalizations.of(context)!;
+              final l10n = AppLocalizations.of(context);
               return Text(l10n.dashboard);
             },
           ),
@@ -779,11 +784,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             SizedBox(height: 24.h),
                           ],
 
-                          // Exams grouped by type (for users)
+                          // Available Services (for users)
                           if (user?.role == 'USER') ...[
-                            _buildExamsByType(),
-                            SizedBox(height: 24.h),
-                            _buildCoursesSection(),
+                            _buildAvailableServicesCard(),
                             SizedBox(height: 24.h),
                             // Quick Stats for users
                             _buildQuickStats(user),
@@ -851,7 +854,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const PaymentInstructionsScreen(),
+        builder: (context) => const payment_screen.PaymentInstructionsScreen(),
       ),
     );
   }
@@ -879,78 +882,63 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       _debugStoredData();
     });
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(16.r),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Builder(
-            builder: (context) {
-              final l10n = AppLocalizations.of(context)!;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isAdmin
-                        ? l10n.adminDashboard
-                        : l10n.welcomeBack(user?.fullName ?? 'User'),
-                    style: AppTextStyles.heading2.copyWith(
-                      color: AppColors.white,
-                      fontSize: 18.sp,
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    isAdmin
-                        ? l10n.manageYourTrafficRulesLearningPlatform
-                        : l10n.readyToMasterTrafficRules,
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      color: AppColors.white.withValues(alpha: 0.9),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-
-          // Access Period Information for regular users
-          if (!isAdmin) ...[
-            SizedBox(height: 12.h),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-              decoration: BoxDecoration(
-                color: AppColors.white.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(
-                  color: AppColors.white.withValues(alpha: 0.3),
-                  width: 1,
-                ),
+    return Builder(
+      builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.2),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(8.w),
-                    decoration: BoxDecoration(
-                      color:
-                          accessPeriod?.hasAccess == true &&
-                              (accessPeriod?.remainingDays ?? 0) > 0
-                          ? AppColors.success.withValues(alpha: 0.2)
-                          : AppColors.error.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Icon(
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Welcome Text
+              Text(
+                isAdmin
+                    ? l10n.adminDashboard
+                    : l10n.welcomeBack(user?.fullName ?? 'User'),
+                style: AppTextStyles.heading3.copyWith(
+                  fontSize: 15.sp,
+                  color: AppColors.grey800,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 6.h),
+              Text(
+                isAdmin
+                    ? l10n.manageYourTrafficRulesLearningPlatform
+                    : l10n.readyToMasterTrafficRules,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.grey600,
+                  fontSize: 12.sp,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+
+              // Access Period Information for regular users
+              if (!isAdmin) ...[
+                SizedBox(height: 10.h),
+                Row(
+                  children: [
+                    Icon(
                       accessPeriod?.hasAccess == true &&
                               (accessPeriod?.remainingDays ?? 0) > 0
                           ? Icons.access_time
@@ -958,99 +946,127 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 (accessPeriod?.remainingDays ?? 0) == 0
                           ? Icons.schedule
                           : Icons.lock,
-                      color: AppColors.white,
-                      size: 20.sp,
+                      size: 16.sp,
+                      color:
+                          accessPeriod?.hasAccess == true &&
+                              (accessPeriod?.remainingDays ?? 0) > 0
+                          ? AppColors.success
+                          : AppColors.error,
                     ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Builder(
-                          builder: (context) {
-                            final l10n = AppLocalizations.of(context)!;
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  accessPeriod?.hasAccess == true &&
-                                          (accessPeriod?.remainingDays ?? 0) > 0
-                                      ? l10n.accessActiveDaysLeft(
-                                          accessPeriod!.remainingDays,
-                                        )
-                                      : accessPeriod?.hasAccess == true &&
-                                            (accessPeriod?.remainingDays ??
-                                                    0) ==
-                                                0
-                                      ? l10n.accessExpired
-                                      : l10n.noAccessCode,
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14.sp,
-                                  ),
-                                ),
-                                if (accessPeriod?.hasAccess == true &&
-                                    (accessPeriod?.remainingDays ?? 0) > 0) ...[
-                                  SizedBox(height: 2.h),
-                                  Text(
-                                    '${l10n.paymentTier} ${accessPeriod?.paymentTier ?? l10n.none}',
-                                    style: AppTextStyles.caption.copyWith(
-                                      color: AppColors.white.withValues(
-                                        alpha: 0.8,
-                                      ),
-                                      fontSize: 11.sp,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            );
-                          },
-                        ),
-                      ],
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            accessPeriod?.hasAccess == true &&
+                                    (accessPeriod?.remainingDays ?? 0) > 0
+                                ? l10n.accessActiveDaysLeft(
+                                    accessPeriod!.remainingDays,
+                                  )
+                                : accessPeriod?.hasAccess == true &&
+                                      (accessPeriod?.remainingDays ?? 0) == 0
+                                ? l10n.accessExpired
+                                : l10n.noAccessCode,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.grey800,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12.sp,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (accessPeriod?.hasAccess == true &&
+                              (accessPeriod?.remainingDays ?? 0) > 0) ...[
+                            SizedBox(height: 2.h),
+                            Text(
+                              '${l10n.paymentTier} ${accessPeriod?.paymentTier ?? l10n.none}',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.grey600,
+                                fontSize: 10.sp,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+                  ],
+                ),
+              ],
 
-          SizedBox(height: 16.h),
-          Builder(
-            builder: (context) {
-              final l10n = AppLocalizations.of(context)!;
-              return CustomButton(
-                text: isAdmin
-                    ? l10n.managePlatform
-                    : (accessPeriod?.hasAccess == true &&
-                          (accessPeriod?.remainingDays ?? 0) > 0)
-                    ? l10n.startLearning
-                    : l10n.getAccessCode,
-                onPressed: () {
-                  if (isAdmin) {
-                    setState(() {
-                      _currentIndex = 0; // Switch to exams tab (now first tab)
-                    });
-                  } else if (accessPeriod?.hasAccess == true &&
-                      (accessPeriod?.remainingDays ?? 0) > 0) {
-                    setState(() {
-                      _currentIndex = 0; // Switch to exams tab (now first tab)
-                    });
-                  } else {
-                    // Show access code instructions
-                    //_showContactSupportDialog();
-                    _showPaymentInstructions();
-                  }
-                },
-                backgroundColor: AppColors.white,
-                textColor: AppColors.primary,
-                width: 150.w,
-              );
-            },
+              // Action Button
+              if (!isAdmin) ...[
+                SizedBox(height: 12.h),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (accessPeriod?.hasAccess == true &&
+                          (accessPeriod?.remainingDays ?? 0) > 0) {
+                        setState(() {
+                          _currentIndex = 0; // Switch to exams tab
+                        });
+                      } else {
+                        _showPaymentInstructions();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.white,
+                      padding: EdgeInsets.symmetric(vertical: 10.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      (accessPeriod?.hasAccess == true &&
+                              (accessPeriod?.remainingDays ?? 0) > 0)
+                          ? l10n.startLearning
+                          : l10n.getAccessCode,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13.sp,
+                        color: AppColors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ] else ...[
+                SizedBox(height: 12.h),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _currentIndex = 0; // Switch to exams tab
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.white,
+                      padding: EdgeInsets.symmetric(vertical: 10.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      l10n.managePlatform,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13.sp,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -1079,7 +1095,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       children: [
         Builder(
           builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
+            final l10n = AppLocalizations.of(context);
             return Text(
               l10n.adminActions,
               style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
@@ -1093,7 +1109,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             Expanded(
               child: Builder(
                 builder: (context) {
-                  final l10n = AppLocalizations.of(context)!;
+                  final l10n = AppLocalizations.of(context);
                   return _buildAdminActionCard(
                     l10n.manageUsers,
                     l10n.viewSearchAndManageAllUsers,
@@ -1113,7 +1129,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             Expanded(
               child: Builder(
                 builder: (context) {
-                  final l10n = AppLocalizations.of(context)!;
+                  final l10n = AppLocalizations.of(context);
                   return _buildAdminActionCard(
                     l10n.manageExams,
                     l10n.createEditAndManageExams,
@@ -1139,7 +1155,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             Expanded(
               child: Builder(
                 builder: (context) {
-                  final l10n = AppLocalizations.of(context)!;
+                  final l10n = AppLocalizations.of(context);
                   return _buildAdminActionCard(
                     l10n.accessCodes,
                     l10n.manageAccessCodesAndPayments,
@@ -1160,7 +1176,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             Expanded(
               child: Builder(
                 builder: (context) {
-                  final l10n = AppLocalizations.of(context)!;
+                  final l10n = AppLocalizations.of(context);
                   return _buildAdminActionCard(
                     l10n.manageCourses,
                     l10n.createEditAndManageCourses,
@@ -1190,7 +1206,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       children: [
         Builder(
           builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
+            final l10n = AppLocalizations.of(context);
             return Text(
               l10n.quickStats,
               style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
@@ -1348,40 +1364,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
-  Widget _buildExamsByType() {
-    // Get current locale and filter by selected language
+  Widget _buildAvailableServicesCard() {
+    final courseState = ref.watch(courseProvider);
     final currentLocale = ref.watch(localeProvider);
     final selectedExamType = _mapLocaleToExamType(currentLocale.languageCode);
 
-    // Filter exams by selected language
+    // Get exam count (works offline with cached data)
     final activeExams = _exams.where((exam) {
       if (!exam.isActive) return false;
-
-      // Get exam type
       String type = exam.examType?.toLowerCase() ?? 'english';
-
-      // If examType is null or 'unknown', try to infer from title
       if (type == 'unknown' || exam.examType == null) {
-        final titleLower = exam.title.toLowerCase();
-        if (titleLower.contains('kiny') || titleLower.contains('kinyarwanda')) {
-          type = 'kinyarwanda';
-        } else if (titleLower.contains('french') ||
-            titleLower.contains('français')) {
-          type = 'french';
-        } else {
-          type = 'english'; // Default to english
-        }
-      }
-
-      // Only include exams matching the selected language
-      return type == selectedExamType.toLowerCase();
-    }).toList();
-
-    // Group filtered exams by type (should only be one type now)
-    final Map<String, List<Exam>> examsByType = {};
-    for (final exam in activeExams) {
-      String type = exam.examType?.toLowerCase() ?? 'english';
-      if (exam.examType == null || type == 'unknown') {
         final titleLower = exam.title.toLowerCase();
         if (titleLower.contains('kiny') || titleLower.contains('kinyarwanda')) {
           type = 'kinyarwanda';
@@ -1392,118 +1384,156 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           type = 'english';
         }
       }
-      examsByType.putIfAbsent(type, () => []).add(exam);
-    }
+      return type == selectedExamType.toLowerCase();
+    }).toList();
 
-    // If no exams loaded, try to load cached exam counts
-    if (examsByType.isEmpty) {
-      return FutureBuilder<Map<String, int>?>(
-        future: _loadCachedExamCounts(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-            final cachedCounts = snapshot.data!;
-            // Only show card for selected language
-            final count = cachedCounts[selectedExamType] ?? 0;
+    final examCount = activeExams.length;
 
-            if (count == 0) {
-              return Container(
-                padding: EdgeInsets.all(20.w),
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(16.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.quiz_outlined,
-                      size: 48.sp,
-                      color: AppColors.grey400,
-                    ),
-                    SizedBox(height: 16.h),
-                    Builder(
-                      builder: (context) {
-                        final l10n = AppLocalizations.of(context);
-                        return Text(
-                          l10n.noExamsAvailable,
-                          style: AppTextStyles.bodyLarge.copyWith(
-                            color: AppColors.grey600,
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context);
-                    return Text(
-                      l10n.availableExams,
-                      style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
-                    );
-                  },
-                ),
-                SizedBox(height: 16.h),
-                // Show only one card for selected language
-                _buildExamTypeCard(selectedExamType, [], cachedCount: count),
-              ],
-            );
-          }
-
-          // No cached data either
-          return Container(
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
+    return Builder(
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Available Services',
+              style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
             ),
-            child: Column(
+            SizedBox(height: 16.h),
+            // First row: Exams and Courses
+            Row(
               children: [
-                Icon(
-                  Icons.quiz_outlined,
-                  size: 48.sp,
-                  color: AppColors.grey400,
+                Expanded(
+                  child: _buildServiceCard(
+                    icon: Icons.quiz,
+                    iconColor: AppColors.primary,
+                    imageUrl:
+                        '${AppConstants.baseUrlImage}exam3.jpg', // Replace with actual exam icon image
+                    title: l10n.exams,
+                    subtitle: examCount > 0
+                        ? '$examCount ${examCount == 1 ? l10n.exam : l10n.exams}'
+                        : l10n.practiceExams,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const exams_screen.AvailableExamsScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-                SizedBox(height: 16.h),
-                Text(
-                  'No exams available',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.grey600,
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: _buildServiceCard(
+                    icon: Icons.school,
+                    iconColor: AppColors.success,
+                    imageUrl:
+                        '${AppConstants.baseUrlImage}exam4.jpg', // Replace with actual course icon image
+                    title: l10n.courses,
+                    subtitle: courseState.isLoading
+                        ? l10n.loading
+                        : courseState.courses.isEmpty
+                        ? l10n.noCoursesAvailable
+                        : '${courseState.courses.length} ${l10n.courses}',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const courses_list_screen.CourseListScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
             ),
-          );
-        },
-      );
+            SizedBox(height: 12.h),
+            // Second row: WhatsApp Group and Share App
+            Row(
+              children: [
+                Expanded(
+                  child: _buildServiceCard(
+                    icon: Icons.chat,
+                    iconColor: Colors.green,
+                    imageUrl:
+                        '${AppConstants.baseUrlImage}exam5.jpg', // Replace with actual WhatsApp icon image
+                    title: 'Join WhatsApp Group',
+                    subtitle: 'Connect with learners',
+                    onTap: () => _joinWhatsAppGroup(),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: _buildServiceCard(
+                    icon: Icons.share,
+                    iconColor: AppColors.warning,
+                    imageUrl:
+                        '${AppConstants.baseUrlImage}exam6.jpg', // Replace with actual share icon image
+                    title: l10n.shareApp,
+                    subtitle: 'Share with friends',
+                    onTap: () => _shareApp(),
+                  ),
+                ),
+              ],
+            ),
+
+            // Third row: Gazette and Road Signs
+            Row(
+              children: [
+                Expanded(
+                  child: _buildServiceCard(
+                    icon: Icons.description,
+                    iconColor: AppColors.primary,
+                    imageUrl:
+                        '${AppConstants.baseUrlImage}exam1.jpg', // Replace with actual gazette icon image
+                    title: 'Gazette',
+                    subtitle: 'Traffic rules gazette',
+                    onTap: () => _openGazette(context),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: _buildServiceCard(
+                    icon: Icons.traffic,
+                    iconColor: AppColors.success,
+                    imageUrl:
+                        '${AppConstants.baseUrlImage}exam2.jpg', // Replace with actual road signs icon image
+                    title: l10n.roadSigns,
+                    subtitle: 'Road signs guide',
+                    onTap: () => _openRoadSigns(context),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildServiceCard({
+    required IconData icon,
+    required Color iconColor,
+    String? imageUrl,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    // Pre-cache image if provided
+    if (imageUrl != null) {
+      ImageCacheService.instance.cacheImage(imageUrl);
     }
 
-    // Only show card for selected language
-    if (examsByType.isEmpty || !examsByType.containsKey(selectedExamType)) {
-      return Container(
-        padding: EdgeInsets.all(20.w),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
           color: AppColors.white,
-          borderRadius: BorderRadius.circular(16.r),
+          borderRadius: BorderRadius.circular(12.r),
           boxShadow: [
             BoxShadow(
               color: AppColors.black.withValues(alpha: 0.05),
@@ -1513,53 +1543,286 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ],
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.quiz_outlined, size: 48.sp, color: AppColors.grey400),
-            SizedBox(height: 16.h),
-            Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context);
-                return Text(
-                  l10n.noExamsAvailable,
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.grey600,
-                  ),
-                );
-              },
+            // Use image from server if provided, otherwise use icon
+            if (imageUrl != null)
+              FutureBuilder<String>(
+                future: ImageCacheService.instance.getImagePath(imageUrl),
+                builder: (context, snapshot) {
+                  final imagePath = snapshot.data ?? imageUrl;
+                  if (imagePath.isNotEmpty) {
+                    return Container(
+                      width: 48.w,
+                      height: 48.w,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8.r),
+                        color: AppColors.grey50,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8.r),
+                        child:
+                            imagePath.startsWith('http') ||
+                                imagePath.startsWith('/') ||
+                                imagePath.startsWith('file://')
+                            ? imagePath.startsWith('file://')
+                                  ? Image.file(
+                                      File(
+                                        imagePath.replaceFirst('file://', ''),
+                                      ),
+                                      width: 48.w,
+                                      height: 48.w,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            return Icon(
+                                              icon,
+                                              size: 24.sp,
+                                              color: iconColor,
+                                            );
+                                          },
+                                    )
+                                  : Image.network(
+                                      imagePath.startsWith('http')
+                                          ? imagePath
+                                          : '${AppConstants.baseUrlImage}$imagePath',
+                                      width: 48.w,
+                                      height: 48.w,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            return Icon(
+                                              icon,
+                                              size: 24.sp,
+                                              color: iconColor,
+                                            );
+                                          },
+                                      loadingBuilder:
+                                          (context, child, loadingProgress) {
+                                            if (loadingProgress == null) {
+                                              return child;
+                                            }
+                                            return Icon(
+                                              icon,
+                                              size: 24.sp,
+                                              color: iconColor,
+                                            );
+                                          },
+                                    )
+                            : Image.file(
+                                File(imagePath),
+                                width: 48.w,
+                                height: 48.w,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Icon(
+                                    icon,
+                                    size: 24.sp,
+                                    color: iconColor,
+                                  );
+                                },
+                              ),
+                      ),
+                    );
+                  }
+                  return Icon(icon, size: 24.sp, color: iconColor);
+                },
+              )
+            else
+              Icon(icon, size: 24.sp, color: iconColor),
+            SizedBox(height: 8.h),
+            Text(
+              title,
+              style: AppTextStyles.bodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 14.sp,
+                color: AppColors.grey800,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              subtitle,
+              style: AppTextStyles.caption.copyWith(
+                fontSize: 11.sp,
+                color: AppColors.grey600,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _openGazette(BuildContext context) async {
+    // Gazette document URL - replace with actual URL from server
+    const gazetteUrl = '/uploads/documents/gazette.pdf';
+    const fileName = 'gazette.pdf';
+
+    try {
+      // Show loading indicator
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      // Cache document
+      final cachedPath = await DocumentCacheService.instance.cacheDocument(
+        gazetteUrl,
+        fileName,
+      );
+
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading dialog
+
+        String filePath = cachedPath ?? gazetteUrl;
+        // Handle local file paths
+        if (cachedPath != null && !cachedPath.startsWith('http')) {
+          // Local file path - use file:// protocol
+          filePath = 'file://$cachedPath';
+        } else if (!filePath.startsWith('http') &&
+            !filePath.startsWith('file://')) {
+          if (filePath.startsWith('/')) {
+            filePath = '${AppConstants.baseUrl}$filePath';
+          } else {
+            filePath = '${AppConstants.baseUrl}/$filePath';
+          }
+        }
+
+        // Open PDF using url_launcher (will open in external PDF viewer)
+        final uri = filePath.startsWith('file://')
+            ? Uri.file(cachedPath!)
+            : Uri.parse(filePath);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Could not open document. Please try again.'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error opening gazette: $e');
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading dialog if still open
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error opening document. Please try again later.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _openRoadSigns(BuildContext context) async {
+    // Road signs document URL - replace with actual URL from server
+    const roadSignsUrl = '/uploads/documents/road_signs.pdf';
+    const fileName = 'road_signs.pdf';
+
+    try {
+      // Show loading indicator
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      // Cache document
+      final cachedPath = await DocumentCacheService.instance.cacheDocument(
+        roadSignsUrl,
+        fileName,
+      );
+
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading dialog
+
+        String filePath = cachedPath ?? roadSignsUrl;
+        // Handle local file paths
+        if (cachedPath != null && !cachedPath.startsWith('http')) {
+          // Local file path - use file:// protocol
+          filePath = 'file://$cachedPath';
+        } else if (!filePath.startsWith('http') &&
+            !filePath.startsWith('file://')) {
+          if (filePath.startsWith('/')) {
+            filePath = '${AppConstants.baseUrl}$filePath';
+          } else {
+            filePath = '${AppConstants.baseUrl}/$filePath';
+          }
+        }
+
+        // Open PDF using url_launcher (will open in external PDF viewer)
+        final uri = filePath.startsWith('file://')
+            ? Uri.file(cachedPath!)
+            : Uri.parse(filePath);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Could not open document. Please try again.'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error opening road signs: $e');
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading dialog if still open
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error opening document. Please try again later.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _joinWhatsAppGroup() async {
+    // WhatsApp group invite link - if user doesn't have WhatsApp, it will prompt to download
+    const whatsappGroupLink =
+        'https://chat.whatsapp.com/JHfdbKSYVFz1s5jlTKfpcm?mode=wwt';
+    final Uri whatsappUri = Uri.parse(whatsappGroupLink);
+
+    debugPrint('🔍 WhatsApp Group URL: $whatsappUri');
+
+    try {
+      await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
+      debugPrint('✅ WhatsApp group link launched successfully');
+    } catch (e) {
+      debugPrint('❌ WhatsApp group link launch failed: $e');
+      if (!mounted) return;
+
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.whatsappNotAvailableTryTheseAlternatives),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 3),
+        ),
       );
     }
-
-    final exams = examsByType[selectedExamType] ?? [];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Builder(
-          builder: (context) {
-            final l10n = AppLocalizations.of(context);
-            return Text(
-              l10n.availableExams,
-              style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
-            );
-          },
-        ),
-        SizedBox(height: 16.h),
-        // Show only one card for selected language
-        FutureBuilder<Map<String, int>?>(
-          future: _loadCachedExamCounts(),
-          builder: (context, snapshot) {
-            final cachedCount = snapshot.data?[selectedExamType];
-            return _buildExamTypeCard(
-              selectedExamType,
-              exams,
-              cachedCount: cachedCount,
-            );
-          },
-        ),
-      ],
-    );
   }
 
   Widget _buildCoursesSection() {
@@ -1589,7 +1852,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const CourseListScreen(),
+                            builder: (context) =>
+                                const courses_list_screen.CourseListScreen(),
                           ),
                         );
                       },
@@ -1710,7 +1974,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => CourseDetailScreen(course: course),
+              builder: (context) =>
+                  course_detail_screen.CourseDetailScreen(course: course),
             ),
           );
         },
@@ -1881,7 +2146,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           context,
           MaterialPageRoute(
             builder: (context) =>
-                AvailableExamsScreen(initialExamType: examType),
+                exams_screen.AvailableExamsScreen(initialExamType: examType),
           ),
         );
       },
@@ -2213,7 +2478,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       return const ExamManagementScreen();
     }
 
-    return const AvailableExamsScreen();
+    return const exams_screen.AvailableExamsScreen();
   }
 
   Widget _buildProgressTab() {
@@ -2222,7 +2487,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final isUser = user?.role == 'USER';
 
     if (isUser) {
-      return const ProgressScreen();
+      return const progress_screen.ProgressScreen();
     }
     return const UserManagementScreen();
   }
@@ -2236,8 +2501,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       appBar: AppBar(
         title: Builder(
           builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
-            return Text(l10n.profile);
+            final l10n = AppLocalizations.of(context);
+            return Text(
+              l10n.profile,
+              style: AppTextStyles.heading3.copyWith(
+                fontSize: 20.sp,
+                color: AppColors.white,
+              ),
+            );
           },
         ),
         backgroundColor: AppColors.primary,
@@ -2247,72 +2518,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         padding: EdgeInsets.all(16.w),
         child: Column(
           children: [
-            // Profile Card
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(20.w),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 40.r,
-                    backgroundColor: AppColors.primary,
-                    child: Icon(
-                      Icons.person,
-                      size: 40.sp,
-                      color: AppColors.white,
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  Text(
-                    user?.fullName ?? 'User',
-                    style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    user?.phoneNumber ?? 'No phone number',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.grey600,
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 4.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Text(
-                      user?.role ?? 'USER',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 24.h),
+            SizedBox(height: 12.h),
 
             // Settings Options
             Builder(
               builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
+                final l10n = AppLocalizations.of(context);
                 return Column(
                   children: [
                     _buildSettingsOption(
@@ -2324,24 +2535,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       },
                     ),
 
-                    _buildSettingsOption(
-                      l10n.notifications,
-                      l10n.manageYourNotificationPreferences,
-                      Icons.notifications,
-                      () {
-                        Navigator.pushNamed(context, '/notifications');
-                      },
-                    ),
+                    // _buildSettingsOption(
+                    //   l10n.notifications,
+                    //   l10n.manageYourNotificationPreferences,
+                    //   Icons.notifications,
+                    //   () {
+                    //     Navigator.pushNamed(context, '/notifications');
+                    //   },
+                    // ),
 
-                    _buildSettingsOption(
-                      l10n.studyReminders,
-                      l10n.setUpStudyReminders,
-                      Icons.schedule,
-                      () {
-                        Navigator.pushNamed(context, '/study-reminders');
-                      },
-                    ),
-
+                    // _buildSettingsOption(
+                    //   l10n.studyReminders,
+                    //   l10n.setUpStudyReminders,
+                    //   Icons.schedule,
+                    //   () {
+                    //     Navigator.pushNamed(context, '/study-reminders');
+                    //   },
+                    // ),
                     _buildSettingsOption(
                       l10n.aboutApp,
                       l10n.learnMoreAboutThisApplication,
@@ -2406,7 +2616,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             // Logout Button
             Builder(
               builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
+                final l10n = AppLocalizations.of(context);
                 return CustomButton(
                   text: l10n.logout,
                   onPressed: () async {
@@ -2414,7 +2624,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     final shouldLogout = await showDialog<bool>(
                       context: context,
                       builder: (context) {
-                        final l10n = AppLocalizations.of(context)!;
+                        final l10n = AppLocalizations.of(context);
                         return AlertDialog(
                           title: Row(
                             children: [

@@ -259,7 +259,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   // Users can now exit and return to continue the exam
 
   void _showExitWarning() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -275,10 +275,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              l10n.whatWouldYouLikeToDo,
-              style: AppTextStyles.bodyMedium,
-            ),
+            Text(l10n.whatWouldYouLikeToDo, style: AppTextStyles.bodyMedium),
             SizedBox(height: 12.h),
             Container(
               padding: EdgeInsets.all(8.w),
@@ -566,7 +563,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
               Navigator.pop(context);
               _submitExam();
             },
-            child: Text(AppLocalizations.of(context)!.submitExam),
+            child: Text(AppLocalizations.of(context).submitExam),
           ),
         ],
       ),
@@ -1765,7 +1762,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   }
 
   void _showFinishExamDialog() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final answeredCount = _userAnswers.length;
     final totalQuestions = _questions.length;
     final unansweredCount = totalQuestions - answeredCount;
@@ -1781,9 +1778,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
         title: Row(
           children: [
             Icon(
-              allAnswered
-                  ? Icons.check_circle
-                  : Icons.warning_amber_rounded,
+              allAnswered ? Icons.check_circle : Icons.warning_amber_rounded,
               color: allAnswered ? AppColors.success : AppColors.warning,
               size: 24.sp,
             ),

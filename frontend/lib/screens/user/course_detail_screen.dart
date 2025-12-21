@@ -49,7 +49,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
         });
       } else {
         if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
+          final l10n = AppLocalizations.of(context);
           setState(() {
             _error = response.message ?? l10n.failedToLoadCourseDetails;
             _fullCourse = widget.course; // Fallback to basic course info
@@ -58,7 +58,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         setState(() {
           _error = '${l10n.errorLoadingCourse}: $e';
           _fullCourse = widget.course; // Fallback to basic course info
@@ -73,7 +73,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final authState = ref.watch(authProvider);
     // Global payment: if user has access, they can access all paid courses
     final hasAccess = authState.accessPeriod?.hasAccess ?? false;
@@ -270,7 +270,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                   children: [
                     Builder(
                       builder: (context) {
-                        final l10n = AppLocalizations.of(context)!;
+                        final l10n = AppLocalizations.of(context);
                         return Text(
                           l10n.difficulty,
                           style: AppTextStyles.caption.copyWith(
@@ -319,7 +319,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
             children: [
               Builder(
                 builder: (context) {
-                  final l10n = AppLocalizations.of(context)!;
+                  final l10n = AppLocalizations.of(context);
                   return _buildInfoItem(
                     Icons.article,
                     l10n.contentItemsCount(course.contentCount ?? 0),
@@ -370,7 +370,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
         children: [
           Builder(
             builder: (context) {
-              final l10n = AppLocalizations.of(context)!;
+              final l10n = AppLocalizations.of(context);
               return Text(
                 l10n.descriptionLabel,
                 style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
@@ -410,7 +410,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
         children: [
           Builder(
             builder: (context) {
-              final l10n = AppLocalizations.of(context)!;
+              final l10n = AppLocalizations.of(context);
               return Text(
                 l10n.courseContent,
                 style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
@@ -506,7 +506,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
   Widget _buildErrorView() {
     return Builder(
       builder: (context) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         return Center(
           child: Padding(
             padding: EdgeInsets.all(20.w),

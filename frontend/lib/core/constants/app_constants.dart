@@ -150,6 +150,7 @@ class AppConstants {
   ];
 
   static const List<String> supportedDocumentFormats = ['pdf', 'doc', 'docx'];
+  static const paymentCode = '*182*8*1*329494*';
 
   // API Endpoints
   static const String authEndpoint = '/auth';

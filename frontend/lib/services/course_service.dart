@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants/app_constants.dart';
@@ -86,23 +87,33 @@ class CourseService {
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         // Debug logging
-        print('✅ Course API Response: ${jsonData['success']}');
-        print(
-          '📦 Course Data: ${jsonData['data'] != null ? 'Present' : 'Missing'}',
-        );
-        if (jsonData['data'] != null && jsonData['data']['contents'] != null) {
+        if (kDebugMode) {
+          print('✅ Course API Response: ${jsonData['success']}');
+        }
+        if (kDebugMode) {
           print(
-            '📚 Contents Count: ${(jsonData['data']['contents'] as List).length}',
+            '📦 Course Data: ${jsonData['data'] != null ? 'Present' : 'Missing'}',
           );
+        }
+        if (jsonData['data'] != null && jsonData['data']['contents'] != null) {
+          if (kDebugMode) {
+            print(
+              '📚 Contents Count: ${(jsonData['data']['contents'] as List).length}',
+            );
+          }
         } else {
-          print('⚠️ Contents: ${jsonData['data']?['contents']}');
+          if (kDebugMode) {
+            print('⚠️ Contents: ${jsonData['data']?['contents']}');
+          }
         }
         return CourseResponse.fromJson(jsonData);
       } else {
         final errorData = json.decode(response.body);
-        print(
-          '❌ Course API Error: ${response.statusCode} - ${errorData['message']}',
-        );
+        if (kDebugMode) {
+          print(
+            '❌ Course API Error: ${response.statusCode} - ${errorData['message']}',
+          );
+        }
         return CourseResponse(
           success: false,
           message: errorData['message'] ?? 'Failed to load course',

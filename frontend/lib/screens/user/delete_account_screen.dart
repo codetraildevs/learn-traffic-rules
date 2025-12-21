@@ -31,7 +31,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
@@ -118,7 +118,10 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                     user?.phoneNumber ?? l10n.notProvided,
                   ),
                   //_buildInfoRow('User ID', user?.id ?? 'Not available'),
-                  _buildInfoRow(l10n.accountStatus, user?.role ?? l10n.userRole),
+                  _buildInfoRow(
+                    l10n.accountStatus,
+                    user?.role ?? l10n.userRole,
+                  ),
                 ],
               ),
             ),
@@ -234,7 +237,9 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                     ),
                     onChanged: (value) {
                       setState(() {
-                        _confirmDeletion = value.toUpperCase() == l10n.deleteConfirmationWord.toUpperCase();
+                        _confirmDeletion =
+                            value.toUpperCase() ==
+                            l10n.deleteConfirmationWord.toUpperCase();
                       });
                     },
                   ),
@@ -269,7 +274,9 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                           setState(() {
                             _confirmDeletion = value ?? false;
                             if (_confirmDeletion) {
-                              _confirmationController.text = l10n.deleteConfirmationWord.toUpperCase();
+                              _confirmationController.text = l10n
+                                  .deleteConfirmationWord
+                                  .toUpperCase();
                             } else {
                               _confirmationController.clear();
                             }
@@ -378,7 +385,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
 
     try {
       // Show confirmation dialog
-      final l10n = AppLocalizations.of(context)!;
+      final l10n = AppLocalizations.of(context);
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
@@ -410,7 +417,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
 
       // Show success message
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(l10n.accountDeletedSuccessfully),
@@ -430,7 +437,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${l10n.failedToDeleteAccount}: $e'),
