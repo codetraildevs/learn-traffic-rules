@@ -49,6 +49,8 @@ temp/
 !uploads/courses/images/
 !uploads/courses/audio/
 !uploads/courses/video/
+!uploads/documents/
+!uploads/images/
 
 
 # Exam question CSV files (large data files)
