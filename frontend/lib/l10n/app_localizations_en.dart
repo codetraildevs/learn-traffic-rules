@@ -153,7 +153,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
-  String get selectLanguage => 'Select Language';
+  String get selectLanguage => 'Select Language (Hindura ururimi)';
 
   @override
   String get english => 'English';
@@ -2618,4 +2618,40 @@ Privacy:
 
   @override
   String lastUpdatedDate(String date) => 'Last updated: $date';
+
+  @override
+  String get availableService => 'Available Services';
+
+  @override
+  String get joinWhatsAppGroup => 'Join WhatsApp Group';
+
+  @override
+  String get connectWithLearners => 'Connect with learners';
+
+  @override
+  String get shareProgram => 'Share the app';
+
+  @override
+  String get shareWithFriends => 'Share with friends';
+
+  @override
+  String get officialGazette => 'Official Gazette';
+
+  @override
+  String get officialGazetteDescription => 'Official Gazette of Rwanda';
+
+  @override
+  String get roadSignsGuide => 'Road Signs Guide';
+
+  @override
+  String get roadSignsDescription => 'Guide to road signs';
+
+  @override
+  String get errorLoadingData => 'An error occurred while loading data';
+
+  @override
+  String get noInternet => 'No internet connection available';
+
+  @override
+  String get totalLessons => 'All lessons';
 }

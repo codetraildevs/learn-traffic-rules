@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:learn_traffic_rules/models/user_model.dart';
 import 'package:learn_traffic_rules/screens/user/payment_instructions_screen.dart'
     as payment_screen;
+import 'package:learn_traffic_rules/screens/user/pdf_viewer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:learn_traffic_rules/screens/user/progress_screen.dart'
     as progress_screen;
@@ -37,6 +38,7 @@ import '../../services/network_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/image_cache_service.dart';
 import '../../services/document_cache_service.dart';
+import '../user/open_gazette.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -105,7 +107,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // Load courses (will use cache if available)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(courseProvider.notifier).loadCourses(forceRefresh: false);
+      // Pre-cache all service card images
+      _precacheServiceImages();
     });
+  }
+
+  void _precacheServiceImages() {
+    // Pre-cache all images used in service cards
+    final imageUrls = [
+      '${AppConstants.imageBaseUrl}online_school.png',
+      '${AppConstants.imageBaseUrl}courses.png',
+      '${AppConstants.imageBaseUrl}traffic_signs.png',
+      '${AppConstants.imageBaseUrl}roadsigns.png',
+    ];
+
+    for (final imageUrl in imageUrls) {
+      ImageCacheService.instance.cacheImage(imageUrl);
+    }
+    debugPrint('✅ Pre-cached ${imageUrls.length} service card images');
   }
 
   @override
@@ -210,7 +229,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       } else {
         // No internet and no cache - show error
         if (mounted) {
-          final l10n = AppLocalizations.of(context)!;
+          final l10n = AppLocalizations.of(context);
           setState(() {
             _error = l10n.noInternetConnectionAndNoCachedDataAvailable;
             _isLoading = false;
@@ -226,7 +245,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       if (cachedDataLoaded) {
         debugPrint('📦 Error occurred, using cached data as fallback');
       } else if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         setState(() {
           _error = '${l10n.failedToLoadDashboardData}: $e';
         });
@@ -605,7 +624,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       });
     }
 
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -679,7 +698,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           final shouldExit = await showDialog<bool>(
             context: context,
             builder: (context) {
-              final l10n = AppLocalizations.of(context)!;
+              final l10n = AppLocalizations.of(context);
               return AlertDialog(
                 title: Row(
                   children: [
@@ -770,7 +789,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         children: [
                           // Welcome Card
                           _buildWelcomeCard(user),
-                          SizedBox(height: 24.h),
+                          SizedBox(height: 12.h),
 
                           // Admin Quick ActionsR
                           if (user?.role == 'ADMIN') ...[
@@ -787,14 +806,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           // Available Services (for users)
                           if (user?.role == 'USER') ...[
                             _buildAvailableServicesCard(),
-                            SizedBox(height: 24.h),
+                            SizedBox(height: 12.h),
                             // Quick Stats for users
-                            _buildQuickStats(user),
-                            SizedBox(height: 24.h),
+                            // _buildQuickStats(user),
+                            //SizedBox(height: 24.h),
                           ],
 
                           // Recent Activity
-                          _buildRecentActivity(user),
+                          //_buildRecentActivity(user),
                         ],
                       ),
                     ),
@@ -816,7 +835,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             SizedBox(height: 16.h),
             Builder(
               builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
+                final l10n = AppLocalizations.of(context);
                 return Column(
                   children: [
                     Text(
@@ -884,7 +903,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     return Builder(
       builder: (context) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         return Container(
           width: double.infinity,
           padding: EdgeInsets.all(12.w),
@@ -1222,7 +1241,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               Expanded(
                 child: Builder(
                   builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
+                    final l10n = AppLocalizations.of(context);
                     return _buildStatCard(
                       l10n.totalUsersLabel,
                       '$_totalUsers',
@@ -1236,7 +1255,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               Expanded(
                 child: Builder(
                   builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
+                    final l10n = AppLocalizations.of(context);
                     return _buildStatCard(
                       l10n.totalExams,
                       '$_totalExams',
@@ -1254,7 +1273,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               Expanded(
                 child: Builder(
                   builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
+                    final l10n = AppLocalizations.of(context);
                     return _buildStatCard(
                       l10n.totalAttempts,
                       '$_totalExamResults',
@@ -1268,7 +1287,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               Expanded(
                 child: Builder(
                   builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
+                    final l10n = AppLocalizations.of(context);
                     return _buildStatCard(
                       l10n.avgScore,
                       '${_averageScore.toStringAsFixed(1)}%',
@@ -1287,7 +1306,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               Expanded(
                 child: Builder(
                   builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
+                    final l10n = AppLocalizations.of(context);
                     return _buildStatCard(
                       l10n.examsTaken,
                       '$_totalExamsTaken',
@@ -1301,7 +1320,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               Expanded(
                 child: Builder(
                   builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
+                    final l10n = AppLocalizations.of(context);
                     return _buildStatCard(
                       l10n.averageScore,
                       '${_averageScore.toStringAsFixed(1)}%',
@@ -1319,7 +1338,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               Expanded(
                 child: Builder(
                   builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
+                    final l10n = AppLocalizations.of(context);
                     return _buildStatCard(
                       l10n.studyStreak,
                       l10n.studyStreakDays(_studyStreak),
@@ -1333,7 +1352,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               Expanded(
                 child: Builder(
                   builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
+                    final l10n = AppLocalizations.of(context);
                     return _buildStatCard(
                       l10n.achievements,
                       '$_achievements',
@@ -1396,10 +1415,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Available Services',
+              l10n.availableService,
               style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
             ),
-            SizedBox(height: 16.h),
+
             // First row: Exams and Courses
             Row(
               children: [
@@ -1407,8 +1426,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   child: _buildServiceCard(
                     icon: Icons.quiz,
                     iconColor: AppColors.primary,
-                    imageUrl:
-                        '${AppConstants.baseUrlImage}exam3.jpg', // Replace with actual exam icon image
+                    imageUrl: '${AppConstants.baseUrlImage}exam14.png',
                     title: l10n.exams,
                     subtitle: examCount > 0
                         ? '$examCount ${examCount == 1 ? l10n.exam : l10n.exams}'
@@ -1424,19 +1442,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     },
                   ),
                 ),
-                SizedBox(width: 12.w),
+                SizedBox(width: 8.w),
                 Expanded(
                   child: _buildServiceCard(
                     icon: Icons.school,
                     iconColor: AppColors.success,
                     imageUrl:
-                        '${AppConstants.baseUrlImage}exam4.jpg', // Replace with actual course icon image
+                        '${AppConstants.imageBaseUrl}signs.png', // Replace with actual course icon image
                     title: l10n.courses,
                     subtitle: courseState.isLoading
                         ? l10n.loading
                         : courseState.courses.isEmpty
                         ? l10n.noCoursesAvailable
-                        : '${courseState.courses.length} ${l10n.courses}',
+                        : '${courseState.courses.length} ${l10n.totalLessons}',
                     onTap: () {
                       Navigator.push(
                         context,
@@ -1450,7 +1468,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ),
               ],
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: 8.h),
             // Second row: WhatsApp Group and Share App
             Row(
               children: [
@@ -1458,22 +1476,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   child: _buildServiceCard(
                     icon: Icons.chat,
                     iconColor: Colors.green,
-                    imageUrl:
-                        '${AppConstants.baseUrlImage}exam5.jpg', // Replace with actual WhatsApp icon image
-                    title: 'Join WhatsApp Group',
-                    subtitle: 'Connect with learners',
+                    title: l10n.joinWhatsAppGroup,
+                    subtitle: l10n.connectWithLearners,
                     onTap: () => _joinWhatsAppGroup(),
                   ),
                 ),
-                SizedBox(width: 12.w),
+                SizedBox(width: 8.w),
                 Expanded(
                   child: _buildServiceCard(
                     icon: Icons.share,
                     iconColor: AppColors.warning,
-                    imageUrl:
-                        '${AppConstants.baseUrlImage}exam6.jpg', // Replace with actual share icon image
-                    title: l10n.shareApp,
-                    subtitle: 'Share with friends',
+
+                    title: l10n.shareProgram,
+                    subtitle: l10n.shareWithFriends,
                     onTap: () => _shareApp(),
                   ),
                 ),
@@ -1481,6 +1496,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
 
             // Third row: Gazette and Road Signs
+            SizedBox(height: 8.h),
             Row(
               children: [
                 Expanded(
@@ -1488,26 +1504,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     icon: Icons.description,
                     iconColor: AppColors.primary,
                     imageUrl:
-                        '${AppConstants.baseUrlImage}exam1.jpg', // Replace with actual gazette icon image
-                    title: 'Gazette',
-                    subtitle: 'Traffic rules gazette',
+                        '${AppConstants.imageBaseUrl}roadsigns1.png', // Replace with actual gazette icon image
+                    title: l10n.officialGazette,
+                    subtitle: l10n.officialGazetteDescription,
                     onTap: () => _openGazette(context),
                   ),
                 ),
-                SizedBox(width: 12.w),
+                SizedBox(width: 8.w),
                 Expanded(
                   child: _buildServiceCard(
                     icon: Icons.traffic,
                     iconColor: AppColors.success,
                     imageUrl:
-                        '${AppConstants.baseUrlImage}exam2.jpg', // Replace with actual road signs icon image
-                    title: l10n.roadSigns,
-                    subtitle: 'Road signs guide',
+                        '${AppConstants.imageBaseUrl}roadsigns.png', // Replace with actual road signs icon image
+                    title: l10n.roadSignsGuide,
+                    subtitle: l10n.roadSignsDescription,
                     onTap: () => _openRoadSigns(context),
                   ),
                 ),
               ],
             ),
+            SizedBox(height: 8.h),
           ],
         );
       },
@@ -1530,10 +1547,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(16.w),
+        height: 150
+            .h, // Fixed height to ensure consistent card sizes and larger images
+        padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(12.r),
+          border: Border.all(color: AppColors.grey200, width: 1),
           boxShadow: [
             BoxShadow(
               color: AppColors.black.withValues(alpha: 0.05),
@@ -1544,92 +1564,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Use image from server if provided, otherwise use icon
-            if (imageUrl != null)
-              FutureBuilder<String>(
-                future: ImageCacheService.instance.getImagePath(imageUrl),
-                builder: (context, snapshot) {
-                  final imagePath = snapshot.data ?? imageUrl;
-                  if (imagePath.isNotEmpty) {
-                    return Container(
-                      width: 48.w,
-                      height: 48.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8.r),
-                        color: AppColors.grey50,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.r),
-                        child:
-                            imagePath.startsWith('http') ||
-                                imagePath.startsWith('/') ||
-                                imagePath.startsWith('file://')
-                            ? imagePath.startsWith('file://')
-                                  ? Image.file(
-                                      File(
-                                        imagePath.replaceFirst('file://', ''),
-                                      ),
-                                      width: 48.w,
-                                      height: 48.w,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                            return Icon(
-                                              icon,
-                                              size: 24.sp,
-                                              color: iconColor,
-                                            );
-                                          },
-                                    )
-                                  : Image.network(
-                                      imagePath.startsWith('http')
-                                          ? imagePath
-                                          : '${AppConstants.baseUrlImage}$imagePath',
-                                      width: 48.w,
-                                      height: 48.w,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                            return Icon(
-                                              icon,
-                                              size: 24.sp,
-                                              color: iconColor,
-                                            );
-                                          },
-                                      loadingBuilder:
-                                          (context, child, loadingProgress) {
-                                            if (loadingProgress == null) {
-                                              return child;
-                                            }
-                                            return Icon(
-                                              icon,
-                                              size: 24.sp,
-                                              color: iconColor,
-                                            );
-                                          },
-                                    )
-                            : Image.file(
-                                File(imagePath),
-                                width: 48.w,
-                                height: 48.w,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Icon(
-                                    icon,
-                                    size: 24.sp,
-                                    color: iconColor,
-                                  );
-                                },
-                              ),
-                      ),
-                    );
-                  }
-                  return Icon(icon, size: 24.sp, color: iconColor);
-                },
+            if (imageUrl != null && imageUrl.isNotEmpty)
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10.r),
+                    color: AppColors.grey50,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10.r),
+                    child: Image.network(
+                      imageUrl,
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        debugPrint('❌ Error loading image: $imageUrl - $error');
+                        return Container(
+                          color: AppColors.grey100,
+                          child: Icon(icon, size: 40.sp, color: iconColor),
+                        );
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          color: AppColors.grey100,
+                          child: Icon(icon, size: 40.sp, color: iconColor),
+                        );
+                      },
+                    ),
+                  ),
+                ),
               )
             else
-              Icon(icon, size: 24.sp, color: iconColor),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10.r),
+                    color: AppColors.grey100,
+                  ),
+                  child: Icon(icon, size: 40.sp, color: iconColor),
+                ),
+              ),
             SizedBox(height: 8.h),
             Text(
               title,
@@ -1648,6 +1628,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               style: AppTextStyles.caption.copyWith(
                 fontSize: 11.sp,
                 color: AppColors.grey600,
+                fontStyle: FontStyle.italic,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -1660,143 +1641,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Future<void> _openGazette(BuildContext context) async {
-    // Gazette document URL - replace with actual URL from server
-    const gazetteUrl = '/uploads/documents/gazette.pdf';
-    const fileName = 'gazette.pdf';
-
-    try {
-      // Show loading indicator
-      if (context.mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) =>
-              const Center(child: CircularProgressIndicator()),
-        );
-      }
-
-      // Cache document
-      final cachedPath = await DocumentCacheService.instance.cacheDocument(
-        gazetteUrl,
-        fileName,
-      );
-
-      if (context.mounted) {
-        Navigator.pop(context); // Close loading dialog
-
-        String filePath = cachedPath ?? gazetteUrl;
-        // Handle local file paths
-        if (cachedPath != null && !cachedPath.startsWith('http')) {
-          // Local file path - use file:// protocol
-          filePath = 'file://$cachedPath';
-        } else if (!filePath.startsWith('http') &&
-            !filePath.startsWith('file://')) {
-          if (filePath.startsWith('/')) {
-            filePath = '${AppConstants.baseUrl}$filePath';
-          } else {
-            filePath = '${AppConstants.baseUrl}/$filePath';
-          }
-        }
-
-        // Open PDF using url_launcher (will open in external PDF viewer)
-        final uri = filePath.startsWith('file://')
-            ? Uri.file(cachedPath!)
-            : Uri.parse(filePath);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Could not open document. Please try again.'),
-                backgroundColor: AppColors.error,
-              ),
-            );
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('Error opening gazette: $e');
-      if (context.mounted) {
-        Navigator.pop(context); // Close loading dialog if still open
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error opening document. Please try again later.'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const OpenOfficialGazetteScreen()),
+    );
   }
 
   Future<void> _openRoadSigns(BuildContext context) async {
-    // Road signs document URL - replace with actual URL from server
-    const roadSignsUrl = '/uploads/documents/road_signs.pdf';
-    const fileName = 'road_signs.pdf';
-
-    try {
-      // Show loading indicator
-      if (context.mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) =>
-              const Center(child: CircularProgressIndicator()),
-        );
-      }
-
-      // Cache document
-      final cachedPath = await DocumentCacheService.instance.cacheDocument(
-        roadSignsUrl,
-        fileName,
-      );
-
-      if (context.mounted) {
-        Navigator.pop(context); // Close loading dialog
-
-        String filePath = cachedPath ?? roadSignsUrl;
-        // Handle local file paths
-        if (cachedPath != null && !cachedPath.startsWith('http')) {
-          // Local file path - use file:// protocol
-          filePath = 'file://$cachedPath';
-        } else if (!filePath.startsWith('http') &&
-            !filePath.startsWith('file://')) {
-          if (filePath.startsWith('/')) {
-            filePath = '${AppConstants.baseUrl}$filePath';
-          } else {
-            filePath = '${AppConstants.baseUrl}/$filePath';
-          }
-        }
-
-        // Open PDF using url_launcher (will open in external PDF viewer)
-        final uri = filePath.startsWith('file://')
-            ? Uri.file(cachedPath!)
-            : Uri.parse(filePath);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Could not open document. Please try again.'),
-                backgroundColor: AppColors.error,
-              ),
-            );
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('Error opening road signs: $e');
-      if (context.mounted) {
-        Navigator.pop(context); // Close loading dialog if still open
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error opening document. Please try again later.'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const RoadSignsPdfScreen()));
   }
 
   Future<void> _joinWhatsAppGroup() async {
@@ -1825,401 +1678,401 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
-  Widget _buildCoursesSection() {
-    final courseState = ref.watch(courseProvider);
+  // Widget _buildCoursesSection() {
+  //   final courseState = ref.watch(courseProvider);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      l10n.courses,
-                      style: AppTextStyles.heading3.copyWith(
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const courses_list_screen.CourseListScreen(),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 12.w,
-                          vertical: 6.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: Text(
-                          l10n.viewAll,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.white,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //         children: [
+  //           Builder(
+  //             builder: (context) {
+  //               final l10n = AppLocalizations.of(context);
+  //               return Row(
+  //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                 children: [
+  //                   Text(
+  //                     l10n.courses,
+  //                     style: AppTextStyles.heading3.copyWith(
+  //                       fontSize: 20.sp,
+  //                       fontWeight: FontWeight.w600,
+  //                     ),
+  //                   ),
+  //                   InkWell(
+  //                     onTap: () {
+  //                       Navigator.push(
+  //                         context,
+  //                         MaterialPageRoute(
+  //                           builder: (context) =>
+  //                               const courses_list_screen.CourseListScreen(),
+  //                         ),
+  //                       );
+  //                     },
+  //                     child: Container(
+  //                       padding: EdgeInsets.symmetric(
+  //                         horizontal: 12.w,
+  //                         vertical: 6.h,
+  //                       ),
+  //                       decoration: BoxDecoration(
+  //                         color: AppColors.primary,
+  //                         borderRadius: BorderRadius.circular(8.r),
+  //                       ),
+  //                       child: Text(
+  //                         l10n.viewAll,
+  //                         style: AppTextStyles.bodyMedium.copyWith(
+  //                           color: AppColors.white,
+  //                           fontSize: 12.sp,
+  //                           fontWeight: FontWeight.w600,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ],
+  //               );
+  //             },
+  //           ),
+  //         ],
+  //       ),
 
-        SizedBox(height: 16.h),
-        if (courseState.isLoading)
-          const Center(child: CircularProgressIndicator())
-        else if (courseState.error != null && courseState.courses.isEmpty)
-          // Only show error if we have no cached courses
-          Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Builder(
-              builder: (context) {
-                final l10n = AppLocalizations.of(context)!;
-                return Text(
-                  '${l10n.errorLoadingCourses} ${courseState.error}',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.error,
-                  ),
-                );
-              },
-            ),
-          )
-        else if (courseState.courses.isEmpty)
-          Container(
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Column(
-              children: [
-                Icon(
-                  Icons.school_outlined,
-                  size: 48.sp,
-                  color: AppColors.grey400,
-                ),
-                SizedBox(height: 16.h),
-                Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
-                    return Text(
-                      l10n.noCoursesAvailable,
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        color: AppColors.grey600,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          )
-        else
-          SizedBox(
-            height: 200.h,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: courseState.courses.take(5).length,
-              itemBuilder: (context, index) {
-                final course = courseState.courses[index];
-                return Container(
-                  width: 200.w,
-                  margin: EdgeInsets.only(right: 12.w),
-                  child: _buildCourseCard(course),
-                );
-              },
-            ),
-          ),
-      ],
-    );
-  }
+  //       SizedBox(height: 16.h),
+  //       if (courseState.isLoading)
+  //         const Center(child: CircularProgressIndicator())
+  //       else if (courseState.error != null && courseState.courses.isEmpty)
+  //         // Only show error if we have no cached courses
+  //         Container(
+  //           padding: EdgeInsets.all(16.w),
+  //           decoration: BoxDecoration(
+  //             color: AppColors.white,
+  //             borderRadius: BorderRadius.circular(16.r),
+  //           ),
+  //           child: Builder(
+  //             builder: (context) {
+  //               final l10n = AppLocalizations.of(context);
+  //               return Text(
+  //                 '${l10n.errorLoadingCourses} ${courseState.error}',
+  //                 style: AppTextStyles.bodyMedium.copyWith(
+  //                   color: AppColors.error,
+  //                 ),
+  //               );
+  //             },
+  //           ),
+  //         )
+  //       else if (courseState.courses.isEmpty)
+  //         Container(
+  //           padding: EdgeInsets.all(20.w),
+  //           decoration: BoxDecoration(
+  //             color: AppColors.white,
+  //             borderRadius: BorderRadius.circular(16.r),
+  //           ),
+  //           child: Column(
+  //             children: [
+  //               Icon(
+  //                 Icons.school_outlined,
+  //                 size: 48.sp,
+  //                 color: AppColors.grey400,
+  //               ),
+  //               SizedBox(height: 16.h),
+  //               Builder(
+  //                 builder: (context) {
+  //                   final l10n = AppLocalizations.of(context);
+  //                   return Text(
+  //                     l10n.noCoursesAvailable,
+  //                     style: AppTextStyles.bodyLarge.copyWith(
+  //                       color: AppColors.grey600,
+  //                     ),
+  //                   );
+  //                 },
+  //               ),
+  //             ],
+  //           ),
+  //         )
+  //       else
+  //         SizedBox(
+  //           height: 200.h,
+  //           child: ListView.builder(
+  //             scrollDirection: Axis.horizontal,
+  //             itemCount: courseState.courses.take(5).length,
+  //             itemBuilder: (context, index) {
+  //               final course = courseState.courses[index];
+  //               return Container(
+  //                 width: 200.w,
+  //                 margin: EdgeInsets.only(right: 12.w),
+  //                 child: _buildCourseCard(course),
+  //               );
+  //             },
+  //           ),
+  //         ),
+  //     ],
+  //   );
+  // }
 
-  Widget _buildCourseCard(Course course) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: AppColors.grey200, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  course_detail_screen.CourseDetailScreen(course: course),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(16.r),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Course Image or Placeholder
-            Container(
-              height: 100.h,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16.r),
-                  topRight: Radius.circular(16.r),
-                ),
-                color: AppColors.grey100,
-              ),
-              child:
-                  course.courseImageUrl != null &&
-                      course.courseImageUrl!.isNotEmpty
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(16.r),
-                        topRight: Radius.circular(16.r),
-                      ),
-                      child: Image.network(
-                        course.courseImageUrl!.startsWith('http')
-                            ? course.courseImageUrl!
-                            : '${AppConstants.baseUrlImage}${course.courseImageUrl}',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: AppColors.grey100,
-                            child: Center(
-                              child: Icon(
-                                Icons.school_outlined,
-                                size: 32.sp,
-                                color: AppColors.grey400,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    )
-                  : Center(
-                      child: Icon(
-                        Icons.school_outlined,
-                        size: 32.sp,
-                        color: AppColors.grey400,
-                      ),
-                    ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(12.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    course.title,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14.sp,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 6.h),
-                  Wrap(
-                    spacing: 6.w,
-                    runSpacing: 4.h,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 6.w,
-                          vertical: 2.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: course.isFree
-                              ? AppColors.success.withValues(alpha: 0.1)
-                              : AppColors.warning.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
-                        child: Text(
-                          course.courseType.displayName,
-                          style: AppTextStyles.caption.copyWith(
-                            color: course.isFree
-                                ? AppColors.success
-                                : AppColors.warning,
-                            fontSize: 10.sp,
-                          ),
-                        ),
-                      ),
-                      Builder(
-                        builder: (context) {
-                          final l10n = AppLocalizations.of(context)!;
-                          return Text(
-                            l10n.lessonsCount(course.contentCount ?? 0),
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.grey600,
-                              fontSize: 10.sp,
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget _buildCourseCard(Course course) {
+  //   return Container(
+  //     decoration: BoxDecoration(
+  //       color: AppColors.white,
+  //       borderRadius: BorderRadius.circular(16.r),
+  //       border: Border.all(color: AppColors.grey200, width: 1),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: AppColors.black.withValues(alpha: 0.03),
+  //           blurRadius: 8,
+  //           offset: const Offset(0, 2),
+  //         ),
+  //       ],
+  //     ),
+  //     child: InkWell(
+  //       onTap: () {
+  //         Navigator.push(
+  //           context,
+  //           MaterialPageRoute(
+  //             builder: (context) =>
+  //                 course_detail_screen.CourseDetailScreen(course: course),
+  //           ),
+  //         );
+  //       },
+  //       borderRadius: BorderRadius.circular(16.r),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           // Course Image or Placeholder
+  //           Container(
+  //             height: 100.h,
+  //             width: double.infinity,
+  //             decoration: BoxDecoration(
+  //               borderRadius: BorderRadius.only(
+  //                 topLeft: Radius.circular(16.r),
+  //                 topRight: Radius.circular(16.r),
+  //               ),
+  //               color: AppColors.grey100,
+  //             ),
+  //             child:
+  //                 course.courseImageUrl != null &&
+  //                     course.courseImageUrl!.isNotEmpty
+  //                 ? ClipRRect(
+  //                     borderRadius: BorderRadius.only(
+  //                       topLeft: Radius.circular(16.r),
+  //                       topRight: Radius.circular(16.r),
+  //                     ),
+  //                     child: Image.network(
+  //                       course.courseImageUrl!.startsWith('http')
+  //                           ? course.courseImageUrl!
+  //                           : '${AppConstants.baseUrlImage}${course.courseImageUrl}',
+  //                       fit: BoxFit.cover,
+  //                       errorBuilder: (context, error, stackTrace) {
+  //                         return Container(
+  //                           color: AppColors.grey100,
+  //                           child: Center(
+  //                             child: Icon(
+  //                               Icons.school_outlined,
+  //                               size: 32.sp,
+  //                               color: AppColors.grey400,
+  //                             ),
+  //                           ),
+  //                         );
+  //                       },
+  //                     ),
+  //                   )
+  //                 : Center(
+  //                     child: Icon(
+  //                       Icons.school_outlined,
+  //                       size: 32.sp,
+  //                       color: AppColors.grey400,
+  //                     ),
+  //                   ),
+  //           ),
+  //           Padding(
+  //             padding: EdgeInsets.all(12.w),
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               mainAxisSize: MainAxisSize.min,
+  //               children: [
+  //                 Text(
+  //                   course.title,
+  //                   style: AppTextStyles.bodyMedium.copyWith(
+  //                     fontWeight: FontWeight.bold,
+  //                     fontSize: 14.sp,
+  //                   ),
+  //                   maxLines: 2,
+  //                   overflow: TextOverflow.ellipsis,
+  //                 ),
+  //                 SizedBox(height: 6.h),
+  //                 Wrap(
+  //                   spacing: 6.w,
+  //                   runSpacing: 4.h,
+  //                   children: [
+  //                     Container(
+  //                       padding: EdgeInsets.symmetric(
+  //                         horizontal: 6.w,
+  //                         vertical: 2.h,
+  //                       ),
+  //                       decoration: BoxDecoration(
+  //                         color: course.isFree
+  //                             ? AppColors.success.withValues(alpha: 0.1)
+  //                             : AppColors.warning.withValues(alpha: 0.1),
+  //                         borderRadius: BorderRadius.circular(4.r),
+  //                       ),
+  //                       child: Text(
+  //                         course.courseType.displayName,
+  //                         style: AppTextStyles.caption.copyWith(
+  //                           color: course.isFree
+  //                               ? AppColors.success
+  //                               : AppColors.warning,
+  //                           fontSize: 10.sp,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     Builder(
+  //                       builder: (context) {
+  //                         final l10n = AppLocalizations.of(context);
+  //                         return Text(
+  //                           l10n.lessonsCount(course.contentCount ?? 0),
+  //                           style: AppTextStyles.caption.copyWith(
+  //                             color: AppColors.grey600,
+  //                             fontSize: 10.sp,
+  //                           ),
+  //                         );
+  //                       },
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  Future<Map<String, int>?> _loadCachedExamCounts() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final examCountsJson = prefs.getString(_cacheKeyExamCountsByType);
-      if (examCountsJson == null) return null;
+  // Future<Map<String, int>?> _loadCachedExamCounts() async {
+  //   try {
+  //     final prefs = await SharedPreferences.getInstance();
+  //     final examCountsJson = prefs.getString(_cacheKeyExamCountsByType);
+  //     if (examCountsJson == null) return null;
 
-      final examCounts = jsonDecode(examCountsJson) as Map<String, dynamic>;
-      return examCounts.map((key, value) => MapEntry(key, value as int));
-    } catch (e) {
-      return null;
-    }
-  }
+  //     final examCounts = jsonDecode(examCountsJson) as Map<String, dynamic>;
+  //     return examCounts.map((key, value) => MapEntry(key, value as int));
+  //   } catch (e) {
+  //     return null;
+  //   }
+  // }
 
-  Widget _buildExamTypeCard(
-    String examType,
-    List<Exam> exams, {
-    int? cachedCount,
-  }) {
-    // Get display name and icon for each exam type
-    String displayName;
-    IconData icon;
-    Color cardColor;
+  // Widget _buildExamTypeCard(
+  //   String examType,
+  //   List<Exam> exams, {
+  //   int? cachedCount,
+  // }) {
+  //   // Get display name and icon for each exam type
+  //   String displayName;
+  //   IconData icon;
+  //   Color cardColor;
 
-    switch (examType.toLowerCase()) {
-      case 'english':
-        displayName = 'English';
-        icon = Icons.language;
-        cardColor = AppColors.primary;
-        break;
-      case 'kinyarwanda':
-        displayName = 'Kinyarwanda';
-        icon = Icons.translate;
-        cardColor = AppColors.secondary;
-        break;
-      case 'french':
-        displayName = 'French';
-        icon = Icons.public;
-        cardColor = Colors.blue;
-        break;
-      default:
-        displayName = examType[0].toUpperCase() + examType.substring(1);
-        icon = Icons.quiz;
-        cardColor = AppColors.primary;
-    }
+  //   switch (examType.toLowerCase()) {
+  //     case 'english':
+  //       displayName = 'English';
+  //       icon = Icons.language;
+  //       cardColor = AppColors.primary;
+  //       break;
+  //     case 'kinyarwanda':
+  //       displayName = 'Kinyarwanda';
+  //       icon = Icons.translate;
+  //       cardColor = AppColors.secondary;
+  //       break;
+  //     case 'french':
+  //       displayName = 'French';
+  //       icon = Icons.public;
+  //       cardColor = Colors.blue;
+  //       break;
+  //     default:
+  //       displayName = examType[0].toUpperCase() + examType.substring(1);
+  //       icon = Icons.quiz;
+  //       cardColor = AppColors.primary;
+  //   }
 
-    return GestureDetector(
-      onTap: () {
-        // Navigate to available exams screen filtered by this exam type
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                exams_screen.AvailableExamsScreen(initialExamType: examType),
-          ),
-        );
-      },
-      child: Container(
-        padding: EdgeInsets.all(8.w),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: cardColor.withValues(alpha: 0.2), width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: cardColor.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              fit: FlexFit.loose,
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(5.w),
-                      decoration: BoxDecoration(
-                        color: cardColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Icon(icon, size: 20.sp, color: cardColor),
-                    ),
-                    // SizedBox(height: 4.h),
-                    Text(
-                      displayName,
-                      style: AppTextStyles.heading3.copyWith(
-                        fontSize: 14.sp,
-                        color: AppColors.grey800,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 2.h),
-                    Builder(
-                      builder: (context) {
-                        final l10n = AppLocalizations.of(context)!;
-                        final count = cachedCount ?? exams.length;
-                        return Text(
-                          count == 1
-                              ? '1 ${l10n.exam}'
-                              : '$count ${l10n.exams}',
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.grey600,
-                            fontSize: 12.sp,
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 4.h),
-          ],
-        ),
-      ),
-    );
-  }
+  //   return GestureDetector(
+  //     onTap: () {
+  //       // Navigate to available exams screen filtered by this exam type
+  //       Navigator.push(
+  //         context,
+  //         MaterialPageRoute(
+  //           builder: (context) =>
+  //               exams_screen.AvailableExamsScreen(initialExamType: examType),
+  //         ),
+  //       );
+  //     },
+  //     child: Container(
+  //       padding: EdgeInsets.all(8.w),
+  //       decoration: BoxDecoration(
+  //         color: AppColors.white,
+  //         borderRadius: BorderRadius.circular(16.r),
+  //         border: Border.all(color: cardColor.withValues(alpha: 0.2), width: 1),
+  //         boxShadow: [
+  //           BoxShadow(
+  //             color: cardColor.withValues(alpha: 0.1),
+  //             blurRadius: 10,
+  //             offset: const Offset(0, 4),
+  //           ),
+  //         ],
+  //       ),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           Flexible(
+  //             fit: FlexFit.loose,
+  //             child: SingleChildScrollView(
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 mainAxisSize: MainAxisSize.min,
+  //                 children: [
+  //                   Container(
+  //                     padding: EdgeInsets.all(5.w),
+  //                     decoration: BoxDecoration(
+  //                       color: cardColor.withValues(alpha: 0.1),
+  //                       borderRadius: BorderRadius.circular(8.r),
+  //                     ),
+  //                     child: Icon(icon, size: 20.sp, color: cardColor),
+  //                   ),
+  //                   // SizedBox(height: 4.h),
+  //                   Text(
+  //                     displayName,
+  //                     style: AppTextStyles.heading3.copyWith(
+  //                       fontSize: 14.sp,
+  //                       color: AppColors.grey800,
+  //                     ),
+  //                     maxLines: 1,
+  //                     overflow: TextOverflow.ellipsis,
+  //                   ),
+  //                   SizedBox(height: 2.h),
+  //                   Builder(
+  //                     builder: (context) {
+  //                       final l10n = AppLocalizations.of(context);
+  //                       final count = cachedCount ?? exams.length;
+  //                       return Text(
+  //                         count == 1
+  //                             ? '1 ${l10n.exam}'
+  //                             : '$count ${l10n.exams}',
+  //                         style: AppTextStyles.caption.copyWith(
+  //                           color: AppColors.grey600,
+  //                           fontSize: 12.sp,
+  //                         ),
+  //                       );
+  //                     },
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //           SizedBox(height: 4.h),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildRecentActivity(User? user) {
     final isAdmin = user?.role == 'ADMIN';
@@ -2230,7 +2083,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       children: [
         Builder(
           builder: (context) {
-            final l10n = AppLocalizations.of(context)!;
+            final l10n = AppLocalizations.of(context);
             return Text(
               l10n.recentActivity,
               style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
@@ -2260,7 +2113,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 SizedBox(height: 16.h),
                 Builder(
                   builder: (context) {
-                    final l10n = AppLocalizations.of(context)!;
+                    final l10n = AppLocalizations.of(context);
                     return Column(
                       children: [
                         Text(
@@ -2341,7 +2194,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             SizedBox(height: 4.h),
                             Builder(
                               builder: (context) {
-                                final l10n = AppLocalizations.of(context)!;
+                                final l10n = AppLocalizations.of(context);
                                 return Text(
                                   '${l10n.examScore(result.score.toString())} • ${_formatTimeAgo(result.submittedAt, context)}',
                                   style: AppTextStyles.caption.copyWith(
@@ -2365,7 +2218,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   String _formatTimeAgo(DateTime date, BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
     final difference = now.difference(date);
 

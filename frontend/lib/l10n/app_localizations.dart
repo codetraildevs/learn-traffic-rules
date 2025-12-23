@@ -885,6 +885,22 @@ abstract class AppLocalizations {
   String get termsConditionsSection13Title;
   String get termsConditionsSection13Content;
   String lastUpdatedDate(String date);
+  String get availableService;
+  String get joinWhatsAppGroup;
+  String get connectWithLearners;
+  String get shareProgram;
+  String get shareWithFriends;
+
+  String get officialGazette;
+  String get officialGazetteDescription;
+
+  String get roadSignsGuide;
+  String get roadSignsDescription;
+
+  String get errorLoadingData;
+  String get noInternet;
+
+  String get totalLessons;
 
   // Factory constructor to get the appropriate localization
   static AppLocalizations of(BuildContext context) {

@@ -6,6 +6,15 @@ class AppConstants {
   static const String baseUrlImage =
       'https://traffic.cyangugudims.com/uploads/images-exams/';
 
+  static const String baseUrlDocument =
+      'https://traffic.cyangugudims.com/uploads/documents/';
+  static const String imageBaseUrl =
+      'https://traffic.cyangugudims.com/uploads/images/';
+
+  static const String siteBaseUrl = 'https://traffic.cyangugudims.com';
+
+  //https://traffic.cyangugudims.com/uploads/images-exams//uploads/question-images/q390.png
+
   // Image Paths
   static const String defaultQuestionImagePath = '/uploads/question-images/';
 
@@ -180,4 +189,21 @@ class AppConstants {
   static const int lockoutDurationMinutes = 15;
   static const int tokenExpiryDays = 7;
   static const int refreshTokenExpiryDays = 30;
+}
+
+class ImageUrlResolver {
+  static String resolve(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) return '';
+
+    // Already absolute URL
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+
+    // Ensure leading slash
+    final normalized = imageUrl.startsWith('/') ? imageUrl : '/$imageUrl';
+
+    // Always attach to site root
+    return '${AppConstants.siteBaseUrl}$normalized';
+  }
 }

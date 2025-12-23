@@ -309,17 +309,6 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             style: TextButton.styleFrom(foregroundColor: AppColors.warning),
             child: Text(l10n.exitWithoutSubmitting),
           ),
-          // ElevatedButton(
-          //   onPressed: () {
-          //     Navigator.pop(context);
-          //     _submitExam();
-          //   },
-          //   style: ElevatedButton.styleFrom(
-          //     backgroundColor: AppColors.error,
-          //     foregroundColor: AppColors.white,
-          //   ),
-          //   child: const Text('Exit & Submit'),
-          // ),
         ],
       ),
     );
@@ -1178,6 +1167,10 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
 
   Widget _buildQuestionContent(question_model.Question question) {
     debugPrint("question.questionImgUrl: ${question.questionImgUrl}");
+    debugPrint(
+      "question.fullquestionimageUrl:${AppConstants.siteBaseUrl}${question.questionImgUrl}",
+    );
+
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       child: Column(
@@ -1201,51 +1194,6 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Question number and points
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //   children: [
-                //     Container(
-                //       padding: EdgeInsets.symmetric(
-                //         horizontal: 12.w,
-                //         vertical: 6.h,
-                //       ),
-                //       decoration: BoxDecoration(
-                //         color: AppColors.primary.withValues(alpha: 0.1),
-                //         borderRadius: BorderRadius.circular(12.r),
-                //       ),
-                //       child: Text(
-                //         'Q$\1',
-                //         style: AppTextStyles.caption.copyWith(
-                //           color: AppColors.primary,
-                //           fontWeight: FontWeight.bold,
-                //           fontSize: 12.sp,
-                //         ),
-                //       ),
-                //     ),
-                //     Container(
-                //       padding: EdgeInsets.symmetric(
-                //         horizontal: 12.w,
-                //         vertical: 6.h,
-                //       ),
-                //       decoration: BoxDecoration(
-                //         color: AppColors.success.withValues(alpha: 0.1),
-                //         borderRadius: BorderRadius.circular(12.r),
-                //       ),
-                //       child: Text(
-                //         '$\1 point$\1',
-                //         style: AppTextStyles.caption.copyWith(
-                //           color: AppColors.success,
-                //           fontWeight: FontWeight.bold,
-                //           fontSize: 12.sp,
-                //         ),
-                //       ),
-                //     ),
-                //   ],
-                // ),
-
-                // SizedBox(height: 16.h),
-
                 // Question text
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1295,99 +1243,151 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                 ),
 
                 // Question image if available
+                // if (question.questionImgUrl != null &&
+                //     question.questionImgUrl!.isNotEmpty) ...[
+                //   SizedBox(height: 4.h),
+                //   FutureBuilder<String>(
+                //     future: ImageCacheService.instance
+                //         .getImagePath(question.questionImgUrl)
+                //         .catchError((e) {
+                //           // If cache fails, return empty string to show error widget
+                //           debugPrint('⚠️ Error getting image path: $e');
+                //           return '';
+                //         }),
+                //     builder: (context, snapshot) {
+                //       if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                //         // If offline and no cached image, show error widget
+                //         if (_isOffline) {
+                //           return _buildImageErrorWidget();
+                //         }
+                //         return const SizedBox.shrink();
+                //       }
+
+                //       final imagePath = snapshot.data!;
+                //       // Check if it's a local file path (not a URL)
+                //       final isLocalFile =
+                //           !imagePath.startsWith('http') &&
+                //           !imagePath.startsWith('https') &&
+                //           imagePath.isNotEmpty;
+
+                //       return ClipRRect(
+                //         borderRadius: BorderRadius.circular(12.r),
+                //         child: isLocalFile
+                //             ? FutureBuilder<bool>(
+                //                 future: File(
+                //                   imagePath,
+                //                 ).exists().catchError((e) => false),
+                //                 builder: (context, fileSnapshot) {
+                //                   if (fileSnapshot.hasData &&
+                //                       fileSnapshot.data == true) {
+                //                     // Image is cached, load from file
+                //                     return Image.file(
+                //                       File(imagePath),
+                //                       width: double.infinity,
+                //                       height: 200.h,
+                //                       fit: BoxFit.contain,
+                //                       errorBuilder: (context, error, stackTrace) {
+                //                         debugPrint(
+                //                           '❌ Error loading cached image: $error',
+                //                         );
+                //                         return _buildImageErrorWidget();
+                //                       },
+                //                     );
+                //                   } else {
+                //                     // File doesn't exist
+                //                     // If offline, show error widget
+                //                     // If online, try network (might be a new image)
+
+                //                     if (_isOffline) {
+                //                       return _buildImageErrorWidget();
+                //                     }
+                //                     return Image.network(
+                //                       question.questionImgUrl!.startsWith(
+                //                             'http',
+                //                           )
+                //                           ? question.questionImgUrl!
+                //                           : '${AppConstants.siteBaseUrl}${question.questionImgUrl}',
+                //                       width: double.infinity,
+                //                       height: 200.h,
+                //                       fit: BoxFit.contain,
+                //                       errorBuilder:
+                //                           (context, error, stackTrace) {
+                //                             return _buildImageErrorWidget();
+                //                           },
+                //                     );
+                //                   }
+                //                 },
+                //               )
+                //             : Builder(
+                //                 // Network URL - only try if online
+                //                 builder: (context) {
+                //                   if (_isOffline) {
+                //                     // Offline and image not cached, show error widget
+                //                     return _buildImageErrorWidget();
+                //                   }
+                //                   // Online, try to load from network
+                //                   return Image.network(
+                //                     imagePath,
+                //                     width: double.infinity,
+                //                     height: 200.h,
+                //                     fit: BoxFit.contain,
+                //                     errorBuilder: (context, error, stackTrace) {
+                //                       return _buildImageErrorWidget();
+                //                     },
+                //                   );
+                //                 },
+                //               ),
+                //       );
+                //     },
+                //   ),
+                // ],
                 if (question.questionImgUrl != null &&
                     question.questionImgUrl!.isNotEmpty) ...[
-                  SizedBox(height: 4.h),
+                  SizedBox(height: 8.h),
+
                   FutureBuilder<String>(
-                    future: ImageCacheService.instance
-                        .getImagePath(question.questionImgUrl)
-                        .catchError((e) {
-                          // If cache fails, return empty string to show error widget
-                          debugPrint('⚠️ Error getting image path: $e');
-                          return '';
-                        }),
+                    future: _getQuestionImageFuture(
+                      question.id.toString(),
+                      question.questionImgUrl!,
+                    ),
                     builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return SizedBox(
+                          height: 180.h,
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+
                       if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        // If offline and no cached image, show error widget
-                        if (_isOffline) {
-                          return _buildImageErrorWidget();
-                        }
-                        return const SizedBox.shrink();
+                        return _buildImageErrorWidget();
                       }
 
                       final imagePath = snapshot.data!;
-                      // Check if it's a local file path (not a URL)
-                      final isLocalFile =
-                          !imagePath.startsWith('http') &&
-                          !imagePath.startsWith('https') &&
-                          imagePath.isNotEmpty;
+                      final isLocalFile = !imagePath.startsWith('http');
 
                       return ClipRRect(
                         borderRadius: BorderRadius.circular(12.r),
                         child: isLocalFile
-                            ? FutureBuilder<bool>(
-                                future: File(
-                                  imagePath,
-                                ).exists().catchError((e) => false),
-                                builder: (context, fileSnapshot) {
-                                  if (fileSnapshot.hasData &&
-                                      fileSnapshot.data == true) {
-                                    // Image is cached, load from file
-                                    return Image.file(
-                                      File(imagePath),
-                                      width: double.infinity,
-                                      height: 200.h,
-                                      fit: BoxFit.contain,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        debugPrint(
-                                          '❌ Error loading cached image: $error',
-                                        );
-                                        return _buildImageErrorWidget();
-                                      },
-                                    );
-                                  } else {
-                                    // File doesn't exist
-                                    // If offline, show error widget
-                                    // If online, try network (might be a new image)
-                                    if (_isOffline) {
-                                      return _buildImageErrorWidget();
-                                    }
-                                    return Image.network(
-                                      question.questionImgUrl!.startsWith(
-                                            'http',
-                                          )
-                                          ? question.questionImgUrl!
-                                          : '${AppConstants.baseUrlImage}${question.questionImgUrl}',
-                                      width: double.infinity,
-                                      height: 200.h,
-                                      fit: BoxFit.contain,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                            return _buildImageErrorWidget();
-                                          },
-                                    );
-                                  }
-                                },
+                            ? Image.file(
+                                File(imagePath),
+                                width: double.infinity,
+                                height: 200.h,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) =>
+                                    _buildImageErrorWidget(),
                               )
-                            : Builder(
-                                // Network URL - only try if online
-                                builder: (context) {
-                                  if (_isOffline) {
-                                    // Offline and image not cached, show error widget
-                                    return _buildImageErrorWidget();
-                                  }
-                                  // Online, try to load from network
-                                  return Image.network(
-                                    imagePath,
-                                    width: double.infinity,
-                                    height: 200.h,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return _buildImageErrorWidget();
-                                    },
-                                  );
-                                },
-                              ),
+                            : (!_isOffline
+                                  ? Image.network(
+                                      imagePath, // ✅ already resolved
+                                      width: double.infinity,
+                                      height: 200.h,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, __, ___) =>
+                                          _buildImageErrorWidget(),
+                                    )
+                                  : _buildImageErrorWidget()),
                       );
                     },
                   ),
@@ -1403,6 +1403,15 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
         ],
       ),
     );
+  }
+
+  final Map<String, Future<String>> _imageFutures = {};
+
+  Future<String> _getQuestionImageFuture(String questionId, String imageUrl) {
+    return _imageFutures.putIfAbsent(questionId, () async {
+      await ImageCacheService.instance.cacheImage(imageUrl);
+      return ImageCacheService.instance.getImagePath(imageUrl);
+    });
   }
 
   Widget _buildImageErrorWidget() {
@@ -1854,7 +1863,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             onPressed: () => Navigator.pop(context),
             child: Text(
               l10n.continueExam,
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppColors.grey600,
                 fontWeight: FontWeight.w600,
               ),
@@ -1875,7 +1884,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
               ),
               child: Text(
                 l10n.submitExam,
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
         ],

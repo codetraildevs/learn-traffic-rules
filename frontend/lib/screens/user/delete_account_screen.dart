@@ -38,7 +38,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.deleteAccount),
-        backgroundColor: AppColors.error,
+        backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
       ),
       body: SingleChildScrollView(
@@ -79,48 +79,6 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                       color: AppColors.error,
                       fontWeight: FontWeight.w600,
                     ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 24.h),
-
-            // Account Information
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(20.w),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(16.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.accountInformation,
-                    style: AppTextStyles.heading3.copyWith(fontSize: 18.sp),
-                  ),
-                  SizedBox(height: 16.h),
-                  _buildInfoRow(
-                    l10n.fullName,
-                    user?.fullName ?? l10n.notProvided,
-                  ),
-                  _buildInfoRow(
-                    l10n.phoneNumber,
-                    user?.phoneNumber ?? l10n.notProvided,
-                  ),
-                  //_buildInfoRow('User ID', user?.id ?? 'Not available'),
-                  _buildInfoRow(
-                    l10n.accountStatus,
-                    user?.role ?? l10n.userRole,
                   ),
                 ],
               ),
@@ -330,38 +288,10 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                 ),
               ],
             ),
+
+            SizedBox(height: 42.h),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 8.h),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 80.w,
-            child: Text(
-              label,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.grey600,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.grey800,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

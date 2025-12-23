@@ -51,8 +51,9 @@ dependencies:
   permission_handler: ^11.2.0
   
   # Device Info (for high security device binding)
-  device_info_plus: ^9.1.1
+  device_info_plus: ^12.3.0
   package_info_plus: ^4.2.0
+  syncfusion_flutter_pdfviewer: ^32.1.19
   
   # Utils
   intl: ^0.20.2

@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:learn_traffic_rules/core/constants/app_constants.dart';
 import 'package:learn_traffic_rules/core/theme/app_theme.dart';
 import 'package:learn_traffic_rules/screens/user/available_exams_screen.dart';
 import '../../models/exam_result_model.dart';

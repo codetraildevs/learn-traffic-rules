@@ -156,7 +156,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get selectLanguage => 'Sélectionner la langue';
 
   @override
-  String get english => 'Anglais';
+  String get english => 'Anglais (English)';
 
   @override
   String get kinyarwanda => 'Kinyarwanda';
@@ -2704,4 +2704,42 @@ Confidentialité:
 
   @override
   String lastUpdatedDate(String date) => 'Dernière mise à jour: $date';
+
+  //new translation keywords
+  @override
+  String get availableService => 'Services Availables';
+
+  @override
+  String get joinWhatsAppGroup => 'Rejoindre le groupe WhatsApp';
+
+  @override
+  String get connectWithLearners => 'Se connecter avec les apprenants';
+
+  @override
+  String get shareProgram => 'Partager l’application';
+
+  @override
+  String get shareWithFriends => 'Partager avec des amis';
+
+  @override
+  String get officialGazette => 'Journal Officiel';
+
+  @override
+  String get officialGazetteDescription => 'Journal Officiel du Rwanda';
+
+  @override
+  String get roadSignsGuide => 'Guide des panneaux routiers';
+
+  @override
+  String get roadSignsDescription => 'Guide des panneaux de signalisation';
+
+  @override
+  String get errorLoadingData =>
+      'Une erreur est survenue lors du chargement des données';
+
+  @override
+  String get noInternet => 'Aucune connexion Internet disponible';
+
+  @override
+  String get totalLessons => 'Toutes les leçons';
 }
