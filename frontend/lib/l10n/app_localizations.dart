@@ -885,12 +885,11 @@ abstract class AppLocalizations {
   String get termsConditionsSection13Title;
   String get termsConditionsSection13Content;
   String lastUpdatedDate(String date);
-  String get availableService;
   String get joinWhatsAppGroup;
   String get connectWithLearners;
   String get shareProgram;
   String get shareWithFriends;
-
+  String get availableServices;
   String get officialGazette;
   String get officialGazetteDescription;
 
@@ -901,6 +900,29 @@ abstract class AppLocalizations {
   String get noInternet;
 
   String get totalLessons;
+
+  //share message
+  String get shareAppSubject;
+  String get shareAppMessage;
+  String get shareFailed;
+
+  String get timeUpTitle;
+  String get timeUpMessage;
+
+  String get securityAlertTitle;
+  String get examPausedMessage;
+  String get examIntegrityNotice;
+  String get stayInAppRule;
+  String get noAppSwitchRule;
+  String get noScreenshotRule;
+  String get repeatedViolationWarning;
+  String get time;
+  String get off;
+
+  String get examSubmittedSuccess;
+  String get examSavedOffline;
+  String get examScoreDescription;
+  String get errorSubmittingExam;
 
   // Factory constructor to get the appropriate localization
   static AppLocalizations of(BuildContext context) {

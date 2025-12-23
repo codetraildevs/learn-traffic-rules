@@ -23,21 +23,18 @@ import '../../services/exam_service.dart';
 import '../../services/user_management_service.dart';
 import '../../models/exam_result_model.dart';
 import '../../models/exam_model.dart';
-import '../../models/course_model.dart';
 import '../admin/exam_management_screen.dart';
 import '../admin/user_management_screen.dart';
 import '../admin/access_code_management_screen.dart';
 import '../admin/course_management_screen.dart';
 import '../user/available_exams_screen.dart' as exams_screen;
 import '../user/course_list_screen.dart' as courses_list_screen;
-import '../user/course_detail_screen.dart' as course_detail_screen;
 import '../../services/notification_polling_service.dart';
 import '../../providers/course_provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../../services/network_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/image_cache_service.dart';
-import '../../services/document_cache_service.dart';
 import '../user/open_gazette.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -1415,7 +1412,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n.availableService,
+              l10n.availableServices,
               style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
             ),
 
@@ -1448,8 +1445,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     icon: Icons.school,
                     iconColor: AppColors.success,
                     imageUrl:
-                        '${AppConstants.imageBaseUrl}signs.png', // Replace with actual course icon image
-                    title: l10n.courses,
+                        '${AppConstants.imageBaseUrl}ishuri_online.png', // Replace with actual course icon image
+                    title: l10n.lessons,
                     subtitle: courseState.isLoading
                         ? l10n.loading
                         : courseState.courses.isEmpty
@@ -1504,7 +1501,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     icon: Icons.description,
                     iconColor: AppColors.primary,
                     imageUrl:
-                        '${AppConstants.imageBaseUrl}roadsigns1.png', // Replace with actual gazette icon image
+                        '${AppConstants.imageBaseUrl}official_gazette.png', // Replace with actual gazette icon image
                     title: l10n.officialGazette,
                     subtitle: l10n.officialGazetteDescription,
                     onTap: () => _openGazette(context),
@@ -1516,8 +1513,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     icon: Icons.traffic,
                     iconColor: AppColors.success,
                     imageUrl:
-                        '${AppConstants.imageBaseUrl}roadsigns.png', // Replace with actual road signs icon image
-                    title: l10n.roadSignsGuide,
+                        '${AppConstants.imageBaseUrl}official_roads_signs.png', // Replace with actual road signs icon image
+                    title: l10n.roadSigns,
                     subtitle: l10n.roadSignsDescription,
                     onTap: () => _openRoadSigns(context),
                   ),
@@ -2538,49 +2535,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Future<void> _shareApp() async {
+    final l10n = AppLocalizations.of(context);
+
     try {
       final packageInfo = await PackageInfo.fromPlatform();
       final appName = packageInfo.appName;
       final version = packageInfo.version;
       final buildNumber = packageInfo.buildNumber;
+
       const playStoreLink =
           'https://play.google.com/store/apps/details?id=com.trafficrules.master';
-      final shareText =
-          '''
-🚗 Rwanda Traffic Rule 🇷🇼 - Master Your Driving Test!
 
-Download the best app to prepare for your provisional driving license exam.
+      // ✅ Replace placeholders in localized message
+      final shareText = l10n.shareAppMessage
+          .replaceAll('{appName}', appName)
+          .replaceAll('{version}', version)
+          .replaceAll('{buildNumber}', buildNumber)
+          .replaceAll('{playStoreLink}', playStoreLink);
 
-📱 App: $appName
-📦 Version: $version ($buildNumber)
-
-✨ Features:
-• Interactive practice tests
-• Comprehensive study materials
-• Road signs and traffic rules
-• Progress tracking
-• Available in English, Kinyarwanda, and French
-
-📥 Download now:
-$playStoreLink
-
-Start your journey to becoming a safe driver!
-#TrafficRules #DrivingTest #LearnToDrive
-''';
-      await Share.share(
-        shareText,
-        subject: 'Rwanda Traffic Rule 🇷🇼 - Driving Test Preparation App',
-      );
+      await Share.share(shareText, subject: l10n.shareAppSubject);
     } catch (e) {
       debugPrint('Error sharing app: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to share app: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.shareFailed),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
   }
 

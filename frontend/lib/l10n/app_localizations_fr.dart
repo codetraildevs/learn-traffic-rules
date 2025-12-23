@@ -156,7 +156,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get selectLanguage => 'Sélectionner la langue';
 
   @override
-  String get english => 'Anglais (English)';
+  String get english => 'Anglais';
 
   @override
   String get kinyarwanda => 'Kinyarwanda';
@@ -2704,10 +2704,8 @@ Confidentialité:
 
   @override
   String lastUpdatedDate(String date) => 'Dernière mise à jour: $date';
-
-  //new translation keywords
   @override
-  String get availableService => 'Services Availables';
+  String get availableServices => 'Services Available';
 
   @override
   String get joinWhatsAppGroup => 'Rejoindre le groupe WhatsApp';
@@ -2742,4 +2740,78 @@ Confidentialité:
 
   @override
   String get totalLessons => 'Toutes les leçons';
+
+  @override
+  String get shareAppSubject =>
+      'Rwanda Traffic Rule 🇷🇼 - Préparation à l’examen de conduite';
+
+  @override
+  String get shareAppMessage => '''
+🚗 Rwanda Traffic Rule 🇷🇼 - Réussissez votre examen de conduite !
+
+Téléchargez la meilleure application pour préparer l’examen du permis de conduire provisoire.
+
+📱 Application : {appName}
+📦 Version : {version} ({buildNumber})
+
+✨ Fonctionnalités :
+• Tests pratiques interactifs
+• Supports d’apprentissage complets
+• Panneaux et règles de circulation
+• Suivi de progression
+• Disponible en anglais, kinyarwanda et français
+
+📥 Télécharger maintenant :
+{playStoreLink}
+
+Commencez votre parcours pour devenir un conducteur responsable !
+#CodeDeLaRoute #ExamenDeConduite
+''';
+
+  @override
+  String get shareFailed => 'Échec du partage de l’application';
+  @override
+  String get timeUpTitle => 'Temps écoulé !';
+
+  @override
+  String get timeUpMessage =>
+      'Le temps de l’examen est terminé. Vos réponses seront soumises automatiquement.';
+  @override
+  String get securityAlertTitle => 'Alerte de sécurité';
+
+  @override
+  String get examPausedMessage =>
+      'L’examen a été suspendu en raison d’un changement d’application ou d’une activité en arrière-plan.';
+
+  @override
+  String get examIntegrityNotice => 'Pour préserver l’intégrité de l’examen :';
+
+  @override
+  String get stayInAppRule => '• Restez dans l’application pendant l’examen';
+
+  @override
+  String get noAppSwitchRule => '• Ne changez pas d’application';
+
+  @override
+  String get noScreenshotRule => '• Ne prenez pas de captures d’écran';
+
+  @override
+  String get repeatedViolationWarning =>
+      'Des violations répétées peuvent entraîner l’annulation de l’examen.';
+  @override
+  String get time => 'Le temps';
+  @override
+  String get off => 'de';
+  @override
+  String get examSubmittedSuccess => 'Examen soumis avec succès !';
+
+  @override
+  String get examSavedOffline =>
+      'Examen enregistré hors ligne ! Il sera synchronisé dès que la connexion sera disponible.';
+
+  @override
+  String get examScoreDescription => 'Votre score :';
+
+  @override
+  String get errorSubmittingExam => 'Erreur lors de la soumission de l’examen';
 }

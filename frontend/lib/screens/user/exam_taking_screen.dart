@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -185,7 +187,9 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   void _showSecurityWarning() {
     if (_securityWarningShown || _isExamCompleted) return;
 
+    final l10n = AppLocalizations.of(context);
     _securityWarningShown = true;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -194,37 +198,25 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
           children: [
             Icon(Icons.security, color: AppColors.error, size: 24.sp),
             SizedBox(width: 8.w),
-            const Text('Security Alert'),
+            Text(l10n.securityAlertTitle),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'The exam was paused due to app switching or background activity.',
-              style: AppTextStyles.bodyMedium,
-            ),
+            Text(l10n.examPausedMessage, style: AppTextStyles.bodyMedium),
             SizedBox(height: 12.h),
             Text(
-              'To maintain exam integrity:',
+              l10n.examIntegrityNotice,
               style: AppTextStyles.bodyMedium.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             SizedBox(height: 8.h),
-            const Text(
-              '• Stay in the exam app during the test',
-              style: AppTextStyles.bodySmall,
-            ),
-            const Text(
-              '• Do not switch to other apps',
-              style: AppTextStyles.bodySmall,
-            ),
-            const Text(
-              '• Do not take screenshots',
-              style: AppTextStyles.bodySmall,
-            ),
+            Text(l10n.stayInAppRule, style: AppTextStyles.bodySmall),
+            Text(l10n.noAppSwitchRule, style: AppTextStyles.bodySmall),
+            Text(l10n.noScreenshotRule, style: AppTextStyles.bodySmall),
             SizedBox(height: 12.h),
             Container(
               padding: EdgeInsets.all(8.w),
@@ -233,7 +225,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(
-                'Repeated violations may result in exam termination.',
+                l10n.repeatedViolationWarning,
                 style: AppTextStyles.caption.copyWith(
                   color: AppColors.warning,
                   fontWeight: FontWeight.bold,
@@ -248,7 +240,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
               Navigator.pop(context);
               _securityWarningShown = false;
             },
-            child: const Text('Continue Exam'),
+            child: Text(l10n.continueExam),
           ),
         ],
       ),
@@ -533,6 +525,8 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   }
 
   void _handleTimeUp() {
+    final l10n = AppLocalizations.of(context);
+
     setState(() {
       _isTimeUp = true;
     });
@@ -542,17 +536,15 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Time\'s Up!'),
-        content: const Text(
-          'The exam time has ended. Your answers will be submitted automatically.',
-        ),
+        title: Text(l10n.timeUpTitle),
+        content: Text(l10n.timeUpMessage),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _submitExam();
             },
-            child: Text(AppLocalizations.of(context).submitExam),
+            child: Text(l10n.submitExam),
           ),
         ],
       ),
@@ -655,9 +647,9 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
     }
 
     // Show loading dialog during submission
-    if (mounted) {
-      _showSubmissionLoadingDialog();
-    }
+    // if (mounted) {
+    //   _showSubmissionLoadingDialog();
+    // }
 
     try {
       // Check internet connection
@@ -798,14 +790,16 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
 
       if (!mounted) return;
 
+      final l10n = AppLocalizations.of(context);
+
       final message = hasInternet
-          ? 'Exam Submitted Successfully!'
-          : 'Exam saved offline! Will sync when internet is available.';
+          ? l10n.examSubmittedSuccess
+          : l10n.examSavedOffline;
 
       AppFlashMessage.showSuccess(
         context,
         message,
-        description: 'Your score: $score%',
+        description: '${l10n.examScoreDescription} $score%',
       );
 
       // Use callback if provided, otherwise navigate to progress screen
@@ -831,9 +825,10 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
       }
 
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       AppFlashMessage.showError(
         context,
-        'Error submitting exam',
+        l10n.errorSubmittingExam,
         description: e.toString(),
       );
     } finally {
@@ -929,6 +924,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   }
 
   Widget _buildLoadingWidget() {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -938,7 +934,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
           ),
           SizedBox(height: 24.h),
           Text(
-            'Loading Exam...',
+            l10n.loading,
             style: AppTextStyles.heading3.copyWith(color: AppColors.grey600),
           ),
         ],
@@ -947,6 +943,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   }
 
   Widget _buildErrorWidget() {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: EdgeInsets.all(32.w),
@@ -956,7 +953,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             Icon(Icons.error_outline, size: 80.sp, color: AppColors.error),
             SizedBox(height: 24.h),
             Text(
-              'Error Loading Exam',
+              l10n.errorLoadingExams,
               style: AppTextStyles.heading2.copyWith(color: AppColors.error),
             ),
             SizedBox(height: 16.h),
@@ -969,7 +966,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             ),
             SizedBox(height: 32.h),
             CustomButton(
-              text: 'Go Back',
+              text: l10n.back,
               onPressed: () => Navigator.pop(context),
               width: 120.w,
             ),
@@ -980,6 +977,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   }
 
   Widget _buildTimeUpWidget() {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: EdgeInsets.all(32.w),
@@ -989,12 +987,12 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             Icon(Icons.timer_off, size: 80.sp, color: AppColors.error),
             SizedBox(height: 24.h),
             Text(
-              'Time\'s Up!',
+              l10n.timeUpTitle,
               style: AppTextStyles.heading2.copyWith(color: AppColors.error),
             ),
             SizedBox(height: 16.h),
             Text(
-              'Your exam time has ended. Your answers will be submitted automatically.',
+              l10n.timeUpMessage,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.grey600,
               ),
@@ -1002,7 +1000,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             ),
             SizedBox(height: 32.h),
             CustomButton(
-              text: 'Submit Exam',
+              text: l10n.submitExam,
               onPressed: _submitExam,
               width: 150.w,
               backgroundColor: AppColors.error,
@@ -1037,6 +1035,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   }
 
   Widget _buildExamHeader(double progress) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: EdgeInsets.fromLTRB(
         16.w,
@@ -1074,7 +1073,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      'Question ${_currentQuestionIndex + 1} of ${_questions.length}',
+                      '${l10n.question} ${_currentQuestionIndex + 1} ${l10n.off} ${_questions.length}',
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.grey600,
                         fontSize: 12.sp,
@@ -1131,7 +1130,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Progress',
+                        l10n.progress,
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.grey600,
                           fontSize: 12.sp,
@@ -1242,105 +1241,6 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                   ],
                 ),
 
-                // Question image if available
-                // if (question.questionImgUrl != null &&
-                //     question.questionImgUrl!.isNotEmpty) ...[
-                //   SizedBox(height: 4.h),
-                //   FutureBuilder<String>(
-                //     future: ImageCacheService.instance
-                //         .getImagePath(question.questionImgUrl)
-                //         .catchError((e) {
-                //           // If cache fails, return empty string to show error widget
-                //           debugPrint('⚠️ Error getting image path: $e');
-                //           return '';
-                //         }),
-                //     builder: (context, snapshot) {
-                //       if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                //         // If offline and no cached image, show error widget
-                //         if (_isOffline) {
-                //           return _buildImageErrorWidget();
-                //         }
-                //         return const SizedBox.shrink();
-                //       }
-
-                //       final imagePath = snapshot.data!;
-                //       // Check if it's a local file path (not a URL)
-                //       final isLocalFile =
-                //           !imagePath.startsWith('http') &&
-                //           !imagePath.startsWith('https') &&
-                //           imagePath.isNotEmpty;
-
-                //       return ClipRRect(
-                //         borderRadius: BorderRadius.circular(12.r),
-                //         child: isLocalFile
-                //             ? FutureBuilder<bool>(
-                //                 future: File(
-                //                   imagePath,
-                //                 ).exists().catchError((e) => false),
-                //                 builder: (context, fileSnapshot) {
-                //                   if (fileSnapshot.hasData &&
-                //                       fileSnapshot.data == true) {
-                //                     // Image is cached, load from file
-                //                     return Image.file(
-                //                       File(imagePath),
-                //                       width: double.infinity,
-                //                       height: 200.h,
-                //                       fit: BoxFit.contain,
-                //                       errorBuilder: (context, error, stackTrace) {
-                //                         debugPrint(
-                //                           '❌ Error loading cached image: $error',
-                //                         );
-                //                         return _buildImageErrorWidget();
-                //                       },
-                //                     );
-                //                   } else {
-                //                     // File doesn't exist
-                //                     // If offline, show error widget
-                //                     // If online, try network (might be a new image)
-
-                //                     if (_isOffline) {
-                //                       return _buildImageErrorWidget();
-                //                     }
-                //                     return Image.network(
-                //                       question.questionImgUrl!.startsWith(
-                //                             'http',
-                //                           )
-                //                           ? question.questionImgUrl!
-                //                           : '${AppConstants.siteBaseUrl}${question.questionImgUrl}',
-                //                       width: double.infinity,
-                //                       height: 200.h,
-                //                       fit: BoxFit.contain,
-                //                       errorBuilder:
-                //                           (context, error, stackTrace) {
-                //                             return _buildImageErrorWidget();
-                //                           },
-                //                     );
-                //                   }
-                //                 },
-                //               )
-                //             : Builder(
-                //                 // Network URL - only try if online
-                //                 builder: (context) {
-                //                   if (_isOffline) {
-                //                     // Offline and image not cached, show error widget
-                //                     return _buildImageErrorWidget();
-                //                   }
-                //                   // Online, try to load from network
-                //                   return Image.network(
-                //                     imagePath,
-                //                     width: double.infinity,
-                //                     height: 200.h,
-                //                     fit: BoxFit.contain,
-                //                     errorBuilder: (context, error, stackTrace) {
-                //                       return _buildImageErrorWidget();
-                //                     },
-                //                   );
-                //                 },
-                //               ),
-                //       );
-                //     },
-                //   ),
-                // ],
                 if (question.questionImgUrl != null &&
                     question.questionImgUrl!.isNotEmpty) ...[
                   SizedBox(height: 8.h),
@@ -1590,6 +1490,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   }
 
   Widget _buildNavigationButtons() {
+    final l10n = AppLocalizations.of(context);
     final isLastQuestion = _currentQuestionIndex == _questions.length - 1;
     final answeredCount = _userAnswers.length;
     final totalQuestions = _questions.length;
@@ -1621,7 +1522,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Answered: $answeredCount/$totalQuestions',
+                  '${l10n.answered}: $answeredCount/$totalQuestions',
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.grey600,
                     fontSize: 12.sp,
@@ -1629,7 +1530,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                   ),
                 ),
                 Text(
-                  'Time: ${_formatTime(_timeRemaining)}',
+                  '${l10n.time}: ${_formatTime(_timeRemaining)}',
                   style: AppTextStyles.caption.copyWith(
                     color: _getTimerColor(),
                     fontWeight: FontWeight.bold,
@@ -1680,7 +1581,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                             : AppColors.grey400,
                       ),
                       label: Text(
-                        'Previous',
+                        l10n.previous,
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
@@ -1726,7 +1627,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                         color: AppColors.white,
                       ),
                       label: Text(
-                        isLastQuestion ? 'Submit Exam' : 'Next',
+                        isLastQuestion ? l10n.submitExam : l10n.next,
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontSize: 15.sp,
                           fontWeight: FontWeight.bold,
@@ -1745,6 +1646,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   }
 
   Widget _buildFinishExamFAB() {
+    final l10n = AppLocalizations.of(context);
     final answeredCount = _userAnswers.length;
     final totalQuestions = _questions.length;
     final allAnswered = answeredCount == totalQuestions;
@@ -1761,7 +1663,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             Icon(allAnswered ? Icons.check_circle : Icons.warning, size: 12.sp),
             SizedBox(width: 4.w),
             Text(
-              allAnswered ? 'Submit Exam' : 'Finish Exam',
+              allAnswered ? l10n.submitExam : l10n.finishExam,
               style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold),
             ),
           ],

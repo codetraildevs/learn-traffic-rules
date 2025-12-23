@@ -818,7 +818,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
         ],
       ),
       child: InkWell(
-        onTap: () => _viewExamResult(result),
+        onTap: () => {},
         borderRadius: BorderRadius.circular(12.r),
         child: Padding(
           padding: EdgeInsets.all(12.w),
@@ -915,26 +915,26 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                     ),
                   ),
                   const Spacer(),
-                  Row(
-                    children: [
-                      Text(
-                        result.passed ? l10n.passed : l10n.failed,
-                        style: AppTextStyles.caption.copyWith(
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w600,
-                          color: result.passed
-                              ? AppColors.success
-                              : AppColors.error,
-                        ),
-                      ),
-                      SizedBox(width: 4.w),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 12.sp,
-                        color: AppColors.grey400,
-                      ),
-                    ],
-                  ),
+                  // Row(
+                  //   children: [
+                  //     Text(
+                  //       result.passed ? l10n.passed : l10n.failed,
+                  //       style: AppTextStyles.caption.copyWith(
+                  //         fontSize: 11.sp,
+                  //         fontWeight: FontWeight.w600,
+                  //         color: result.passed
+                  //             ? AppColors.success
+                  //             : AppColors.error,
+                  //       ),
+                  //     ),
+                  //     SizedBox(width: 4.w),
+                  //     Icon(
+                  //       Icons.arrow_forward_ios,
+                  //       size: 12.sp,
+                  //       color: AppColors.grey400,
+                  //     ),
+                  //   ],
+                  // ),
                 ],
               ),
             ],

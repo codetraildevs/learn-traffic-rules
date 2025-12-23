@@ -78,12 +78,12 @@ class _LanguageSelectionScreenState
               Text(
                 l10n.selectLanguage,
                 style: TextStyle(
-                  fontSize: 28.sp,
+                  fontSize: 20.sp,
                   fontWeight: FontWeight.bold,
                   color: AppColors.grey800,
                   fontFamily: 'Poppins',
                   fontStyle: FontStyle.normal,
-                  letterSpacing: 0.5,
+                  letterSpacing: 0.3,
                 ),
               ),
               SizedBox(height: 8.h),
@@ -91,7 +91,7 @@ class _LanguageSelectionScreenState
               // Subtitle
               Text(
                 l10n.chooseYourPreferredLanguage,
-                style: TextStyle(fontSize: 18.sp, color: AppColors.grey600),
+                style: TextStyle(fontSize: 14.sp, color: AppColors.grey600),
               ),
               SizedBox(height: 48.h),
 
@@ -197,14 +197,14 @@ class _LanguageSelectionScreenState
         child: Row(
           children: [
             // Flag
-            Text(flag, style: TextStyle(fontSize: 32.sp)),
+            Text(flag, style: TextStyle(fontSize: 30.sp)),
             SizedBox(width: 16.w),
             // Language Name
             Expanded(
               child: Text(
                 languageName,
                 style: TextStyle(
-                  fontSize: 18.sp,
+                  fontSize: 16.sp,
                   fontFamily: 'Poppins',
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   color: isSelected ? AppColors.primary : AppColors.grey800,

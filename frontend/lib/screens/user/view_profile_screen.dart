@@ -68,7 +68,7 @@ class ViewProfileScreen extends ConsumerWidget {
                   ),
                   _buildInfoRow(
                     l10n.accountStatus,
-                    user?.isActive == true ? l10n.active : l10n.inactive,
+                    user?.isActive == true ? l10n.inactive : l10n.active,
                   ),
                   _buildInfoRow(
                     l10n.lastLogin,

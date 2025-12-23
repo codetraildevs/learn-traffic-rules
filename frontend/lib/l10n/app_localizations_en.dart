@@ -153,7 +153,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
-  String get selectLanguage => 'Select Language (Hindura ururimi)';
+  String get selectLanguage => 'Select Language';
 
   @override
   String get english => 'English';
@@ -2618,9 +2618,8 @@ Privacy:
 
   @override
   String lastUpdatedDate(String date) => 'Last updated: $date';
-
   @override
-  String get availableService => 'Available Services';
+  String get availableServices => 'Available Services';
 
   @override
   String get joinWhatsAppGroup => 'Join WhatsApp Group';
@@ -2654,4 +2653,79 @@ Privacy:
 
   @override
   String get totalLessons => 'All lessons';
+
+  @override
+  String get shareAppSubject =>
+      'Rwanda Traffic Rule 🇷🇼 - Driving Test Preparation App';
+
+  @override
+  String get shareAppMessage => '''
+🚗 Rwanda Traffic Rule 🇷🇼 - Master Your Driving Test!
+
+Download the best app to prepare for your provisional driving license exam.
+
+📱 App: {appName}
+📦 Version: {version} ({buildNumber})
+
+✨ Features:
+• Interactive practice tests
+• Comprehensive study materials
+• Road signs and traffic rules
+• Progress tracking
+• Available in English, Kinyarwanda, and French
+
+📥 Download now:
+{playStoreLink}
+
+Start your journey to becoming a safe driver!
+#TrafficRules #DrivingTest #LearnToDrive
+''';
+
+  @override
+  String get shareFailed => 'Failed to share the app';
+  @override
+  String get timeUpTitle => "Time's Up!";
+
+  @override
+  String get timeUpMessage =>
+      'The exam time has ended. Your answers will be submitted automatically.';
+
+  @override
+  String get securityAlertTitle => 'Security Alert';
+
+  @override
+  String get examPausedMessage =>
+      'The exam was paused due to app switching or background activity.';
+
+  @override
+  String get examIntegrityNotice => 'To maintain exam integrity:';
+
+  @override
+  String get stayInAppRule => '• Stay in the exam app during the test';
+
+  @override
+  String get noAppSwitchRule => '• Do not switch to other apps';
+
+  @override
+  String get noScreenshotRule => '• Do not take screenshots';
+
+  @override
+  String get repeatedViolationWarning =>
+      'Repeated violations may result in exam termination.';
+  @override
+  String get time => 'time';
+  @override
+  String get off => 'of';
+  @override
+  String get examSubmittedSuccess => 'Exam submitted successfully!';
+
+  @override
+  String get examSavedOffline =>
+      'Exam saved offline! Will sync when internet is available.';
+
+  @override
+  String get examScoreDescription => 'Your score:';
+
+  @override
+  String get errorSubmittingExam => 'Error submitting exam';
 }
