@@ -2348,18 +2348,18 @@ Ubwoba:
 
   // Disclaimer Screen
   @override
-  String get educationalDisclaimer => 'Icyitonderwa cy\'Uburezi';
+  String get educationalDisclaimer => 'ICYOTONDERWA:';
 
   @override
   String get educationalPurposeOnlyDescription =>
       'Iyi porogaramu yateguwe gusa kugira ngo ikugufashe kwitegura ikizamini cyawe cya lisansi yo gutwara imodoka.';
 
   @override
-  String get practiceSimulation => 'Gukina Ikizamini';
+  String get practiceSimulation => 'Kwitoza ikizamin';
 
   @override
   String get practiceSimulationDescription =>
-      'Ibyizamini byo kwitegura bigana imiterere y\'ikizamini nyakuri ariko si ibizamini bya leta.';
+      'Ibizamini byo kwitegura bigana imiterere y\'ikizamini nyakuri ariko si ibizamini bya leta.';
 
   @override
   String get notOfficial => 'Ntabwo ari bya Leta';
@@ -2375,25 +2375,25 @@ Ubwoba:
 
   @override
   String get iHaveReadAndUnderstoodTheEducationalDisclaimer =>
-      'Nasomye kandi ndabyumva icyitonderwa cyo kwiga';
+      'Nasomye kandi ndabyumva icyitonderwa cyo gukoresha iyi porogaramu';
 
   @override
   String get pleaseAcceptTermsAndConditions =>
-      'Nyamuneka wemere amabwiriza n\'ibisabwa';
+      'Nyamuneka emera amategeko n\'amabwiriza';
 
   @override
   String get pleaseCheckTheBoxBelowToAcceptTermsAndConditions =>
-      'Nyamuneka wongereho akamenyetso munsi kugira ngo wemere amabwiriza n\'ibisabwa mbere yo gukomeza';
+      'Nyamuneka kanda akamenyetso ka kare  munsi kugira ngo wemere amategeko n\'amabwiriza';
 
   @override
   String get couldNotOpenLinkTapCopyToCopyTheUrl =>
-      'Ntibishoboye gufungura ihuza. Kanda "Gukoporora" kugira ngo ukoporore URL.';
+      'Ntibishoboye gufungura linki. Kanda "Gukoporora" kugira ngo ukoporore linki.';
 
   @override
   String get urlCopiedToClipboard => 'URL yakoporowe mu clipboard';
 
   @override
-  String get copyUrl => 'Gukoporora URL';
+  String get copyUrl => 'Gukoporora linki';
 
   @override
   String errorMessage(String error) => 'Ikosa: $error';
