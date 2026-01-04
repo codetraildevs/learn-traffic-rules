@@ -51,8 +51,8 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   // Track which images are being preloaded
   final Set<String> _preloadingImages = {};
   // Search query for filtering exams
-  // String _searchQuery = '';
-  // final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -84,7 +84,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _animationController.dispose();
-    // _searchController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -955,12 +955,12 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         ),
 
         // Search Bar Section
-        // SliverToBoxAdapter(
-        //   child: Padding(
-        //     padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-        //     child: _buildSearchBar(),
-        //   ),
-        // ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            child: _buildSearchBar(),
+          ),
+        ),
 
         // Exams filtered by selected language and search query
         ..._buildExamsByType(),
@@ -1132,62 +1132,62 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     );
   }
 
-  // Widget _buildSearchBar() {
-  //   return Container(
-  //     decoration: BoxDecoration(
-  //       color: AppColors.white,
-  //       borderRadius: BorderRadius.circular(12.r),
-  //       border: Border.all(color: AppColors.grey200, width: 1),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: AppColors.black.withValues(alpha: 0.05),
-  //           blurRadius: 4,
-  //           offset: const Offset(0, 2),
-  //         ),
-  //       ],
-  //     ),
-  //     child: TextField(
-  //       controller: _searchController,
-  //       decoration: InputDecoration(
-  //         hintText: 'Search exams by title, type or language...',
-  //         hintStyle: AppTextStyles.bodyMedium.copyWith(
-  //           color: AppColors.grey500,
-  //           fontSize: 14.sp,
-  //         ),
-  //         prefixIcon: Icon(Icons.search, color: AppColors.grey600, size: 24.sp),
-  //         suffixIcon: _searchQuery.isNotEmpty
-  //             ? IconButton(
-  //                 icon: Icon(
-  //                   Icons.clear,
-  //                   color: AppColors.grey600,
-  //                   size: 20.sp,
-  //                 ),
-  //                 onPressed: () {
-  //                   _searchController.clear();
-  //                   setState(() {
-  //                     _searchQuery = '';
-  //                   });
-  //                 },
-  //               )
-  //             : null,
-  //         border: InputBorder.none,
-  //         contentPadding: EdgeInsets.symmetric(
-  //           horizontal: 16.w,
-  //           vertical: 12.h,
-  //         ),
-  //       ),
-  //       style: AppTextStyles.bodyMedium.copyWith(
-  //         color: AppColors.grey800,
-  //         fontSize: 14.sp,
-  //       ),
-  //       onChanged: (value) {
-  //         setState(() {
-  //           _searchQuery = value;
-  //         });
-  //       },
-  //     ),
-  //   );
-  // }
+  Widget _buildSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: AppColors.grey200, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Search exams by title, type or language...',
+          hintStyle: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.grey500,
+            fontSize: 14.sp,
+          ),
+          prefixIcon: Icon(Icons.search, color: AppColors.grey600, size: 24.sp),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: Icon(
+                    Icons.clear,
+                    color: AppColors.grey600,
+                    size: 20.sp,
+                  ),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchQuery = '';
+                    });
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 16.w,
+            vertical: 12.h,
+          ),
+        ),
+        style: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.grey800,
+          fontSize: 14.sp,
+        ),
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
+      ),
+    );
+  }
 
   List<Widget> _buildExamsByType() {
     final l10n = AppLocalizations.of(context);
@@ -1196,25 +1196,25 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     var filteredExams = _freeExamData!.exams;
 
     // Apply search filter if search query is not empty
-    // if (_searchQuery.isNotEmpty) {
-    //   final queryLower = _searchQuery.toLowerCase();
-    //   filteredExams = filteredExams.where((exam) {
-    //     // Search in title
-    //     final titleMatch = exam.title.toLowerCase().contains(queryLower);
+    if (_searchQuery.isNotEmpty) {
+      final queryLower = _searchQuery.toLowerCase();
+      filteredExams = filteredExams.where((exam) {
+        // Search in title
+        final titleMatch = exam.title.toLowerCase().contains(queryLower);
 
-    //     // Search in exam type
-    //     final typeMatch =
-    //         exam.examType?.toLowerCase().contains(queryLower) ?? false;
+        // Search in exam type
+        final typeMatch =
+            exam.examType?.toLowerCase().contains(queryLower) ?? false;
 
-    //     // Search in language name (map exam type to language name)
-    //     final languageName = _mapExamTypeToLanguageName(
-    //       exam.examType?.toLowerCase() ?? 'english',
-    //     );
-    //     final languageMatch = languageName.toLowerCase().contains(queryLower);
+        // Search in language name (map exam type to language name)
+        final languageName = _mapExamTypeToLanguageName(
+          exam.examType?.toLowerCase() ?? 'english',
+        );
+        final languageMatch = languageName.toLowerCase().contains(queryLower);
 
-    //     return titleMatch || typeMatch || languageMatch;
-    //   }).toList();
-    // }
+        return titleMatch || typeMatch || languageMatch;
+      }).toList();
+    }
 
     if (filteredExams.isEmpty) {
       return [

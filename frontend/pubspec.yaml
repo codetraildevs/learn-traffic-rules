@@ -86,6 +86,10 @@ flutter:
     - assets/icons/
   
   # Enable localization
+  # NOTE: We use manually maintained localization files in lib/l10n/
+  # The generate: true is for Flutter's built-in localization system,
+  # but we don't use it - our files are manually maintained.
+  # DO NOT run 'flutter gen-l10n' - it will overwrite our manual files!
   generate: true
   
 
