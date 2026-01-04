@@ -1503,7 +1503,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
           16.w,
           16.h,
           16.w,
-          MediaQuery.of(context).padding.bottom + 0.h,
+          MediaQuery.of(context).padding.bottom,
         ),
         decoration: BoxDecoration(
           color: AppColors.white,
@@ -1525,8 +1525,8 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                   '${l10n.answered}: $answeredCount/$totalQuestions',
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.grey600,
-                    fontSize: 12.sp,
                     fontWeight: FontWeight.bold,
+                    fontSize: 12.sp,
                   ),
                 ),
                 Text(
@@ -1545,94 +1545,37 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
             // Navigation buttons
             Row(
               children: [
-                // Previous button
+                // Previous
                 Expanded(
                   child: SizedBox(
                     height: 50.h,
                     child: ElevatedButton.icon(
                       onPressed: canGoPrevious ? _previousQuestion : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: canGoPrevious
-                            ? AppColors.grey100
-                            : AppColors.grey200,
-                        foregroundColor: canGoPrevious
-                            ? AppColors.grey800
-                            : AppColors.grey400,
-                        elevation: canGoPrevious ? 2 : 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          side: BorderSide(
-                            color: canGoPrevious
-                                ? AppColors.grey300
-                                : AppColors.grey200,
-                            width: 1,
-                          ),
-                        ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16.w,
-                          vertical: 12.h,
-                        ),
-                      ),
-                      icon: Icon(
-                        Icons.arrow_back_ios,
-                        size: 16.sp,
-                        color: canGoPrevious
-                            ? AppColors.grey800
-                            : AppColors.grey400,
-                      ),
-                      label: Text(
-                        l10n.previous,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: canGoPrevious
-                              ? AppColors.grey800
-                              : AppColors.grey400,
-                        ),
-                      ),
+                      icon: Icon(Icons.arrow_back_ios, size: 16.sp),
+                      label: Text(l10n.previous),
                     ),
                   ),
                 ),
 
                 SizedBox(width: 12.w),
 
-                // Next/Submit button - allow skipping questions
+                // Next / Submit (DIRECT)
                 Expanded(
-                  flex: 1,
                   child: SizedBox(
                     height: 50.h,
                     child: ElevatedButton.icon(
-                      onPressed: isLastQuestion
-                          ? _showFinishExamDialog
-                          : _nextQuestion,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isLastQuestion
-                            ? AppColors.success
-                            : AppColors.primary,
-                        foregroundColor: AppColors.white,
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 20.w,
-                          vertical: 12.h,
-                        ),
-                      ),
+                      onPressed: isLastQuestion ? _submitExam : _nextQuestion,
                       icon: Icon(
                         isLastQuestion
                             ? Icons.check_circle
                             : Icons.arrow_forward_ios,
                         size: 18.sp,
-                        color: AppColors.white,
                       ),
-                      label: Text(
-                        isLastQuestion ? l10n.submitExam : l10n.next,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontSize: 15.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.white,
-                        ),
+                      label: Text(isLastQuestion ? l10n.submitExam : l10n.next),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isLastQuestion
+                            ? AppColors.success
+                            : AppColors.primary,
                       ),
                     ),
                   ),
@@ -1647,152 +1590,144 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
 
   Widget _buildFinishExamFAB() {
     final l10n = AppLocalizations.of(context);
-    final answeredCount = _userAnswers.length;
-    final totalQuestions = _questions.length;
-    final allAnswered = answeredCount == totalQuestions;
 
     return Padding(
       padding: EdgeInsets.only(bottom: 78.h),
       child: FloatingActionButton.extended(
-        onPressed: _showFinishExamDialog,
-        backgroundColor: allAnswered ? AppColors.success : AppColors.warning,
+        onPressed: _submitExam, // ✅ DIRECT SUBMIT
+        backgroundColor: AppColors.success,
         foregroundColor: AppColors.white,
         elevation: 8,
-        label: Row(
-          children: [
-            Icon(allAnswered ? Icons.check_circle : Icons.warning, size: 12.sp),
-            SizedBox(width: 4.w),
-            Text(
-              allAnswered ? l10n.submitExam : l10n.finishExam,
-              style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold),
-            ),
-          ],
+        icon: Icon(Icons.check_circle, size: 16.sp),
+        label: Text(
+          l10n.submitExam,
+          style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.bold),
         ),
       ),
     );
   }
 
-  void _showFinishExamDialog() {
-    final l10n = AppLocalizations.of(context);
-    final answeredCount = _userAnswers.length;
-    final totalQuestions = _questions.length;
-    final unansweredCount = totalQuestions - answeredCount;
-    final allAnswered = unansweredCount == 0;
+  // void _showFinishExamDialog() {
+  //   final l10n = AppLocalizations.of(context);
+  //   final answeredCount = _userAnswers.length;
+  //   final totalQuestions = _questions.length;
+  //   final unansweredCount = totalQuestions - answeredCount;
+  //   final allAnswered = unansweredCount == 0;
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        title: Row(
-          children: [
-            Icon(
-              allAnswered ? Icons.check_circle : Icons.warning_amber_rounded,
-              color: allAnswered ? AppColors.success : AppColors.warning,
-              size: 24.sp,
-            ),
-            SizedBox(width: 8.w),
-            Text(
-              allAnswered ? l10n.submitExamQuestion : l10n.finishExam,
-              style: AppTextStyles.heading3.copyWith(color: AppColors.grey800),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (allAnswered) ...[
-              Text(
-                l10n.allQuestionsHaveBeenAnswered,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.grey700,
-                ),
-              ),
-            ] else ...[
-              Text(
-                l10n.youHaveUnansweredQuestions,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.grey700,
-                ),
-              ),
-              SizedBox(height: 16.h),
-              Container(
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(
-                    color: AppColors.error.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      color: AppColors.error,
-                      size: 16.sp,
-                    ),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: Text(
-                        l10n.youHaveUnansweredQuestionsCount(unansweredCount),
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.error,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            SizedBox(height: 16.h),
-            Text(
-              l10n.onceSubmittedYouCannotChangeAnswers,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.grey600,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              l10n.continueExam,
-              style: const TextStyle(
-                color: AppColors.grey600,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          if (allAnswered)
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _submitExam();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.success,
-                foregroundColor: AppColors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-              ),
-              child: Text(
-                l10n.submitExam,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (context) => AlertDialog(
+  //       shape: RoundedRectangleBorder(
+  //         borderRadius: BorderRadius.circular(16.r),
+  //       ),
+  //       title: Row(
+  //         children: [
+  //           Icon(
+  //             allAnswered ? Icons.check_circle : Icons.warning_amber_rounded,
+  //             color: allAnswered ? AppColors.success : AppColors.warning,
+  //             size: 24.sp,
+  //           ),
+  //           SizedBox(width: 8.w),
+  //           Text(
+  //             allAnswered ? l10n.submitExamQuestion : l10n.finishExam,
+  //             style: AppTextStyles.heading3.copyWith(color: AppColors.grey800),
+  //           ),
+  //         ],
+  //       ),
+  //       content: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           if (allAnswered) ...[
+  //             Text(
+  //               l10n.allQuestionsHaveBeenAnswered,
+  //               style: AppTextStyles.bodyMedium.copyWith(
+  //                 color: AppColors.grey700,
+  //               ),
+  //             ),
+  //           ] else ...[
+  //             Text(
+  //               l10n.youHaveUnansweredQuestions,
+  //               style: AppTextStyles.bodyMedium.copyWith(
+  //                 color: AppColors.grey700,
+  //               ),
+  //             ),
+  //             SizedBox(height: 16.h),
+  //             Container(
+  //               padding: EdgeInsets.all(12.w),
+  //               decoration: BoxDecoration(
+  //                 color: AppColors.error.withValues(alpha: 0.1),
+  //                 borderRadius: BorderRadius.circular(8.r),
+  //                 border: Border.all(
+  //                   color: AppColors.error.withValues(alpha: 0.3),
+  //                   width: 1,
+  //                 ),
+  //               ),
+  //               child: Row(
+  //                 children: [
+  //                   Icon(
+  //                     Icons.error_outline,
+  //                     color: AppColors.error,
+  //                     size: 16.sp,
+  //                   ),
+  //                   SizedBox(width: 8.w),
+  //                   Expanded(
+  //                     child: Text(
+  //                       l10n.youHaveUnansweredQuestionsCount(unansweredCount),
+  //                       style: AppTextStyles.caption.copyWith(
+  //                         color: AppColors.error,
+  //                         fontWeight: FontWeight.w600,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ],
+  //           SizedBox(height: 16.h),
+  //           Text(
+  //             l10n.onceSubmittedYouCannotChangeAnswers,
+  //             style: AppTextStyles.caption.copyWith(
+  //               color: AppColors.grey600,
+  //               fontStyle: FontStyle.italic,
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(context),
+  //           child: Text(
+  //             l10n.continueExam,
+  //             style: const TextStyle(
+  //               color: AppColors.grey600,
+  //               fontWeight: FontWeight.w600,
+  //             ),
+  //           ),
+  //         ),
+  //         if (allAnswered)
+  //           ElevatedButton(
+  //             onPressed: () {
+  //               Navigator.pop(context);
+  //               _submitExam();
+  //             },
+  //             style: ElevatedButton.styleFrom(
+  //               backgroundColor: AppColors.success,
+  //               foregroundColor: AppColors.white,
+  //               shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(8.r),
+  //               ),
+  //             ),
+  //             child: Text(
+  //               l10n.submitExam,
+  //               style: const TextStyle(fontWeight: FontWeight.bold),
+  //             ),
+  //           ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   /// Save exam progress to SharedPreferences
   Future<void> _saveExamProgress() async {

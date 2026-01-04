@@ -2502,17 +2502,17 @@ Ubwoba:
       'Nyamuneka tegereza mu gihe dukurura dosiye y\'amajwi';
 
   @override
-  String get externalLink => 'Ihuza ryo hanze';
+  String get externalLink => 'Linki yo hanze ya porogaramu';
 
   @override
-  String get openLink => 'Fungura ihuza';
+  String get openLink => 'Fungura linki';
 
   @override
-  String get noContentAvailable => 'Nta birimo bihari';
+  String get noContentAvailable => 'Nta amakuru ahari';
 
   // Course Detail Screen
   @override
-  String get startCourse => 'Tangira amahugurwa';
+  String get startCourse => 'Tangira isomo';
 
   @override
   String get getAccessToStart => 'Bona uburenganzira bwo gutangira';
@@ -2531,7 +2531,7 @@ Ubwoba:
   String get courseContent => 'Ibirimo by\'amahugurwa';
 
   @override
-  String get errorLoadingCourse => 'Ikosa mu gukurura amahugurwa';
+  String get errorLoadingCourse => 'Ikosa mu gukurura isomo';
 
   @override
   String get failedToLoadCourseDetails =>
@@ -2556,7 +2556,7 @@ Ubwoba:
 
   @override
   String get termsConditionsSection2Content =>
-      'Rwanda Traffic Rule 🇷🇼 ni porogaramu y’uburezi igenewe:\n\n'
+      'Rwanda Traffic Rule 🇷🇼 ni porogaramu y’uburezi irimo ibi bikurikira:\n\n'
       '• Ibibazo by’imyitozo n’ibizamini ku mategeko y’umuhanda\n\n'
       '• Gukurikirana aho ugeze n’isesengura ry’imikorere\n\n'
       '• Amasomo ajyanye n’amategeko y’umuhanda\n\n'
@@ -2589,8 +2589,7 @@ Ubwoba:
       '• Gusubiza inyuma (reverse engineer) cyangwa gushaka kode ya porogaramu';
 
   @override
-  String get termsConditionsSection5Title =>
-      '5. Ibiri muri Porogaramu by’Uburezi';
+  String get termsConditionsSection5Title => '5. Ibiri muri Porogaramu:';
 
   @override
   String get termsConditionsSection5Content =>
@@ -2610,7 +2609,7 @@ Ubwoba:
       '• Gukoporora, guhindura, cyangwa gukwirakwiza ibiri muri porogaramu\n\n'
       '• Gukoresha ibirango byacu utabyemerewe\n\n'
       '• Gukora porogaramu ishingiye ku yacu (derivative works)\n\n'
-      '• Gusiba cyangwa guhindura amatangazo arengera uburenganzira';
+      '• Gusiba cyangwa guhindura amatangazo arengera uburenganzira bwa muntu';
 
   @override
   String get termsConditionsSection7Title => '7. Ibanga n’Umutekano w’Amakuru';
@@ -2678,7 +2677,7 @@ Ubwoba:
       'Email: engineers.devs@gmail.com\n\n'
       'Telefone: +250788659575\n\n'
       'WhatsApp: +250788659575\n\n'
-      'Live Chat: Irahari amasaha 24/7';
+      'Live Chat:Turahari amasaha 24/7';
 
   @override
   String lastUpdatedDate(String date) => 'Byavuguruwe bwa nyuma: $date';
