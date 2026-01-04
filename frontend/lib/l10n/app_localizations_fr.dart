@@ -2814,4 +2814,8 @@ Commencez votre parcours pour devenir un conducteur responsable !
 
   @override
   String get errorSubmittingExam => 'Erreur lors de la soumission de l’examen';
+  @override
+  String get correctQuestions => 'Questions correctes :';
+  @override
+  String get incorrectQuestions => 'Questions incorrectes :';
 }

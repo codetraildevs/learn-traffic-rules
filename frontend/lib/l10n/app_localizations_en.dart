@@ -2728,4 +2728,8 @@ Start your journey to becoming a safe driver!
 
   @override
   String get errorSubmittingExam => 'Error submitting exam';
+  @override
+  String get correctQuestions => 'Correct questions:';
+  @override
+  String get incorrectQuestions => 'Incorrect questions:';
 }

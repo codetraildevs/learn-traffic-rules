@@ -31,6 +31,7 @@ UserWithStats _$UserWithStatsFromJson(Map<String, dynamic> json) =>
       blockedAt: json['blockedAt'] == null
           ? null
           : DateTime.parse(json['blockedAt'] as String),
+      preferredLanguage: json['preferredLanguage'] as String?,
     );
 
 Map<String, dynamic> _$UserWithStatsToJson(UserWithStats instance) =>
@@ -50,6 +51,7 @@ Map<String, dynamic> _$UserWithStatsToJson(UserWithStats instance) =>
       'isBlocked': instance.isBlocked,
       'blockReason': instance.blockReason,
       'blockedAt': instance.blockedAt?.toIso8601String(),
+      'preferredLanguage': instance.preferredLanguage,
     };
 
 AccessCodeStats _$AccessCodeStatsFromJson(Map<String, dynamic> json) =>
@@ -136,11 +138,15 @@ CreateAccessCodeForUserRequest _$CreateAccessCodeForUserRequestFromJson(
   Map<String, dynamic> json,
 ) => CreateAccessCodeForUserRequest(
   paymentAmount: (json['paymentAmount'] as num).toDouble(),
+  durationDays: (json['durationDays'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$CreateAccessCodeForUserRequestToJson(
   CreateAccessCodeForUserRequest instance,
-) => <String, dynamic>{'paymentAmount': instance.paymentAmount};
+) => <String, dynamic>{
+  'paymentAmount': instance.paymentAmount,
+  'durationDays': instance.durationDays,
+};
 
 CreateAccessCodeForUserResponse _$CreateAccessCodeForUserResponseFromJson(
   Map<String, dynamic> json,

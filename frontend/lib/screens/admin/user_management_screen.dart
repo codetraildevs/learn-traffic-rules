@@ -492,24 +492,56 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       final selectedTier = await _showPaymentTierDialog();
       if (selectedTier == null) return;
 
-      debugPrint(
-        '🔍 Selected tier: ${selectedTier['name']} - ${selectedTier['amount']} RWF',
-      );
+      final isCustom = selectedTier['isCustom'] as bool? ?? false;
+      final amount = selectedTier['amount'] as int;
+      final days = selectedTier['days'] as int;
 
-      final response = await _userManagementService.createAccessCodeForUser(
-        user.id,
-        selectedTier['amount'].toDouble(),
-      );
-
-      if (response.success) {
-        final l10n = AppLocalizations.of(context);
-        _showSuccessSnackBar(l10n.accessCodeGeneratedFor(user.fullName));
-        _loadUsers(); // Refresh the list
-      } else {
-        final l10n = AppLocalizations.of(context);
-        _showErrorSnackBar(
-          '${l10n.failedToGenerateAccessCode}: ${response.message}',
+      if (isCustom) {
+        debugPrint(
+          '🔍 Selected custom date range: ${selectedTier['days']} days',
         );
+        // For custom dates, use a calculated amount based on days
+        // You can adjust this formula as needed
+        final calculatedAmount = _calculateAmountForDays(days);
+
+        final response = await _userManagementService.createAccessCodeForUser(
+          user.id,
+          calculatedAmount.toDouble(),
+          durationDays: days, // Pass custom days to backend
+        );
+
+        if (response.success) {
+          final l10n = AppLocalizations.of(context);
+          _showSuccessSnackBar(
+            '${l10n.accessCodeGeneratedFor(user.fullName)} (${days} days)',
+          );
+          _loadUsers(); // Refresh the list
+        } else {
+          final l10n = AppLocalizations.of(context);
+          _showErrorSnackBar(
+            '${l10n.failedToGenerateAccessCode}: ${response.message}',
+          );
+        }
+      } else {
+        debugPrint(
+          '🔍 Selected tier: ${selectedTier['tier']} - $amount RWF (${days} days)',
+        );
+
+        final response = await _userManagementService.createAccessCodeForUser(
+          user.id,
+          amount.toDouble(),
+        );
+
+        if (response.success) {
+          final l10n = AppLocalizations.of(context);
+          _showSuccessSnackBar(l10n.accessCodeGeneratedFor(user.fullName));
+          _loadUsers(); // Refresh the list
+        } else {
+          final l10n = AppLocalizations.of(context);
+          _showErrorSnackBar(
+            '${l10n.failedToGenerateAccessCode}: ${response.message}',
+          );
+        }
       }
     } catch (e) {
       final l10n = AppLocalizations.of(context);
@@ -517,37 +549,76 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     }
   }
 
+  /// Calculate payment amount based on number of days
+  /// Uses a simple formula: base amount per day
+  /// You can adjust this formula to match your pricing structure
+  int _calculateAmountForDays(int days) {
+    // Base pricing: 50 RWF per day
+    // Minimum: 500 RWF, Maximum: 10000 RWF
+    final baseAmount = days * 50;
+    if (baseAmount < 500) return 1000;
+    if (baseAmount > 10000) return 10000;
+    return baseAmount;
+  }
+
   Future<Map<String, dynamic>?> _showPaymentTierDialog() async {
     final tiers = [
-      {'tier': '1_MONTH', 'amount': 1500, 'days': 30},
-      {'tier': '3_MONTHS', 'amount': 3000, 'days': 90},
-      {'tier': '6_MONTHS', 'amount': 5000, 'days': 180},
+      {'tier': '1_MONTH', 'amount': 1500, 'days': 30, 'isCustom': false},
+      {'tier': '3_MONTHS', 'amount': 3000, 'days': 90, 'isCustom': false},
+      {'tier': '6_MONTHS', 'amount': 5000, 'days': 180, 'isCustom': false},
+      {'tier': 'CUSTOM', 'amount': 0, 'days': 0, 'isCustom': true},
     ];
 
-    return showDialog<Map<String, dynamic>>(
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) {
         final l10n = AppLocalizations.of(context);
         return AlertDialog(
           title: Text(l10n.selectPaymentTier, style: AppTextStyles.heading3),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: tiers.map((tier) {
-              final amount = tier['amount'] as int;
-              final days = tier['days'] as int;
-              String label;
-              if (days == 30) {
-                label = '1 Month - $amount RWF';
-              } else if (days == 90) {
-                label = '3 Months - $amount RWF';
-              } else {
-                label = '6 Months - $amount RWF';
-              }
-              return ListTile(
-                title: Text(label, style: AppTextStyles.bodyMedium),
-                onTap: () => Navigator.pop(context, tier),
-              );
-            }).toList(),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: tiers.map((tier) {
+                final isCustom = tier['isCustom'] as bool;
+                if (isCustom) {
+                  return ListTile(
+                    leading: Icon(
+                      Icons.calendar_today,
+                      color: AppColors.primary,
+                    ),
+                    title: Text(
+                      'Custom Date Range',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Select specific end date',
+                      style: AppTextStyles.caption,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context, {'showCustom': true});
+                    },
+                  );
+                } else {
+                  final amount = tier['amount'] as int;
+                  final days = tier['days'] as int;
+                  String label;
+                  if (days == 30) {
+                    label = '1 Month - $amount RWF';
+                  } else if (days == 90) {
+                    label = '3 Months - $amount RWF';
+                  } else {
+                    label = '6 Months - $amount RWF';
+                  }
+                  return ListTile(
+                    title: Text(label, style: AppTextStyles.bodyMedium),
+                    onTap: () => Navigator.pop(context, tier),
+                  );
+                }
+              }).toList(),
+            ),
           ),
           actions: [
             TextButton(
@@ -555,6 +626,251 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               child: Text(l10n.cancel, style: AppTextStyles.bodyMedium),
             ),
           ],
+        );
+      },
+    );
+
+    // If user selected custom, show the custom date picker
+    if (result != null && result['showCustom'] == true) {
+      return await _showCustomDatePickerDialog();
+    }
+
+    return result;
+  }
+
+  Future<Map<String, dynamic>?> _showCustomDatePickerDialog() async {
+    DateTime? selectedEndDate;
+    final now = DateTime.now();
+    final startDate = DateTime(now.year, now.month, now.day);
+
+    return showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today,
+                    color: AppColors.primary,
+                    size: 24.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  Text('Custom Date Range', style: AppTextStyles.heading3),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Start Date (Now)
+                    Container(
+                      padding: EdgeInsets.all(12.w),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.play_arrow,
+                            color: AppColors.primary,
+                            size: 20.sp,
+                          ),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Start Date',
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  DateFormat('MMM dd, yyyy').format(startDate),
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                                Text(
+                                  '(Today)',
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.grey600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    // End Date Picker
+                    Text(
+                      'Select End Date:',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    InkWell(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate:
+                              selectedEndDate ??
+                              startDate.add(const Duration(days: 30)),
+                          firstDate: startDate,
+                          lastDate: DateTime(now.year + 5),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            selectedEndDate = picked;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(12.w),
+                        decoration: BoxDecoration(
+                          color: selectedEndDate != null
+                              ? AppColors.success.withValues(alpha: 0.1)
+                              : AppColors.grey50,
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(
+                            color: selectedEndDate != null
+                                ? AppColors.success
+                                : AppColors.grey300,
+                            width: selectedEndDate != null ? 2 : 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today,
+                              color: selectedEndDate != null
+                                  ? AppColors.success
+                                  : AppColors.grey600,
+                              size: 20.sp,
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    selectedEndDate != null
+                                        ? DateFormat(
+                                            'MMM dd, yyyy',
+                                          ).format(selectedEndDate!)
+                                        : 'Tap to select end date',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      fontWeight: selectedEndDate != null
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      color: selectedEndDate != null
+                                          ? AppColors.success
+                                          : AppColors.grey600,
+                                    ),
+                                  ),
+                                  if (selectedEndDate != null) ...[
+                                    SizedBox(height: 4.h),
+                                    Text(
+                                      '${selectedEndDate!.difference(startDate).inDays} days',
+                                      style: AppTextStyles.caption.copyWith(
+                                        color: AppColors.success,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            if (selectedEndDate != null)
+                              Icon(
+                                Icons.check_circle,
+                                color: AppColors.success,
+                                size: 20.sp,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (selectedEndDate != null) ...[
+                      SizedBox(height: 16.h),
+                      Container(
+                        padding: EdgeInsets.all(12.w),
+                        decoration: BoxDecoration(
+                          color: AppColors.info.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(
+                            color: AppColors.info.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info,
+                              color: AppColors.info,
+                              size: 16.sp,
+                            ),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Text(
+                                'Access code will be valid for ${selectedEndDate!.difference(startDate).inDays} days',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.info,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(l10n.cancel),
+                ),
+                ElevatedButton(
+                  onPressed: selectedEndDate != null
+                      ? () {
+                          final days = selectedEndDate!
+                              .difference(startDate)
+                              .inDays;
+                          Navigator.pop(context, {
+                            'tier': 'CUSTOM',
+                            'amount': 0, // No fixed amount for custom
+                            'days': days,
+                            'isCustom': true,
+                            'startDate': startDate.toIso8601String(),
+                            'endDate': selectedEndDate!.toIso8601String(),
+                          });
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.white,
+                  ),
+                  child: Text('Confirm'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -1005,6 +1321,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                 ),
                               ),
                             ),
+                            // Language Badge
+                            if (user.preferredLanguage != null) ...[
+                              SizedBox(height: 6.h),
+                              _buildLanguageBadge(user.preferredLanguage!),
+                            ],
 
                             // Role Badge
                             // Container(
@@ -1257,6 +1578,56 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             text,
             style: AppTextStyles.caption.copyWith(
               color: color,
+              fontSize: 11.sp,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageBadge(String languageCode) {
+    final languageNames = {
+      'en': 'English',
+      'fr': 'Français',
+      'rw': 'Kinyarwanda',
+    };
+    final languageColors = {
+      'en': AppColors.info,
+      'fr': AppColors.secondary,
+      'rw': AppColors.primary,
+    };
+    final languageIcons = {
+      'en': Icons.language,
+      'fr': Icons.language,
+      'rw': Icons.language,
+    };
+
+    final languageName =
+        languageNames[languageCode] ?? languageCode.toUpperCase();
+    final languageColor = languageColors[languageCode] ?? AppColors.grey600;
+    final languageIcon = languageIcons[languageCode] ?? Icons.language;
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: languageColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(
+          color: languageColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(languageIcon, size: 14.sp, color: languageColor),
+          SizedBox(width: 6.w),
+          Text(
+            languageName,
+            style: AppTextStyles.caption.copyWith(
+              color: languageColor,
               fontSize: 11.sp,
               fontWeight: FontWeight.w600,
             ),

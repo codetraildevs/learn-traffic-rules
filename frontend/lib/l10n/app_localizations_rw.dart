@@ -109,7 +109,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get finishExam => 'soza Ikizamini';
 
   @override
-  String get submitExam => 'Ohereza Ikizamini';
+  String get submitExam => 'Soza Ikizamini';
 
   @override
   String get examResults => 'Ibisubizo by\'Ikizamini';
@@ -1441,7 +1441,7 @@ class AppLocalizationsRw extends AppLocalizations {
       'Urashobora gusohoka kandi wongere ugaruka nyuma, cyangwa wongere ibisubizo byawe.';
 
   @override
-  String get submitExamQuestion => 'Ongera Icyiciro?';
+  String get submitExamQuestion => 'Ohereza ibibazo';
 
   @override
   String get onceSubmittedYouCannotChangeAnswers =>
@@ -2794,4 +2794,8 @@ Tangira urugendo rwo kuba umushoferi utekanye!
 
   @override
   String get errorSubmittingExam => 'Habaye ikibazo mu kohereza ikizamini';
+  @override
+  String get correctQuestions => 'Ibibazo wakoze';
+  @override
+  String get incorrectQuestions => 'Ibibazo wishe';
 }

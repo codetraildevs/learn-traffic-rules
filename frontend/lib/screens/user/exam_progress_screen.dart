@@ -27,31 +27,31 @@ class ExamProgressScreen extends StatefulWidget {
 
 class _ExamProgressScreenState extends State<ExamProgressScreen> {
   bool _isRetaking = false;
-  static const MethodChannel _securityChannel = MethodChannel(
-    'com.trafficrules.master/security',
-  );
+  // static const MethodChannel _securityChannel = MethodChannel(
+  //   'com.trafficrules.master/security',
+  // );
 
-  Future<void> _disableScreenshots() async {
-    if (Platform.isAndroid) {
-      try {
-        await _securityChannel.invokeMethod('disableScreenshots');
-        debugPrint('🔒 Security: Screenshots disabled for detailed answers');
-      } catch (e) {
-        debugPrint('🔒 Security: Failed to disable screenshots: $e');
-      }
-    }
-  }
+  // Future<void> _disableScreenshots() async {
+  //   if (Platform.isAndroid) {
+  //     try {
+  //       await _securityChannel.invokeMethod('disableScreenshots');
+  //       debugPrint('🔒 Security: Screenshots disabled for detailed answers');
+  //     } catch (e) {
+  //       debugPrint('🔒 Security: Failed to disable screenshots: $e');
+  //     }
+  //   }
+  // }
 
-  Future<void> _enableScreenshots() async {
-    if (Platform.isAndroid) {
-      try {
-        await _securityChannel.invokeMethod('enableScreenshots');
-        debugPrint('🔒 Security: Screenshots enabled after detailed answers');
-      } catch (e) {
-        debugPrint('🔒 Security: Failed to enable screenshots: $e');
-      }
-    }
-  }
+  // Future<void> _enableScreenshots() async {
+  //   if (Platform.isAndroid) {
+  //     try {
+  //       await _securityChannel.invokeMethod('enableScreenshots');
+  //       debugPrint('🔒 Security: Screenshots enabled after detailed answers');
+  //     } catch (e) {
+  //       debugPrint('🔒 Security: Failed to enable screenshots: $e');
+  //     }
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -163,12 +163,12 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildScoreDetail(
-                label: l10n.correct,
+                label: l10n.correctQuestions,
                 value: '${widget.examResult.correctAnswers}',
                 color: AppColors.success,
               ),
               _buildScoreDetail(
-                label: l10n.incorrect,
+                label: l10n.incorrectQuestions,
                 value:
                     '${widget.examResult.totalQuestions - widget.examResult.correctAnswers}',
                 color: AppColors.error,

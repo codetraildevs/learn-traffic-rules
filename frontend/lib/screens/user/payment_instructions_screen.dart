@@ -400,6 +400,35 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
     );
   }
 
+  /// Get the adjusted payment amount based on current language
+  /// English/French: 1 month=2500, 3 months=3500, 6 months=5000
+  /// Kinyarwanda: Keep original amounts
+  int _getAdjustedAmount(PaymentTier tier) {
+    final locale = Localizations.localeOf(context);
+    final isEnglishOrFrench =
+        locale.languageCode == 'en' || locale.languageCode == 'fr';
+
+    if (!isEnglishOrFrench) {
+      // Kinyarwanda - keep original amounts
+      return tier.amount;
+    }
+
+    // English/French - adjust amounts based on days
+    if (tier.days == 30) {
+      // 1 month
+      return 2500;
+    } else if (tier.days == 90) {
+      // 3 months
+      return 3500;
+    } else if (tier.days == 180) {
+      // 6 months
+      return 5000;
+    }
+
+    // For other durations, keep original amount
+    return tier.amount;
+  }
+
   Widget _buildPaymentTiers() {
     final l10n = AppLocalizations.of(context);
     return Column(
@@ -450,7 +479,15 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
 
   Widget _buildSimplePaymentTierCard(PaymentTier tier) {
     final l10n = AppLocalizations.of(context);
-    final isPopular = tier.amount == 1500; // 1 month plan
+    final adjustedAmount = _getAdjustedAmount(tier);
+    final locale = Localizations.localeOf(context);
+    final isEnglishOrFrench =
+        locale.languageCode == 'en' || locale.languageCode == 'fr';
+
+    // Determine if popular: 1 month plan (30 days)
+    // For English/French: 2500, For Kinyarwanda: 1500
+    final popularAmount = isEnglishOrFrench ? 2500 : 1500;
+    final isPopular = adjustedAmount == popularAmount && tier.days == 30;
 
     return Container(
       padding: EdgeInsets.all(12.w),
@@ -495,7 +532,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  tier.formattedAmount,
+                  '$adjustedAmount RWF',
                   style: AppTextStyles.heading3.copyWith(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.bold,
@@ -631,20 +668,23 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
 
   void _selectPlan(PaymentTier tier) {
     final l10n = AppLocalizations.of(context);
+    final adjustedAmount = _getAdjustedAmount(tier);
+    final adjustedFormattedAmount = '$adjustedAmount RWF';
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.selectedPlan(tier.formattedAmount)),
+        title: Text(l10n.selectedPlan(adjustedFormattedAmount)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${l10n.amount} ${tier.formattedAmount}\n${l10n.duration} ${tier.durationText}',
+              '${l10n.amount} $adjustedFormattedAmount\n${l10n.duration} ${tier.durationText}',
             ),
             SizedBox(height: 16.h),
             Text(
-              '${l10n.toPayViaMoMoDialThisCode} ${AppConstants.paymentCode}${tier.amount}#',
+              '${l10n.toPayViaMoMoDialThisCode} ${AppConstants.paymentCode}$adjustedAmount#',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 8.h),
@@ -659,7 +699,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      '${AppConstants.paymentCode}${tier.amount}#',
+                      '${AppConstants.paymentCode}$adjustedAmount#',
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.bold,
@@ -670,7 +710,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                   ),
                   IconButton(
                     onPressed: () => _copyToClipboard(
-                      '${AppConstants.paymentCode}${tier.amount}#',
+                      '${AppConstants.paymentCode}$adjustedAmount#',
                     ),
                     icon: Icon(Icons.copy, color: Colors.blue[600]),
                     tooltip: l10n.copyCode,
@@ -697,7 +737,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              _dialMoMoPayment(tier.amount);
+              _dialMoMoPayment(adjustedAmount);
             },
             child: Text(l10n.dialMoMo),
           ),

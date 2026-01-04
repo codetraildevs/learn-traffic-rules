@@ -923,6 +923,8 @@ abstract class AppLocalizations {
   String get examSavedOffline;
   String get examScoreDescription;
   String get errorSubmittingExam;
+  String get correctQuestions;
+  String get incorrectQuestions;
 
   // Factory constructor to get the appropriate localization
   static AppLocalizations of(BuildContext context) {
