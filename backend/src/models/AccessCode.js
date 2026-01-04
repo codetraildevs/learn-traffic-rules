@@ -43,7 +43,7 @@ const AccessCode = sequelize.define('AccessCode', {
     comment: 'Duration in days based on payment tier'
   },
   paymentTier: {
-    type: DataTypes.ENUM('1_MONTH', '3_MONTHS', '6_MONTHS'),
+    type: DataTypes.ENUM('1_MONTH', '3_MONTHS', '6_MONTHS', 'CUSTOM'),
     allowNull: false,
     comment: 'Payment tier for easy reference'
   },
@@ -198,22 +198,35 @@ AccessCode.getPaymentTierByAmount = function(amount) {
   return null;
 };
 
-AccessCode.createWithPayment = async function(userId, generatedByManagerId, paymentAmount) {
-  const tierConfig = AccessCode.getPaymentTierByAmount(paymentAmount);
-  if (!tierConfig) {
-    throw new Error('Invalid payment amount');
+AccessCode.createWithPayment = async function(userId, generatedByManagerId, paymentAmount, durationDays = null) {
+  let tierConfig = null;
+  let days = durationDays;
+  let tier = 'CUSTOM';
+
+  // If durationDays is provided, use it for custom dates
+  if (durationDays && durationDays > 0) {
+    days = durationDays;
+    tier = 'CUSTOM';
+  } else {
+    // Otherwise, use payment tier logic
+    tierConfig = AccessCode.getPaymentTierByAmount(paymentAmount);
+    if (!tierConfig) {
+      throw new Error('Invalid payment amount. For custom dates, provide durationDays parameter.');
+    }
+    days = tierConfig.days;
+    tier = tierConfig.tier;
   }
 
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + tierConfig.days);
+  expiresAt.setDate(expiresAt.getDate() + days);
 
   return AccessCode.create({
     code: AccessCode.generateCode(),
     userId,
     generatedByManagerId,
     paymentAmount,
-    durationDays: tierConfig.days,
-    paymentTier: tierConfig.tier,
+    durationDays: days,
+    paymentTier: tier,
     expiresAt
   });
 };

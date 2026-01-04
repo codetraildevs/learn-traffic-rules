@@ -305,7 +305,15 @@ router.post('/users/:id/access-codes',
   [
     param('id').isUUID().withMessage('Valid user ID is required'),
     body('paymentAmount').isNumeric().withMessage('Payment amount must be a number')
-      .isIn([1500, 3000, 5000]).withMessage('Invalid payment amount')
+      .custom((value, { req }) => {
+        // If durationDays is provided, allow any positive amount
+        if (req.body.durationDays) {
+          return value > 0;
+        }
+        // Otherwise, must be one of the fixed tiers
+        return [1500, 3000, 5000].includes(Number(value));
+      }).withMessage('Invalid payment amount. For custom dates, provide durationDays parameter.'),
+    body('durationDays').optional().isInt({ min: 1, max: 3650 }).withMessage('Duration days must be between 1 and 3650')
   ],
   userManagementController.createAccessCodeForUser
 );

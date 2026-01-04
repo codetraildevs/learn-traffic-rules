@@ -329,12 +329,13 @@ const createAccessCodeForUser = async (req, res) => {
     }
 
     const { id: userId } = req.params;
-    const { paymentAmount } = req.body;
+    const { paymentAmount, durationDays } = req.body;
     const generatedByManagerId = req.user.userId;
 
     console.log('🔍 Creating access code for user:', {
       userId,
       paymentAmount,
+      durationDays: durationDays || 'not provided (using tier)',
       generatedByManagerId
     });
 
@@ -352,18 +353,31 @@ const createAccessCodeForUser = async (req, res) => {
 
     // Ensure paymentAmount is a number
     const numericPaymentAmount = Number(paymentAmount);
-    if (isNaN(numericPaymentAmount)) {
+    if (isNaN(numericPaymentAmount) || numericPaymentAmount <= 0) {
       return res.status(400).json({
         success: false,
         message: 'Invalid payment amount'
       });
     }
 
-    // Create access code with payment
+    // Validate durationDays if provided
+    let numericDurationDays = null;
+    if (durationDays !== undefined && durationDays !== null) {
+      numericDurationDays = Number(durationDays);
+      if (isNaN(numericDurationDays) || numericDurationDays < 1 || numericDurationDays > 3650) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid duration days. Must be between 1 and 3650.'
+        });
+      }
+    }
+
+    // Create access code with payment (with optional custom duration)
     const accessCode = await AccessCode.createWithPayment(
       userId,
       generatedByManagerId,
-      numericPaymentAmount
+      numericPaymentAmount,
+      numericDurationDays
     );
 
     // Get user details for response
