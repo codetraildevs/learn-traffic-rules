@@ -19,7 +19,8 @@ class NotificationPollingService {
   Timer? _pollingTimer;
   bool _isPolling = false;
   String? _lastNotificationId;
-  int _pollingIntervalSeconds = 30; // Check every 30 seconds
+  // OPTIMIZATION: Increased interval to reduce ANR risk (was 30 seconds)
+  int _pollingIntervalSeconds = 120; // Check every 2 minutes (reduces ANR)
   final Set<String> _shownNotificationIds = {}; // Track shown notifications
 
   Future<void> startPolling() async {
@@ -47,10 +48,19 @@ class NotificationPollingService {
 
   Future<void> _checkForNewNotifications() async {
     try {
-      final response = await _apiService.getNotifications(
-        page: 1,
-        limit: 5, // Only check the latest 5 notifications
-      );
+      // OPTIMIZATION: Add timeout to prevent ANR (max 5 seconds)
+      final response = await _apiService
+          .getNotifications(
+            page: 1,
+            limit: 5, // Only check the latest 5 notifications
+          )
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              debugPrint('⏱️ Notification check timed out');
+              return <String, dynamic>{'success': false};
+            },
+          );
 
       if (response['success']) {
         final notifications = List<Map<String, dynamic>>.from(

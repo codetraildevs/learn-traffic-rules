@@ -138,15 +138,11 @@ CreateAccessCodeForUserRequest _$CreateAccessCodeForUserRequestFromJson(
   Map<String, dynamic> json,
 ) => CreateAccessCodeForUserRequest(
   paymentAmount: (json['paymentAmount'] as num).toDouble(),
-  durationDays: (json['durationDays'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$CreateAccessCodeForUserRequestToJson(
   CreateAccessCodeForUserRequest instance,
-) => <String, dynamic>{
-  'paymentAmount': instance.paymentAmount,
-  'durationDays': instance.durationDays,
-};
+) => <String, dynamic>{'paymentAmount': instance.paymentAmount};
 
 CreateAccessCodeForUserResponse _$CreateAccessCodeForUserResponseFromJson(
   Map<String, dynamic> json,

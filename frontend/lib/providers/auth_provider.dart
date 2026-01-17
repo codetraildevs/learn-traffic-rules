@@ -446,6 +446,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    // OPTIMIZATION: Clear local state FIRST for instant logout
+    // Then call API in background (non-blocking)
+    
+    // Step 1: Clear local state immediately (instant)
+    await _clearStoredAuth();
+    state = state.copyWith(
+      status: AuthStatus.unauthenticated,
+      user: null,
+      error: null,
+    );
+    
+    // Step 2: Call API logout in background (non-blocking, fire and forget)
+    _logoutOnServer().catchError((e) {
+      debugPrint('⚠️ Background logout API call failed: $e');
+      // Ignore errors - local logout already completed
+    });
+  }
+  
+  /// Logout on server (runs in background, non-blocking)
+  Future<void> _logoutOnServer() async {
     try {
       // Get device ID for logout
       final deviceService = DeviceService();
@@ -455,26 +475,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final hasInternet = await networkService.hasInternetConnection();
 
       if (hasInternet) {
-        await _apiService.logout(deviceId).timeout(const Duration(seconds: 5));
+        // Call API with shorter timeout since it's background
+        await _apiService.logout(deviceId).timeout(const Duration(seconds: 3));
+        debugPrint('✅ Background logout API call succeeded');
       } else {
         debugPrint(
-          '🌐 LOGOUT: No internet connection, clearing local session only',
+          '🌐 LOGOUT: No internet connection, local logout already completed',
         );
       }
     } on TimeoutException catch (_) {
       debugPrint(
-        '⏱️ LOGOUT: Server did not respond, proceeding with local log out',
+        '⏱️ LOGOUT: Server did not respond, local logout already completed',
       );
     } catch (e) {
-      // Log error but continue with logout
-      debugPrint('Logout error: $e');
-    } finally {
-      await _clearStoredAuth();
-      state = state.copyWith(
-        status: AuthStatus.unauthenticated,
-        user: null,
-        error: null,
-      );
+      // Log error but don't throw - local logout already completed
+      debugPrint('⚠️ Background logout error: $e');
     }
   }
 
@@ -530,6 +545,57 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   void clearError() {
     state = state.copyWith(error: null);
+  }
+
+  /// Refresh access period from server (useful when admin grants access)
+  /// This should be called when app comes to foreground or when user navigates to exams
+  Future<void> refreshAccessPeriod() async {
+    try {
+      final currentUser = state.user;
+      if (currentUser == null || currentUser.role != 'USER') {
+        debugPrint('🔄 REFRESH ACCESS: Not a user, skipping refresh');
+        return;
+      }
+
+      // Check internet connection
+      final networkService = NetworkService();
+      final hasInternet = await networkService.hasInternetConnection();
+      if (!hasInternet) {
+        debugPrint('🔄 REFRESH ACCESS: No internet, skipping refresh');
+        return;
+      }
+
+      debugPrint('🔄 REFRESH ACCESS: Refreshing access period for user...');
+      
+      // Make a fresh login call to get the latest access period
+      final loginRequest = LoginRequest(
+        phoneNumber: currentUser.phoneNumber,
+        deviceId: currentUser.deviceId,
+      );
+      final freshResponse = await _apiService.login(loginRequest);
+
+      if (freshResponse.success == true && freshResponse.data != null) {
+        final freshAccessPeriod = freshResponse.data!.accessPeriod;
+        debugPrint(
+          '🔄 REFRESH ACCESS: Fresh access period loaded - hasAccess: ${freshAccessPeriod?.hasAccess}, remainingDays: ${freshAccessPeriod?.remainingDays}',
+        );
+
+        // Store the fresh access period
+        await _storeUserData(currentUser, accessPeriod: freshAccessPeriod);
+
+        // Update state with fresh access period
+        state = state.copyWith(
+          accessPeriod: freshAccessPeriod,
+        );
+        
+        debugPrint('✅ REFRESH ACCESS: Access period refreshed successfully');
+      } else {
+        debugPrint('❌ REFRESH ACCESS: Failed to refresh access period');
+      }
+    } catch (e) {
+      debugPrint('❌ REFRESH ACCESS: Error refreshing access period: $e');
+      // Don't throw error, just log it - user can continue with cached data
+    }
   }
 }
 

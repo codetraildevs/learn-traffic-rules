@@ -8,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../models/exam_model.dart';
 import '../../services/flash_message_service.dart';
 import '../../services/api_service.dart';
+import '../../services/image_cache_service.dart';
 import '../../widgets/custom_button.dart';
 
 class QuestionUploadScreen extends ConsumerStatefulWidget {
@@ -70,6 +71,7 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
     _optionDController.dispose();
     _correctAnswerController.dispose();
     _imageUrlController.dispose();
+    _animationController?.dispose();
     super.dispose();
   }
 
@@ -163,14 +165,44 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8.r),
-                child: Image.network(
-                  widget.exam.examImgUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.quiz,
-                      color: AppColors.grey400,
-                      size: 24.sp,
+                child: FutureBuilder<String>(
+                  future: ImageCacheService.instance.getImagePath(
+                    widget.exam.examImgUrl!.startsWith('http')
+                        ? widget.exam.examImgUrl!
+                        : '${AppConstants.baseUrlImage}${widget.exam.examImgUrl}',
+                  ),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Container(
+                        color: AppColors.grey100,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      );
+                    }
+
+                    final imagePath = snapshot.data ?? '';
+                    if (imagePath.isEmpty) {
+                      return Icon(
+                        Icons.quiz,
+                        color: AppColors.grey400,
+                        size: 24.sp,
+                      );
+                    }
+
+                    return Image.network(
+                      imagePath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          Icons.quiz,
+                          color: AppColors.grey400,
+                          size: 24.sp,
+                        );
+                      },
                     );
                   },
                 ),

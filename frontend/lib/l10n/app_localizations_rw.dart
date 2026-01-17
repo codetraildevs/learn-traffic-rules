@@ -2352,10 +2352,10 @@ Ubwoba:
 
   @override
   String get educationalPurposeOnlyDescription =>
-      'Iyi porogaramu yateguwe gusa kugira ngo ikugufashe kwitegura ikizamini cyawe cya lisansi yo gutwara imodoka.';
+      'Iyi porogaramu yateguwe gusa kugira ngo ikugufashe kwitegura ikizamini cyo gukorera urushya rwagatengo rwo gutwara imodoka cyangwa moto.';
 
   @override
-  String get practiceSimulation => 'Kwitoza ikizamin';
+  String get practiceSimulation => 'Kwitoza ibizamini';
 
   @override
   String get practiceSimulationDescription =>
@@ -2772,7 +2772,7 @@ Tangira urugendo rwo kuba umushoferi utekanye!
   String get noAppSwitchRule => '• Ntuhindure ujya mu zindi porogaramu';
 
   @override
-  String get noScreenshotRule => '• Ntufate amashusho ya ecran';
+  String get noScreenshotRule => '• Ntufate amashusho';
 
   @override
   String get repeatedViolationWarning =>

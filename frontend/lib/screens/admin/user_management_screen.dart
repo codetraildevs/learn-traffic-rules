@@ -1376,7 +1376,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                               onPressed: () => _generateAccessCode(user),
                               tooltip: AppLocalizations.of(
                                 context,
-                              )!.generateAccessCode,
+                              ).generateAccessCode,
                             ),
                             _buildActionButton(
                               icon: user.isBlocked == true
@@ -1411,7 +1411,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           onPressed: () => _generateAccessCode(user),
                           tooltip: AppLocalizations.of(
                             context,
-                          )!.generateAccessCode,
+                          ).generateAccessCode,
                         ),
                         _buildActionButton(
                           icon: user.isBlocked == true
@@ -2487,7 +2487,6 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
                 Expanded(
                   child: Builder(
                     builder: (context) {
-                      final l10n = AppLocalizations.of(context);
                       final days =
                           _paymentTiers.firstWhere(
                                 (tier) => tier['amount'] == _selectedAmount,

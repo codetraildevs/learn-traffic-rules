@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:learn_traffic_rules/core/theme/app_theme.dart';
+import 'package:learn_traffic_rules/screens/home/home_screen.dart';
 import '../../models/exam_result_model.dart';
 import '../../models/exam_model.dart';
 import '../../l10n/app_localizations.dart';
@@ -72,7 +73,10 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          ),
         ),
       ),
       body: _isRetaking ? _buildRetakingView() : _buildResultsView(),

@@ -23,6 +23,8 @@ class _LanguageSelectionScreenState
   void initState() {
     super.initState();
     _loadCurrentLanguage();
+    // OPTIMIZATION: Auto-detect device language to reduce friction
+    _autoDetectLanguage();
   }
 
   Future<void> _loadCurrentLanguage() async {
@@ -30,6 +32,39 @@ class _LanguageSelectionScreenState
     setState(() {
       _selectedLanguage = savedLocale ?? 'rw';
     });
+  }
+
+  // OPTIMIZATION: Auto-detect language from device settings
+  Future<void> _autoDetectLanguage() async {
+    // Check if language was already selected
+    final isSelected = await LocaleService.isLanguageSelected();
+    if (isSelected) return;
+
+    // Get device locale
+    final deviceLocale = Localizations.localeOf(context);
+    final deviceLanguage = deviceLocale.languageCode;
+
+    // Map device language to supported languages
+    String? detectedLanguage;
+    if (deviceLanguage == 'rw' || deviceLanguage == 'kin') {
+      detectedLanguage = 'rw';
+    } else if (deviceLanguage == 'en') {
+      detectedLanguage = 'en';
+    } else if (deviceLanguage == 'fr') {
+      detectedLanguage = 'fr';
+    }
+
+    // If device language matches a supported language, auto-select it
+    if (detectedLanguage != null && _selectedLanguage == null) {
+      debugPrint('🌍 Auto-detected language: $detectedLanguage from device');
+      await _selectLanguage(detectedLanguage);
+      // Auto-continue after 1 second if language was auto-detected
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted && _selectedLanguage == detectedLanguage) {
+          _handleContinue();
+        }
+      });
+    }
   }
 
   Future<void> _selectLanguage(String languageCode) async {

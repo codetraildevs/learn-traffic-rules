@@ -8,6 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../../models/course_model.dart';
 import '../../services/course_service.dart';
+import '../../services/image_cache_service.dart';
 import '../../widgets/custom_button.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -53,8 +54,8 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
           ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
         _isLoading = false;
       });
-      _initializeVideo();
-      _initializeAudio();
+      // OPTIMIZATION: Only initialize media for current content (lazy loading)
+      _initializeMediaForCurrentIndex();
       return;
     }
 
@@ -94,8 +95,8 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
               ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
             _isLoading = false;
           });
-          _initializeVideo();
-          _initializeAudio();
+          // OPTIMIZATION: Only initialize media for current content (lazy loading)
+          _initializeMediaForCurrentIndex();
         } else {
           // Check if contentCount indicates contents should exist
           final expectedContents =
@@ -134,6 +135,26 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         _isLoading = false;
         _error = l10n.errorLoadingCourseContent(e.toString());
       });
+    }
+  }
+
+  /// OPTIMIZATION: Initialize media only for current index (lazy loading)
+  void _initializeMediaForCurrentIndex() {
+    if (_contents.isEmpty) return;
+
+    final currentContent = _contents[_currentIndex];
+    
+    // Dispose previous media
+    _videoController?.dispose();
+    _videoController = null;
+    _audioPlayer?.dispose();
+    _audioPlayer = null;
+
+    // Initialize only the current content's media
+    if (currentContent.contentType == CourseContentType.video) {
+      _initializeVideo();
+    } else if (currentContent.contentType == CourseContentType.audio) {
+      _initializeAudio();
     }
   }
 
@@ -465,17 +486,13 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
   void _goToNext() {
     if (_currentIndex < _contents.length - 1) {
       setState(() {
-        _videoController?.dispose();
-        _videoController = null;
-        _audioPlayer?.dispose();
-        _audioPlayer = null;
         _isAudioPlaying = false;
         _audioDuration = Duration.zero;
         _audioPosition = Duration.zero;
         _error = null; // Clear error when navigating
         _currentIndex++;
-        _initializeVideo();
-        _initializeAudio();
+        // OPTIMIZATION: Only initialize media for new index
+        _initializeMediaForCurrentIndex();
       });
     }
   }
@@ -483,17 +500,13 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
   void _goToPrevious() {
     if (_currentIndex > 0) {
       setState(() {
-        _videoController?.dispose();
-        _videoController = null;
-        _audioPlayer?.dispose();
-        _audioPlayer = null;
         _isAudioPlaying = false;
         _audioDuration = Duration.zero;
         _audioPosition = Duration.zero;
         _error = null; // Clear error when navigating
         _currentIndex--;
-        _initializeVideo();
-        _initializeAudio();
+        // OPTIMIZATION: Only initialize media for new index
+        _initializeMediaForCurrentIndex();
       });
     }
   }
@@ -752,19 +765,52 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
               bottomLeft: Radius.circular(16.r),
               bottomRight: Radius.circular(16.r),
             ),
-            child: Image.network(
-              _getFullUrl(content.content),
-              width: double.infinity,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  height: 200.h,
-                  color: AppColors.grey200,
-                  child: Icon(
-                    Icons.broken_image,
-                    size: 48.sp,
-                    color: AppColors.grey400,
-                  ),
+            child: FutureBuilder<String>(
+              future: ImageCacheService.instance.getImagePath(
+                _getFullUrl(content.content),
+              ),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Container(
+                    height: 200.h,
+                    color: AppColors.grey200,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  );
+                }
+
+                final imagePath = snapshot.data ?? '';
+                if (imagePath.isEmpty) {
+                  return Container(
+                    height: 200.h,
+                    color: AppColors.grey200,
+                    child: Icon(
+                      Icons.broken_image,
+                      size: 48.sp,
+                      color: AppColors.grey400,
+                    ),
+                  );
+                }
+
+                return Image.network(
+                  imagePath,
+                  width: double.infinity,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 200.h,
+                      color: AppColors.grey200,
+                      child: Icon(
+                        Icons.broken_image,
+                        size: 48.sp,
+                        color: AppColors.grey400,
+                      ),
+                    );
+                  },
                 );
               },
             ),

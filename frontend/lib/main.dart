@@ -51,29 +51,41 @@ void main() async {
   //   debugPrint('⚠️ Firebase initialization failed: $e');
   // }
 
-  // Initialize shared preferences
+  // OPTIMIZATION: Make initialization non-blocking to prevent ANR
+  // Initialize shared preferences (lightweight, can be blocking)
   await SharedPreferences.getInstance();
 
-  // Initialize API service
+  // Initialize API service (lightweight, can be blocking)
   await ApiService().initialize();
 
-  // Initialize notification service with fallback
-  try {
-    await NotificationService().initialize();
-  } catch (e) {
-    debugPrint(
-      '⚠️ Main notification service failed, using simple fallback: $e',
-    );
-    await SimpleNotificationService().initialize();
-  }
+  // OPTIMIZATION: Initialize notification service in background (non-blocking)
+  // Don't block app startup if notification service fails
+  Future.microtask(() async {
+    try {
+      await NotificationService().initialize();
+    } catch (e) {
+      debugPrint(
+        '⚠️ Main notification service failed, using simple fallback: $e',
+      );
+      try {
+        await SimpleNotificationService().initialize();
+      } catch (e2) {
+        debugPrint('⚠️ Simple notification service also failed: $e2');
+        // Continue anyway - notifications are not critical for app startup
+      }
+    }
+  });
 
-  // Start notification polling service
-  try {
-    await NotificationPollingService().startPolling();
-    debugPrint('✅ Notification polling service started');
-  } catch (e) {
-    debugPrint('⚠️ Failed to start notification polling service: $e');
-  }
+  // OPTIMIZATION: Start notification polling in background (non-blocking)
+  // Don't await - let it start in background to avoid blocking app startup
+  Future.microtask(() async {
+    try {
+      await NotificationPollingService().startPolling();
+      debugPrint('✅ Notification polling service started');
+    } catch (e) {
+      debugPrint('⚠️ Failed to start notification polling service: $e');
+    }
+  });
 
   // Initialize image cache service (non-blocking, will retry when needed)
   // Don't wait for it to complete, as it might fail and we want the app to start

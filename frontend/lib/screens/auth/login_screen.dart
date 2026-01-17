@@ -10,8 +10,7 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/privacy_policy_modal.dart';
 import '../../services/device_service.dart';
 import '../../services/debug_service.dart';
-import '../../services/flash_message_service.dart';
-import 'package:flash_message/flash_message.dart';
+import '../../services/network_service.dart';
 import '../../l10n/app_localizations.dart';
 import 'register_screen.dart';
 import '../../screens/home/home_screen.dart';
@@ -32,13 +31,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   String? _deviceId;
   String? _deviceModel;
   String? _platformName;
+  final NetworkService _networkService = NetworkService();
 
   @override
   void initState() {
     super.initState();
+    // Initialize device info in background (non-blocking)
     _initializeDeviceInfo();
-    // Pre-fill for testing - using admin account
-    // Admin: 0729111458 (bypasses device ID validation)
     _phoneController.text = '';
   }
 
@@ -276,12 +275,73 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       });
 
       final l10n = AppLocalizations.of(context);
-      AppFlashMessage.show(
-        context: context,
-        message: l10n.pleaseCheckPhoneNumber,
-        description: l10n.enterValidPhoneNumber,
-        type: FlashMessageType.warning,
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.pleaseCheckPhoneNumber,
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  l10n.enterValidPhoneNumber,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.warning,
+            duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.all(16.w),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Check internet connection before attempting login
+    final hasInternet = await _networkService.hasInternetConnection();
+    if (!hasInternet) {
+      final l10n = AppLocalizations.of(context);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.noInternetConnection,
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  l10n.networkError,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.all(16.w),
+          ),
+        );
+      }
       return;
     }
 
@@ -421,8 +481,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               errorString.contains('connection') ||
               errorString.contains('timeout') ||
               errorString.contains('unreachable') ||
-              errorString.contains('socketexception')) {
-            errorMessage = l10n.networkError;
+              errorString.contains('socketexception') ||
+              errorString.contains('failed host lookup') ||
+              errorString.contains('no internet') ||
+              errorString.contains('internet')) {
+            errorMessage = l10n.noInternetConnection;
             errorDescription = l10n.networkError;
           } else if (errorString.contains('server') ||
               errorString.contains('api error') ||
@@ -447,13 +510,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             errorDescription = error?.toString() ?? l10n.checkCredentials;
           }
 
-          AppFlashMessage.show(
-            context: context,
-            message: errorMessage,
-            description: errorDescription,
-            type: FlashMessageType.error,
-            duration: const Duration(seconds: 8),
-          );
+          // Use ScaffoldMessenger instead of FlashMessage to avoid AnimationController dispose issues
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      errorMessage,
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (errorDescription.isNotEmpty) ...[
+                      SizedBox(height: 4.h),
+                      Text(
+                        errorDescription,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                backgroundColor: AppColors.error,
+                duration: const Duration(seconds: 5),
+                behavior: SnackBarBehavior.floating,
+                margin: EdgeInsets.all(16.w),
+              ),
+            );
+          }
         }
       }
     } catch (e, stackTrace) {
@@ -463,13 +552,55 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         setState(() => _isLoading = false);
 
         final l10n = AppLocalizations.of(context);
-        AppFlashMessage.show(
-          context: context,
-          message: l10n.networkError,
-          description: l10n.networkError,
-          type: FlashMessageType.error,
-          duration: const Duration(seconds: 4),
-        );
+        final errorString = e.toString().toLowerCase();
+
+        // Check if it's a network error
+        final isNetworkError =
+            errorString.contains('network') ||
+            errorString.contains('connection') ||
+            errorString.contains('timeout') ||
+            errorString.contains('unreachable') ||
+            errorString.contains('socketexception') ||
+            errorString.contains('failed host lookup') ||
+            errorString.contains('no internet') ||
+            errorString.contains('internet');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isNetworkError
+                        ? l10n.noInternetConnection
+                        : l10n.loginFailed,
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    isNetworkError
+                        ? l10n.networkError
+                        : (e.toString().isNotEmpty
+                              ? e.toString()
+                              : l10n.checkCredentials),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: AppColors.error,
+              duration: const Duration(seconds: 5),
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.all(16.w),
+            ),
+          );
+        }
       }
     }
   }

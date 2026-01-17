@@ -6,6 +6,7 @@ import 'package:learn_traffic_rules/services/flash_message_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/exam_model.dart';
 import '../../services/api_service.dart';
+import '../../services/image_cache_service.dart';
 import '../../widgets/custom_button.dart';
 import 'question_upload_screen.dart';
 import 'add_question_screen.dart';
@@ -273,17 +274,48 @@ class _QuestionManagementScreenState
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8.r),
-                  child: Image.network(
-                    '${AppConstants.baseUrlImage}${question.questionImgUrl!}',
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: AppColors.grey100,
-                        child: Icon(
-                          Icons.broken_image,
-                          color: AppColors.grey400,
-                          size: 40.sp,
-                        ),
+                  child: FutureBuilder<String>(
+                    future: ImageCacheService.instance.getImagePath(
+                      '${AppConstants.baseUrlImage}${question.questionImgUrl!}',
+                    ),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Container(
+                          color: AppColors.grey100,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        );
+                      }
+
+                      final imagePath = snapshot.data ?? '';
+                      if (imagePath.isEmpty) {
+                        return Container(
+                          color: AppColors.grey100,
+                          child: Icon(
+                            Icons.broken_image,
+                            color: AppColors.grey400,
+                            size: 40.sp,
+                          ),
+                        );
+                      }
+
+                      return Image.network(
+                        imagePath,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: AppColors.grey100,
+                            child: Icon(
+                              Icons.broken_image,
+                              color: AppColors.grey400,
+                              size: 40.sp,
+                            ),
+                          );
+                        },
                       );
                     },
                   ),

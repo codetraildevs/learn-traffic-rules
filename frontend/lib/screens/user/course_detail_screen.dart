@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/constants/app_constants.dart';
 import '../../models/course_model.dart';
 import '../../services/course_service.dart';
+import '../../services/image_cache_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../l10n/app_localizations.dart';
@@ -119,10 +120,41 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                               course.courseImageUrl!.isNotEmpty
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(16.r),
-                              child: Image.network(
-                                course.courseImageUrl!.startsWith('http')
-                                    ? course.courseImageUrl!
-                                    : '${AppConstants.baseUrlImage}${course.courseImageUrl}',
+                              child: FutureBuilder<String>(
+                            future: ImageCacheService.instance.getImagePath(
+                              course.courseImageUrl!.startsWith('http')
+                                  ? course.courseImageUrl!
+                                  : '${AppConstants.baseUrlImage}${course.courseImageUrl}',
+                            ),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return Container(
+                                  color: AppColors.grey100,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              final imagePath = snapshot.data ?? '';
+                              if (imagePath.isEmpty) {
+                                return Container(
+                                  color: AppColors.grey100,
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.school_outlined,
+                                      size: 64.sp,
+                                      color: AppColors.grey400,
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              return Image.network(
+                                imagePath,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
@@ -136,7 +168,9 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                                     ),
                                   );
                                 },
-                              ),
+                              );
+                            },
+                          ),
                             )
                           : Center(
                               child: Icon(

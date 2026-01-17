@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'offline_exam_service.dart';
 import 'exam_service.dart';
@@ -101,8 +102,16 @@ class ExamSyncService {
       // Initialize image cache service
       await ImageCacheService.instance.initialize();
 
+      // OPTIMIZATION: Download exams in batches with delays to prevent ANR
       // Download each exam with its questions
+      int batchCount = 0;
       for (final exam in exams) {
+        // OPTIMIZATION: Add small delay every 5 exams to prevent ANR
+        if (batchCount > 0 && batchCount % 5 == 0) {
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
+        batchCount++;
+
         // Check internet connectivity BEFORE each exam download
         // If we lose connectivity, stop trying to download
         final stillHasInternet = await _networkService.hasInternetConnection();
@@ -216,61 +225,26 @@ class ExamSyncService {
             continue; // Skip this exam and continue with next
           }
 
+          // OPTIMIZATION: Cache images in background to prevent ANR
           // Download and cache images for questions (only if we still have internet)
           // Images can be cached later when online, so don't fail the exam download if image caching fails
           // Use hasInternetForQuestions instead of stillHasInternet since we just checked it
           if (hasInternetForQuestions) {
-            int imageCacheSuccess = 0;
-            int imageCacheFail = 0;
-            for (final question in questions) {
-              // Check connectivity before each image
-              final hasInternetForImage = await _networkService
-                  .hasInternetConnection();
-              if (!hasInternetForImage) {
-                debugPrint(
-                  '🌐 Internet lost during image caching, skipping remaining images',
-                );
-                break;
-              }
-
-              if (question.questionImgUrl != null &&
-                  question.questionImgUrl!.isNotEmpty) {
-                try {
-                  final cachedPath = await ImageCacheService.instance
-                      .cacheImage(question.questionImgUrl!);
-                  if (cachedPath != null) {
-                    imageCacheSuccess++;
-                  } else {
-                    imageCacheFail++;
-                  }
-                } catch (e) {
-                  imageCacheFail++;
-                  // Continue even if image caching fails
-                }
-              }
-            }
-            if (imageCacheSuccess > 0 || imageCacheFail > 0) {
-              debugPrint(
-                '🖼️ Image caching for exam ${exam.id}: $imageCacheSuccess successful, $imageCacheFail failed',
-              );
-            }
-
-            // Download and cache exam image if available
-            if (exam.examImgUrl != null && exam.examImgUrl!.isNotEmpty) {
-              try {
-                await ImageCacheService.instance.cacheImage(exam.examImgUrl!);
-              } catch (e) {
-                // Continue even if image caching fails
-              }
-            }
-          } else {
-            debugPrint(
-              '⚠️ Skipping image caching for exam ${exam.id} (no internet)',
-            );
+            // OPTIMIZATION: Cache images in background (non-blocking)
+            // Don't await - let it happen in background to prevent ANR
+            _cacheQuestionImagesInBackground(exam, questions).catchError((e) {
+              debugPrint('⚠️ Background image caching error: $e');
+            });
           }
 
-          // Save exam and questions offline (even if images weren't cached)
-          await _offlineService.saveExam(exam, questions);
+          // Save exam to offline storage with timeout to prevent ANR
+          await _offlineService.saveExam(exam, questions).timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              debugPrint('⚠️ saveExam timeout for ${exam.id}');
+              throw TimeoutException('saveExam timeout');
+            },
+          );
 
           totalQuestions += questions.length;
           successCount++;
@@ -558,4 +532,42 @@ class ExamSyncService {
 
   /// Check if sync is in progress
   bool get isSyncing => _isSyncing;
+
+  /// OPTIMIZATION: Cache question images in background to prevent ANR
+  Future<void> _cacheQuestionImagesInBackground(
+    Exam exam,
+    List<question_model.Question> questions,
+  ) async {
+    try {
+      // Cache exam image
+      if (exam.examImgUrl != null && exam.examImgUrl!.isNotEmpty) {
+        ImageCacheService.instance.cacheImage(exam.examImgUrl!).catchError((e) {
+          debugPrint('⚠️ Failed to cache exam image: $e');
+          return null;
+        });
+      }
+
+      // Cache question images in batches with delays
+      int batchCount = 0;
+      for (final question in questions) {
+        if (question.questionImgUrl != null &&
+            question.questionImgUrl!.isNotEmpty) {
+          // Add delay every 10 images to prevent ANR
+          if (batchCount > 0 && batchCount % 10 == 0) {
+            await Future.delayed(const Duration(milliseconds: 50));
+          }
+          batchCount++;
+
+          ImageCacheService.instance
+              .cacheImage(question.questionImgUrl!)
+              .catchError((e) {
+            debugPrint('⚠️ Failed to cache question image: $e');
+            return null;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error in background image caching: $e');
+    }
+  }
 }

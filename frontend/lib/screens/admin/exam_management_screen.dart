@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/constants/app_constants.dart';
 import '../../models/exam_model.dart';
 import '../../providers/exam_provider.dart';
 import '../../services/flash_message_service.dart';
+import '../../services/image_cache_service.dart';
 import '../../widgets/custom_button.dart';
 import 'create_exam_screen.dart';
 import 'edit_exam_screen.dart';
@@ -60,6 +62,7 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
   @override
   void dispose() {
     _animationController.dispose();
+    _animationController?.dispose();
     super.dispose();
   }
 
@@ -596,37 +599,70 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.zero,
-                        child: Image.network(
-                          exam.examImgUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: AppColors.grey200,
-                              child: Icon(
-                                Icons.image_not_supported,
-                                color: AppColors.grey400,
-                                size: 40.sp,
-                              ),
-                            );
-                          },
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Container(
-                              color: AppColors.grey200,
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  value:
-                                      loadingProgress.expectedTotalBytes != null
+                        child: FutureBuilder<String>(
+                          future: ImageCacheService.instance.getImagePath(
+                            exam.examImgUrl!.startsWith('http')
+                                ? exam.examImgUrl!
+                                : '${AppConstants.baseUrlImage}${exam.examImgUrl}',
+                          ),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return Container(
+                                color: AppColors.grey200,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              );
+                            }
+
+                            final imagePath = snapshot.data ?? '';
+                            if (imagePath.isEmpty) {
+                              return Container(
+                                color: AppColors.grey200,
+                                child: Icon(
+                                  Icons.image_not_supported,
+                                  color: AppColors.grey400,
+                                  size: 40.sp,
+                                ),
+                              );
+                            }
+
+                            return Image.network(
+                              imagePath,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: AppColors.grey200,
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    color: AppColors.grey400,
+                                    size: 40.sp,
+                                  ),
+                                );
+                              },
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  color: AppColors.grey200,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      value:
+                                          loadingProgress.expectedTotalBytes != null
                                       ? loadingProgress.cumulativeBytesLoaded /
                                             loadingProgress.expectedTotalBytes!
                                       : null,
-                                  strokeWidth: 2,
-                                  valueColor:
-                                      const AlwaysStoppedAnimation<Color>(
-                                        AppColors.primary,
-                                      ),
-                                ),
-                              ),
+                                      strokeWidth: 2,
+                                      valueColor:
+                                          const AlwaysStoppedAnimation<Color>(
+                                            AppColors.primary,
+                                          ),
+                                    ),
+                                  ),
+                                );
+                              },
                             );
                           },
                         ),

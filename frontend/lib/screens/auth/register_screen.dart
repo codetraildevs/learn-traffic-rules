@@ -11,8 +11,7 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/privacy_policy_modal.dart';
 import '../../services/device_service.dart';
 import '../../services/debug_service.dart';
-import '../../services/flash_message_service.dart';
-import 'package:flash_message/flash_message.dart';
+import '../../services/network_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../screens/home/home_screen.dart';
 
@@ -34,6 +33,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   String? _deviceId;
   String? _deviceModel;
   String? _platformName;
+  final NetworkService _networkService = NetworkService();
 
   @override
   void initState() {
@@ -287,12 +287,73 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       });
 
       final l10n = AppLocalizations.of(context);
-      AppFlashMessage.show(
-        context: context,
-        message: l10n.pleaseCheckYourInformation,
-        description: l10n.makeSureAllFieldsFilled,
-        type: FlashMessageType.warning,
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.pleaseCheckYourInformation,
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  l10n.makeSureAllFieldsFilled,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.warning,
+            duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.all(16.w),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Check internet connection before attempting registration
+    final hasInternet = await _networkService.hasInternetConnection();
+    if (!hasInternet) {
+      final l10n = AppLocalizations.of(context);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.noInternetConnection,
+                  style: AppTextStyles.bodyLarge.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  l10n.networkError,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 5),
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.all(16.w),
+          ),
+        );
+      }
       return;
     }
 
@@ -347,13 +408,36 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           });
 
           final l10n = AppLocalizations.of(context);
-          AppFlashMessage.show(
-            context: context,
-            message: l10n.registrationSuccessful,
-            description: l10n.welcomeToApp,
-            type: FlashMessageType.success,
-            duration: const Duration(seconds: 2),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.registrationSuccessful,
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      l10n.welcomeToApp,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: AppColors.success,
+                duration: const Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+                margin: EdgeInsets.all(16.w),
+              ),
+            );
+          }
 
           // Wait for auth state to update, then navigate to home screen
           // Registration automatically logs the user in
@@ -368,11 +452,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                 '✅ Auth state confirmed as authenticated, navigating...',
               );
               if (mounted) {
-                // Navigate directly to HomeScreen to ensure proper state
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const HomeScreen()),
-                  (route) => false, // Remove all previous routes
+                  (route) => false,
                 );
               }
               return;
@@ -486,31 +569,59 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             errorIcon = '❌';
           }
 
-          AppFlashMessage.show(
-            context: context,
-            message: '$errorMessage $errorIcon',
-            description: errorDescription,
-            type: FlashMessageType.error,
-            duration: const Duration(seconds: 8),
-            onTap:
-                (errorString.contains('phone number is already registered') ||
-                    errorString.contains('phone number is already') ||
-                    errorString.contains('phone already exists') ||
-                    errorString.contains('user already exists') ||
-                    errorString.contains('phone number already') ||
-                    errorString.contains('device is already registered') ||
-                    errorString.contains('device already registered') ||
-                    errorString.contains('device is already') ||
-                    errorString.contains('device already exists') ||
-                    errorString.contains('device already used') ||
-                    errorString.contains('device binding') ||
-                    errorString.contains('device conflict'))
-                ? () {
-                    // Show confirmation dialog before navigating to login
-                    _showLoginConfirmationDialog();
-                  }
-                : null,
-          );
+          if (mounted) {
+            final showLoginAction =
+                errorString.contains('phone number is already registered') ||
+                errorString.contains('phone number is already') ||
+                errorString.contains('phone already exists') ||
+                errorString.contains('user already exists') ||
+                errorString.contains('phone number already') ||
+                errorString.contains('device is already registered') ||
+                errorString.contains('device already registered') ||
+                errorString.contains('device is already') ||
+                errorString.contains('device already exists') ||
+                errorString.contains('device already used') ||
+                errorString.contains('device binding') ||
+                errorString.contains('device conflict');
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$errorMessage $errorIcon',
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      errorDescription,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: AppColors.error,
+                duration: const Duration(seconds: 8),
+                behavior: SnackBarBehavior.floating,
+                margin: EdgeInsets.all(16.w),
+                action: showLoginAction
+                    ? SnackBarAction(
+                        label: l10n.goToLogin,
+                        textColor: Colors.white,
+                        onPressed: () {
+                          _showLoginConfirmationDialog();
+                        },
+                      )
+                    : null,
+              ),
+            );
+          }
         }
       }
     } catch (e, stackTrace) {
@@ -520,13 +631,36 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         setState(() => _isLoading = false);
 
         final l10n = AppLocalizations.of(context);
-        AppFlashMessage.show(
-          context: context,
-          message: l10n.networkError,
-          description: l10n.networkError,
-          type: FlashMessageType.error,
-          duration: const Duration(seconds: 4),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.networkError,
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    l10n.networkError,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: AppColors.error,
+              duration: const Duration(seconds: 4),
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.all(16.w),
+            ),
+          );
+        }
       }
     }
   }
@@ -574,7 +708,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
               ),
 
               SizedBox(height: 8.h),
-
               // Clean Information Section
               Container(
                 margin: EdgeInsets.symmetric(horizontal: 20.w),
@@ -1026,12 +1159,33 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
           if (mounted) {
             // Show special error message for this scenario
             final l10n = AppLocalizations.of(context);
-            AppFlashMessage.show(
-              context: context,
-              message: l10n.deviceBindingIssue,
-              description: l10n.deviceBindingIssueDescription,
-              type: FlashMessageType.error,
-              duration: const Duration(seconds: 10),
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.deviceBindingIssue,
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      l10n.deviceBindingIssueDescription,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: AppColors.error,
+                duration: const Duration(seconds: 10),
+                behavior: SnackBarBehavior.floating,
+                margin: EdgeInsets.all(16.w),
+              ),
             );
           }
         }

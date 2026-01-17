@@ -21,6 +21,7 @@ class UserWithStats {
   final bool? isBlocked;
   final String? blockReason;
   final DateTime? blockedAt;
+  final String? preferredLanguage; // User's learning language preference
 
   const UserWithStats({
     required this.id,
@@ -38,6 +39,7 @@ class UserWithStats {
     this.isBlocked,
     this.blockReason,
     this.blockedAt,
+    this.preferredLanguage,
   });
 
   factory UserWithStats.fromJson(Map<String, dynamic> json) {
@@ -81,6 +83,7 @@ class UserWithStats {
         blockedAt: json['blockedAt'] != null
             ? DateTime.tryParse(json['blockedAt'].toString())
             : null,
+        preferredLanguage: json['preferredLanguage']?.toString(),
       );
     } catch (e) {
       debugPrint('❌ Error parsing UserWithStats: $e');

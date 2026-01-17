@@ -1,10 +1,14 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:learn_traffic_rules/core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/course_model.dart';
 import '../../services/course_service.dart';
+import '../../services/image_cache_service.dart';
+import '../../services/network_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_button.dart';
 import '../../l10n/app_localizations.dart';
@@ -20,63 +24,206 @@ class CourseListScreen extends ConsumerStatefulWidget {
 
 class _CourseListScreenState extends ConsumerState<CourseListScreen> {
   final CourseService _courseService = CourseService();
+  final NetworkService _networkService = NetworkService();
   List<Course> _courses = [];
   List<Course> _filteredCourses = [];
   bool _isLoading = true;
   String? _error;
   CourseType? _selectedCourseType;
 
+  // Cache keys
+  static const String _cacheKeyCourses = 'cached_courses';
+  static const String _cacheKeyTimestamp = 'courses_cache_timestamp';
+
   @override
   void initState() {
     super.initState();
+    // OPTIMIZATION: Load from cache first, then fetch fresh data
     _loadCourses();
+    // Pre-cache images in background
+    ImageCacheService.instance.initialize();
   }
 
-  Future<void> _loadCourses() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+  Future<void> _loadCourses({bool forceRefresh = false}) async {
+    // OPTIMIZATION: Load from cache FIRST for instant display
+    final cachedDataLoaded = await _loadCachedCourses();
 
+    if (cachedDataLoaded && !forceRefresh) {
+      // Show cached data immediately
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _error = null;
+        });
+      }
+    } else {
+      // No cache or force refresh - show loading
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _error = null;
+        });
+      }
+    }
+
+    // Check internet connection in parallel
+    final hasInternetFuture = _networkService.hasInternetConnection();
+
+    // If we have cached data, show it and fetch fresh data in background
+    if (cachedDataLoaded && !forceRefresh) {
+      final hasInternet = await hasInternetFuture;
+      if (hasInternet) {
+        // Fetch fresh data in background (non-blocking)
+        _loadFreshCourses().catchError((e) {
+          debugPrint('⚠️ Background course refresh failed: $e');
+        });
+      }
+      return; // Exit early - UI already shown with cache
+    }
+
+    // No cache or force refresh - must wait for API
+    final hasInternet = await hasInternetFuture;
+
+    if (hasInternet) {
+      try {
+        final response = await _courseService.getAllCourses(isActive: true);
+        if (response.success && response.data != null) {
+          if (mounted) {
+            setState(() {
+              _courses = response.data!;
+              _filteredCourses = _courses;
+            });
+            _applyFilter();
+            // Cache the data
+            await _cacheCourses(response.data!);
+          }
+        } else {
+          if (!mounted) return;
+          final l10n = AppLocalizations.of(context);
+          setState(() {
+            _error = response.message ?? l10n.errorLoadingCourses;
+          });
+        }
+      } catch (e) {
+        if (!mounted) return;
+        final l10n = AppLocalizations.of(context);
+        // Try to load from cache on error
+        final cachedLoaded = await _loadCachedCourses();
+        if (cachedLoaded) {
+          setState(() {
+            _error = null; // Clear error if cache loaded
+          });
+        } else {
+          setState(() {
+            _error = '${l10n.errorLoadingCourses} $e';
+          });
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    } else {
+      // No internet and no cache - show error
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        if (!cachedDataLoaded) {
+          setState(() {
+            _error = l10n.noInternetConnection;
+            _isLoading = false;
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> _loadFreshCourses() async {
     try {
       final response = await _courseService.getAllCourses(isActive: true);
       if (response.success && response.data != null) {
+        if (mounted) {
+          setState(() {
+            _courses = response.data!;
+            _filteredCourses = _courses;
+          });
+          _applyFilter();
+          // Cache the data
+          await _cacheCourses(response.data!);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error loading fresh courses: $e');
+      // Silently fail - user already has cached data displayed
+    }
+  }
+
+  Future<bool> _loadCachedCourses() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final coursesJson = prefs.getString(_cacheKeyCourses);
+
+      if (coursesJson == null) {
+        debugPrint('📦 No cached courses found');
+        return false;
+      }
+
+      final coursesList = jsonDecode(coursesJson) as List;
+      final cachedCourses = coursesList
+          .map((json) => Course.fromJson(json as Map<String, dynamic>))
+          .toList();
+
+      if (mounted) {
         setState(() {
-          _courses = response.data!;
+          _courses = cachedCourses;
           _filteredCourses = _courses;
         });
         _applyFilter();
-      } else {
-        if (!mounted) return;
-        final l10n = AppLocalizations.of(context);
-        setState(() {
-          _error = response.message ?? l10n.errorLoadingCourses;
-        });
       }
+
+      debugPrint('📦 Loaded ${cachedCourses.length} cached courses');
+      return true;
     } catch (e) {
-      if (!mounted) return;
-      final l10n = AppLocalizations.of(context);
-      setState(() {
-        _error = '${l10n.errorLoadingCourses} $e';
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      debugPrint('Error loading cached courses: $e');
+      return false;
+    }
+  }
+
+  Future<void> _cacheCourses(List<Course> courses) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final coursesJson = courses.map((c) => c.toJson()).toList();
+      await prefs.setString(_cacheKeyCourses, jsonEncode(coursesJson));
+      await prefs.setString(_cacheKeyTimestamp, DateTime.now().toIso8601String());
+
+      // Pre-cache course images in background
+      for (final course in courses) {
+        if (course.courseImageUrl != null && course.courseImageUrl!.isNotEmpty) {
+          final imageUrl = course.courseImageUrl!.startsWith('http')
+              ? course.courseImageUrl!
+              : '${AppConstants.baseUrlImage}${course.courseImageUrl}';
+          ImageCacheService.instance.cacheImage(imageUrl).catchError((e) {
+            debugPrint('⚠️ Failed to cache course image: $e');
+            return null;
+          });
+        }
+      }
+
+      debugPrint('💾 Cached ${courses.length} courses');
+    } catch (e) {
+      debugPrint('Error caching courses: $e');
     }
   }
 
   void _applyFilter() {
+    // OPTIMIZATION: Filter logic without setState (caller handles setState)
     if (_selectedCourseType == null) {
-      setState(() {
-        _filteredCourses = _courses;
-      });
+      _filteredCourses = _courses;
     } else {
-      setState(() {
-        _filteredCourses = _courses
-            .where((course) => course.courseType == _selectedCourseType)
-            .toList();
-      });
+      _filteredCourses = _courses
+          .where((course) => course.courseType == _selectedCourseType)
+          .toList();
     }
   }
 
@@ -93,11 +240,14 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadCourses),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => _loadCourses(forceRefresh: true),
+          ),
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: _loadCourses,
+        onRefresh: () => _loadCourses(forceRefresh: true),
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _error != null
@@ -149,10 +299,11 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
               label: Text(l10n.allCourses),
               selected: _selectedCourseType == null,
               onSelected: (selected) {
+                // OPTIMIZATION: Batch setState with filter
                 setState(() {
                   _selectedCourseType = null;
+                  _applyFilter();
                 });
-                _applyFilter();
               },
               selectedColor: AppColors.primary.withValues(alpha: 0.2),
               checkmarkColor: AppColors.primary,
@@ -164,10 +315,11 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
               label: Text(l10n.free),
               selected: _selectedCourseType == CourseType.free,
               onSelected: (selected) {
+                // OPTIMIZATION: Batch setState with filter
                 setState(() {
                   _selectedCourseType = selected ? CourseType.free : null;
+                  _applyFilter();
                 });
-                _applyFilter();
               },
               selectedColor: AppColors.success.withValues(alpha: 0.2),
               checkmarkColor: AppColors.success,
@@ -179,10 +331,11 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
               label: Text(l10n.paidCourse),
               selected: _selectedCourseType == CourseType.paid,
               onSelected: (selected) {
+                // OPTIMIZATION: Batch setState with filter
                 setState(() {
                   _selectedCourseType = selected ? CourseType.paid : null;
+                  _applyFilter();
                 });
-                _applyFilter();
               },
               selectedColor: AppColors.warning.withValues(alpha: 0.2),
               checkmarkColor: AppColors.warning,
@@ -242,21 +395,54 @@ class _CourseListScreenState extends ConsumerState<CourseListScreen> {
                         topLeft: Radius.circular(16.r),
                         topRight: Radius.circular(16.r),
                       ),
-                      child: Image.network(
-                        course.courseImageUrl!.startsWith('http')
-                            ? course.courseImageUrl!
-                            : '${AppConstants.baseUrlImage}${course.courseImageUrl}',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: AppColors.grey100,
-                            child: Center(
-                              child: Icon(
-                                Icons.school_outlined,
-                                size: 48.sp,
-                                color: AppColors.grey400,
+                      child: FutureBuilder<String>(
+                        future: ImageCacheService.instance.getImagePath(
+                          course.courseImageUrl!.startsWith('http')
+                              ? course.courseImageUrl!
+                              : '${AppConstants.baseUrlImage}${course.courseImageUrl}',
+                        ),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Container(
+                              color: AppColors.grey100,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.primary,
+                                ),
                               ),
-                            ),
+                            );
+                          }
+
+                          final imagePath = snapshot.data ?? '';
+                          if (imagePath.isEmpty) {
+                            return Container(
+                              color: AppColors.grey100,
+                              child: Center(
+                                child: Icon(
+                                  Icons.school_outlined,
+                                  size: 48.sp,
+                                  color: AppColors.grey400,
+                                ),
+                              ),
+                            );
+                          }
+
+                          return Image.network(
+                            imagePath,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: AppColors.grey100,
+                                child: Center(
+                                  child: Icon(
+                                    Icons.school_outlined,
+                                    size: 48.sp,
+                                    color: AppColors.grey400,
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         },
                       ),

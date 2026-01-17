@@ -23,21 +23,18 @@ import '../../services/exam_service.dart';
 import '../../services/user_management_service.dart';
 import '../../models/exam_result_model.dart';
 import '../../models/exam_model.dart';
-import '../../models/course_model.dart';
 import '../admin/exam_management_screen.dart';
 import '../admin/user_management_screen.dart';
 import '../admin/access_code_management_screen.dart';
 import '../admin/course_management_screen.dart';
 import '../user/available_exams_screen.dart' as exams_screen;
 import '../user/course_list_screen.dart' as courses_list_screen;
-import '../user/course_detail_screen.dart' as course_detail_screen;
 import '../../services/notification_polling_service.dart';
 import '../../providers/course_provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../../services/network_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/image_cache_service.dart';
-import '../../services/document_cache_service.dart';
 import '../user/open_gazette.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -83,9 +80,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   static const String _cacheKeyAdminStats = 'cached_admin_stats';
   static const String _cacheKeyExamCountsByType = 'cached_exam_counts_by_type';
   static const String _cacheKeyTimestamp = 'dashboard_cache_timestamp';
-  static const Duration _cacheValidityDuration = Duration(
-    hours: 1,
-  ); // Cache valid for 1 hour
 
   @override
   void initState() {
@@ -102,13 +96,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       _currentIndex = 1; // Dashboard tab first for admin/manager
     }
 
-    // Load dashboard data (will use cache if available)
+    // OPTIMIZATION: Load from cache FIRST for instant display
+    // Then fetch from API in background
     _loadDashboardData(forceRefresh: false);
-    // Load courses (will use cache if available)
+
+    // Load courses and pre-cache images in background (non-blocking)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(courseProvider.notifier).loadCourses(forceRefresh: false);
-      // Pre-cache all service card images
-      _precacheServiceImages();
+      _precacheServiceImages(); // Non-blocking
     });
   }
 
@@ -156,6 +151,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           debugPrint(
             '🔄 App resumed after ${backgroundDuration.inSeconds}s, reloading data',
           );
+          // Refresh access period when app comes to foreground
+          final authNotifier = ref.read(authProvider.notifier);
+          authNotifier.refreshAccessPeriod();
           _loadDashboardData(forceRefresh: false); // Use cache if available
         } else {
           debugPrint(
@@ -180,47 +178,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Future<void> _loadDashboardData({bool forceRefresh = false}) async {
-    if (mounted) {
-      setState(() {
-        _isLoading = true;
-        _error = '';
-      });
-    }
-
     try {
       final authState = ref.read(authProvider);
       final user = authState.user;
 
-      // Check internet connection
-      final hasInternet = await _networkService.hasInternetConnection();
+      // OPTIMIZATION: Load from cache FIRST for instant display
+      final cachedDataLoaded = await _loadCachedDashboardData(user?.role);
 
-      // Try to load from cache first if offline or if cache is still valid
-      if (!hasInternet || !forceRefresh) {
-        final cachedDataLoaded = await _loadCachedDashboardData(user?.role);
-        if (cachedDataLoaded && !forceRefresh) {
-          debugPrint('📦 Using cached dashboard data');
-          if (mounted) {
-            setState(() {
-              _isLoading = false;
-            });
-          }
-          // If offline, use cache and return
-          if (!hasInternet) {
-            debugPrint('🌐 No internet - using cached data only');
-            return;
-          }
-          // If online but cache is valid, use cache and refresh in background
-          if (await _isCacheValid()) {
-            debugPrint('📦 Cache is valid, refreshing in background');
-            // Load fresh data in background
-            _loadFreshDashboardData(user?.role);
-            return;
-          }
+      if (cachedDataLoaded && !forceRefresh) {
+        // Show cached data immediately
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _error = '';
+          });
+        }
+      } else {
+        // No cache or force refresh - show loading
+        if (mounted) {
+          setState(() {
+            _isLoading = true;
+            _error = '';
+          });
         }
       }
 
-      // Load fresh data from API
+      // Check internet connection in parallel
+      final hasInternetFuture = _networkService.hasInternetConnection();
+
+      // If we have cached data, show it and fetch fresh data in background
+      if (cachedDataLoaded && !forceRefresh) {
+        final hasInternet = await hasInternetFuture;
+
+        if (hasInternet) {
+          // Fetch fresh data in background (non-blocking)
+          _loadFreshDashboardData(user?.role).catchError((e) {
+            debugPrint('⚠️ Background refresh failed: $e');
+          });
+        }
+        return; // Exit early - UI already shown with cache
+      }
+
+      // No cache or force refresh - must wait for API
+      final hasInternet = await hasInternetFuture;
+
       if (hasInternet) {
+        // Load fresh data from API
         if (user?.role == 'USER') {
           await _loadUserDashboardData();
         } else if (user?.role == 'ADMIN') {
@@ -244,10 +247,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final cachedDataLoaded = await _loadCachedDashboardData(user?.role);
       if (cachedDataLoaded) {
         debugPrint('📦 Error occurred, using cached data as fallback');
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _error = '';
+          });
+        }
       } else if (mounted) {
         final l10n = AppLocalizations.of(context);
         setState(() {
           _error = '${l10n.failedToLoadDashboardData}: $e';
+          _isLoading = false;
         });
       }
     } finally {
@@ -266,9 +276,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       } else if (role == 'ADMIN') {
         await _loadAdminDashboardData();
       }
+
+      // Update UI with fresh data
+      if (mounted) {
+        setState(() {
+          // Data already updated in _loadUserDashboardData or _loadAdminDashboardData
+        });
+      }
     } catch (e) {
-      debugPrint('Error loading fresh dashboard data: $e');
-      // Silently fail - user already has cached data
+      debugPrint('⚠️ Error loading fresh dashboard data: $e');
+      // Silently fail - user already has cached data displayed
     }
   }
 
@@ -551,23 +568,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
-  Future<bool> _isCacheValid() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final timestampStr = prefs.getString(_cacheKeyTimestamp);
-      if (timestampStr == null) return false;
-
-      final timestamp = DateTime.parse(timestampStr);
-      final now = DateTime.now();
-      final age = now.difference(timestamp);
-
-      return age < _cacheValidityDuration;
-    } catch (e) {
-      debugPrint('Error checking cache validity: $e');
-      return false;
-    }
-  }
-
   int _calculateAchievements(List<ExamResultData> results) {
     int achievements = 0;
 
@@ -654,6 +654,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             // Small delay to ensure state is updated
             Future.delayed(const Duration(milliseconds: 100), () {
               if (mounted && _currentIndex == index) {
+                if (index == 0) {
+                  // Exams tab - refresh access period and reload exams
+                  final authNotifier = ref.read(authProvider.notifier);
+                  authNotifier.refreshAccessPeriod();
+                }
                 _loadDashboardData(
                   forceRefresh: false,
                 ); // Use cache if available
@@ -811,9 +816,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             // _buildQuickStats(user),
                             //SizedBox(height: 24.h),
                           ],
-
-                          // Recent Activity
-                          //_buildRecentActivity(user),
                         ],
                       ),
                     ),
@@ -1077,6 +1079,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       style: AppTextStyles.bodyMedium.copyWith(
                         fontWeight: FontWeight.w600,
                         fontSize: 13.sp,
+                        color: AppColors.white,
                       ),
                     ),
                   ),
@@ -1577,22 +1580,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10.r),
-                    child: Image.network(
-                      imageUrl,
-                      width: double.infinity,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        debugPrint('❌ Error loading image: $imageUrl - $error');
-                        return Container(
-                          color: AppColors.grey100,
-                          child: Icon(icon, size: 40.sp, color: iconColor),
-                        );
-                      },
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          color: AppColors.grey100,
-                          child: Icon(icon, size: 40.sp, color: iconColor),
+                    child: FutureBuilder<String>(
+                      future: ImageCacheService.instance.getImagePath(imageUrl),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Container(
+                            color: AppColors.grey100,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          );
+                        }
+
+                        final imagePath = snapshot.data ?? '';
+                        if (imagePath.isEmpty) {
+                          return Container(
+                            color: AppColors.grey100,
+                            child: Icon(icon, size: 40.sp, color: iconColor),
+                          );
+                        }
+
+                        return Image.network(
+                          imagePath,
+                          width: double.infinity,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            debugPrint(
+                              '❌ Error loading image: $imagePath - $error',
+                            );
+                            return Container(
+                              color: AppColors.grey100,
+                              child: Icon(icon, size: 40.sp, color: iconColor),
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: AppColors.grey100,
+                              child: Icon(icon, size: 40.sp, color: iconColor),
+                            );
+                          },
                         );
                       },
                     ),
@@ -2074,165 +2105,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   //   );
   // }
 
-  Widget _buildRecentActivity(User? user) {
-    final isAdmin = user?.role == 'ADMIN';
-    final recentResults = _examResults.take(5).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Builder(
-          builder: (context) {
-            final l10n = AppLocalizations.of(context);
-            return Text(
-              l10n.recentActivity,
-              style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
-            );
-          },
-        ),
-        SizedBox(height: 16.h),
-
-        if (recentResults.isEmpty)
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.history, size: 48.sp, color: AppColors.grey400),
-                SizedBox(height: 16.h),
-                Builder(
-                  builder: (context) {
-                    final l10n = AppLocalizations.of(context);
-                    return Column(
-                      children: [
-                        Text(
-                          l10n.noRecentActivity,
-                          style: AppTextStyles.bodyLarge.copyWith(
-                            color: AppColors.grey600,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          isAdmin
-                              ? l10n.noExamAttemptsRecordedYet
-                              : l10n.startTakingExamsToSeeYourProgressHere,
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.grey500,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ],
-            ),
-          )
-        else
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              children: recentResults.asMap().entries.map((entry) {
-                final index = entry.key;
-                final result = entry.value;
-                return Container(
-                  margin: EdgeInsets.only(bottom: 12.h),
-                  padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(
-                    color: result.passed
-                        ? Colors.green.withValues(alpha: 0.1)
-                        : Colors.red.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(
-                      color: result.passed
-                          ? Colors.green.withValues(alpha: 0.3)
-                          : Colors.red.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        result.passed ? Icons.check_circle : Icons.cancel,
-                        color: result.passed ? Colors.green : Colors.red,
-                        size: 20.w,
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              result.exam?.title ?? 'Exam ${index + 1}',
-                              style: AppTextStyles.bodyLarge.copyWith(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14.sp,
-                              ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Builder(
-                              builder: (context) {
-                                final l10n = AppLocalizations.of(context);
-                                return Text(
-                                  '${l10n.examScore(result.score.toString())} • ${_formatTimeAgo(result.submittedAt, context)}',
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.grey600,
-                                    fontSize: 12.sp,
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-      ],
-    );
-  }
-
-  String _formatTimeAgo(DateTime date, BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays == 0) {
-      return l10n.today;
-    } else if (difference.inDays == 1) {
-      return l10n.yesterday;
-    } else if (difference.inDays < 7) {
-      return l10n.daysAgo(difference.inDays);
-    } else {
-      return '${date.month}/${date.day}/${date.year}';
-    }
-  }
-
   Widget _buildStatCard(
     String title,
     String value,
@@ -2346,9 +2218,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildProfileTab() {
-    final authState = ref.watch(authProvider);
-    final user = authState.user;
-
     //disble back button when user are on dashboard screen
     return Scaffold(
       appBar: AppBar(
@@ -2513,10 +2382,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     );
 
                     if (shouldLogout == true && mounted) {
-                      // Perform logout
-                      await ref.read(authProvider.notifier).logout();
+                      // OPTIMIZATION: Clear local state immediately and navigate
+                      // Don't wait for API logout - it can happen in background
+                      // This makes logout feel instant
 
-                      // Navigate to login screen explicitly
+                      // Clear local auth state immediately (non-blocking)
+                      ref.read(authProvider.notifier).logout().catchError((e) {
+                        debugPrint('⚠️ Background logout failed: $e');
+                        // Ignore errors - local logout already happened
+                      });
+
+                      // Navigate immediately without waiting
                       if (mounted) {
                         Navigator.pushNamedAndRemoveUntil(
                           context,
@@ -2539,44 +2415,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   Future<void> _shareApp() async {
     try {
+      final l10n = AppLocalizations.of(context);
       final packageInfo = await PackageInfo.fromPlatform();
       final appName = packageInfo.appName;
       final version = packageInfo.version;
       final buildNumber = packageInfo.buildNumber;
       const playStoreLink =
           'https://play.google.com/store/apps/details?id=com.trafficrules.master';
-      final shareText =
-          '''
-🚗 Rwanda Traffic Rule 🇷🇼 - Master Your Driving Test!
 
-Download the best app to prepare for your provisional driving license exam.
+      // Get localized share message and replace placeholders
+      final shareText = l10n.shareAppMessage
+          .replaceAll('{appName}', appName)
+          .replaceAll('{version}', version)
+          .replaceAll('{buildNumber}', buildNumber)
+          .replaceAll('{playStoreLink}', playStoreLink);
 
-📱 App: $appName
-📦 Version: $version ($buildNumber)
-
-✨ Features:
-• Interactive practice tests
-• Comprehensive study materials
-• Road signs and traffic rules
-• Progress tracking
-• Available in English, Kinyarwanda, and French
-
-📥 Download now:
-$playStoreLink
-
-Start your journey to becoming a safe driver!
-#TrafficRules #DrivingTest #LearnToDrive
-''';
-      await Share.share(
-        shareText,
-        subject: 'Rwanda Traffic Rule 🇷🇼 - Driving Test Preparation App',
-      );
+      await Share.share(shareText, subject: l10n.shareAppSubject);
     } catch (e) {
       debugPrint('Error sharing app: $e');
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to share app: $e'),
+            content: Text(l10n.shareFailed),
             backgroundColor: AppColors.error,
           ),
         );
