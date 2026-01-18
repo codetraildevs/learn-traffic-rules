@@ -304,16 +304,26 @@ router.post('/users/:id/access-codes',
   authMiddleware.requireRole(['ADMIN', 'MANAGER']),
   [
     param('id').isUUID().withMessage('Valid user ID is required'),
+    // Validate durationDays first so it's available for paymentAmount validation
+    body('durationDays').optional().isInt({ min: 1, max: 3650 }).withMessage('Duration days must be between 1 and 3650'),
     body('paymentAmount').isNumeric().withMessage('Payment amount must be a number')
       .custom((value, { req }) => {
-        // If durationDays is provided, allow any positive amount
-        if (req.body.durationDays) {
-          return value > 0;
+        // If durationDays is provided and is a valid number, allow any positive amount
+        const durationDays = req.body.durationDays;
+        // Check if durationDays exists and is valid (handles both string and number)
+        const hasValidDurationDays = durationDays !== undefined && 
+                                     durationDays !== null && 
+                                     durationDays !== '' &&
+                                     !isNaN(Number(durationDays)) && 
+                                     Number(durationDays) > 0;
+        
+        if (hasValidDurationDays) {
+          // For custom dates, any positive amount is allowed
+          return Number(value) > 0;
         }
         // Otherwise, must be one of the fixed tiers
         return [1500, 3000, 5000].includes(Number(value));
-      }).withMessage('Invalid payment amount. For custom dates, provide durationDays parameter.'),
-    body('durationDays').optional().isInt({ min: 1, max: 3650 }).withMessage('Duration days must be between 1 and 3650')
+      }).withMessage('Invalid payment amount. For custom dates, provide durationDays parameter.')
   ],
   userManagementController.createAccessCodeForUser
 );
