@@ -93,13 +93,28 @@ class UserManagementService {
         "🔍 Creating access code for user: $userId with amount: $paymentAmount${durationDays != null ? ' (${durationDays} days)' : ''}",
       );
 
+      // Ensure paymentAmount is positive
+      if (paymentAmount <= 0) {
+        throw Exception('Payment amount must be greater than 0');
+      }
+
+      // Build request body
+      final requestBody = <String, dynamic>{
+        'paymentAmount': paymentAmount,
+      };
+
+      // Add durationDays only if provided and valid
+      if (durationDays != null && durationDays > 0) {
+        // Ensure it's sent as an integer (not double)
+        requestBody['durationDays'] = durationDays;
+      }
+
+      debugPrint("🔍 Request body: $requestBody");
+
       final response = await _apiService.makeRequest(
         'POST',
         '${AppConstants.userManagementEndpoint}/users/$userId/access-codes',
-        body: {
-          'paymentAmount': paymentAmount,
-          if (durationDays != null) 'durationDays': durationDays,
-        },
+        body: requestBody,
       );
 
       debugPrint("🔍 Access code response: $response");

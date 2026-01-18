@@ -500,9 +500,30 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         debugPrint(
           '🔍 Selected custom date range: ${selectedTier['days']} days',
         );
+
+        // Validate days is within acceptable range (1-3650 as per backend)
+        if (days < 1 || days > 3650) {
+          _showErrorSnackBar(
+            'Invalid duration. Days must be between 1 and 3650.',
+          );
+          return;
+        }
+
         // For custom dates, use a calculated amount based on days
         // You can adjust this formula as needed
         final calculatedAmount = _calculateAmountForDays(days);
+
+        // Ensure calculated amount is positive
+        if (calculatedAmount <= 0) {
+          _showErrorSnackBar(
+            'Invalid payment amount calculated. Please try again.',
+          );
+          return;
+        }
+
+        debugPrint(
+          '🔍 Creating access code with amount: $calculatedAmount RWF for $days days',
+        );
 
         final response = await _userManagementService.createAccessCodeForUser(
           user.id,
@@ -582,7 +603,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 final isCustom = tier['isCustom'] as bool;
                 if (isCustom) {
                   return ListTile(
-                    leading: Icon(
+                    leading: const Icon(
                       Icons.calendar_today,
                       color: AppColors.primary,
                     ),
@@ -593,7 +614,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                         color: AppColors.primary,
                       ),
                     ),
-                    subtitle: Text(
+                    subtitle: const Text(
                       'Select specific end date',
                       style: AppTextStyles.caption,
                     ),
@@ -658,7 +679,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     size: 24.sp,
                   ),
                   SizedBox(width: 8.w),
-                  Text('Custom Date Range', style: AppTextStyles.heading3),
+                  const Expanded(
+                    child: Text(
+                      'Custom Date Range',
+                      style: AppTextStyles.heading3,
+                    ),
+                  ),
                 ],
               ),
               content: SingleChildScrollView(
@@ -866,7 +892,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     backgroundColor: AppColors.primary,
                     foregroundColor: AppColors.white,
                   ),
-                  child: Text('Confirm'),
+                  child: const Text('Confirm'),
                 ),
               ],
             );
@@ -1066,9 +1092,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           slivers: [
             SliverToBoxAdapter(child: _buildFilterSection()),
             if (_isLoading)
-              SliverFillRemaining(
+              const SliverFillRemaining(
                 hasScrollBody: false,
-                child: const Center(child: LoadingWidget()),
+                child: Center(child: LoadingWidget()),
               )
             else if (_filteredUsers.isEmpty)
               SliverFillRemaining(
