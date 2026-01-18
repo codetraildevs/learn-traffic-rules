@@ -2130,147 +2130,150 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
       color: AppColors.white,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Previous button
-          IconButton(
-            onPressed: _currentPage > 1
-                ? () {
-                    setState(() {
-                      _currentPage--;
-                    });
-                    _loadUsers(page: _currentPage);
-                    _scrollToTop();
-                  }
-                : null,
-            icon: const Icon(Icons.chevron_left),
-            tooltip: AppLocalizations.of(context).previousPage,
-          ),
-          SizedBox(width: 8.w),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Previous button
+            IconButton(
+              onPressed: _currentPage > 1
+                  ? () {
+                      setState(() {
+                        _currentPage--;
+                      });
+                      _loadUsers(page: _currentPage);
+                      _scrollToTop();
+                    }
+                  : null,
+              icon: const Icon(Icons.chevron_left),
+              tooltip: AppLocalizations.of(context).previousPage,
+            ),
+            SizedBox(width: 8.w),
 
-          // Page numbers
-          ...List.generate(_totalPages > 5 ? 5 : _totalPages, (index) {
-            int pageNumber;
-            if (_totalPages <= 5) {
-              pageNumber = index + 1;
-            } else {
-              // Show current page and 2 pages on each side
-              if (_currentPage <= 3) {
+            // Page numbers
+            ...List.generate(_totalPages > 5 ? 5 : _totalPages, (index) {
+              int pageNumber;
+              if (_totalPages <= 5) {
                 pageNumber = index + 1;
-              } else if (_currentPage >= _totalPages - 2) {
-                pageNumber = _totalPages - 4 + index;
               } else {
-                pageNumber = _currentPage - 2 + index;
+                // Show current page and 2 pages on each side
+                if (_currentPage <= 3) {
+                  pageNumber = index + 1;
+                } else if (_currentPage >= _totalPages - 2) {
+                  pageNumber = _totalPages - 4 + index;
+                } else {
+                  pageNumber = _currentPage - 2 + index;
+                }
               }
-            }
 
-            final isCurrentPage = pageNumber == _currentPage;
-            return Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4.w),
-              child: InkWell(
-                onTap: () {
-                  setState(() {
-                    _currentPage = pageNumber;
-                  });
-                  _loadUsers(page: pageNumber);
-                  _scrollToTop();
-                },
-                borderRadius: BorderRadius.circular(8.r),
-                child: Container(
-                  width: 40.w,
-                  height: 40.h,
-                  decoration: BoxDecoration(
-                    color: isCurrentPage
-                        ? AppColors.primary
-                        : AppColors.grey100,
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(
+              final isCurrentPage = pageNumber == _currentPage;
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                child: InkWell(
+                  onTap: () {
+                    setState(() {
+                      _currentPage = pageNumber;
+                    });
+                    _loadUsers(page: pageNumber);
+                    _scrollToTop();
+                  },
+                  borderRadius: BorderRadius.circular(8.r),
+                  child: Container(
+                    width: 40.w,
+                    height: 40.h,
+                    decoration: BoxDecoration(
                       color: isCurrentPage
                           ? AppColors.primary
-                          : AppColors.grey300,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '$pageNumber',
-                      style: AppTextStyles.bodyMedium.copyWith(
+                          : AppColors.grey100,
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
                         color: isCurrentPage
-                            ? AppColors.white
-                            : AppColors.grey800,
-                        fontWeight: isCurrentPage
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+                            ? AppColors.primary
+                            : AppColors.grey300,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$pageNumber',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: isCurrentPage
+                              ? AppColors.white
+                              : AppColors.grey800,
+                          fontWeight: isCurrentPage
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            }),
 
-          // Show ellipsis if there are more pages
-          if (_totalPages > 5 && _currentPage < _totalPages - 2)
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4.w),
-              child: Text(
-                '...',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.grey600,
-                ),
-              ),
-            ),
-
-          // Show last page if not in visible range
-          if (_totalPages > 5 && _currentPage < _totalPages - 2)
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4.w),
-              child: InkWell(
-                onTap: () {
-                  setState(() {
-                    _currentPage = _totalPages;
-                  });
-                  _loadUsers(page: _totalPages);
-                  _scrollToTop();
-                },
-                borderRadius: BorderRadius.circular(8.r),
-                child: Container(
-                  width: 40.w,
-                  height: 40.h,
-                  decoration: BoxDecoration(
-                    color: AppColors.grey100,
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(color: AppColors.grey300),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '$_totalPages',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.grey800,
-                      ),
-                    ),
+            // Show ellipsis if there are more pages
+            if (_totalPages > 5 && _currentPage < _totalPages - 2)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                child: Text(
+                  '...',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.grey600,
                   ),
                 ),
               ),
-            ),
 
-          SizedBox(width: 8.w),
-
-          // Next button
-          IconButton(
-            onPressed: _currentPage < _totalPages
-                ? () {
+            // Show last page if not in visible range
+            if (_totalPages > 5 && _currentPage < _totalPages - 2)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                child: InkWell(
+                  onTap: () {
                     setState(() {
-                      _currentPage++;
+                      _currentPage = _totalPages;
                     });
-                    _loadUsers(page: _currentPage);
+                    _loadUsers(page: _totalPages);
                     _scrollToTop();
-                  }
-                : null,
-            icon: const Icon(Icons.chevron_right),
-            tooltip: AppLocalizations.of(context).nextPage,
-          ),
-        ],
+                  },
+                  borderRadius: BorderRadius.circular(8.r),
+                  child: Container(
+                    width: 40.w,
+                    height: 40.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.grey100,
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(color: AppColors.grey300),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$_totalPages',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.grey800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+            SizedBox(width: 8.w),
+
+            // Next button
+            IconButton(
+              onPressed: _currentPage < _totalPages
+                  ? () {
+                      setState(() {
+                        _currentPage++;
+                      });
+                      _loadUsers(page: _currentPage);
+                      _scrollToTop();
+                    }
+                  : null,
+              icon: const Icon(Icons.chevron_right),
+              tooltip: AppLocalizations.of(context).nextPage,
+            ),
+          ],
+        ),
       ),
     );
   }
