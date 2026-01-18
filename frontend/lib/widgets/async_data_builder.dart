@@ -39,7 +39,7 @@ class AsyncDataBuilder<T> extends StatelessWidget {
           return errorBuilder?.call(context, error) ??
               Builder(
                 builder: (context) {
-                  final l10n = AppLocalizations.of(context)!;
+                  final l10n = AppLocalizations.of(context);
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
