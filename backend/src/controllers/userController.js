@@ -18,7 +18,7 @@ class UserController {
 
       const users = await User.findAll({
         where: whereClause,
-        attributes: ['id', 'fullName', 'phoneNumber', 'deviceId', 'role', 'isActive', 'createdAt', 'lastLogin'],
+        attributes: ['id', 'fullName', 'phoneNumber', 'deviceId', 'role', 'isActive', 'createdAt', 'lastLogin', 'preferredLanguage'],
         order: [['createdAt', 'DESC']]
       });
 
@@ -55,7 +55,7 @@ class UserController {
       }
 
       const user = await User.findByPk(id, {
-        attributes: ['id', 'fullName', 'phoneNumber', 'deviceId', 'role', 'isActive', 'createdAt', 'lastLogin']
+        attributes: ['id', 'fullName', 'phoneNumber', 'deviceId', 'role', 'isActive', 'createdAt', 'lastLogin', 'preferredLanguage']
       });
 
       if (!user) {
@@ -262,6 +262,60 @@ class UserController {
       });
     } catch (error) {
       console.error('Get dashboard error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  }
+
+  /**
+   * Update user's preferred language
+   */
+  async updatePreferredLanguage(req, res) {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Validation failed',
+          errors: errors.array()
+        });
+      }
+
+      const userId = req.user.userId;
+      const { preferredLanguage } = req.body;
+
+      const user = await User.findByPk(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+
+      // Validate language code
+      const validLanguages = ['en', 'fr', 'rw'];
+      if (preferredLanguage && !validLanguages.includes(preferredLanguage)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid language code. Must be one of: en, fr, rw'
+        });
+      }
+
+      await user.update({ preferredLanguage: preferredLanguage || null });
+
+      res.json({
+        success: true,
+        message: 'Preferred language updated successfully',
+        data: {
+          id: user.id,
+          preferredLanguage: user.preferredLanguage
+        }
+      });
+    } catch (error) {
+      console.error('Update preferred language error:', error);
       res.status(500).json({
         success: false,
         message: 'Internal server error',

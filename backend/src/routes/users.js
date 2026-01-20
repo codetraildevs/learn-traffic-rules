@@ -265,6 +265,44 @@ router.get('/dashboard',
 
 /**
  * @swagger
+ * /api/users/me/preferred-language:
+ *   patch:
+ *     summary: Update current user's preferred language
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               preferredLanguage:
+ *                 type: string
+ *                 enum: [en, fr, rw]
+ *                 description: Preferred language code (en, fr, or rw)
+ *     responses:
+ *       200:
+ *         description: Preferred language updated successfully
+ *       400:
+ *         description: Invalid language code
+ *       401:
+ *         description: Unauthorized
+ */
+router.patch('/me/preferred-language',
+  authMiddleware.authenticate,
+  [
+    body('preferredLanguage')
+      .optional()
+      .isIn(['en', 'fr', 'rw'])
+      .withMessage('Preferred language must be one of: en, fr, rw')
+  ],
+  userController.updatePreferredLanguage
+);
+
+/**
+ * @swagger
  * /api/users/{id}/statistics:
  *   get:
  *     summary: Get user statistics (Admin/Manager only)

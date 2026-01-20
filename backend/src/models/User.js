@@ -68,6 +68,14 @@ const User = sequelize.define('User', {
   blockedAt: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  preferredLanguage: {
+    type: DataTypes.STRING(10),
+    allowNull: true,
+    defaultValue: null,
+    validate: {
+      isIn: [['en', 'fr', 'rw', null]]
+    }
   }
 }, {
   tableName: 'users',

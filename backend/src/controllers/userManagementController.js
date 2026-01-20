@@ -96,7 +96,7 @@ const getAllUsers = async (req, res) => {
       attributes: [
         'id', 'fullName', 'phoneNumber', 'role', 
         'isActive', 'lastLogin', 'createdAt', 'updatedAt',
-        'isBlocked', 'blockReason', 'blockedAt'
+        'isBlocked', 'blockReason', 'blockedAt', 'preferredLanguage'
       ],
       order: [[sortBy, sortOrder.toUpperCase()]],
       limit: parseInt(limit),
@@ -260,7 +260,7 @@ const getUserDetails = async (req, res) => {
       attributes: [
         'id', 'fullName', 'phoneNumber', 'role', 
         'isActive', 'lastLogin', 'createdAt', 'updatedAt',
-        'isBlocked', 'blockReason', 'blockedAt'
+        'isBlocked', 'blockReason', 'blockedAt', 'preferredLanguage'
       ]
     });
 
