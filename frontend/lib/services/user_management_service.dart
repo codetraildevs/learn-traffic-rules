@@ -99,9 +99,7 @@ class UserManagementService {
       }
 
       // Build request body
-      final requestBody = <String, dynamic>{
-        'paymentAmount': paymentAmount,
-      };
+      final requestBody = <String, dynamic>{'paymentAmount': paymentAmount};
 
       // Add durationDays only if provided and valid
       if (durationDays != null && durationDays > 0) {
@@ -348,6 +346,27 @@ class UserManagementService {
         if (blockReason != null) 'blockReason': blockReason,
       },
     );
+  }
+
+  // Update user's preferred language
+  Future<Map<String, dynamic>> updatePreferredLanguage(
+    String languageCode,
+  ) async {
+    try {
+      debugPrint('🌍 Updating preferred language to: $languageCode');
+
+      final response = await _apiService.makeRequest(
+        'PATCH',
+        '${AppConstants.usersEndpoint}/me/preferred-language',
+        body: {'preferredLanguage': languageCode},
+      );
+
+      debugPrint('✅ Preferred language updated successfully');
+      return response;
+    } catch (e) {
+      debugPrint('❌ Error updating preferred language: $e');
+      rethrow;
+    }
   }
 
   // Delete user
