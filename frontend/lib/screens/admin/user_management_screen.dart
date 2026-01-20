@@ -366,23 +366,29 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             : AppColors.grey600,
                       ),
                       SizedBox(width: 6.w),
-                      Builder(
-                        builder: (context) {
-                          final l10n = AppLocalizations.of(context);
-                          return Text(
-                            _startDate != null
-                                ? DateFormat('MMM dd, yyyy').format(_startDate!)
-                                : l10n.startDate,
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: _startDate != null
-                                  ? AppColors.primary
-                                  : AppColors.grey600,
-                              fontWeight: _startDate != null
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                            ),
-                          );
-                        },
+                      Flexible(
+                        child: Builder(
+                          builder: (context) {
+                            final l10n = AppLocalizations.of(context);
+                            return Text(
+                              _startDate != null
+                                  ? DateFormat(
+                                      'MMM dd, yyyy',
+                                    ).format(_startDate!)
+                                  : l10n.startDate,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: _startDate != null
+                                    ? AppColors.primary
+                                    : AppColors.grey600,
+                                fontWeight: _startDate != null
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -421,17 +427,21 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                 : AppColors.grey600,
                           ),
                           SizedBox(width: 6.w),
-                          Text(
-                            _endDate != null
-                                ? DateFormat('MMM dd, yyyy').format(_endDate!)
-                                : l10n.endDate,
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: _endDate != null
-                                  ? AppColors.primary
-                                  : AppColors.grey600,
-                              fontWeight: _endDate != null
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
+                          Flexible(
+                            child: Text(
+                              _endDate != null
+                                  ? DateFormat('MMM dd, yyyy').format(_endDate!)
+                                  : l10n.endDate,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: _endDate != null
+                                    ? AppColors.primary
+                                    : AppColors.grey600,
+                                fontWeight: _endDate != null
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                         ],
@@ -459,17 +469,21 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       children: [
                         Icon(Icons.clear, size: 16.sp, color: AppColors.error),
                         SizedBox(width: 6.w),
-                        Builder(
-                          builder: (context) {
-                            final l10n = AppLocalizations.of(context);
-                            return Text(
-                              l10n.clear,
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.error,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            );
-                          },
+                        Flexible(
+                          child: Builder(
+                            builder: (context) {
+                              final l10n = AppLocalizations.of(context);
+                              return Text(
+                                l10n.clear,
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.error,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),
@@ -1055,7 +1069,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.userManagement, style: AppTextStyles.heading2),
+                Text(
+                  l10n.userManagement,
+                  style: AppTextStyles.heading2.copyWith(
+                    color: AppColors.white,
+                  ),
+                ),
                 if (_totalUsers > 0)
                   Text(
                     l10n.usersCount(_totalUsers),
@@ -1213,6 +1232,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                     fontWeight: FontWeight.bold,
                                     fontSize: 12.sp,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
                                 );
                               },
                             ),
@@ -1283,6 +1304,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                     ? AppColors.error
                                     : AppColors.grey800,
                               ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                             SizedBox(height: 6.h),
                             // Phone - Clickable for calling
@@ -1325,14 +1348,20 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                           : AppColors.primary,
                                     ),
                                     SizedBox(width: 6.w),
-                                    Text(
-                                      user.phoneNumber,
-                                      style: AppTextStyles.bodyMedium.copyWith(
-                                        color: _isUserCalled(user.id)
-                                            ? AppColors.success
-                                            : AppColors.primary,
-                                        fontWeight: FontWeight.w600,
-                                        decoration: TextDecoration.underline,
+                                    Flexible(
+                                      child: Text(
+                                        user.phoneNumber,
+                                        style: AppTextStyles.bodyMedium
+                                            .copyWith(
+                                              color: _isUserCalled(user.id)
+                                                  ? AppColors.success
+                                                  : AppColors.primary,
+                                              fontWeight: FontWeight.w600,
+                                              decoration:
+                                                  TextDecoration.underline,
+                                            ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
                                       ),
                                     ),
                                     if (_isUserCalled(user.id)) ...[
@@ -1600,12 +1629,16 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         children: [
           Icon(icon, size: 14.sp, color: color),
           SizedBox(width: 6.w),
-          Text(
-            text,
-            style: AppTextStyles.caption.copyWith(
-              color: color,
-              fontSize: 11.sp,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              text,
+              style: AppTextStyles.caption.copyWith(
+                color: color,
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ],
@@ -1742,40 +1775,64 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                 value: 'all',
                                 child: Text(
                                   AppLocalizations.of(context).allUsers,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
                               DropdownMenuItem(
                                 value: 'user',
-                                child: Text(AppLocalizations.of(context).users),
+                                child: Text(
+                                  AppLocalizations.of(context).users,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
                               ),
                               DropdownMenuItem(
                                 value: 'manager',
                                 child: Text(
                                   AppLocalizations.of(context).managers,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: 'admin',
+                                child: Text(
+                                  AppLocalizations.of(context).admins,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
                               DropdownMenuItem(
                                 value: 'with_code',
                                 child: Text(
                                   AppLocalizations.of(context).withCode,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
                               DropdownMenuItem(
                                 value: 'without_code',
                                 child: Text(
                                   AppLocalizations.of(context).noCode,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
                               DropdownMenuItem(
                                 value: 'called',
                                 child: Text(
                                   AppLocalizations.of(context).called,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
                               DropdownMenuItem(
                                 value: 'not_called',
                                 child: Text(
                                   AppLocalizations.of(context).notCalled,
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
                               ),
                             ],
@@ -2105,17 +2162,21 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         children: [
           Icon(Icons.people, color: AppColors.primary, size: 20.sp),
           SizedBox(width: 8.w),
-          Builder(
-            builder: (context) {
-              final l10n = AppLocalizations.of(context);
-              return Text(
-                '${l10n.totalUsersLabel}: $_totalUsers',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary,
-                ),
-              );
-            },
+          Flexible(
+            child: Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return Text(
+                  '${l10n.totalUsersLabel}: $_totalUsers',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -2300,7 +2361,13 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 size: 24.sp,
               ),
               SizedBox(width: 8.w),
-              Text(isCurrentlyBlocked ? l10n.unblockUser : l10n.blockUser),
+              Expanded(
+                child: Text(
+                  isCurrentlyBlocked ? l10n.unblockUser : l10n.blockUser,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
             ],
           ),
           content: Column(
@@ -2311,6 +2378,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 isCurrentlyBlocked
                     ? l10n.areYouSureYouWantToUnblockUser(user.fullName)
                     : l10n.areYouSureYouWantToBlockUser(user.fullName),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 3,
               ),
               SizedBox(height: 8.h),
               Container(
@@ -2349,6 +2418,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                               : AppColors.error,
                           fontWeight: FontWeight.w600,
                         ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 3,
                       ),
                     ),
                   ],
@@ -2477,7 +2548,13 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
             children: [
               Icon(Icons.vpn_key, color: AppColors.primary, size: 24.sp),
               SizedBox(width: 8.w),
-              Text(l10n.generateAccessCode),
+              Expanded(
+                child: Text(
+                  l10n.generateAccessCode,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
             ],
           );
         },
@@ -2494,6 +2571,8 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
                 style: AppTextStyles.bodyMedium.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
               );
             },
           ),
@@ -2527,6 +2606,8 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
                           color: AppColors.primary,
                           fontWeight: FontWeight.w600,
                         ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
                       );
                     },
                   ),
@@ -2606,6 +2687,8 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
                         fontWeight: FontWeight.w600,
                         color: isSelected ? color : AppColors.grey800,
                       ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
                     ),
                     Text(
                       '${tier['amount']} RWF',
@@ -2613,6 +2696,8 @@ class _PaymentTierDialogState extends State<_PaymentTierDialog> {
                         color: isSelected ? color : AppColors.grey600,
                         fontWeight: FontWeight.w600,
                       ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ],
                 ),

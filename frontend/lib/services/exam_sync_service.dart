@@ -128,15 +128,35 @@ class ExamSyncService {
           final needsDownload =
               forceDownload || _needsDownload(exam, existingExam);
 
-          if (!needsDownload) {
-            debugPrint('⏭️ Skipping exam ${exam.id} (no changes detected)');
+          // Check if questions are already cached for this exam
+          // Even if exam doesn't need updating, we should check if questions exist
+          bool questionsExist = false;
+          if (existingExam != null && !needsDownload) {
+            // Check if questions are cached for this exam
+            final examData = await _offlineService.getExam(exam.id);
+            if (examData != null && examData['questions'] != null) {
+              final cachedQuestions = examData['questions'] as List;
+              questionsExist = cachedQuestions.isNotEmpty;
+            }
+          }
+
+          // Skip only if exam doesn't need updating AND questions already exist
+          if (!needsDownload && questionsExist) {
+            debugPrint('⏭️ Skipping exam ${exam.id} (no changes, questions cached)');
             skippedCount++;
             continue;
           }
 
-          debugPrint(
-            '📥 Downloading exam ${exam.id} (${existingExam != null ? 'updated' : 'new'})',
-          );
+          // If exam doesn't need updating but questions are missing, download questions only
+          if (!needsDownload && !questionsExist) {
+            debugPrint(
+              '📥 Downloading questions for exam ${exam.id} (exam cached, questions missing)',
+            );
+          } else {
+            debugPrint(
+              '📥 Downloading exam ${exam.id} (${existingExam != null ? 'updated' : 'new'})',
+            );
+          }
 
           // Get questions for this exam
           // Check connectivity again before fetching questions

@@ -11,6 +11,7 @@ import '../../widgets/custom_button.dart';
 import '../../services/user_management_service.dart';
 import '../../services/offline_exam_service.dart';
 import '../../services/exam_sync_service.dart';
+import '../../services/exam_service.dart';
 import '../../services/network_service.dart';
 import '../../services/image_cache_service.dart';
 import '../../models/free_exam_model.dart';
@@ -40,7 +41,10 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   final UserManagementService _userManagementService = UserManagementService();
   final OfflineExamService _offlineService = OfflineExamService();
   final ExamSyncService _syncService = ExamSyncService();
+  final ExamService _examService = ExamService();
   final NetworkService _networkService = NetworkService();
+  // Track which exams are being pre-downloaded to avoid duplicate downloads
+  final Set<String> _preloadingExams = {};
   FreeExamData? _freeExamData;
   List<Exam> _allExams = []; // Cache all exams
   bool _isLoadingFreeExams = true;
@@ -51,7 +55,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   final Map<String, String?> _imagePathCache = {};
   // Track which images are being preloaded
   final Set<String> _preloadingImages = {};
-  
+
   // Track previous access state to detect changes
   bool? _previousHasAccess;
   DateTime? _lastAccessRefresh;
@@ -83,24 +87,26 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
   }
 
   Timer? _periodicRefreshTimer;
-  
+
   /// Load cached exams when access changes (works offline)
   /// This shows exams immediately from cache, then API will update if online
   Future<void> _loadCachedExamsForAccessChange() async {
     try {
       debugPrint('📱 Loading cached exams for access change...');
-      
+
       // First, try to use in-memory cache
       if (_allExams.isNotEmpty) {
         debugPrint('📱 Using ${_allExams.length} exams from memory cache');
         await _applyCachedExamsToUI();
         return;
       }
-      
+
       // If no memory cache, try offline database
       final offlineExams = await _offlineService.getAllExams();
       if (offlineExams.isNotEmpty) {
-        debugPrint('📱 Using ${offlineExams.length} exams from offline database');
+        debugPrint(
+          '📱 Using ${offlineExams.length} exams from offline database',
+        );
         // Mark free exams by type
         final examsWithFreeMarked = _markFreeExamsByType(offlineExams);
         // Store in memory cache
@@ -108,34 +114,34 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         await _applyCachedExamsToUI();
         return;
       }
-      
+
       debugPrint('📱 No cached exams found');
     } catch (e) {
       debugPrint('❌ Error loading cached exams: $e');
     }
   }
-  
+
   /// Apply cached exams to UI (filter by selected type and update state)
   Future<void> _applyCachedExamsToUI() async {
     if (_allExams.isEmpty) return;
-    
+
     // Ensure _selectedExamType is set
     if (_selectedExamType == null) {
       final currentLocale = ref.read(localeProvider);
       _selectedExamType = _mapLocaleToExamType(currentLocale.languageCode);
     }
-    
+
     // Check user access from authProvider
     final authState = ref.read(authProvider);
     final hasAccess = authState.accessPeriod?.hasAccess ?? false;
     final isFreeUser = !hasAccess;
-    
+
     // Load payment instructions from offline storage if available
     PaymentInstructions? offlinePaymentInstructions;
     if (isFreeUser) {
       offlinePaymentInstructions = await _loadPaymentInstructionsOffline();
     }
-    
+
     // Filter by selected exam type
     final filteredExams = _allExams.where((exam) {
       String type = exam.examType?.toLowerCase() ?? 'english';
@@ -143,13 +149,14 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         final titleLower = exam.title.toLowerCase();
         if (titleLower.contains('kiny') || titleLower.contains('kinyarwanda')) {
           type = 'kinyarwanda';
-        } else if (titleLower.contains('french') || titleLower.contains('français')) {
+        } else if (titleLower.contains('french') ||
+            titleLower.contains('français')) {
           type = 'french';
         }
       }
       return type == _selectedExamType!.toLowerCase();
     }).toList();
-    
+
     if (mounted) {
       setState(() {
         _freeExamData = FreeExamData(
@@ -160,14 +167,14 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         );
         _isLoadingFreeExams = false;
       });
-      
+
       // Preload image paths
       _preloadImagePaths();
-      
+
       debugPrint('✅ Applied ${filteredExams.length} cached exams to UI');
     }
   }
-  
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -175,38 +182,46 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     _periodicRefreshTimer?.cancel();
     super.dispose();
   }
-  
+
   /// Start periodic refresh of access period (every 30 seconds)
   /// This ensures access is detected even when screen is in background tab
   void _startPeriodicAccessRefresh() {
     _periodicRefreshTimer?.cancel();
-    _periodicRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+    _periodicRefreshTimer = Timer.periodic(const Duration(seconds: 30), (
+      timer,
+    ) {
       if (!mounted) {
         timer.cancel();
         return;
       }
-      
+
       // Only refresh if we're online and user doesn't have access yet
       // (to detect when admin grants access)
       final authState = ref.read(authProvider);
       final hasAccess = authState.accessPeriod?.hasAccess ?? false;
-      
+
       if (!hasAccess) {
-        debugPrint('🔄 Periodic access check (every 30s) - checking for new access...');
+        debugPrint(
+          '🔄 Periodic access check (every 30s) - checking for new access...',
+        );
         _networkService.hasInternetConnection().then((hasInternet) {
           if (hasInternet && mounted) {
             final authNotifier = ref.read(authProvider.notifier);
             authNotifier.refreshAccessPeriod().then((_) async {
               if (mounted) {
                 final newAuthState = ref.read(authProvider);
-                final newHasAccess = newAuthState.accessPeriod?.hasAccess ?? false;
+                final newHasAccess =
+                    newAuthState.accessPeriod?.hasAccess ?? false;
                 if (newHasAccess && _previousHasAccess == false) {
-                  debugPrint('🔄 Access detected during periodic check! Loading cached exams first...');
+                  debugPrint(
+                    '🔄 Access detected during periodic check! Loading cached exams first...',
+                  );
                   // Load cached exams first, then fetch from API if online
                   if (mounted) {
                     await _loadCachedExamsForAccessChange();
                     // Then fetch from API if online
-                    final hasInternet = await _networkService.hasInternetConnection();
+                    final hasInternet = await _networkService
+                        .hasInternetConnection();
                     if (hasInternet) {
                       _loadFreeExams(forceReload: true);
                     }
@@ -214,10 +229,13 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                   _previousHasAccess = newHasAccess;
                 } else if (newHasAccess != _previousHasAccess) {
                   // Access status changed, load cached first
-                  debugPrint('🔄 Access status changed, loading cached exams first...');
+                  debugPrint(
+                    '🔄 Access status changed, loading cached exams first...',
+                  );
                   if (mounted) {
                     await _loadCachedExamsForAccessChange();
-                    final hasInternet = await _networkService.hasInternetConnection();
+                    final hasInternet = await _networkService
+                        .hasInternetConnection();
                     if (hasInternet) {
                       _loadFreeExams(forceReload: true);
                     }
@@ -300,11 +318,11 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       // Initialize previous access state
       final authState = ref.read(authProvider);
       _previousHasAccess = authState.accessPeriod?.hasAccess ?? false;
-      
+
       // Refresh access period when screen loads (to detect if admin granted access)
       final authNotifier = ref.read(authProvider.notifier);
       await authNotifier.refreshAccessPeriod();
-      
+
       // Update previous access state after refresh
       final refreshedAuthState = ref.read(authProvider);
       _previousHasAccess = refreshedAuthState.accessPeriod?.hasAccess ?? false;
@@ -314,7 +332,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       ImageCacheService.instance.initialize();
       _loadFreeExams();
       _setupConnectivityListener();
-      
+
       // Set up periodic refresh when screen is visible (every 30 seconds)
       _startPeriodicAccessRefresh();
     });
@@ -341,8 +359,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       String type = exam.examType?.toLowerCase() ?? 'english';
       if (exam.examType == null) {
         final titleLower = exam.title.toLowerCase();
-        if (titleLower.contains('kiny') ||
-            titleLower.contains('kinyarwanda')) {
+        if (titleLower.contains('kiny') || titleLower.contains('kinyarwanda')) {
           type = 'kinyarwanda';
         } else if (titleLower.contains('french') ||
             titleLower.contains('français')) {
@@ -398,10 +415,12 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       _filterExamsClientSide();
       return;
     }
-    
+
     // If forceReload is true, we'll merge with cached exams (preserves cache, adds/updates from API)
     if (forceReload) {
-      debugPrint('🔄 Force reload requested - will merge API exams with cached exams');
+      debugPrint(
+        '🔄 Force reload requested - will merge API exams with cached exams',
+      );
     }
 
     try {
@@ -419,7 +438,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         // Online: Refresh access period first to ensure we have latest access status
         final authNotifier = ref.read(authProvider.notifier);
         await authNotifier.refreshAccessPeriod();
-        
+
         // Get updated access state after refresh
         final updatedAuthState = ref.read(authProvider);
         final hasAccess = updatedAuthState.accessPeriod?.hasAccess ?? false;
@@ -430,7 +449,9 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         try {
           final response = await _userManagementService.getFreeExams();
           debugPrint('🔄 Free exams response: $response');
-          debugPrint('🔄 Is free user: ${response.data.isFreeUser}, hasAccess: $hasAccess');
+          debugPrint(
+            '🔄 Is free user: ${response.data.isFreeUser}, hasAccess: $hasAccess',
+          );
 
           if (response.success) {
             debugPrint(
@@ -451,18 +472,20 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
             // Merge with existing cached exams instead of replacing
             // This preserves cached exams and adds/updates with new ones from API
             if (forceReload && _allExams.isNotEmpty) {
-              debugPrint('🔄 Merging ${examsWithFreeMarked.length} API exams with ${_allExams.length} cached exams');
+              debugPrint(
+                '🔄 Merging ${examsWithFreeMarked.length} API exams with ${_allExams.length} cached exams',
+              );
               // Create a map of existing exams by ID for quick lookup
               final existingExamsMap = <String, Exam>{};
               for (final exam in _allExams) {
                 existingExamsMap[exam.id] = exam;
               }
-              
+
               // Add/update exams from API
               for (final exam in examsWithFreeMarked) {
                 existingExamsMap[exam.id] = exam; // Update or add
               }
-              
+
               // Convert back to list
               _allExams = existingExamsMap.values.toList();
               debugPrint('🔄 After merge: ${_allExams.length} total exams');
@@ -511,21 +534,20 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               if (stillOnline) {
                 // Initialize image cache service
                 await ImageCacheService.instance.initialize();
-                
+
                 // Cache exam images in background
                 for (final exam in examsWithFreeMarked) {
-                  if (exam.examImgUrl != null &&
-                      exam.examImgUrl!.isNotEmpty) {
+                  if (exam.examImgUrl != null && exam.examImgUrl!.isNotEmpty) {
                     // Construct full image URL using baseUrlImage
                     final imageUrl = exam.examImgUrl!.startsWith('http')
                         ? exam.examImgUrl!
                         : '${AppConstants.baseUrlImage}${exam.examImgUrl}';
-                    ImageCacheService.instance
-                        .cacheImage(imageUrl)
-                        .catchError((e) {
-                          debugPrint('⚠️ Failed to cache exam image: $e');
-                          return null;
-                        });
+                    ImageCacheService.instance.cacheImage(imageUrl).catchError((
+                      e,
+                    ) {
+                      debugPrint('⚠️ Failed to cache exam image: $e');
+                      return null;
+                    });
                   }
                 }
 
@@ -546,6 +568,10 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
 
             // Preload all image paths for the filtered exams
             _preloadImagePaths();
+
+            // Pre-download questions for visible exams in background (non-blocking)
+            // This ensures questions are cached before user clicks "Start Exam"
+            _preloadExamQuestions(filteredExams);
           } else {
             debugPrint('❌ Failed to load free exams: ${response.message}');
             // Fallback to offline data
@@ -653,6 +679,9 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
 
         // Preload all image paths for the filtered exams
         _preloadImagePaths();
+
+        // Pre-download questions for visible exams in background (if online)
+        _preloadExamQuestions(filteredExams);
         return; // Exit early since we used cached exams
       }
 
@@ -764,6 +793,9 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
 
         // Preload all image paths for the filtered exams
         _preloadImagePaths();
+
+        // Pre-download questions for visible exams in background (if online)
+        _preloadExamQuestions(filteredExams);
       } else {
         debugPrint('📱 No offline exams available');
         setState(() {
@@ -951,6 +983,9 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
 
     // Preload image paths after filtering
     _preloadImagePaths();
+
+    // Pre-download questions for visible exams in background (if online)
+    _preloadExamQuestions(filteredExams);
   }
 
   /// Preload all image paths for currently filtered exams
@@ -1012,12 +1047,89 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     debugPrint('🖼️ Finished preloading ${imageUrls.length} image paths');
   }
 
+  /// Pre-download questions for visible exams in background
+  /// This ensures questions are cached before user clicks "Start Exam"
+  Future<void> _preloadExamQuestions(List<Exam> exams) async {
+    if (exams.isEmpty) return;
+
+    // Check internet connection first
+    final hasInternet = await _networkService.hasInternetConnection();
+    if (!hasInternet) {
+      debugPrint('📱 Offline: Skipping question pre-download');
+      return;
+    }
+
+    debugPrint(
+      '📥 Pre-downloading questions for ${exams.length} visible exams...',
+    );
+
+    // Pre-download questions for each exam in background (non-blocking)
+    for (final exam in exams) {
+      // Skip if already preloading or if exam ID is invalid
+      if (_preloadingExams.contains(exam.id) || exam.id.isEmpty) {
+        continue;
+      }
+
+      // Check if questions are already cached offline
+      final examData = await _offlineService.getExam(exam.id);
+      if (examData != null && examData['questions'] != null) {
+        final cachedQuestions = examData['questions'] as List;
+        if (cachedQuestions.isNotEmpty) {
+          debugPrint('✅ Questions already cached for exam ${exam.id}');
+          continue;
+        }
+      }
+
+      // Mark as preloading
+      _preloadingExams.add(exam.id);
+
+      // Pre-download questions in background (non-blocking)
+      _preloadQuestionsForExam(exam).catchError((e) {
+        debugPrint(
+          '⚠️ Failed to pre-download questions for exam ${exam.id}: $e',
+        );
+        _preloadingExams.remove(exam.id);
+      });
+    }
+  }
+
+  /// Pre-download questions for a specific exam
+  Future<void> _preloadQuestionsForExam(Exam exam) async {
+    try {
+      debugPrint(
+        '📥 Pre-downloading questions for exam: ${exam.id} (${exam.title})',
+      );
+
+      // Fetch questions from API
+      final questions = await _examService.getQuestionsByExamId(
+        exam.id,
+        isFreeExam: exam.isFirstTwo ?? false,
+        examType: exam.examType,
+      );
+
+      if (questions.isNotEmpty) {
+        // Save to offline storage
+        await _offlineService.saveExam(exam, questions);
+        debugPrint(
+          '✅ Pre-downloaded ${questions.length} questions for exam ${exam.id}',
+        );
+      } else {
+        debugPrint('⚠️ No questions found for exam ${exam.id}');
+      }
+    } catch (e) {
+      debugPrint('❌ Error pre-downloading questions for exam ${exam.id}: $e');
+      rethrow;
+    } finally {
+      _preloadingExams.remove(exam.id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Watch auth provider for access period changes
     final authState = ref.watch(authProvider);
     final currentHasAccess = authState.accessPeriod?.hasAccess ?? false;
-    
+
     // Detect access period changes and refresh exams automatically
     // Only check if the value has changed to avoid unnecessary refreshes
     if (_previousHasAccess != currentHasAccess) {
@@ -1027,7 +1139,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         }
       });
     }
-    
+
     return Scaffold(
       backgroundColor: AppColors.grey50,
       body: RefreshIndicator(
@@ -1040,21 +1152,25 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       ),
     );
   }
-  
+
   /// Handle access period changes - refresh exams when access is granted
   void _handleAccessPeriodChange(bool currentHasAccess) async {
-    debugPrint('🔄 Access period change detected: $_previousHasAccess -> $currentHasAccess');
-    
+    debugPrint(
+      '🔄 Access period change detected: $_previousHasAccess -> $currentHasAccess',
+    );
+
     // Only refresh if access status changed from no access to having access
-    if (_previousHasAccess != null && 
-        _previousHasAccess == false && 
+    if (_previousHasAccess != null &&
+        _previousHasAccess == false &&
         currentHasAccess == true) {
-      debugPrint('🔄 Access granted! Loading cached exams first, then fetching missing from API...');
-      
+      debugPrint(
+        '🔄 Access granted! Loading cached exams first, then fetching missing from API...',
+      );
+
       if (mounted) {
         // Step 1: Load cached exams first (works offline, instant display)
         await _loadCachedExamsForAccessChange();
-        
+
         // Step 2: If online, fetch from API to get any new/missing exams
         final hasInternet = await _networkService.hasInternetConnection();
         if (hasInternet) {
@@ -1066,12 +1182,12 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         }
       }
     }
-    
+
     // Also refresh periodically (every 30 seconds) when user has access
     // This ensures access is detected even if the change wasn't detected immediately
     if (currentHasAccess) {
       final now = DateTime.now();
-      if (_lastAccessRefresh == null || 
+      if (_lastAccessRefresh == null ||
           now.difference(_lastAccessRefresh!).inSeconds >= 30) {
         debugPrint('🔄 Periodic access refresh (every 30s)...');
         _lastAccessRefresh = now;
@@ -1089,7 +1205,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         });
       }
     }
-    
+
     // Update previous access state
     _previousHasAccess = currentHasAccess;
   }

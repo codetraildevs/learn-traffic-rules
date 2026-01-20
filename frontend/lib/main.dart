@@ -96,20 +96,28 @@ void main() async {
 
   // Initialize offline exam sync (only if internet is available)
   // Don't block app startup - run in background
-  Future.delayed(const Duration(seconds: 2), () async {
+  // Start immediately but with a small delay to let app UI render first
+  Future.delayed(const Duration(milliseconds: 500), () async {
     try {
       final networkService = NetworkService();
       final hasInternet = await networkService.hasInternetConnection();
 
       if (hasInternet) {
-        // Download exams for offline use in background
-        // Use forceDownload=false to only download new/updated exams
-        // This is more efficient and avoids unnecessary downloads
+        debugPrint('📥 Starting background download of all exams and questions...');
+        // Download ALL exams and their questions for offline use in background
+        // This ensures everything is cached before user navigates to exam screen
+        // Use forceDownload=false to only download new/updated exams (more efficient)
+        // But ensure questions are downloaded for all exams
         final syncService = ExamSyncService();
-        syncService.downloadAllExams(forceDownload: false).catchError((e) {
+        
+        // Start download in background (non-blocking)
+        syncService.downloadAllExams(forceDownload: false).then((_) {
+          debugPrint('✅ All exams and questions downloaded successfully');
+        }).catchError((e) {
           debugPrint('⚠️ Failed to download exams on startup: $e');
         });
-        debugPrint('✅ Offline exam sync started in background');
+        
+        debugPrint('✅ Background exam sync started (non-blocking)');
       } else {
         debugPrint('📱 No internet on startup, will use offline data');
       }

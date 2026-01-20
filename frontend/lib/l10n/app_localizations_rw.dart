@@ -1498,17 +1498,17 @@ class AppLocalizationsRw extends AppLocalizations {
   String get examSummary => 'Incamake y\'Icyiciro';
 
   @override
-  String get freeExam => 'Icyiciro cyo ku Buntu';
+  String get freeExam => 'Ibizamini by\'ubuntu';
 
   @override
-  String get backToExams => 'Subira ku Biciro';
+  String get backToExams => 'Subira ku Bizamini';
 
   @override
-  String get secureView => 'REBA YUZUE';
+  String get secureView => 'KUREBA BIRAHISHWE';
 
   @override
   String get screenshotsAreDisabledToProtectAnswerIntegrity =>
-      'Gufata amashushanyo byahagaritswe kugira ngo kubungabunge ubwoba bw\'ibisubizo';
+      'Gufata amashushanyo byahagaritswe';
 
   @override
   String detailedAnswersFor(String examTitle) =>
