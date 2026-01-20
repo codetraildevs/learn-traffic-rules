@@ -351,6 +351,9 @@ console.log('🔄 Loading API routes...');
 app.use('/api/auth', require('./src/routes/auth'));
 console.log('✅ Auth routes loaded');
 
+app.use('/api/users', require('./src/routes/users'));
+console.log('✅ Users routes loaded');
+
 const userManagementRoutes = require('./src/routes/userManagement');
 console.log('✅ User management routes loaded:', userManagementRoutes.stack ? userManagementRoutes.stack.length : 'No stack');
 app.use('/api/user-management', userManagementRoutes);
