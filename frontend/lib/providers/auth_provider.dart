@@ -9,6 +9,8 @@ import '../services/api_service.dart';
 import '../services/error_handler_service.dart';
 import '../services/device_service.dart';
 import '../services/network_service.dart';
+import '../services/user_management_service.dart';
+import '../services/locale_service.dart';
 
 enum AuthStatus { initial, authenticated, unauthenticated, loading }
 
@@ -50,6 +52,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   final ApiService _apiService = ApiService();
+  final UserManagementService _userManagementService = UserManagementService();
 
   Future<void> _initialize() async {
     await _apiService.initialize();
@@ -290,6 +293,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Sync saved language preference to backend after authentication
+  Future<void> _syncPreferredLanguageToBackend() async {
+    try {
+      final savedLocaleCode = await LocaleService.getSavedLocale();
+      if (savedLocaleCode != null) {
+        debugPrint('🌍 Syncing preferred language to backend: $savedLocaleCode');
+        // Update in background (non-blocking)
+        _userManagementService.updatePreferredLanguage(savedLocaleCode).catchError((e) {
+          debugPrint('⚠️ Failed to sync preferred language to backend: $e');
+          // Don't throw - language sync failure shouldn't block authentication
+          return <String, dynamic>{};
+        });
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error syncing preferred language: $e');
+      // Don't throw - this is a non-critical operation
+    }
+  }
+
   Future<bool> login(LoginRequest request) async {
     try {
       // Don't change auth state during login to prevent auto-refresh
@@ -334,6 +356,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
           accessPeriod: response.data!.accessPeriod,
           isLoading: false,
         );
+
+        // Sync preferred language to backend after successful login
+        _syncPreferredLanguageToBackend();
+
         return true;
       } else {
         debugPrint('❌ LOGIN FAILED: ${response.message}');
@@ -408,6 +434,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
           accessPeriod: response.data!.accessPeriod,
           isLoading: false,
         );
+
+        // Sync preferred language to backend after successful registration
+        _syncPreferredLanguageToBackend();
+
         return true;
       } else {
         state = state.copyWith(
