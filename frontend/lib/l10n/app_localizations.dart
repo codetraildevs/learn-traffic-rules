@@ -68,6 +68,7 @@ abstract class AppLocalizations {
   String get kinyarwanda;
   String get french;
   String get ikinyarwanda;
+  String get languageNotSet;
 
   // Theme selection
   String get appTheme;

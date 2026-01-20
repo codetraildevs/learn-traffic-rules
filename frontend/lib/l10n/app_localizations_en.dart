@@ -159,6 +159,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get english => 'English';
 
   @override
+  String get languageNotSet => 'Not Set';
+
+  @override
   String get kinyarwanda => 'Kinyarwanda';
 
   @override

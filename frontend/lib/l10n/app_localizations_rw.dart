@@ -166,6 +166,9 @@ class AppLocalizationsRw extends AppLocalizations {
   String get french => 'Igifaransa (French)';
 
   @override
+  String get languageNotSet => 'Nta cyemezo';
+
+  @override
   String get appTheme => 'Ishusho';
 
   @override

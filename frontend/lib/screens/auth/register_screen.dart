@@ -407,38 +407,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             'timestamp': DateTime.now().toIso8601String(),
           });
 
-          final l10n = AppLocalizations.of(context);
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.registrationSuccessful,
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      l10n.welcomeToApp,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                    ),
-                  ],
-                ),
-                backgroundColor: AppColors.success,
-                duration: const Duration(seconds: 2),
-                behavior: SnackBarBehavior.floating,
-                margin: EdgeInsets.all(16.w),
-              ),
-            );
-          }
-
           // Wait for auth state to update, then navigate to home screen
           // Registration automatically logs the user in
           // Poll auth state until it's authenticated (with timeout)
@@ -452,6 +420,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                 '✅ Auth state confirmed as authenticated, navigating...',
               );
               if (mounted) {
+                // Navigate immediately without showing snackbar here
+                // Success message can be shown on home screen if needed
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -631,36 +601,39 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
         setState(() => _isLoading = false);
 
         final l10n = AppLocalizations.of(context);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.networkError,
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+        // Use addPostFrameCallback to ensure context is valid before showing snackbar
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.networkError,
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    l10n.networkError,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: Colors.white.withValues(alpha: 0.9),
+                    SizedBox(height: 4.h),
+                    Text(
+                      l10n.networkError,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                backgroundColor: AppColors.error,
+                duration: const Duration(seconds: 4),
+                behavior: SnackBarBehavior.floating,
+                margin: EdgeInsets.all(16.w),
               ),
-              backgroundColor: AppColors.error,
-              duration: const Duration(seconds: 4),
-              behavior: SnackBarBehavior.floating,
-              margin: EdgeInsets.all(16.w),
-            ),
-          );
-        }
+            );
+          }
+        });
       }
     }
   }

@@ -510,8 +510,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             errorDescription = error?.toString() ?? l10n.checkCredentials;
           }
 
-          // Use ScaffoldMessenger instead of FlashMessage to avoid AnimationController dispose issues
-          if (mounted) {
+          // Use addPostFrameCallback to safely show snackbar even if widget tree is updating
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Column(
@@ -542,7 +543,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 margin: EdgeInsets.all(16.w),
               ),
             );
-          }
+          });
         }
       }
     } catch (e, stackTrace) {
@@ -565,42 +566,45 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             errorString.contains('no internet') ||
             errorString.contains('internet');
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isNetworkError
-                        ? l10n.noInternetConnection
-                        : l10n.loginFailed,
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+        // Use addPostFrameCallback to ensure context is valid before showing snackbar
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isNetworkError
+                          ? l10n.noInternetConnection
+                          : l10n.loginFailed,
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    isNetworkError
-                        ? l10n.networkError
-                        : (e.toString().isNotEmpty
-                              ? e.toString()
-                              : l10n.checkCredentials),
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: Colors.white.withValues(alpha: 0.9),
+                    SizedBox(height: 4.h),
+                    Text(
+                      isNetworkError
+                          ? l10n.networkError
+                          : (e.toString().isNotEmpty
+                                ? e.toString()
+                                : l10n.checkCredentials),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                backgroundColor: AppColors.error,
+                duration: const Duration(seconds: 5),
+                behavior: SnackBarBehavior.floating,
+                margin: EdgeInsets.all(16.w),
               ),
-              backgroundColor: AppColors.error,
-              duration: const Duration(seconds: 5),
-              behavior: SnackBarBehavior.floating,
-              margin: EdgeInsets.all(16.w),
-            ),
-          );
-        }
+            );
+          }
+        });
       }
     }
   }

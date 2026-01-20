@@ -128,6 +128,20 @@ class ApiService {
                   },
                 );
             break;
+          case 'PATCH':
+            response = await http
+                .patch(
+                  uri,
+                  headers: requestHeaders,
+                  body: body != null ? jsonEncode(body) : null,
+                )
+                .timeout(
+                  const Duration(seconds: 30),
+                  onTimeout: () {
+                    throw Exception('Request timeout');
+                  },
+                );
+            break;
           case 'DELETE':
             response = await http
                 .delete(uri, headers: requestHeaders)

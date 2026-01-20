@@ -1376,11 +1376,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                 ),
                               ),
                             ),
-                            // Language Badge
-                            if (user.preferredLanguage != null) ...[
-                              SizedBox(height: 6.h),
-                              _buildLanguageBadge(user.preferredLanguage!),
-                            ],
+                            // Language Badge - Always show
+                            SizedBox(height: 6.h),
+                            _buildLanguageBadge(user.preferredLanguage),
 
                             // Role Badge
                             // Container(
@@ -1572,6 +1570,16 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                       : l10n.called,
                                   AppColors.success,
                                 ),
+                              // Preferred Language - Always show
+                              _buildStatChip(
+                                Icons.language,
+                                user.preferredLanguage != null
+                                    ? _getLanguageName(user.preferredLanguage!)
+                                    : l10n.languageNotSet,
+                                user.preferredLanguage != null
+                                    ? _getLanguageColor(user.preferredLanguage!)
+                                    : AppColors.grey500,
+                              ),
                             ],
                           );
                         },
@@ -1646,27 +1654,13 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     );
   }
 
-  Widget _buildLanguageBadge(String languageCode) {
-    final languageNames = {
-      'en': 'English',
-      'fr': 'Français',
-      'rw': 'Kinyarwanda',
-    };
-    final languageColors = {
-      'en': AppColors.info,
-      'fr': AppColors.secondary,
-      'rw': AppColors.primary,
-    };
-    final languageIcons = {
-      'en': Icons.language,
-      'fr': Icons.language,
-      'rw': Icons.language,
-    };
-
-    final languageName =
-        languageNames[languageCode] ?? languageCode.toUpperCase();
-    final languageColor = languageColors[languageCode] ?? AppColors.grey600;
-    final languageIcon = languageIcons[languageCode] ?? Icons.language;
+  Widget _buildLanguageBadge(String? languageCode) {
+    final languageName = languageCode != null
+        ? _getLanguageName(languageCode)
+        : AppLocalizations.of(context).languageNotSet;
+    final languageColor = languageCode != null
+        ? _getLanguageColor(languageCode)
+        : AppColors.grey500;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
@@ -1681,19 +1675,41 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(languageIcon, size: 14.sp, color: languageColor),
+          Icon(Icons.language, size: 14.sp, color: languageColor),
           SizedBox(width: 6.w),
-          Text(
-            languageName,
-            style: AppTextStyles.caption.copyWith(
-              color: languageColor,
-              fontSize: 11.sp,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              languageName,
+              style: AppTextStyles.caption.copyWith(
+                color: languageColor,
+                fontSize: 11.sp,
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ],
       ),
     );
+  }
+
+  String _getLanguageName(String languageCode) {
+    final languageNames = {
+      'en': 'English',
+      'fr': 'Français',
+      'rw': 'Kinyarwanda',
+    };
+    return languageNames[languageCode] ?? languageCode.toUpperCase();
+  }
+
+  Color _getLanguageColor(String languageCode) {
+    final languageColors = {
+      'en': AppColors.info,
+      'fr': AppColors.secondary,
+      'rw': AppColors.primary,
+    };
+    return languageColors[languageCode] ?? AppColors.grey600;
   }
 
   String _formatCallTime(DateTime callTime) {

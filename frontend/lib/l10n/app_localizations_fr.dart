@@ -165,6 +165,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get french => 'Français';
 
   @override
+  String get languageNotSet => 'Non défini';
+
+  @override
   String get appTheme => 'Thème';
 
   @override
