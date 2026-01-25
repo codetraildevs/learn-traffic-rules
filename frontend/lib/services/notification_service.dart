@@ -72,9 +72,9 @@ class NotificationService {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
           'learn_traffic_rules_channel',
-          'Rwanda Traffic Rule 🇷🇼 Notifications',
+          'Rwanda Traffic Driving School Notifications',
           channelDescription:
-              'Notifications for the Rwanda Traffic Rule 🇷🇼 app',
+              'Notifications for the Rwanda Traffic Driving School app',
           importance: Importance.high,
           priority: Priority.high,
           showWhen: true,

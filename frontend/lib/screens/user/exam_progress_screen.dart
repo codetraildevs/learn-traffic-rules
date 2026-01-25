@@ -61,9 +61,9 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
       backgroundColor: AppColors.grey50,
       appBar: AppBar(
         title: Text(
-          '${l10n.examResult}: ${widget.exam.title}',
-          style: AppTextStyles.heading2.copyWith(
-            fontSize: 20.sp,
+          '${l10n.practiceExamTitle}: ${widget.exam.title.replaceAll(RegExp(r'[^0-9]'), '')}',
+          style: AppTextStyles.heading3.copyWith(
+            fontSize: 16.sp,
             fontWeight: FontWeight.bold,
             color: AppColors.white,
           ),

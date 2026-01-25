@@ -134,21 +134,18 @@ class _LanguageSelectionScreenState
               _buildLanguageOption(
                 languageCode: 'en',
                 languageName: l10n.english,
-                flag: '🇬🇧',
                 isSelected: _selectedLanguage == 'en',
               ),
               SizedBox(height: 16.h),
               _buildLanguageOption(
                 languageCode: 'rw',
                 languageName: l10n.ikinyarwanda,
-                flag: '🇷🇼',
                 isSelected: _selectedLanguage == 'rw',
               ),
               SizedBox(height: 16.h),
               _buildLanguageOption(
                 languageCode: 'fr',
                 languageName: l10n.french,
-                flag: '🇫🇷',
                 isSelected: _selectedLanguage == 'fr',
               ),
 
@@ -211,7 +208,6 @@ class _LanguageSelectionScreenState
   Widget _buildLanguageOption({
     required String languageCode,
     required String languageName,
-    required String flag,
     required bool isSelected,
   }) {
     return InkWell(
@@ -231,8 +227,12 @@ class _LanguageSelectionScreenState
         ),
         child: Row(
           children: [
-            // Flag
-            Text(flag, style: TextStyle(fontSize: 30.sp)),
+            // Language Icon
+            Icon(
+              Icons.language,
+              size: 24.sp,
+              color: isSelected ? AppColors.primary : AppColors.grey600,
+            ),
             SizedBox(width: 16.w),
             // Language Name
             Expanded(

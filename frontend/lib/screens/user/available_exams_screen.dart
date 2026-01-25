@@ -1288,61 +1288,6 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 ],
               ],
             ),
-            // background: Container(
-            //   decoration: const BoxDecoration(
-            //     gradient: LinearGradient(
-            //       begin: Alignment.topLeft,
-            //       end: Alignment.bottomRight,
-            //       colors: [AppColors.primary, AppColors.secondary],
-            //     ),
-            //   ),
-            //   // child:
-            //   //  Stack(
-            //   //   children: [
-            //   //     // Background Pattern
-            //   //     Positioned(
-            //   //       top: -50.h,
-            //   //       right: -50.w,
-            //   //       child: Container(
-            //   //         width: 200.w,
-            //   //         height: 200.h,
-            //   //         decoration: BoxDecoration(
-            //   //           shape: BoxShape.circle,
-            //   //           color: AppColors.white.withValues(alpha: 0.1),
-            //   //         ),
-            //   //       ),
-            //   //     ),
-            //   //     Positioned(
-            //   //       bottom: -30.h,
-            //   //       left: -30.w,
-            //   //       child: Container(
-            //   //         width: 150.w,
-            //   //         height: 150.h,
-            //   //         decoration: BoxDecoration(
-            //   //           shape: BoxShape.circle,
-            //   //           color: AppColors.white.withValues(alpha: 0.05),
-            //   //         ),
-            //   //       ),
-            //   //     ),
-            //   //     // Content
-            //   //     Center(
-            //   //       child: Column(
-            //   //         mainAxisAlignment: MainAxisAlignment.center,
-            //   //         children: [
-            //   //           Icon(Icons.quiz, size: 48.sp, color: AppColors.white),
-            //   //           SizedBox(height: 8.h),
-            //   //           Text(
-            //   //             'Test Your Traffic Rules Knowledge',
-            //   //             style: AppTextStyles.bodyLarge.copyWith(
-            //   //               color: AppColors.white.withValues(alpha: 0.9),
-            //   //             ),
-            //   //           ),
-            //   //         ],
-            //   //       ),
-            //   //     ),
-            //   //   ],
-            //   // ),
-            // ),
           ),
         ),
 
@@ -1382,12 +1327,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
 
     // Map locale codes to exam types and display names
     final languageOptions = [
-      {
-        'code': 'rw',
-        'examType': 'kinyarwanda',
-        'name': l10n.ikinyarwanda,
-        'flag': '🇷🇼',
-      },
+      {'code': 'rw', 'examType': 'kinyarwanda', 'name': l10n.ikinyarwanda},
       {
         'code': 'en',
         'examType': 'english',
@@ -1420,17 +1360,22 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
             isExpanded: true,
             underline: const SizedBox.shrink(),
             items: languageOptions.map((option) {
+              final flag = option['flag'];
               return DropdownMenuItem<String>(
-                value: option['examType'] as String,
+                value: option['examType']!,
                 child: Row(
                   children: [
-                    Text(
-                      option['flag'] as String,
-                      style: TextStyle(fontSize: 20.sp),
-                    ),
+                    if (flag != null && flag.isNotEmpty)
+                      Text(flag, style: TextStyle(fontSize: 20.sp))
+                    else
+                      Icon(
+                        Icons.language,
+                        size: 20.sp,
+                        color: AppColors.primary,
+                      ),
                     SizedBox(width: 8.w),
                     Text(
-                      option['name'] as String,
+                      option['name']!,
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.grey800,
                         fontWeight: FontWeight.w500,
@@ -1450,7 +1395,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
                 (opt) => opt['examType'] == newExamType,
                 orElse: () => languageOptions[0],
               );
-              final localeCode = languageOption['code'] as String;
+              final localeCode = languageOption['code']!;
 
               // Update locale provider
               final localeNotifier = ref.read(localeProvider.notifier);
@@ -1594,7 +1539,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     // Extract exam number from title (e.g., "exam 21" -> "21")
     final examNumber = exam.title.replaceAll(RegExp(r'[^0-9]'), '');
     final displayTitle = examNumber.isNotEmpty
-        ? 'exam $examNumber'
+        ? '${l10n.practiceExamTitle} $examNumber'
         : exam.title;
 
     // Get exam image URL - construct full path if it's just a filename
@@ -1634,64 +1579,19 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               _buildImagePlaceholder(),
 
             // Exam Title
-            Text(
-              displayTitle,
-              style: AppTextStyles.heading3.copyWith(
-                fontSize: 18.sp,
-                color: AppColors.grey800,
-                fontWeight: FontWeight.bold,
+            Expanded(
+              child: Text(
+                displayTitle,
+                style: AppTextStyles.heading3.copyWith(
+                  fontSize: 16.sp,
+                  color: AppColors.grey800,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
             // SizedBox(height: 6.h),
-
-            // Questions Count
-            // Row(
-            //   children: [
-            //     Icon(
-            //       Icons.quiz_outlined,
-            //       size: 13.sp,
-            //       color: AppColors.grey600,
-            //     ),
-            //     SizedBox(width: 4.w),
-            //     Expanded(
-            //       child: Text(
-            //         l10n.questionsCount(exam.questionCount ?? 0),
-            //         style: AppTextStyles.bodyMedium.copyWith(
-            //           color: AppColors.grey700,
-            //           fontSize: 11.sp,
-            //         ),
-            //         maxLines: 1,
-            //         overflow: TextOverflow.ellipsis,
-            //       ),
-            //     ),
-            //   ],
-            // ),
-
-            // Duration
-            // Row(
-            //   children: [
-            //     Icon(
-            //       Icons.timer_outlined,
-            //       size: 13.sp,
-            //       color: AppColors.grey600,
-            //     ),
-            //     SizedBox(width: 4.w),
-            //     Expanded(
-            //       child: Text(
-            //         l10n.durationMinutes(exam.duration),
-            //         style: AppTextStyles.bodyMedium.copyWith(
-            //           color: AppColors.grey700,
-            //           fontSize: 11.sp,
-            //         ),
-            //         maxLines: 1,
-            //         overflow: TextOverflow.ellipsis,
-            //       ),
-            //     ),
-            //   ],
-            // ),
-            //const Spacer(),
 
             // Start Exam Button
             SizedBox(
@@ -1912,23 +1812,63 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     final cachedPath = _imagePathCache[imageUrl];
 
     if (cachedPath != null && cachedPath.isNotEmpty) {
-      final isLocalFile = !cachedPath.startsWith('http');
+      // Check if it's a network URL
+      final isNetworkUrl =
+          cachedPath.startsWith('http://') ||
+          cachedPath.startsWith('https://') ||
+          cachedPath.startsWith('file://');
 
-      if (isLocalFile) {
-        // Use cached local file
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(8.r),
-          child: Image.file(
-            File(cachedPath),
-            width: double.infinity,
-            height: 85.h,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return _buildImagePlaceholder();
-            },
-          ),
-        );
-      } else {
+      // Handle file:// URI by extracting the actual path
+      String? localFilePath;
+      if (cachedPath.startsWith('file://')) {
+        try {
+          final uri = Uri.parse(cachedPath);
+          localFilePath = uri.path;
+        } catch (e) {
+          debugPrint('❌ Error parsing file:// URI: $cachedPath - $e');
+          localFilePath = null;
+        }
+      } else if (!isNetworkUrl) {
+        localFilePath = cachedPath;
+      }
+
+      if (localFilePath != null) {
+        // Use cached local file - validate path first
+        try {
+          final file = File(localFilePath);
+          // Check if file exists before trying to load
+          if (file.existsSync()) {
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(8.r),
+              child: Image.file(
+                file,
+                width: double.infinity,
+                height: 85.h,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  debugPrint(
+                    '❌ Error loading cached image file: $localFilePath - $error',
+                  );
+                  // Clear invalid cache entry
+                  _imagePathCache.remove(imageUrl);
+                  return _buildImagePlaceholder();
+                },
+              ),
+            );
+          } else {
+            // File doesn't exist, try network or show placeholder
+            debugPrint('⚠️ Cached file does not exist: $localFilePath');
+            // Clear invalid cache entry
+            _imagePathCache.remove(imageUrl);
+            // Fall through to network loading
+          }
+        } catch (e) {
+          debugPrint('❌ Error accessing cached file: $localFilePath - $e');
+          // Clear invalid cache entry
+          _imagePathCache.remove(imageUrl);
+          // Fall through to network loading
+        }
+      } else if (isNetworkUrl && !cachedPath.startsWith('file://')) {
         // Network URL from cache
         if (_isOffline) {
           return _buildImagePlaceholder();
@@ -1941,31 +1881,37 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
             height: 85.h,
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
+              debugPrint(
+                '❌ Error loading cached network image: $cachedPath - $error',
+              );
+              // Clear invalid cache entry
+              _imagePathCache.remove(imageUrl);
               return _buildImagePlaceholder();
             },
           ),
         );
       }
-    } else {
-      // Path not yet cached, try to load directly
-      if (_isOffline) {
-        // Offline and not cached, show placeholder
-        return _buildImagePlaceholder();
-      }
-      // Online, try network image
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(8.r),
-        child: Image.network(
-          imageUrl,
-          width: double.infinity,
-          height: 85.h,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return _buildImagePlaceholder();
-          },
-        ),
-      );
     }
+
+    // Path not yet cached or invalid, try to load directly
+    if (_isOffline) {
+      // Offline and not cached, show placeholder
+      return _buildImagePlaceholder();
+    }
+    // Online, try network image
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8.r),
+      child: Image.network(
+        imageUrl,
+        width: double.infinity,
+        height: 85.h,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          debugPrint('❌ Error loading network image: $imageUrl - $error');
+          return _buildImagePlaceholder();
+        },
+      ),
+    );
   }
 
   Widget _buildImagePlaceholder() {

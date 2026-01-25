@@ -110,10 +110,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void _precacheServiceImages() {
     // Pre-cache all images used in service cards
     final imageUrls = [
-      '${AppConstants.imageBaseUrl}online_school.png',
-      '${AppConstants.imageBaseUrl}courses.png',
-      '${AppConstants.imageBaseUrl}traffic_signs.png',
-      '${AppConstants.imageBaseUrl}roadsigns.png',
+      '${AppConstants.imageBaseUrl}ishuri_online.png',
+      '${AppConstants.imageBaseUrl}ishuri_online.png',
+      '${AppConstants.imageBaseUrl}official_roads_signs.png',
+      '${AppConstants.imageBaseUrl}official_gazette.png',
     ];
 
     for (final imageUrl in imageUrls) {
@@ -1418,7 +1418,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Available Services',
+              l10n.availableServices,
               style: AppTextStyles.heading3.copyWith(fontSize: 20.sp),
             ),
 
@@ -1451,7 +1451,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     icon: Icons.school,
                     iconColor: AppColors.success,
                     imageUrl:
-                        '${AppConstants.imageBaseUrl}signs.png', // Replace with actual course icon image
+                        '${AppConstants.imageBaseUrl}ishuri_online.png', // Replace with actual course icon image
                     title: l10n.courses,
                     subtitle: courseState.isLoading
                         ? l10n.loading
@@ -1479,8 +1479,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   child: _buildServiceCard(
                     icon: Icons.chat,
                     iconColor: Colors.green,
-                    title: 'Join WhatsApp Group',
-                    subtitle: 'Connect with learners',
+                    title: l10n.joinWhatsAppGroup,
+                    subtitle: l10n.connectWithLearners,
                     onTap: () => _joinWhatsAppGroup(),
                   ),
                 ),
@@ -1491,7 +1491,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     iconColor: AppColors.warning,
 
                     title: l10n.shareApp,
-                    subtitle: 'Share with friends',
+                    subtitle: l10n.shareWithFriends,
                     onTap: () => _shareApp(),
                   ),
                 ),
@@ -1507,9 +1507,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     icon: Icons.description,
                     iconColor: AppColors.primary,
                     imageUrl:
-                        '${AppConstants.imageBaseUrl}roadsigns1.png', // Replace with actual gazette icon image
-                    title: 'Official Gazette',
-                    subtitle: 'Official gazette of Rwanda',
+                        '${AppConstants.imageBaseUrl}official_gazette.png', // Replace with actual gazette icon image
+                    title: l10n.officialGazette,
+                    subtitle: l10n.officialGazetteDescription,
                     onTap: () => _openGazette(context),
                   ),
                 ),
@@ -1519,9 +1519,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     icon: Icons.traffic,
                     iconColor: AppColors.success,
                     imageUrl:
-                        '${AppConstants.imageBaseUrl}roadsigns.png', // Replace with actual road signs icon image
+                        '${AppConstants.imageBaseUrl}official_roads_signs.png', // Replace with actual road signs icon image
                     title: l10n.roadSigns,
-                    subtitle: 'Road signs guide',
+                    subtitle: l10n.roadSignsDescription,
                     onTap: () => _openRoadSigns(context),
                   ),
                 ),
@@ -1587,7 +1587,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             ConnectionState.waiting) {
                           return Container(
                             color: AppColors.grey100,
-                            child: Center(
+                            child: const Center(
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 color: AppColors.primary,
@@ -1708,402 +1708,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       );
     }
   }
-
-  // Widget _buildCoursesSection() {
-  //   final courseState = ref.watch(courseProvider);
-
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //         children: [
-  //           Builder(
-  //             builder: (context) {
-  //               final l10n = AppLocalizations.of(context);
-  //               return Row(
-  //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                 children: [
-  //                   Text(
-  //                     l10n.courses,
-  //                     style: AppTextStyles.heading3.copyWith(
-  //                       fontSize: 20.sp,
-  //                       fontWeight: FontWeight.w600,
-  //                     ),
-  //                   ),
-  //                   InkWell(
-  //                     onTap: () {
-  //                       Navigator.push(
-  //                         context,
-  //                         MaterialPageRoute(
-  //                           builder: (context) =>
-  //                               const courses_list_screen.CourseListScreen(),
-  //                         ),
-  //                       );
-  //                     },
-  //                     child: Container(
-  //                       padding: EdgeInsets.symmetric(
-  //                         horizontal: 12.w,
-  //                         vertical: 6.h,
-  //                       ),
-  //                       decoration: BoxDecoration(
-  //                         color: AppColors.primary,
-  //                         borderRadius: BorderRadius.circular(8.r),
-  //                       ),
-  //                       child: Text(
-  //                         l10n.viewAll,
-  //                         style: AppTextStyles.bodyMedium.copyWith(
-  //                           color: AppColors.white,
-  //                           fontSize: 12.sp,
-  //                           fontWeight: FontWeight.w600,
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 ],
-  //               );
-  //             },
-  //           ),
-  //         ],
-  //       ),
-
-  //       SizedBox(height: 16.h),
-  //       if (courseState.isLoading)
-  //         const Center(child: CircularProgressIndicator())
-  //       else if (courseState.error != null && courseState.courses.isEmpty)
-  //         // Only show error if we have no cached courses
-  //         Container(
-  //           padding: EdgeInsets.all(16.w),
-  //           decoration: BoxDecoration(
-  //             color: AppColors.white,
-  //             borderRadius: BorderRadius.circular(16.r),
-  //           ),
-  //           child: Builder(
-  //             builder: (context) {
-  //               final l10n = AppLocalizations.of(context);
-  //               return Text(
-  //                 '${l10n.errorLoadingCourses} ${courseState.error}',
-  //                 style: AppTextStyles.bodyMedium.copyWith(
-  //                   color: AppColors.error,
-  //                 ),
-  //               );
-  //             },
-  //           ),
-  //         )
-  //       else if (courseState.courses.isEmpty)
-  //         Container(
-  //           padding: EdgeInsets.all(20.w),
-  //           decoration: BoxDecoration(
-  //             color: AppColors.white,
-  //             borderRadius: BorderRadius.circular(16.r),
-  //           ),
-  //           child: Column(
-  //             children: [
-  //               Icon(
-  //                 Icons.school_outlined,
-  //                 size: 48.sp,
-  //                 color: AppColors.grey400,
-  //               ),
-  //               SizedBox(height: 16.h),
-  //               Builder(
-  //                 builder: (context) {
-  //                   final l10n = AppLocalizations.of(context);
-  //                   return Text(
-  //                     l10n.noCoursesAvailable,
-  //                     style: AppTextStyles.bodyLarge.copyWith(
-  //                       color: AppColors.grey600,
-  //                     ),
-  //                   );
-  //                 },
-  //               ),
-  //             ],
-  //           ),
-  //         )
-  //       else
-  //         SizedBox(
-  //           height: 200.h,
-  //           child: ListView.builder(
-  //             scrollDirection: Axis.horizontal,
-  //             itemCount: courseState.courses.take(5).length,
-  //             itemBuilder: (context, index) {
-  //               final course = courseState.courses[index];
-  //               return Container(
-  //                 width: 200.w,
-  //                 margin: EdgeInsets.only(right: 12.w),
-  //                 child: _buildCourseCard(course),
-  //               );
-  //             },
-  //           ),
-  //         ),
-  //     ],
-  //   );
-  // }
-
-  // Widget _buildCourseCard(Course course) {
-  //   return Container(
-  //     decoration: BoxDecoration(
-  //       color: AppColors.white,
-  //       borderRadius: BorderRadius.circular(16.r),
-  //       border: Border.all(color: AppColors.grey200, width: 1),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: AppColors.black.withValues(alpha: 0.03),
-  //           blurRadius: 8,
-  //           offset: const Offset(0, 2),
-  //         ),
-  //       ],
-  //     ),
-  //     child: InkWell(
-  //       onTap: () {
-  //         Navigator.push(
-  //           context,
-  //           MaterialPageRoute(
-  //             builder: (context) =>
-  //                 course_detail_screen.CourseDetailScreen(course: course),
-  //           ),
-  //         );
-  //       },
-  //       borderRadius: BorderRadius.circular(16.r),
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: [
-  //           // Course Image or Placeholder
-  //           Container(
-  //             height: 100.h,
-  //             width: double.infinity,
-  //             decoration: BoxDecoration(
-  //               borderRadius: BorderRadius.only(
-  //                 topLeft: Radius.circular(16.r),
-  //                 topRight: Radius.circular(16.r),
-  //               ),
-  //               color: AppColors.grey100,
-  //             ),
-  //             child:
-  //                 course.courseImageUrl != null &&
-  //                     course.courseImageUrl!.isNotEmpty
-  //                 ? ClipRRect(
-  //                     borderRadius: BorderRadius.only(
-  //                       topLeft: Radius.circular(16.r),
-  //                       topRight: Radius.circular(16.r),
-  //                     ),
-  //                     child: Image.network(
-  //                       course.courseImageUrl!.startsWith('http')
-  //                           ? course.courseImageUrl!
-  //                           : '${AppConstants.baseUrlImage}${course.courseImageUrl}',
-  //                       fit: BoxFit.cover,
-  //                       errorBuilder: (context, error, stackTrace) {
-  //                         return Container(
-  //                           color: AppColors.grey100,
-  //                           child: Center(
-  //                             child: Icon(
-  //                               Icons.school_outlined,
-  //                               size: 32.sp,
-  //                               color: AppColors.grey400,
-  //                             ),
-  //                           ),
-  //                         );
-  //                       },
-  //                     ),
-  //                   )
-  //                 : Center(
-  //                     child: Icon(
-  //                       Icons.school_outlined,
-  //                       size: 32.sp,
-  //                       color: AppColors.grey400,
-  //                     ),
-  //                   ),
-  //           ),
-  //           Padding(
-  //             padding: EdgeInsets.all(12.w),
-  //             child: Column(
-  //               crossAxisAlignment: CrossAxisAlignment.start,
-  //               mainAxisSize: MainAxisSize.min,
-  //               children: [
-  //                 Text(
-  //                   course.title,
-  //                   style: AppTextStyles.bodyMedium.copyWith(
-  //                     fontWeight: FontWeight.bold,
-  //                     fontSize: 14.sp,
-  //                   ),
-  //                   maxLines: 2,
-  //                   overflow: TextOverflow.ellipsis,
-  //                 ),
-  //                 SizedBox(height: 6.h),
-  //                 Wrap(
-  //                   spacing: 6.w,
-  //                   runSpacing: 4.h,
-  //                   children: [
-  //                     Container(
-  //                       padding: EdgeInsets.symmetric(
-  //                         horizontal: 6.w,
-  //                         vertical: 2.h,
-  //                       ),
-  //                       decoration: BoxDecoration(
-  //                         color: course.isFree
-  //                             ? AppColors.success.withValues(alpha: 0.1)
-  //                             : AppColors.warning.withValues(alpha: 0.1),
-  //                         borderRadius: BorderRadius.circular(4.r),
-  //                       ),
-  //                       child: Text(
-  //                         course.courseType.displayName,
-  //                         style: AppTextStyles.caption.copyWith(
-  //                           color: course.isFree
-  //                               ? AppColors.success
-  //                               : AppColors.warning,
-  //                           fontSize: 10.sp,
-  //                         ),
-  //                       ),
-  //                     ),
-  //                     Builder(
-  //                       builder: (context) {
-  //                         final l10n = AppLocalizations.of(context);
-  //                         return Text(
-  //                           l10n.lessonsCount(course.contentCount ?? 0),
-  //                           style: AppTextStyles.caption.copyWith(
-  //                             color: AppColors.grey600,
-  //                             fontSize: 10.sp,
-  //                           ),
-  //                         );
-  //                       },
-  //                     ),
-  //                   ],
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  // Future<Map<String, int>?> _loadCachedExamCounts() async {
-  //   try {
-  //     final prefs = await SharedPreferences.getInstance();
-  //     final examCountsJson = prefs.getString(_cacheKeyExamCountsByType);
-  //     if (examCountsJson == null) return null;
-
-  //     final examCounts = jsonDecode(examCountsJson) as Map<String, dynamic>;
-  //     return examCounts.map((key, value) => MapEntry(key, value as int));
-  //   } catch (e) {
-  //     return null;
-  //   }
-  // }
-
-  // Widget _buildExamTypeCard(
-  //   String examType,
-  //   List<Exam> exams, {
-  //   int? cachedCount,
-  // }) {
-  //   // Get display name and icon for each exam type
-  //   String displayName;
-  //   IconData icon;
-  //   Color cardColor;
-
-  //   switch (examType.toLowerCase()) {
-  //     case 'english':
-  //       displayName = 'English';
-  //       icon = Icons.language;
-  //       cardColor = AppColors.primary;
-  //       break;
-  //     case 'kinyarwanda':
-  //       displayName = 'Kinyarwanda';
-  //       icon = Icons.translate;
-  //       cardColor = AppColors.secondary;
-  //       break;
-  //     case 'french':
-  //       displayName = 'French';
-  //       icon = Icons.public;
-  //       cardColor = Colors.blue;
-  //       break;
-  //     default:
-  //       displayName = examType[0].toUpperCase() + examType.substring(1);
-  //       icon = Icons.quiz;
-  //       cardColor = AppColors.primary;
-  //   }
-
-  //   return GestureDetector(
-  //     onTap: () {
-  //       // Navigate to available exams screen filtered by this exam type
-  //       Navigator.push(
-  //         context,
-  //         MaterialPageRoute(
-  //           builder: (context) =>
-  //               exams_screen.AvailableExamsScreen(initialExamType: examType),
-  //         ),
-  //       );
-  //     },
-  //     child: Container(
-  //       padding: EdgeInsets.all(8.w),
-  //       decoration: BoxDecoration(
-  //         color: AppColors.white,
-  //         borderRadius: BorderRadius.circular(16.r),
-  //         border: Border.all(color: cardColor.withValues(alpha: 0.2), width: 1),
-  //         boxShadow: [
-  //           BoxShadow(
-  //             color: cardColor.withValues(alpha: 0.1),
-  //             blurRadius: 10,
-  //             offset: const Offset(0, 4),
-  //           ),
-  //         ],
-  //       ),
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: [
-  //           Flexible(
-  //             fit: FlexFit.loose,
-  //             child: SingleChildScrollView(
-  //               child: Column(
-  //                 crossAxisAlignment: CrossAxisAlignment.start,
-  //                 mainAxisSize: MainAxisSize.min,
-  //                 children: [
-  //                   Container(
-  //                     padding: EdgeInsets.all(5.w),
-  //                     decoration: BoxDecoration(
-  //                       color: cardColor.withValues(alpha: 0.1),
-  //                       borderRadius: BorderRadius.circular(8.r),
-  //                     ),
-  //                     child: Icon(icon, size: 20.sp, color: cardColor),
-  //                   ),
-  //                   // SizedBox(height: 4.h),
-  //                   Text(
-  //                     displayName,
-  //                     style: AppTextStyles.heading3.copyWith(
-  //                       fontSize: 14.sp,
-  //                       color: AppColors.grey800,
-  //                     ),
-  //                     maxLines: 1,
-  //                     overflow: TextOverflow.ellipsis,
-  //                   ),
-  //                   SizedBox(height: 2.h),
-  //                   Builder(
-  //                     builder: (context) {
-  //                       final l10n = AppLocalizations.of(context);
-  //                       final count = cachedCount ?? exams.length;
-  //                       return Text(
-  //                         count == 1
-  //                             ? '1 ${l10n.exam}'
-  //                             : '$count ${l10n.exams}',
-  //                         style: AppTextStyles.caption.copyWith(
-  //                           color: AppColors.grey600,
-  //                           fontSize: 12.sp,
-  //                         ),
-  //                       );
-  //                     },
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //           ),
-  //           SizedBox(height: 4.h),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget _buildStatCard(
     String title,

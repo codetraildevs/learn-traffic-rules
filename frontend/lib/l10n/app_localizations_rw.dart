@@ -4,7 +4,7 @@ import 'app_localizations.dart';
 
 class AppLocalizationsRw extends AppLocalizations {
   @override
-  String get appName => 'Rwanda Traffic Rule 🇷🇼';
+  String get appName => 'Rwanda Traffic Driving School';
 
   @override
   String get welcome => 'Murakaza neza';
@@ -97,22 +97,22 @@ class AppLocalizationsRw extends AppLocalizations {
   String get passwordsDoNotMatch => 'Ijambobanga ntabwo bihuye';
 
   @override
-  String get exams => 'Ibizamini';
+  String get exams => 'imyitozo';
 
   @override
-  String get exam => 'Ikizamini';
+  String get exam => 'imwitozo';
 
   @override
-  String get startExam => 'Tangira Ikizamini';
+  String get startExam => 'Tangira Umwitozo';
 
   @override
-  String get finishExam => 'soza Ikizamini';
+  String get finishExam => 'soza Umwitozo';
 
   @override
-  String get submitExam => 'Soza Ikizamini';
+  String get submitExam => 'Soza Umwitozo';
 
   @override
-  String get examResults => 'Ibisubizo by\'Ikizamini';
+  String get examResults => 'Ibisubizo by\'Umwitozo';
 
   @override
   String get score => 'Amanota';
@@ -142,7 +142,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get dashboard => 'Ahabanza';
 
   @override
-  String get courses => 'Amasomo';
+  String get courses => 'Ishuri Online';
 
   @override
   String get notifications => 'Amatangazo';
@@ -327,13 +327,13 @@ class AppLocalizationsRw extends AppLocalizations {
   String get securityAlert => 'Icyitonderwa cy\'Umutekano';
 
   @override
-  String get continueExam => 'Komeza Ikizamini';
+  String get continueExam => 'Komeza imwitozo';
 
   @override
   String get exitExam => 'Gusohoka mu Kizamini?';
 
   @override
-  String get exitWithoutSubmitting => 'Gusohoka Udasoza Ikizamini';
+  String get exitWithoutSubmitting => 'Gusohoka Udasoza imwitozo';
 
   @override
   String get timesUp => 'Igihe Cyarangiye!';
@@ -360,10 +360,10 @@ class AppLocalizationsRw extends AppLocalizations {
   String get timeSpent => 'Igihe wakoresheje';
 
   @override
-  String get completedAt => 'Igihe wasoreje ikizamini';
+  String get completedAt => 'Igihe wasoreje imwitozo';
 
   @override
-  String get examType => 'Ubwoko bw\'Ikizamini';
+  String get examType => 'Ubwoko bw\'imwitozo';
 
   // User Management
   @override
@@ -460,7 +460,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get keyFeatures => 'Ibintu by\'ingenzi biri muri porogaramu';
 
   @override
-  String get practiceExams => 'Ibizamini byo kwitorezaho';
+  String get practiceExams => 'imyitozo yo kwitorezaho';
 
   @override
   String get multiLanguage => 'Indimi Nyinshi';
@@ -550,7 +550,8 @@ class AppLocalizationsRw extends AppLocalizations {
   String get registrationSuccessful => 'Kwiyandikisha Byagenze Neza!';
 
   @override
-  String get welcomeToApp => 'Murakaza neza kuri  Rwanda Traffic Rule 🇷🇼!';
+  String get welcomeToApp =>
+      'Murakaza neza kuri  Rwanda Traffic Driving School!';
 
   @override
   String get phoneNumberAlreadyRegistered =>
@@ -602,7 +603,7 @@ class AppLocalizationsRw extends AppLocalizations {
 
   // Splash Screen
   @override
-  String get masterTrafficRules => 'Menya neza Rwanda Traffic Rule 🇷🇼';
+  String get masterTrafficRules => 'Menya neza Rwanda Traffic Driving School';
 
   // Form fields and validation
   @override
@@ -641,18 +642,18 @@ class AppLocalizationsRw extends AppLocalizations {
 
   @override
   String get privacyPolicyContent =>
-      'Rwanda Traffic Rule 🇷🇼 ni porogaramu y\'inyigisho yateguwe kugirango ifashe abakoresha bashaka kwitegura ibizamini by\'uruhushya rwagateganyo rwo gutwara.\n\n⚠️ IKURUBA: Iyi porogaramu NTIDUFITE isano na, cyangwa ngo dufashe, leta, Guverinoma y\'u Rwanda, cyangwa ikigo cy\'ibanze cy\'ibizamini byo gukoresha modoka. Iki ni gikoresho cy\'inyigisho gikora ubwacyo gitegurwa gusa kugirango wige.\n\nInkomoko Ishingiro: Kugirango ubone amategeko y\'umuhanda ashingiro, amabwiriza, n\'amakuru y\'uruhushya rwo gukoresha modoka (harimo n\'uruhushya rw\'igihe gito n\'uruhushya rw\'igihe kirekire), nyamuneka reba Polisi y\'u Rwanda (Serivisi z\'Uruhushya rwo Gukoresha Modoka): https://police.gov.rw/home/\n\nDukusanya amakuru make gusa agenewe guha serivisi zacu z\'inyigisho:\n• Numero ya telefoni kugirango wandike konti no gukomeza umutekano\n• Amakuru y\'igikoresho kugirango dukemuke ibinyoma\n• Imbere y\'inyigisho kugirango dukugenerere\n• Amakuru y\'ukoresha porogaramu kugirango dukongere serivisi\n\nUbwigenge bwawe ni ngombwa kuri twe. Dukoresha uburyo bwo gukomeza umutekano bwa kijyambere kugirango dukure amakuru yawe kandi ntidushyire amakuru yawe y\'umuntu ku bandi.';
+      'Rwanda Traffic Driving School ni porogaramu y\'inyigisho yateguwe kugirango ifashe abakoresha bashaka kwitegura imyitozo by\'uruhushya rwagateganyo rwo gutwara.\n\n⚠️ IKURUBA: Iyi porogaramu NTIDUFITE isano na, cyangwa ngo dufashe, leta, Guverinoma y\'u Rwanda, cyangwa ikigo cy\'ibanze cy\'imyitozo byo gukoresha modoka. Iki ni gikoresho cy\'inyigisho gikora ubwacyo gitegurwa gusa kugirango wige.\n\nInkomoko Ishingiro: Kugirango ubone amategeko y\'umuhanda ashingiro, amabwiriza, n\'amakuru y\'uruhushya rwo gukoresha modoka (harimo n\'uruhushya rw\'igihe gito n\'uruhushya rw\'igihe kirekire), nyamuneka reba Polisi y\'u Rwanda (Serivisi z\'Uruhushya rwo Gukoresha Modoka): https://police.gov.rw/home/\n\nDukusanya amakuru make gusa agenewe guha serivisi zacu z\'inyigisho:\n• Numero ya telefoni kugirango wandike konti no gukomeza umutekano\n• Amakuru y\'igikoresho kugirango dukemuke ibinyoma\n• Imbere y\'inyigisho kugirango dukugenerere\n• Amakuru y\'ukoresha porogaramu kugirango dukongere serivisi\n\nUbwigenge bwawe ni ngombwa kuri twe. Dukoresha uburyo bwo gukomeza umutekano bwa kijyambere kugirango dukure amakuru yawe kandi ntidushyire amakuru yawe y\'umuntu ku bandi.';
 
   @override
   String get termsConditionsTitle => 'Amategeko n\'amabwiriza';
 
   @override
   String get termsConditionsContent =>
-      'Ukoresha Rwanda Traffic Rule 🇷🇼, aba yemeye amabwiriza:\n\n⚠️ IKURUBA:\nIyi porogaramu NTIDUFITE isano na, cyangwa ngo dufashe, leta, Guverinoma y\'u Rwanda, cyangwa ikigo cy\'ibanze cy\'ibizamini byo gukoresha modoka. Iki ni gikoresho cy\'inyigisho gikora ubwacyo gitegurwa gusa kugirango wige.\n\nInkomoko Ishingiro: Kugirango ubone amategeko y\'imihanda ashingiro, amabwiriza, n\'amakuru y\'uruhushya rwo gukoresha modoka (harimo n\'uruhushya rw\'igihe gito n\'uruhushya rw\'igihe kirekire), nyamuneka reba Polisi y\'u Rwanda (Serivisi z\'Uruhushya rwo Gukoresha Modoka): https://police.gov.rw/home/\n\nIntego y\'Inyigisho: Iyi porogaramu yateguwe gusa kugirango wige. Nubwo duha ibyifuzo byuzuye byo kwiga, abakoresha bagomba gukomeza imikorere y\'ibanze ya leta kugirango bafate uruhushya rwo gukoresha modoka. Buri gihe menya neza amakuru n\'inama z\'ibanze.\n\nInshingano z\'Umukoresha:\n• Tanga amakuru ukuri mu gihe cyo kwiyandikisha\n• Koresha porogaramu gusa kugirango wige\n• Kunda uburenganzira bwo gukoresha ubwoba\n• Ntukagerageze guhindura porogaramu\n• Menya neza amakuru yose n\'inama z\'ibanze za leta\n\nKuboneka kwa Serivisi: Dushishikariza gukomeza kuboneka kwa serivisi ariko ntidushobora kwemeza ko hazaba ubwoba bukomeza.\n\nGusiba Konti: Urashobora gusiba konti yawe igihe icyo ari cyo cyose. Dufite uburenganzira bwo guhagarika konti zirenganyije amabwiriza.';
+      'Ukoresha Rwanda Traffic Driving School, aba yemeye amabwiriza:\n\n⚠️ IKURUBA:\nIyi porogaramu NTIDUFITE isano na, cyangwa ngo dufashe, leta, Guverinoma y\'u Rwanda, cyangwa ikigo cy\'ibanze cy\'ibizamini cyo gukoresha modoka. Iki ni gikoresho cy\'inyigisho gikora ubwacyo gitegurwa gusa kugirango wige.\n\nInkomoko Ishingiro: Kugirango ubone amategeko y\'imihanda ashingiro, amabwiriza, n\'amakuru y\'uruhushya rwo gukoresha modoka (harimo n\'uruhushya rw\'igihe gito n\'uruhushya rw\'igihe kirekire), nyamuneka reba Polisi y\'u Rwanda (Serivisi z\'Uruhushya rwo Gukoresha Modoka): https://police.gov.rw/home/\n\nIntego y\'Inyigisho: Iyi porogaramu yateguwe gusa kugirango wige. Nubwo duha ibyifuzo byuzuye byo kwiga, abakoresha bagomba gukomeza imikorere y\'ibanze ya leta kugirango bafate uruhushya rwo gukoresha modoka. Buri gihe menya neza amakuru n\'inama z\'ibanze.\n\nInshingano z\'Umukoresha:\n• Tanga amakuru ukuri mu gihe cyo kwiyandikisha\n• Koresha porogaramu gusa kugirango wige\n• Kunda uburenganzira bwo gukoresha ubwoba\n• Ntukagerageze guhindura porogaramu\n• Menya neza amakuru yose n\'inama z\'ibanze za leta\n\nKuboneka kwa Serivisi: Dushishikariza gukomeza kuboneka kwa serivisi ariko ntidushobora kwemeza ko hazaba ubwoba bukomeza.\n\nGusiba Konti: Urashobora gusiba konti yawe igihe icyo ari cyo cyose. Dufite uburenganzira bwo guhagarika konti zirenganyije amabwiriza.';
 
   // Registration specific
   @override
-  String get startLearningJourney => 'Tangira Inzira yo Kwiga 🇷🇼';
+  String get startLearningJourney => 'Tangira Inzira yo Kwiga';
 
   @override
   String get fillDetailsToCreateAccount =>
@@ -914,7 +915,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get startLearning => 'Tangira Kwiga';
 
   @override
-  String get getAccessCode => 'Saba gufungurirwa ibizamini';
+  String get getAccessCode => 'Saba gufungurirwa imyitozo';
 
   @override
   String get adminActions => 'Ibikorwa by\'adimini';
@@ -927,11 +928,11 @@ class AppLocalizationsRw extends AppLocalizations {
       'Reba, shakisha, kandi ucunge abakoresha bose';
 
   @override
-  String get manageExams => 'Gucunga Ibizamini';
+  String get manageExams => 'Gucunga imyitozo';
 
   @override
   String get createEditAndManageExams =>
-      'Kurema, hindura, kandi ucunge ibizamini';
+      'Kurema, hindura, kandi ucunge imyitozo';
 
   @override
   String get manageAccessCodesAndPayments =>
@@ -951,7 +952,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get totalUsersLabel => 'Abakoresha Bose';
 
   @override
-  String get totalExams => 'Ibizamini Byose';
+  String get totalExams => 'imyitozo Yose';
 
   @override
   String get totalAttempts => 'Inshuro wakoze';
@@ -960,7 +961,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get avgScore => 'impuzandengo';
 
   @override
-  String get examsTaken => 'Ibizamini Byakozwe';
+  String get examsTaken => 'imyitozo Byakozwe';
 
   @override
   String get averageScore => 'impuzandengo';
@@ -975,7 +976,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get achievements => 'Intsinzi';
 
   @override
-  String get availableExams => 'Ibizamini Bibazwa/Babaza';
+  String get availableExams => 'imyitozo yo kwitegura';
 
   @override
   String get viewAll => 'Reba yose';
@@ -1006,7 +1007,7 @@ class AppLocalizationsRw extends AppLocalizations {
 
   @override
   String get startTakingExamsToSeeYourProgressHere =>
-      'Tangira gukora ibizamini kugiranga utangira kwimenyereza sisitemu';
+      'Tangira gukora imyitozo kugiranga utangira kwimenyereza sisitemu';
 
   @override
   String examScore(String score) => 'amanota: $score%';
@@ -1025,7 +1026,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get failedToLoadDashboardData => 'Kuzana makuru y\'ahabanza byanze';
 
   @override
-  String get manageExamsLabel => 'Gucunga Ibizamini';
+  String get manageExamsLabel => 'Gucunga imyitozo';
 
   @override
   String get progress => 'iterambere';
@@ -1134,10 +1135,10 @@ class AppLocalizationsRw extends AppLocalizations {
 
   // Available Exams Screen
   @override
-  String get allExams => 'Ibizamini Byose';
+  String get allExams => 'imyitozo Byose';
 
   @override
-  String get filterByExamType => 'Tondeka ugendeye k bwoko bw\'ibizamini';
+  String get filterByExamType => 'Tondeka ugendeye k bwoko bw\'imyitozo';
 
   @override
   String get all => 'Byose';
@@ -1148,22 +1149,22 @@ class AppLocalizationsRw extends AppLocalizations {
 
   @override
   String get checkBackLaterForNewTrafficRulesExams =>
-      'Subiramo nyuma kugira ngo ubone ibizamini bishya by\'amategeko y\'umuhanda';
+      'Subiramo nyuma kugira ngo ubone imyitozo bishya by\'amategeko y\'umuhanda';
 
   @override
   String get noExamsAvailableForThisLanguage =>
       'Nta bizamini biboneka muri ururimi wahasemo';
 
   @override
-  String examTypeExams(String type) => 'Ibizamini bya $type';
+  String examTypeExams(String type) => 'imyitozo bya $type';
 
   @override
   String get freeTrialFirstExamOfEachTypeIsFree =>
-      'Kugerageza ku Buntu: Ikizamini cya mbere cya buri  bwoko ni ubuntu';
+      'Kugerageza ku Buntu: imwitozo cya mbere cya buri  bwoko ni ubuntu';
 
   @override
   String get upgradeToAccessAllExams =>
-      'Ishyura kugira ngo ubone ibizamini byose';
+      'Ishyura kugira ngo ubone imyitozo byose';
 
   @override
   String get viewPlans => 'Reba gahunda';
@@ -1207,7 +1208,7 @@ class AppLocalizationsRw extends AppLocalizations {
 
   @override
   String get takeYourFirstExamToStartTrackingYourPerformance =>
-      'kora ikizamini cya mbere kugira ngo utangire gurikirana imikorere yawe';
+      'kora imwitozo cya mbere kugira ngo utangire gurikirana imikorere yawe';
 
   @override
   String get whatYouWillSeeHere => 'Icyo uzabona hano';
@@ -1230,7 +1231,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get totalTime => 'Igihe nakoresheje';
 
   @override
-  String get recentResults => 'Ibizamini mperuka gukora';
+  String get recentResults => 'imyitozo mperuka gukora';
 
   @override
   String correctAnswersCount(int correct, int total) =>
@@ -1240,18 +1241,18 @@ class AppLocalizationsRw extends AppLocalizations {
   String get areasOfImprovement => 'Ahantu Hakenewe kwitabyaho';
 
   @override
-  String get failedExamsTitle => 'Ibizamini watsinzwe';
+  String get failedExamsTitle => 'imyitozo watsinzwe';
 
   @override
   String youHaveFailedExams(int count, String plural) =>
-      'Watsinzwe $count$plural ibizamini';
+      'Watsinzwe $count$plural imyitozo';
 
   @override
   String get lowPerformance => 'Imikorere iri hasi';
 
   @override
   String examsWithLowScores(int count, String plural) =>
-      'Ibizamini $count$plural bifite amanota (< 65%)';
+      'imyitozo $count$plural bifite amanota (< 65%)';
 
   @override
   String get studyStrategy => 'Gahunda y\'Kwiga';
@@ -1279,14 +1280,14 @@ class AppLocalizationsRw extends AppLocalizations {
       'Ibyiciro $total$plural, $passed byarangiye neza';
 
   @override
-  String get takeMorePracticeExams => 'Kora ibizamini byinshi';
+  String get takeMorePracticeExams => 'Kora imyitozo byinshi';
 
   @override
   String get focusOnUnderstandingMaterial =>
       'Shingira ku gusobanukirwa neza amasomo';
 
   @override
-  String get reviewFailedExamTopics => 'Subiramo ibizamini watsinzwe';
+  String get reviewFailedExamTopics => 'Subiramo imyitozo watsinzwe';
 
   @override
   String get excellentPerformanceConsiderAdvanced =>
@@ -1302,7 +1303,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String latestScore(int score) => 'Ibisubizo vya nyuma: $score%';
 
   @override
-  String get retakeExam => 'Subiramo ikizamini';
+  String get retakeExam => 'Subiramo imwitozo';
 
   @override
   String get viewAnswer => 'Reba ibisubizo';
@@ -1313,7 +1314,7 @@ class AppLocalizationsRw extends AppLocalizations {
   ///take rest here.
   @override
   String get reviewMaterialBeforeTakingExams =>
-      '• Subiramo amasomo mbere yo gukora ibizamini';
+      '• Subiramo amasomo mbere yo gukora imyitozo';
 
   @override
   String get takePracticeExamsRegularly =>
@@ -1424,7 +1425,7 @@ class AppLocalizationsRw extends AppLocalizations {
 
   @override
   String get stayInExamAppDuringTest =>
-      '• Komeza mu porogaramu y\'icyiciro mu gihe cy\'ikizamini';
+      '• Komeza mu porogaramu y\'icyiciro mu gihe cy\'imwitozo';
 
   @override
   String get doNotSwitchToOtherApps => '• Ntugahindure ku porogaramu zindi';
@@ -1501,7 +1502,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get examSummary => 'Incamake y\'Icyiciro';
 
   @override
-  String get freeExam => 'Ibizamini by\'ubuntu';
+  String get freeExam => 'imyitozo by\'ubuntu';
 
   @override
   String get backToExams => 'Subira ku Bizamini';
@@ -1574,7 +1575,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get developerInformation => 'Amakuru y\'Abashyushanyije';
 
   @override
-  String get appNameLabel => 'Rwanda Traffic Rule 🇷🇼';
+  String get appNameLabel => 'Rwanda Traffic Driving School';
 
   @override
   String get descriptionLabel => 'Ibisobanuro';
@@ -1620,14 +1621,14 @@ class AppLocalizationsRw extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'Rwanda Traffic Rule 🇷🇼 ni porogaramu y\'umukoresha w\'amashanyarazi y\'inyigisho yuzuye yateguwe kugira ngo ifashe abantu kwitegura kuri ikizamini cyabo cy\'urupapuro rwo gukoresha modoka. Iyi porogaramu itanga amahugurwa agufasha, inyigisho zuzuye, na materiyali z\'kwiga zifite gushyigikira indimi nyinshi kugira ngo zongere ubumenyi bwo gukoresha modoka bwiza.';
+      'Rwanda Traffic Driving School ni porogaramu y\'umukoresha w\'amashanyarazi y\'inyigisho yuzuye yateguwe kugira ngo ifashe abantu kwitegura kuri imwitozo cyabo cy\'urupapuro rwo gukoresha modoka. Iyi porogaramu itanga amahugurwa agufasha, inyigisho zuzuye, na materiyali z\'kwiga zifite gushyigikira indimi nyinshi kugira ngo zongere ubumenyi bwo gukoresha modoka bwiza.';
 
   @override
   String get importantNotice => '⚠️ NGENDAHORO:';
 
   @override
   String get notAffiliatedNotice =>
-      'Iyi porogaramu NTIDUFITE isano, cyangwa NTIDUFITE ubwoba na Leta y\'u Rwanda cyangwa ikigo cy\'ibanze cy\'ikizamini cyo gukoresha modoka. Iki ni gikoresho cy\'inyigisho cy\'ubwigenge.';
+      'Iyi porogaramu NTIDUFITE isano, cyangwa NTIDUFITE ubwoba na Leta y\'u Rwanda cyangwa ikigo cy\'ibanze cy\'imwitozo cyo gukoresha modoka. Iki ni gikoresho cy\'inyigisho cy\'ubwigenge.';
 
   @override
   String get legalNoticeContent =>
@@ -1652,7 +1653,7 @@ class AppLocalizationsRw extends AppLocalizations {
       'Amabwiriza y\'ishyura ntiboneka nta internet. Nyamuneka wihujwe na internet kugira ngo urebe gahunda z\'ishyura.';
 
   @override
-  String get howToGetFullAccess => 'Uko Wasaba gufungurirwa ibizamini';
+  String get howToGetFullAccess => 'Uko Wasaba gufungurirwa imyitozo';
 
   @override
   String get chooseAPlan => 'Hitamo Gahunda';
@@ -1791,7 +1792,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get quickHelp => 'Ubufasha Bwihuse';
 
   @override
-  String get howToTakeAnExam => 'Uko Wakora Ikizamini';
+  String get howToTakeAnExam => 'Uko Wakora imwitozo';
 
   @override
   String get learnTheBasicsOfTakingExams =>
@@ -1880,7 +1881,7 @@ class AppLocalizationsRw extends AppLocalizations {
   // Help & Support - Help Text
   @override
   String get examHelpText => '''1. Jya ku tabu y'Amahugurwa
-2. Hitamo ikizamini ushaka gukora
+2. Hitamo imwitozo ushaka gukora
 3. Soma ikibazo cyose neza
 4. Kanda ku gice gifite umuzungu w'igisubizo wahitanye
 5. Koresha buto z'Inyuma/Imbere kugira ngo wihindure
@@ -1975,7 +1976,7 @@ Ubwoba:
   String lowPerformanceExams(int count) => 'Amahugurwa Y\'Amabanga ($count)';
 
   @override
-  String get examResult => 'Igisubizo cy\'Ikizamini';
+  String get examResult => 'Igisubizo cy\'imwitozo';
 
   // Free Exams Screen
   @override
@@ -1987,7 +1988,7 @@ Ubwoba:
       'Subira nyuma kugira ngo urebe amahugurwa mashya';
 
   @override
-  String startingExam(String examTitle) => 'Gutangira ikizamini: $examTitle';
+  String startingExam(String examTitle) => 'Gutangira imwitozo: $examTitle';
 
   @override
   String get getFullAccess => 'Bona Kwinjira Byuzuye';
@@ -2087,7 +2088,7 @@ Ubwoba:
   String get freeExams => 'Amahugurwa yo ku Buntu';
 
   @override
-  String get errorLoadingExams => 'Ikosa mu Kukuramo ibizamini';
+  String get errorLoadingExams => 'Ikosa mu Kukuramo imyitozo';
 
   @override
   String get freeTrial => 'Gerageza yo ku Buntu';
@@ -2113,7 +2114,7 @@ Ubwoba:
       'Dukusanya amakuru akurikira iyo ukoresheje porogaramu yacu:\n\n'
       '• Amakuru y’umuntu ku giti cye: Izina ryawe na nimero ya telefoni bikoreshwa mu gufungura konti no kukuranga.\n\n'
       '• Amakuru y’igikoresho: Indangamuntu y’igikoresho (Device ID) ikoreshwa mu mutekano no kwemeza umwirondoro.\n\n'
-      '• Amakuru y’imikoreshereze: Ibisubizo by’ibizamini byawe, aho ugeze mu myigire, n’uko ukoresha porogaramu kugira ngo tunoze serivisi dutanga.\n\n'
+      '• Amakuru y’imikoreshereze: Ibisubizo by’imyitozo byawe, aho ugeze mu myigire, n’uko ukoresha porogaramu kugira ngo tunoze serivisi dutanga.\n\n'
       '• Amakuru ya tekiniki: Amakuru ajyanye n’imikorere ya porogaramu, raporo z’amakosa, n’ibiranga igikoresho.';
 
   @override
@@ -2122,7 +2123,7 @@ Ubwoba:
   String get privacyPolicySection2Content =>
       'Dukoresha amakuru yawe mu:\n\n'
       '• Gutanga no gukomeza serivisi zacu z’uburezi\n\n'
-      '• Gukurikirana aho ugeze mu myigire n’ibisubizo by’ibizamini\n\n'
+      '• Gukurikirana aho ugeze mu myigire n’ibisubizo by’imyitozo\n\n'
       '• Kunoza imikorere ya porogaramu n’uburyo uyikoresha\n\n'
       '• Kukumenyesha amakuru n’amatangazo y’ingenzi\n\n'
       '• Kurinda umutekano wa porogaramu no gukumira uburiganya\n\n'
@@ -2202,7 +2203,7 @@ Ubwoba:
   @override
   String get notificationTypes => 'Ubwoko bw’imenyesha';
   @override
-  String get examReminders => 'Ibyibutsa ibizamini';
+  String get examReminders => 'Ibyibutsa imyitozo';
   @override
   String get achievementAlerts => 'Amatangazo y’ibyagezweho';
   @override
@@ -2210,7 +2211,7 @@ Ubwoba:
       'Kwizihiza intambwe n’ibyagezweho';
   @override
   String get getNotifiedAboutUpcomingExams =>
-      'Kumenyeshwa ibizamini biri hafi n’igihe ntarengwa';
+      'Kumenyeshwa imyitozo biri hafi n’igihe ntarengwa';
   @override
   String get systemUpdates => 'Ivugurura rya sisiteme';
   @override
@@ -2264,14 +2265,14 @@ Ubwoba:
 
   @override
   String get educationalPurposeOnlyContent =>
-      'Iyi porogaramu igenewe gusa amahugurwa yo kwiga amategeko y’umuhanda no kwimenyereza ibizamini byo gutwara ibinyabiziga.';
+      'Iyi porogaramu igenewe gusa amahugurwa yo kwiga amategeko y’umuhanda no kwimenyereza imyitozo byo gutwara ibinyabiziga.';
 
   @override
   String get noOfficialCertification => 'Nta Cyemezo Cya Leta Itanga';
 
   @override
   String get noOfficialCertificationContent =>
-      'Iyi porogaramu NTITANGA impushya zo gutwara ibinyabiziga, NTIYEMEZA gutsinda ibizamini bya Leta, kandi NTISIMBURANA n’inzira za Leta zemewe.';
+      'Iyi porogaramu NTITANGA impushya zo gutwara ibinyabiziga, NTIYEMEZA gutsinda imyitozo bya Leta, kandi NTISIMBURANA n’inzira za Leta zemewe.';
 
   @override
   String get yourResponsibility => 'Inshingano Zawe';
@@ -2296,7 +2297,7 @@ Ubwoba:
 
   @override
   String get privacyGovDisclaimer =>
-      'Iyi porogaramu NTIFITANYE isano, ntiyemejwe kandi ntifitanye umubano na Leta y’u Rwanda cyangwa n’urwego urwo ari rwo rwose rutanga ibizamini cyangwa impushya zo gutwara ibinyabiziga. Ni igikoresho cyigenga kigenewe kwiga gusa.';
+      'Iyi porogaramu NTIFITANYE isano, ntiyemejwe kandi ntifitanye umubano na Leta y’u Rwanda cyangwa n’urwego urwo ari rwo rwose rutanga imyitozo cyangwa impushya zo gutwara ibinyabiziga. Ni igikoresho cyigenga kigenewe kwiga gusa.';
 
   @override
   String get officialSource => 'Isoko yemewe:';
@@ -2312,7 +2313,7 @@ Ubwoba:
   String get dataWeCollectContent =>
       '• Nimero ya telefoni yo gufungura konti\n'
       '• Amakuru y’igikoresho ku bw’umutekano\n'
-      '• Aho ugeze mu myigire n’ibisubizo by’ibizamini\n'
+      '• Aho ugeze mu myigire n’ibisubizo by’imyitozo\n'
       '• Uko ukoresha porogaramu kugira ngo tuyinoze';
 
   @override
@@ -2355,14 +2356,14 @@ Ubwoba:
 
   @override
   String get educationalPurposeOnlyDescription =>
-      'Iyi porogaramu yateguwe gusa kugira ngo ikugufashe kwitegura ikizamini cyo gukorera urushya rwagatengo rwo gutwara imodoka cyangwa moto.';
+      'Iyi porogaramu yateguwe gusa kugira ngo ikugufashe kwitegura imwitozo cyo gukorera urushya rwagatengo rwo gutwara imodoka cyangwa moto.';
 
   @override
-  String get practiceSimulation => 'Kwitoza ibizamini';
+  String get practiceSimulation => 'Kwitoza imyitozo';
 
   @override
   String get practiceSimulationDescription =>
-      'Ibizamini byo kwitegura bigana imiterere y\'ikizamini nyakuri ariko si ibizamini bya leta.';
+      'imyitozo byo kwitegura bigana imiterere y\'imwitozo nyakuri ariko si imyitozo bya leta.';
 
   @override
   String get notOfficial => 'Ntabwo ari bya Leta';
@@ -2407,6 +2408,116 @@ Ubwoba:
 
   @override
   String get ikinyarwanda => 'Ikinyarwanda';
+
+  // New compliance disclaimer keys
+  @override
+  String get appNameFull => 'Rwanda Traffic Driving School';
+
+  @override
+  String get educationalStudyPlatform => 'Porogaramu y\'Amashuri';
+
+  @override
+  String get importantDisclaimerReadCarefully =>
+      'ICYEMEZO CY\'INGENZI - NYAMUNZEKA SOMA NEZA';
+
+  @override
+  String get disclaimerPrivateEntity =>
+      'Iyi porogaramu "Rwanda Traffic Driving School" yategurwa kandi ikoreshwa na ENTITE YITABIRIYE (CodeTrail Dev).';
+
+  @override
+  String get disclaimerWeAre => 'TURI:';
+
+  @override
+  String get disclaimerNotAffiliated =>
+      'NTIDUFITE isano na Guverinoma y\'u Rwanda';
+
+  @override
+  String get disclaimerNotEndorsed =>
+      'NTIDUFITE ubwemezi bwa Polisi y\'u Rwanda';
+
+  @override
+  String get disclaimerNotConnected =>
+      'NTIDUFITE isano na kigo cy\'ibanze cy\'uruhushya';
+
+  @override
+  String get disclaimerNotGovernment =>
+      'NTABWO ari porogaramu cyangwa serivisi ya Leta';
+
+  @override
+  String get disclaimerNotAuthorized =>
+      'NTIDUFITE uburenganzira bwo gutanga uruhushya rwo gutwara cyangwa uruhushya';
+
+  @override
+  String get disclaimerNotConducting => 'NTIDUKORA imyitozo by\'ibanze';
+
+  @override
+  String get disclaimerPrivateEducationalTool =>
+      'IKI NI GIKORESHO CY\'AMASHURI CYITABIRIYE gusa kugirango wige no kwitegura.';
+
+  @override
+  String get disclaimerOfficialProcedures =>
+      'Imikorere yose y\'ibanze igomba gukomeza binyuze mu nzira z\'ibanze za Leta. Iyi porogaramu ntacyisimbuza ibyo Leta isaba.';
+
+  @override
+  String get disclaimerAcknowledge =>
+      'Ukomeje gukoresha, uba wemeye ko iyi ni porogaramu y\'amashuri itabiriye gusa kugirango wige.';
+
+  @override
+  String get disclaimerReadUnderstood =>
+      'Narayisomye kandi narayisobanukiwe hejuru';
+
+  @override
+  String get disclaimerUnderstandButton =>
+      'Ndabyumva - Iyi ni Porogaramu y\'Amashuri Ntabwo ari ya Leta';
+
+  @override
+  String get criticalDisclaimer => 'ICYEMEZO CY\'INGENZI';
+
+  @override
+  String get aboutAppTitle => 'Ibyerekeye Rwanda Traffic Driving School';
+
+  @override
+  String get appDescriptionFull =>
+      'Rwanda Traffic Driving School ni porogaramu y\'amashanyarazi y\'amashuri itabiriye yateguwe kugira ngo ifashe abanyeshuri kwiga amategeko y\'umuhanda y\'u Rwanda, ibimenyetso by\'umuhanda, na teyori yo gutwara binyuze mu materiyali yo kwitegura n\'amashuri.';
+
+  @override
+  String get developerEntity =>
+      'Iyi porogaramu yategurwa kandi ikoreshwa na ENTITE YITABIRIYE (CodeTrail Dev). Turi:';
+
+  @override
+  String get privacyPolicyHeader =>
+      'Iyi politiki y\'ubwige ikoresha porogaramu y\'amashanyarazi "Rwanda Traffic Driving School", gikoresho cy\'amashuri kitabiriye cyateguwe na CodeTrail Dev (entite yitabiriye). Iyi porogaramu NTIDUFITE isano na, cyangwa ngo dufashe, ikigo cya Leta, Guverinoma y\'u Rwanda, cyangwa kigo cy\'ibanze cy\'uruhushya.';
+
+  @override
+  String get termsOfUseTitle =>
+      'AMABWIRIZA YO GUKORESHA - Rwanda Traffic Driving School';
+
+  @override
+  String get termsOfUseHeader =>
+      'INGENZI: Iki ni POROGARAMU Y\'AMASHURI ITABIRIYE';
+
+  @override
+  String get termsIndependentApp =>
+      'Rwanda Traffic Driving School yategurwa kandi ikoreshwa na CodeTrail Dev (ENTITE YITABIRIYE). NTIDUFITE isano na, cyangwa ngo dufashe, Guverinoma y\'u Rwanda, Polisi y\'u Rwanda, cyangwa kigo cy\'ibanze cy\'uruhushya. Iki ni gikoresho cy\'amashuri kitabiriye gusa kugirango wige no kwitegura. Abakoresha bagomba gukomeza imikorere yose y\'ibanze binyuze mu nzira z\'ibanze za Leta.';
+
+  @override
+  String get termsDeveloperInfo => 'CodeTrail Dev';
+
+  @override
+  String get appNameLabelText => 'Izina ry\'Porogaramu';
+
+  @override
+  String get descriptionLabelText => 'Insobanuro';
+
+  @override
+  String get developerLabelText => 'Umwubatsi';
+
+  @override
+  String get contactEmailLabelText => 'Imeyili yo Guhura';
+
+  @override
+  String get appDescriptionShort =>
+      'Porogaramu y\'amashuri itabiriye yo kwiga amategeko y\'umuhanda y\'u Rwanda na teyori yo gutwara';
 
   // Course List Screen
   @override
@@ -2552,15 +2663,15 @@ Ubwoba:
 
   @override
   String get termsConditionsSection1Content =>
-      'Mu gukurura (download), gushyira kuri telefone (install), cyangwa gukoresha porogaramu ya Rwanda Traffic Rule 🇷🇼, uba wemeye gukurikiza aya Mategeko n’Amabwiriza. Niba utayemera, nyamuneka ntukoreshe iyi porogaramu.';
+      'Mu gukurura (download), gushyira kuri telefone (install), cyangwa gukoresha porogaramu ya Rwanda Traffic Driving School, uba wemeye gukurikiza aya Mategeko n’Amabwiriza. Niba utayemera, nyamuneka ntukoreshe iyi porogaramu.';
 
   @override
   String get termsConditionsSection2Title => '2. Ibisobanuro bya Serivisi';
 
   @override
   String get termsConditionsSection2Content =>
-      'Rwanda Traffic Rule 🇷🇼 ni porogaramu y’uburezi irimo ibi bikurikira:\n\n'
-      '• Ibibazo by’imyitozo n’ibizamini ku mategeko y’umuhanda\n\n'
+      'Rwanda Traffic Driving School ni porogaramu y’uburezi irimo ibi bikurikira:\n\n'
+      '• Ibibazo by’imyitozo n’imyitozo ku mategeko y’umuhanda\n\n'
       '• Gukurikirana aho ugeze n’isesengura ry’imikorere\n\n'
       '• Amasomo ajyanye n’amategeko y’umuhanda\n\n'
       '• Kwiga udakoresheje internet (offline)\n\n'
@@ -2722,19 +2833,19 @@ Ubwoba:
 
   @override
   String get shareAppSubject =>
-      'Rwanda Traffic Rule 🇷🇼 - Sangiza porogaramu yo kwitegura Ikizamini cyo Gutwara';
+      'Rwanda Traffic Driving School - Sangiza porogaramu yo kwitegura imwitozo cyo Gutwara';
 
   @override
   String get shareAppMessage => '''
-🚗 Rwanda Traffic Rule 🇷🇼 - Tsinda ikizamini cyo gutwara!
+🚗 Rwanda Traffic Driving School - Tsinda imwitozo cyo gutwara!
 
-iyi ni porogaramu nziza igufasha kwitegura ikizamini cy’uruhushya rw’agateganyo rwo gutwara moto cyangwa imodoka.
+iyi ni porogaramu nziza igufasha kwitegura imwitozo cy’uruhushya rw’agateganyo rwo gutwara moto cyangwa imodoka.
 
 📱 Porogaramu: {appName}
 📦 Verisiyo: {version} ({buildNumber})
 
 ✨ Ibiranga:
-• Ibizamini by’imyitozo
+• imyitozo by’imyitozo
 • Amasomo asobanutse neza
 • Ibyapa n’amategeko y’umuhanda
 • Gukurikirana aho ugeze
@@ -2744,7 +2855,7 @@ iyi ni porogaramu nziza igufasha kwitegura ikizamini cy’uruhushya rw’agatega
 {playStoreLink}
 
 Tangira urugendo rwo kuba umushoferi utekanye!
-#AmategekoYUmuhanda #IkizaminiCyoGutwara
+#AmategekoYUmuhanda #imwitozoCyoGutwara
 ''';
 
   @override
@@ -2754,22 +2865,22 @@ Tangira urugendo rwo kuba umushoferi utekanye!
 
   @override
   String get timeUpMessage =>
-      'Igihe cy’ikizamini cyarangiye. Ibisubizo byawe biroherezwa byikora.';
+      'Igihe cy’imwitozo cyarangiye. Ibisubizo byawe biroherezwa byikora.';
 
   @override
   String get securityAlertTitle => 'Iburira ry’umutekano';
 
   @override
   String get examPausedMessage =>
-      'Ikizamini cyahagaze kubera guhindura porogaramu cyangwa kujya mu buryo bw’inyuma.';
+      'imwitozo cyahagaze kubera guhindura porogaramu cyangwa kujya mu buryo bw’inyuma.';
 
   @override
   String get examIntegrityNotice =>
-      'Kugira ngo ubunyangamugayo bw’ikizamini bubungabungwe:';
+      'Kugira ngo ubunyangamugayo bw’imwitozo bubungabungwe:';
 
   @override
   String get stayInAppRule =>
-      '• Guma muri porogaramu y’ikizamini mu gihe cy’ikizamini';
+      '• Guma muri porogaramu y’imwitozo mu gihe cy’imwitozo';
 
   @override
   String get noAppSwitchRule => '• Ntuhindure ujya mu zindi porogaramu';
@@ -2779,26 +2890,28 @@ Tangira urugendo rwo kuba umushoferi utekanye!
 
   @override
   String get repeatedViolationWarning =>
-      'Gusubiramo amakosa bishobora gutuma ikizamini gihagarikwa burundu.';
+      'Gusubiramo amakosa bishobora gutuma imwitozo gihagarikwa burundu.';
   @override
   String get time => 'Igihe';
   @override
   String get off => 'Kuri';
 
   @override
-  String get examSubmittedSuccess => 'Ikizamini cyoherejwe neza!';
+  String get examSubmittedSuccess => 'imwitozo cyoherejwe neza!';
 
   @override
   String get examSavedOffline =>
-      'Ikizamini cyabitswe kuri telefone! Kizoherezwa internet ibonetse.';
+      'imwitozo cyabitswe kuri telefone! Kizoherezwa internet ibonetse.';
 
   @override
   String get examScoreDescription => 'Amanota yawe:';
 
   @override
-  String get errorSubmittingExam => 'Habaye ikibazo mu kohereza ikizamini';
+  String get errorSubmittingExam => 'Habaye ikibazo mu kohereza imwitozo';
   @override
   String get correctQuestions => 'Ibibazo wakoze';
   @override
   String get incorrectQuestions => 'Ibibazo wishe';
+  @override
+  String get practiceExamTitle => 'Umwitozo wa';
 }

@@ -4,7 +4,7 @@ import 'app_localizations.dart';
 
 class AppLocalizationsEn extends AppLocalizations {
   @override
-  String get appName => 'Rwanda Traffic Rule 🇷🇼';
+  String get appName => 'Rwanda Traffic Driving School';
 
   @override
   String get welcome => 'Welcome';
@@ -96,22 +96,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordsDoNotMatch => 'Passwords do not match';
 
   @override
-  String get exams => 'Exams';
+  String get exams => 'Practices';
 
   @override
-  String get exam => 'Exam';
+  String get exam => 'Practice';
 
   @override
-  String get startExam => 'Start Exam';
+  String get startExam => 'Start Practice';
 
   @override
-  String get finishExam => 'Finish Exam';
+  String get finishExam => 'Finish Practice';
 
   @override
-  String get submitExam => 'Submit Exam';
+  String get submitExam => 'Submit Practice';
 
   @override
-  String get examResults => 'Exam Results';
+  String get examResults => 'Practice Results';
 
   @override
   String get score => 'Score';
@@ -632,18 +632,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyPolicyContent =>
-      'Rwanda Traffic Rule 🇷🇼 is an educational application designed to help users prepare for provisional driving license examinations.\n\n⚠️ IMPORTANT: This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.\n\nOfficial Source: For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to Rwanda National Police (Driving License Services): https://police.gov.rw/home/\n\nWe collect minimal data necessary to provide our educational services:\n• Phone number for account creation and security\n• Device information for fraud prevention\n• Learning progress to personalize your experience\n• App usage data to improve our services\n\nYour privacy is important to us. We use industry-standard security measures to protect your data and never share your personal information with third parties.';
+      'Rwanda Traffic Driving School is an educational application designed to help users prepare for provisional driving license examinations.\n\n⚠️ IMPORTANT: This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.\n\nOfficial Source: For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to Rwanda National Police (Driving License Services): https://police.gov.rw/home/\n\nWe collect minimal data necessary to provide our educational services:\n• Phone number for account creation and security\n• Device information for fraud prevention\n• Learning progress to personalize your experience\n• App usage data to improve our services\n\nYour privacy is important to us. We use industry-standard security measures to protect your data and never share your personal information with third parties.';
 
   @override
   String get termsConditionsTitle => 'Terms & Conditions';
 
   @override
   String get termsConditionsContent =>
-      'By using Rwanda Traffic Rule 🇷🇼, you agree to these terms:\n\n⚠️ IMPORTANT DISCLAIMER:\nThis app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.\n\nOfficial Source: For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to Rwanda National Police (Driving License Services): https://police.gov.rw/home/\n\nEducational Purpose: This app is designed for educational practice only. While we provide comprehensive study materials, users must complete official government procedures to obtain driving licenses. Always verify information with official sources and consult local authorities.\n\nUser Responsibilities:\n• Provide accurate information during registration\n• Use the app for educational purposes only\n• Respect intellectual property rights\n• Not attempt to reverse engineer the app\n• Verify all information with official government sources\n\nService Availability: We strive to maintain service availability but cannot guarantee uninterrupted access.\n\nAccount Termination: You may delete your account at any time. We reserve the right to suspend accounts that violate these terms.';
+      'By using Rwanda Traffic Driving School, you agree to these terms:\n\n⚠️ IMPORTANT DISCLAIMER:\nThis app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.\n\nOfficial Source: For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to Rwanda National Police (Driving License Services): https://police.gov.rw/home/\n\nEducational Purpose: This app is designed for educational practice only. While we provide comprehensive study materials, users must complete official government procedures to obtain driving licenses. Always verify information with official sources and consult local authorities.\n\nUser Responsibilities:\n• Provide accurate information during registration\n• Use the app for educational purposes only\n• Respect intellectual property rights\n• Not attempt to reverse engineer the app\n• Verify all information with official government sources\n\nService Availability: We strive to maintain service availability but cannot guarantee uninterrupted access.\n\nAccount Termination: You may delete your account at any time. We reserve the right to suspend accounts that violate these terms.';
 
   // Registration specific
   @override
-  String get startLearningJourney => 'Start Learning Journey 🇷🇼';
+  String get startLearningJourney => 'Start Learning Journey';
 
   @override
   String get fillDetailsToCreateAccount =>
@@ -938,7 +938,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totalUsersLabel => 'Total Users';
 
   @override
-  String get totalExams => 'Total Exams';
+  String get totalExams => 'Total Practices';
 
   @override
   String get totalAttempts => 'Total Attempts';
@@ -962,7 +962,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get achievements => 'Achievements';
 
   @override
-  String get availableExams => 'Available Exams';
+  String get availableExams => 'Available Practices';
 
   @override
   String get viewAll => 'View All';
@@ -1119,7 +1119,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   // Available Exams Screen
   @override
-  String get allExams => 'All Exams';
+  String get allExams => 'All Practices';
 
   @override
   String get filterByExamType => 'Filter by Exam Type';
@@ -1282,7 +1282,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String latestScore(int score) => 'Latest score: $score%';
 
   @override
-  String get retakeExam => 'Retake Exam';
+  String get retakeExam => 'Retake Practice';
 
   @override
   String get viewAnswer => 'View Answer';
@@ -1478,10 +1478,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get examSummary => 'Exam Summary';
 
   @override
-  String get freeExam => 'Free Exam';
+  String get freeExam => 'Free Practice';
 
   @override
-  String get backToExams => 'Back to Exams';
+  String get backToExams => 'Back to Practices';
 
   @override
   String get secureView => 'SECURE VIEW';
@@ -1496,11 +1496,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get questionByQuestionResultsNotAvailable =>
-      'Question-by-question results are not available for this exam.';
+      'Question-by-question results are not available for this practice.';
 
   // About App Screen - Detailed Content
   @override
-  String get interactivePracticeExams => 'Interactive practice exams';
+  String get interactivePracticeExams => 'Interactive practices';
 
   @override
   String get multiLanguageSupport =>
@@ -1522,10 +1522,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offlineStudyMode =>
-      'Offline study mode - download exams and courses';
+      'Offline study mode - download practices and courses';
 
   @override
-  String get offlineExamTaking => 'Offline exam taking with automatic sync';
+  String get offlineExamTaking => 'Offline practice taking with automatic sync';
 
   @override
   String get achievementSystem => 'Achievement system and progress tracking';
@@ -1594,7 +1594,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'Rwanda Traffic Rule 🇷🇼 is a comprehensive educational mobile application designed to help individuals prepare for their provisional driving license examination. This app provides interactive practice tests, comprehensive courses, and study materials with multi-language support to enhance safe driving knowledge development.';
+      'Rwanda Traffic Driving School is a comprehensive educational mobile application designed to help individuals prepare for their provisional driving license examination. This app provides interactive practice tests, comprehensive courses, and study materials with multi-language support to enhance safe driving knowledge development.';
 
   @override
   String get importantNotice => '⚠️ IMPORTANT:';
@@ -1660,12 +1660,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   // Help & Support - Help Text
   @override
-  String get examHelpText => '''1. Go to the Exams tab
-2. Select an exam you want to take
+  String get examHelpText => '''1. Go to the practices tab
+2. Select a practice you want to take
 3. Read each question carefully
 4. Click on the circle next to your chosen answer
 5. Use the Next/Previous buttons to navigate
-6. Click "Finish Exam" when you're done
+6. Click "Finish Practice" when you're done
 7. Review your results and see detailed explanations
 
 Tips:
@@ -1791,7 +1791,7 @@ Privacy:
 
   @override
   String get allExamResultsAndProgressData =>
-      'All exam results and progress data';
+      'All practice results and progress data';
 
   @override
   String get studyHistoryAndAchievements => 'Study history and achievements';
@@ -1842,10 +1842,11 @@ Privacy:
   String get quickHelp => 'Quick Help';
 
   @override
-  String get howToTakeAnExam => 'How to Take an Exam';
+  String get howToTakeAnExam => 'How to Take a Practice';
 
   @override
-  String get learnTheBasicsOfTakingExams => 'Learn the basics of taking exams';
+  String get learnTheBasicsOfTakingExams =>
+      'Learn the basics of taking practices';
 
   @override
   String get understandingYourProgress => 'Understanding Your Progress';
@@ -1896,7 +1897,7 @@ Privacy:
 
   @override
   String get faqCanIUseTheAppOfflineAnswer =>
-      'Yes! You can download exams and courses for offline use. Your progress will sync when you\'re back online.';
+      'Yes! You can download practices and courses for offline use. Your progress will sync when you\'re back online.';
 
   @override
   String get faqHowOftenAreNewQuestionsAdded =>
@@ -1932,7 +1933,7 @@ Privacy:
   String get detailedAnalytics => 'Detailed Analytics';
 
   @override
-  String get retakeFailedExams => 'Retake Failed Exams';
+  String get retakeFailedExams => 'Retake Failed Practices';
 
   @override
   String get reviewTopics => 'Review Topics';
@@ -1941,12 +1942,12 @@ Privacy:
   String get studyTips => 'Study Tips';
 
   @override
-  String lowPerformanceExams(int count) => 'Low Performance Exams ($count)';
+  String lowPerformanceExams(int count) => 'Low Performance Practices ($count)';
 
   @override
-  String get examResult => 'Exam Result';
+  String get examResult => 'Practice Result';
 
-  // Free Exams Screen
+  // Free Practices Screen
   @override
   String youHaveFreeExamsRemaining(int count, String plural) =>
       'You have $count free exam$plural remaining';
@@ -2050,10 +2051,10 @@ Privacy:
   String failedToLoadExams(String error) => 'Failed to load exams: $error';
 
   @override
-  String get freeExams => 'Free Exams';
+  String get freeExams => 'Free Practices';
 
   @override
-  String get errorLoadingExams => 'Error Loading Exams';
+  String get errorLoadingExams => 'Error Loading Practices';
 
   @override
   String get freeTrial => 'Free Trial';
@@ -2086,7 +2087,7 @@ Privacy:
   String get privacyPolicySection2Content =>
       'We use your information to:\n\n'
       '• Provide and maintain our educational services\n\n'
-      '• Track your learning progress and exam results\n\n'
+      '• Track your learning progress and practice results\n\n'
       '• Improve app functionality and user experience\n\n'
       '• Send important updates and notifications\n\n'
       '• Ensure app security and prevent fraud\n\n'
@@ -2149,8 +2150,8 @@ Privacy:
   String get privacyPolicySection9Content =>
       'If you have any questions about this Privacy Policy or our data practices, please contact us at:\n\n'
       'Email: engineers.devs@gmail.com\n\n'
-      'Phone: +250780494000\n\n'
-      'WhatsApp: +250780494000\n\n'
+      'Phone: +250788659575\n\n'
+      'WhatsApp: +250788659575\n\n'
       'Live Chat: Available 24/7';
 
   // Notifications Screen
@@ -2162,7 +2163,7 @@ Privacy:
   @override
   String get notificationTypes => 'Notification Types';
   @override
-  String get examReminders => 'Exam Reminders';
+  String get examReminders => 'Practice Reminders';
   @override
   String get achievementAlerts => 'Achievement Alerts';
   @override
@@ -2348,7 +2349,115 @@ Privacy:
   String get chooseYourPreferredLanguage => 'Choose your preferred language';
 
   @override
-  String get ikinyarwanda => 'Ikinyarwanda';
+  String get ikinyarwanda => 'Kinyarwanda';
+
+  // New compliance disclaimer keys
+  @override
+  String get appNameFull => 'Rwanda Traffic Driving School';
+
+  @override
+  String get educationalStudyPlatform => 'Educational Study Platform';
+
+  @override
+  String get importantDisclaimerReadCarefully =>
+      'IMPORTANT DISCLAIMER - PLEASE READ CAREFULLY';
+
+  @override
+  String get disclaimerPrivateEntity =>
+      'This application "Rwanda Traffic Driving School" is developed and operated by a PRIVATE ENTITY (CodeTrail Dev).';
+
+  @override
+  String get disclaimerWeAre => 'WE ARE:';
+
+  @override
+  String get disclaimerNotAffiliated =>
+      'NOT affiliated with the Government of Rwanda';
+
+  @override
+  String get disclaimerNotEndorsed => 'NOT endorsed by Rwanda National Police';
+
+  @override
+  String get disclaimerNotConnected =>
+      'NOT connected to any official licensing authority';
+
+  @override
+  String get disclaimerNotGovernment =>
+      'NOT a government application or service';
+
+  @override
+  String get disclaimerNotAuthorized =>
+      'NOT authorized to issue driving licenses or permits';
+
+  @override
+  String get disclaimerNotConducting => 'NOT conducting official examinations';
+
+  @override
+  String get disclaimerPrivateEducationalTool =>
+      'THIS IS A PRIVATE EDUCATIONAL TOOL for practice and study purposes only.';
+
+  @override
+  String get disclaimerOfficialProcedures =>
+      'All official procedures must be completed through authorized government channels. This app does not replace official requirements.';
+
+  @override
+  String get disclaimerAcknowledge =>
+      'By continuing, you acknowledge this is an independent educational application for supplemental learning only.';
+
+  @override
+  String get disclaimerReadUnderstood =>
+      'I have read and understood the disclaimer above';
+
+  @override
+  String get disclaimerUnderstandButton =>
+      'I Understand - This is an Unofficial Educational App';
+
+  @override
+  String get criticalDisclaimer => 'CRITICAL DISCLAIMER';
+
+  @override
+  String get aboutAppTitle => 'About Rwanda Traffic Driving School';
+
+  @override
+  String get appDescriptionFull =>
+      'Rwanda Traffic Driving School is an independent educational mobile application designed to help learners study Rwanda\'s traffic regulations, road signs, and driving theory through interactive practice materials and study courses.';
+
+  @override
+  String get developerEntity =>
+      'This application is developed and operated by a PRIVATE ENTITY (CodeTrail Dev). We are:';
+
+  @override
+  String get privacyPolicyHeader =>
+      'This privacy policy applies to the "Rwanda Traffic Driving School" mobile application, an independent educational tool developed by CodeTrail Dev (a private entity). This app is NOT affiliated with, endorsed by, or connected to any government agency, the Government of Rwanda, or any official licensing authority.';
+
+  @override
+  String get termsOfUseTitle => 'TERMS OF USE - Rwanda Traffic Driving School';
+
+  @override
+  String get termsOfUseHeader =>
+      'IMPORTANT: This is an INDEPENDENT EDUCATIONAL APPLICATION';
+
+  @override
+  String get termsIndependentApp =>
+      'Rwanda Traffic Driving School is developed and operated by CodeTrail Dev (a PRIVATE ENTITY). We are NOT affiliated with, endorsed by, or connected to the Government of Rwanda, Rwanda National Police, or any official licensing authority. This is a private educational tool for practice and study purposes only. Users must complete all official procedures through authorized government channels.';
+
+  @override
+  String get termsDeveloperInfo => 'CodeTrail Dev';
+
+  @override
+  String get appNameLabelText => 'App Name';
+
+  @override
+  String get descriptionLabelText => 'Description';
+
+  @override
+  String get developerLabelText => 'Developer';
+
+  @override
+  String get contactEmailLabelText => 'Contact Email';
+
+  @override
+  String get appDescriptionShort =>
+      'Independent educational application for studying traffic rules and driving theory';
 
   // Course List Screen
   @override
@@ -2492,14 +2601,14 @@ Privacy:
 
   @override
   String get termsConditionsSection1Content =>
-      'By downloading, installing, or using the Rwanda Traffic Rule 🇷🇼 mobile application, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our app.';
+      'By downloading, installing, or using the Rwanda Traffic Driving School mobile application, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our app.';
 
   @override
   String get termsConditionsSection2Title => '2. Description of Service';
 
   @override
   String get termsConditionsSection2Content =>
-      'Rwanda Traffic Rule 🇷🇼 is an educational mobile application that provides:\n\n'
+      'Rwanda Traffic Driving School is an educational mobile application that provides:\n\n'
       '• Interactive traffic rules quizzes and practice exams\n\n'
       '• Progress tracking and performance analytics\n\n'
       '• Educational content about traffic regulations\n\n'
@@ -2659,11 +2768,11 @@ Privacy:
 
   @override
   String get shareAppSubject =>
-      'Rwanda Traffic Rule 🇷🇼 - Driving Test Preparation App';
+      'Rwanda Traffic Driving School - Driving Test Preparation App';
 
   @override
   String get shareAppMessage => '''
-🚗 Rwanda Traffic Rule 🇷🇼 - Master Your Driving Test!
+🚗 Rwanda Traffic Driving School - Master Your Driving Test!
 
 Download the best app to prepare for your provisional driving license exam.
 
@@ -2735,4 +2844,6 @@ Start your journey to becoming a safe driver!
   String get correctQuestions => 'Correct questions:';
   @override
   String get incorrectQuestions => 'Incorrect questions:';
+  @override
+  String get practiceExamTitle => 'Practice Exam';
 }

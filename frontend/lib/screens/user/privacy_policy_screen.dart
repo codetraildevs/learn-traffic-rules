@@ -39,14 +39,34 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.privacyPolicy,
-                    style: AppTextStyles.heading2.copyWith(fontSize: 24.sp),
+                    l10n.privacyPolicyTitle,
+                    style: AppTextStyles.heading2.copyWith(fontSize: 22.sp),
                   ),
                   SizedBox(height: 8.h),
                   Text(
                     l10n.lastUpdated('December 2025'),
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey600,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF3CD),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
+                        color: const Color(0xFFDC3545),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      l10n.privacyPolicyHeader,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.grey800,
+                        fontSize: 12.sp,
+                        height: 1.4,
+                      ),
                     ),
                   ),
                 ],

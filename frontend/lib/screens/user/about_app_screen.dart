@@ -55,7 +55,7 @@ class AboutAppScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 16.h),
                   Text(
-                    l10n.appName,
+                    l10n.appNameFull,
                     style: AppTextStyles.heading3.copyWith(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
@@ -91,47 +91,78 @@ class AboutAppScreen extends StatelessWidget {
 
             // About Section
             _buildSectionCard(
-              title: l10n.aboutThisApp,
+              title: l10n.aboutAppTitle,
               icon: Icons.info_rounded,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.appDescription,
+                    l10n.appDescriptionFull,
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey700,
                       fontSize: 13.sp,
                       height: 1.5,
                     ),
                   ),
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 16.h),
                   Container(
-                    padding: EdgeInsets.all(12.w),
+                    padding: EdgeInsets.all(16.w),
                     decoration: BoxDecoration(
-                      color: AppColors.warning.withValues(alpha: 0.1),
+                      color: const Color(0xFFFFF3CD),
                       borderRadius: BorderRadius.circular(12.r),
                       border: Border.all(
-                        color: AppColors.warning.withValues(alpha: 0.3),
-                        width: 1,
+                        color: const Color(0xFFDC3545),
+                        width: 2,
                       ),
                     ),
-                    child: Row(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.school_rounded,
-                          color: AppColors.warning,
-                          size: 20.sp,
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Text(
-                            l10n.notAffiliatedNotice,
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.grey800,
-                              fontSize: 12.sp,
-                              height: 1.4,
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: const Color(0xFFDC3545),
+                              size: 24.sp,
                             ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Text(
+                                l10n.criticalDisclaimer,
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: const Color(0xFFDC3545),
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 12.h),
+                        Text(
+                          l10n.developerEntity,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.grey800,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                            height: 1.4,
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        _buildDisclaimerBullet(l10n.disclaimerNotAffiliated),
+                        _buildDisclaimerBullet(l10n.disclaimerNotEndorsed),
+                        _buildDisclaimerBullet(l10n.disclaimerNotConnected),
+                        _buildDisclaimerBullet(l10n.disclaimerNotGovernment),
+                        _buildDisclaimerBullet(l10n.disclaimerNotAuthorized),
+                        _buildDisclaimerBullet(l10n.disclaimerNotConducting),
+                        SizedBox(height: 12.h),
+                        Text(
+                          l10n.disclaimerPrivateEducationalTool,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.grey800,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                            height: 1.4,
                           ),
                         ),
                       ],
@@ -182,23 +213,23 @@ class AboutAppScreen extends StatelessWidget {
               child: Column(
                 children: [
                   _buildInfoRow(
-                    label: l10n.appNameLabel,
-                    value: AppConstants.appName,
+                    label: l10n.appNameLabelText,
+                    value: l10n.appNameFull,
                   ),
                   SizedBox(height: 12.h),
                   _buildInfoRow(
-                    label: l10n.descriptionLabel,
-                    value: AppConstants.appDescription,
+                    label: l10n.descriptionLabelText,
+                    value: l10n.appDescriptionShort,
                   ),
                   SizedBox(height: 12.h),
                   _buildInfoRow(
-                    label: l10n.developerLabel,
-                    value: 'Traffic Rules Learning Team',
+                    label: l10n.developerLabelText,
+                    value: l10n.termsDeveloperInfo,
                   ),
                   SizedBox(height: 12.h),
                   _buildInfoRow(
-                    label: l10n.websiteLabel,
-                    value: 'wwww.rwandatraffic.com',
+                    label: l10n.contactEmailLabelText,
+                    value: 'codetrail.dev@gmail.com',
                   ),
                 ],
               ),
@@ -239,11 +270,11 @@ class AboutAppScreen extends StatelessWidget {
                   _buildContactRow(
                     icon: Icons.email_rounded,
                     label: l10n.email,
-                    value: 'engineers.devs@gmail.com',
+                    value: 'codetrail.dev@gmail.com',
                     onTap: () async {
                       final uri = Uri(
                         scheme: 'mailto',
-                        path: 'engineers.devs@gmail.com',
+                        path: 'codetrail.dev@gmail.com',
                       );
                       if (await canLaunchUrl(uri)) {
                         await launchUrl(uri);
@@ -433,6 +464,35 @@ class AboutAppScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDisclaimerBullet(String text) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 4.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '• ',
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: AppColors.grey800,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.grey800,
+                fontSize: 12.sp,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -84,6 +84,37 @@ abstract class AppLocalizations {
   String get disclaimer;
   String get acceptDisclaimer;
   String get iUnderstand;
+  String get appNameFull;
+  String get educationalStudyPlatform;
+  String get importantDisclaimerReadCarefully;
+  String get disclaimerPrivateEntity;
+  String get disclaimerWeAre;
+  String get disclaimerNotAffiliated;
+  String get disclaimerNotEndorsed;
+  String get disclaimerNotConnected;
+  String get disclaimerNotGovernment;
+  String get disclaimerNotAuthorized;
+  String get disclaimerNotConducting;
+  String get disclaimerPrivateEducationalTool;
+  String get disclaimerOfficialProcedures;
+  String get disclaimerAcknowledge;
+  String get disclaimerReadUnderstood;
+  String get disclaimerUnderstandButton;
+  String get criticalDisclaimer;
+  String get aboutAppTitle;
+  String get appDescriptionFull;
+  String get developerEntity;
+  String get privacyPolicyTitle;
+  String get privacyPolicyHeader;
+  String get termsOfUseTitle;
+  String get termsOfUseHeader;
+  String get termsIndependentApp;
+  String get termsDeveloperInfo;
+  String get appNameLabelText;
+  String get descriptionLabelText;
+  String get developerLabelText;
+  String get contactEmailLabelText;
+  String get appDescriptionShort;
 
   // Error messages
   String get networkError;
@@ -248,7 +279,6 @@ abstract class AppLocalizations {
   String get byCreatingAccountYouAgree;
   String get privacyPolicy;
   String get and;
-  String get privacyPolicyTitle;
   String get privacyPolicyContent;
   String get termsConditionsTitle;
   String get termsConditionsContent;
@@ -926,6 +956,7 @@ abstract class AppLocalizations {
   String get errorSubmittingExam;
   String get correctQuestions;
   String get incorrectQuestions;
+  String get practiceExamTitle;
 
   // Factory constructor to get the appropriate localization
   static AppLocalizations of(BuildContext context) {

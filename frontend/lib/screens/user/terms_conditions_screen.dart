@@ -40,14 +40,60 @@ class TermsConditionsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    l10n.termsConditionsTitle,
-                    style: AppTextStyles.heading2.copyWith(fontSize: 24.sp),
+                    l10n.termsOfUseTitle,
+                    style: AppTextStyles.heading2.copyWith(fontSize: 22.sp),
                   ),
                   SizedBox(height: 8.h),
                   Text(
                     l10n.lastUpdatedDate('December 2025'),
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: AppColors.grey600,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF3CD),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
+                        color: const Color(0xFFDC3545),
+                        width: 2,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: const Color(0xFFDC3545),
+                              size: 24.sp,
+                            ),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Text(
+                                l10n.termsOfUseHeader,
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: const Color(0xFFDC3545),
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 12.h),
+                        Text(
+                          l10n.termsIndependentApp,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.grey800,
+                            fontSize: 12.sp,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

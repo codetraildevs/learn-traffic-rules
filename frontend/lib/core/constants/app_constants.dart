@@ -32,10 +32,10 @@ class AppConstants {
   static const String notificationPrefsKey = 'notification_preferences';
 
   // App Configuration
-  static const String appName = 'Rwanda Traffic Rule 🇷🇼';
-  static const String appSubtitle = 'Provisional Driving License Preparation';
+  static const String appName = 'Rwanda Traffic Driving School';
+  static const String appSubtitle = 'Educational Study Platform';
   static const String appDescription =
-      'Educational app for provisional driving license preparation and traffic safety learning';
+      'Independent educational application for studying Rwanda traffic rules and driving theory through interactive practice materials';
   static const String appVersion = '1.1.1';
   static const String appBuildNumber = '16';
 

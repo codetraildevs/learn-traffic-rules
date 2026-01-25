@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/constants/app_constants.dart';
 import '../../l10n/app_localizations.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -116,24 +115,30 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     opacity: _textAnimation.value,
                     child: Column(
                       children: [
-                        Text(
-                          AppConstants.appName,
-                          style: AppTextStyles.heading1.copyWith(
-                            color: AppColors.white,
-                            fontSize: 32.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
                         Builder(
                           builder: (context) {
-                            final l10n = AppLocalizations.of(context)!;
-                            return Text(
-                              l10n.masterTrafficRules,
-                              style: AppTextStyles.bodyLarge.copyWith(
-                                color: AppColors.white.withValues(alpha: 0.9),
-                                fontSize: 16.sp,
-                              ),
+                            final l10n = AppLocalizations.of(context);
+                            return Column(
+                              children: [
+                                Text(
+                                  l10n.appNameFull,
+                                  style: AppTextStyles.heading1.copyWith(
+                                    color: AppColors.white,
+                                    fontSize: 28.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 8.h),
+                                Text(
+                                  l10n.educationalStudyPlatform,
+                                  style: AppTextStyles.bodyLarge.copyWith(
+                                    color: AppColors.white.withValues(alpha: 0.9),
+                                    fontSize: 16.sp,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
                             );
                           },
                         ),

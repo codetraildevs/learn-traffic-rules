@@ -952,7 +952,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.exam.title,
+                      '${l10n.practiceExamTitle} ${widget.exam.title.replaceAll(RegExp(r'[^0-9]'), '')}',
                       style: AppTextStyles.heading3.copyWith(
                         color: AppColors.primary,
                         fontSize: 18.sp,
