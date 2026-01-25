@@ -957,7 +957,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get totalUsersLabel => 'Total des utilisateurs';
 
   @override
-  String get totalExams => 'Total des examens';
+  String get totalExams => 'Total des pratiques';
 
   @override
   String get totalAttempts => 'Total des tentatives';
