@@ -13,6 +13,28 @@ const { Server } = require('socket.io');
 const { testConnection, initializeTables } = require('./src/config/database');
 const notificationService = require('./src/services/notificationService');
 
+// ⭐ SETUP ASSOCIATIONS IMMEDIATELY (before routes are loaded)
+// This ensures associations are available even if AUTO_DB_INIT=false
+// Import models first to ensure they're loaded
+require('./src/models/User');
+require('./src/models/Exam');
+require('./src/models/Question');
+require('./src/models/PaymentRequest');
+require('./src/models/AccessCode');
+require('./src/models/ExamResult');
+require('./src/models/Notification');
+require('./src/models/StudyReminder');
+require('./src/models/NotificationPreferences');
+require('./src/models/Course');
+require('./src/models/CourseContent');
+require('./src/models/CourseProgress');
+require('./src/models/CourseContentProgress');
+
+// Now set up associations
+const setupAssociations = require('./src/config/associations');
+setupAssociations();
+console.log('✅ Model associations set up (early initialization)');
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {

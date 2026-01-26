@@ -1599,6 +1599,22 @@ class ExamController {
       });
     } catch (error) {
       console.error('Get user exam results error:', error);
+      
+      // Check if it's an association error
+      if (error.name === 'SequelizeEagerLoadingError' || error.message?.includes('not associated')) {
+        console.error('❌ Association error detected. Ensure associations are set up before routes are loaded.');
+        console.error('   Error details:', error.message);
+        
+        // Try to set up associations on the fly (fallback)
+        try {
+          const setupAssociations = require('../config/associations');
+          setupAssociations();
+          console.log('✅ Associations set up as fallback');
+        } catch (setupError) {
+          console.error('❌ Failed to set up associations:', setupError);
+        }
+      }
+      
       res.status(500).json({
         success: false,
         message: 'Internal server error',
