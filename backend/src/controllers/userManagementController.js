@@ -332,19 +332,9 @@ const createAccessCodeForUser = async (req, res) => {
     const { paymentAmount, durationDays } = req.body;
     const generatedByManagerId = req.user.userId;
 
-    console.log('🔍 Creating access code for user:', {
-      userId,
-      paymentAmount,
-      durationDays: durationDays || 'not provided (using tier)',
-      generatedByManagerId
-    });
-
-    // Check if user exists
+    // Check if user exists first
     const user = await User.findByPk(userId);
-    console.log('🔍 User found:', user ? 'Yes' : 'No');
-    
     if (!user) {
-      console.log('❌ User not found with ID:', userId);
       return res.status(404).json({
         success: false,
         message: 'User not found'
@@ -356,13 +346,17 @@ const createAccessCodeForUser = async (req, res) => {
     if (isNaN(numericPaymentAmount) || numericPaymentAmount <= 0) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid payment amount'
+        message: 'Invalid payment amount. Payment amount must be a positive number.'
       });
     }
 
-    // Validate durationDays if provided
+    // Check if payment amount matches a tier (1500, 3000, 5000)
+    const validTierAmounts = [1500, 3000, 5000];
+    const isTierAmount = validTierAmounts.includes(numericPaymentAmount);
+    
+    // Validate durationDays based on payment amount type
     let numericDurationDays = null;
-    if (durationDays !== undefined && durationDays !== null) {
+    if (durationDays !== undefined && durationDays !== null && durationDays !== '') {
       numericDurationDays = Number(durationDays);
       if (isNaN(numericDurationDays) || numericDurationDays < 1 || numericDurationDays > 3650) {
         return res.status(400).json({
@@ -370,6 +364,33 @@ const createAccessCodeForUser = async (req, res) => {
           message: 'Invalid duration days. Must be between 1 and 3650.'
         });
       }
+    } else if (!isTierAmount) {
+      // If not a tier amount and no durationDays provided, require it
+      return res.status(400).json({
+        success: false,
+        message: `Duration days is required for custom payment amounts. Valid tier amounts (30, 90, or 180 days) are: 1500, 3000, 5000. For other amounts, provide durationDays (1-3650).`
+      });
+    }
+
+    // Log the request details
+    if (isTierAmount) {
+      const tierDays = numericPaymentAmount === 1500 ? 30 : numericPaymentAmount === 3000 ? 90 : 180;
+      console.log('🔍 Creating access code for user:', {
+        userId,
+        paymentAmount: numericPaymentAmount,
+        paymentTier: numericPaymentAmount === 1500 ? '1_MONTH' : numericPaymentAmount === 3000 ? '3_MONTHS' : '6_MONTHS',
+        durationDays: tierDays,
+        note: 'Using payment tier (durationDays set automatically)',
+        generatedByManagerId
+      });
+    } else {
+      console.log('🔍 Creating access code for user:', {
+        userId,
+        paymentAmount: numericPaymentAmount,
+        durationDays: numericDurationDays,
+        note: 'Using custom duration',
+        generatedByManagerId
+      });
     }
 
     // Create access code with payment (with optional custom duration)

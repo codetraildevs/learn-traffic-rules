@@ -279,28 +279,31 @@ AccessCode.createWithPayment = async function(userId, generatedByManagerId, paym
   let tier = 'CUSTOM';
 
   // If durationDays is provided and valid, use it for custom dates
-  if (durationDays !== null && durationDays !== undefined) {
+  if (durationDays !== null && durationDays !== undefined && durationDays !== '') {
     const numericDurationDays = Number(durationDays);
-    if (isNaN(numericDurationDays) || numericDurationDays <= 0) {
-      throw new Error(`Invalid duration days: ${durationDays}. Duration must be a positive number.`);
+    if (isNaN(numericDurationDays) || numericDurationDays < 1) {
+      throw new Error(`Invalid duration days: ${durationDays}. Duration must be a positive number greater than or equal to 1.`);
+    }
+    if (numericDurationDays > 3650) {
+      throw new Error(`Invalid duration days: ${durationDays}. Duration cannot exceed 3650 days (10 years).`);
     }
     days = numericDurationDays;
     tier = 'CUSTOM';
-    console.log(`📅 Using custom duration: ${days} days for payment amount: ${numericPaymentAmount}`);
+    console.log(`📅 Using custom duration: ${days} days for payment amount: ${numericPaymentAmount} RWF`);
   } else {
-    // Otherwise, use payment tier logic
+    // Otherwise, use payment tier logic (1500→30 days, 3000→90 days, 5000→180 days)
     tierConfig = AccessCode.getPaymentTierByAmount(numericPaymentAmount);
     if (!tierConfig) {
-      const validTiers = Object.values(AccessCode.PAYMENT_TIERS).map(t => t.amount).join(', ');
+      const validTiers = Object.values(AccessCode.PAYMENT_TIERS).map(t => `${t.amount} (${t.days} days)`).join(', ');
       throw new Error(
-        `Invalid payment amount: ${numericPaymentAmount}. ` +
+        `Invalid payment amount: ${numericPaymentAmount} RWF. ` +
         `Valid payment tier amounts are: ${validTiers}. ` +
-        `For custom duration, provide both paymentAmount and durationDays parameters.`
+        `For custom payment amounts, you must provide durationDays parameter (1-3650 days).`
       );
     }
     days = tierConfig.days;
     tier = tierConfig.tier;
-    console.log(`💰 Using payment tier: ${tier} (${days} days) for amount: ${numericPaymentAmount}`);
+    console.log(`💰 Using payment tier: ${tier} (${days} days) for amount: ${numericPaymentAmount} RWF`);
   }
 
   const expiresAt = new Date();
