@@ -282,7 +282,9 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           // Refresh access period when app comes to foreground
           final authNotifier = ref.read(authProvider.notifier);
           authNotifier.refreshAccessPeriod().then((_) {
-            _loadFreeExams(forceReload: true);
+            if (mounted) {
+              _loadFreeExams(forceReload: true);
+            }
           });
         } else {
           debugPrint(
@@ -309,7 +311,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       );
 
       // Only update if different or not set
-      if (_selectedExamType != examTypeFromLocale) {
+      if (_selectedExamType != examTypeFromLocale && mounted) {
         setState(() {
           _selectedExamType = examTypeFromLocale;
         });
@@ -379,10 +381,12 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       if (hasInternet && _isOffline) {
         // Internet came back - sync data
         debugPrint('🌐 Internet connection restored, syncing...');
-        setState(() {
-          _isOffline = false;
-          _isSyncing = true;
-        });
+        if (mounted) {
+          setState(() {
+            _isOffline = false;
+            _isSyncing = true;
+          });
+        }
 
         // Refresh access period when internet comes back
         final authNotifier = ref.read(authProvider.notifier);
@@ -392,17 +396,23 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         await _syncService.fullSync();
 
         // Reload exams after sync
-        await _loadFreeExams(forceReload: true);
+        if (mounted) {
+          await _loadFreeExams(forceReload: true);
+        }
 
-        setState(() {
-          _isSyncing = false;
-        });
+        if (mounted) {
+          setState(() {
+            _isSyncing = false;
+          });
+        }
       } else if (!hasInternet && !_isOffline) {
         // Internet lost
         debugPrint('🌐 Internet connection lost, using offline data');
-        setState(() {
-          _isOffline = true;
-        });
+        if (mounted) {
+          setState(() {
+            _isOffline = true;
+          });
+        }
       }
     });
   }
@@ -424,15 +434,19 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     }
 
     try {
-      setState(() {
-        _isLoadingFreeExams = true;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingFreeExams = true;
+        });
+      }
 
       // Check internet connection
       final hasInternet = await _networkService.hasInternetConnection();
-      setState(() {
-        _isOffline = !hasInternet;
-      });
+      if (mounted) {
+        setState(() {
+          _isOffline = !hasInternet;
+        });
+      }
 
       if (hasInternet) {
         // Online: Refresh access period first to ensure we have latest access status
@@ -513,15 +527,17 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               return type == examTypeToFilter.toLowerCase();
             }).toList();
 
-            setState(() {
-              _freeExamData = FreeExamData(
-                exams: filteredExams, // Set filtered exams directly
-                isFreeUser: response.data.isFreeUser,
-                freeExamsRemaining: response.data.freeExamsRemaining,
-                paymentInstructions: response.data.paymentInstructions,
-              );
-              _isLoadingFreeExams = false;
-            });
+            if (mounted) {
+              setState(() {
+                _freeExamData = FreeExamData(
+                  exams: filteredExams, // Set filtered exams directly
+                  isFreeUser: response.data.isFreeUser,
+                  freeExamsRemaining: response.data.freeExamsRemaining,
+                  paymentInstructions: response.data.paymentInstructions,
+                );
+                _isLoadingFreeExams = false;
+              });
+            }
 
             debugPrint(
               '🌐 Online: Filtered to ${filteredExams.length} exams for type: ${_selectedExamType ?? _mapLocaleToExamType(ref.read(localeProvider).languageCode)}',
@@ -589,9 +605,11 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       }
     } catch (e) {
       debugPrint('❌ Error loading free exams: $e');
-      setState(() {
-        _isLoadingFreeExams = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingFreeExams = false;
+        });
+      }
     }
   }
 
@@ -798,15 +816,19 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         _preloadExamQuestions(filteredExams);
       } else {
         debugPrint('📱 No offline exams available');
+        if (mounted) {
+          setState(() {
+            _isLoadingFreeExams = false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Error loading offline exams: $e');
+      if (mounted) {
         setState(() {
           _isLoadingFreeExams = false;
         });
       }
-    } catch (e) {
-      debugPrint('❌ Error loading offline exams: $e');
-      setState(() {
-        _isLoadingFreeExams = false;
-      });
     }
   }
 
@@ -969,14 +991,16 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
       );
     }
 
-    setState(() {
-      _freeExamData = FreeExamData(
-        exams: filteredExams,
-        isFreeUser: _freeExamData!.isFreeUser,
-        freeExamsRemaining: _freeExamData!.freeExamsRemaining,
-        paymentInstructions: _freeExamData!.paymentInstructions,
-      );
-    });
+    if (mounted) {
+      setState(() {
+        _freeExamData = FreeExamData(
+          exams: filteredExams,
+          isFreeUser: _freeExamData!.isFreeUser,
+          freeExamsRemaining: _freeExamData!.freeExamsRemaining,
+          paymentInstructions: _freeExamData!.paymentInstructions,
+        );
+      });
+    }
     debugPrint(
       '🔄 Filtered to ${filteredExams.length} exams for type: $examTypeToFilter (total in _allExams: ${_allExams.length})',
     );
@@ -1402,11 +1426,13 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
               await localeNotifier.setLocale(Locale(localeCode));
 
               // Clear image cache when language changes to reload images for new language
-              setState(() {
-                _selectedExamType = newExamType;
-                _imagePathCache
-                    .clear(); // Clear cache to reload images for new language
-              });
+              if (mounted) {
+                setState(() {
+                  _selectedExamType = newExamType;
+                  _imagePathCache
+                      .clear(); // Clear cache to reload images for new language
+                });
+              }
 
               // Check if we're offline
               final hasInternet = await _networkService.hasInternetConnection();
