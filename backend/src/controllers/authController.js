@@ -340,8 +340,11 @@ class AuthController {
         { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '30d' }
       );
 
-      // Update last login
-      await authService.updateLastLogin(user.id);
+      // Update last login (non-blocking - don't fail login if this fails)
+      authService.updateLastLogin(user.id).catch((error) => {
+        // Log but don't throw - login should succeed even if lastLogin update fails
+        console.warn(`⚠️ Failed to update lastLogin for user ${user.id}:`, error.message);
+      });
 
       // Get access period information for regular users
       let accessPeriodInfo = null;

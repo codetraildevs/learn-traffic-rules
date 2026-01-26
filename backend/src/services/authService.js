@@ -24,11 +24,59 @@ class AuthService {
 
   /**
    * Update user last login
+   * Uses direct UPDATE query to avoid lock contention
+   * Includes retry logic for lock timeouts
    */
   async updateLastLogin(userId) {
-    const user = await User.findByPk(userId);
-    if (user) {
-      await user.updateLastLogin();
+    const maxRetries = 3;
+    const retryDelay = 100; // 100ms
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        // Use direct UPDATE instead of fetch-then-save to reduce lock contention
+        // This avoids SELECT ... FOR UPDATE lock, only uses UPDATE lock
+        await User.update(
+          { 
+            lastLogin: new Date(),
+            updatedAt: new Date()
+          },
+          { 
+            where: { id: userId },
+            // Use a transaction with shorter timeout to prevent long waits
+            transaction: null, // No transaction needed for simple update
+            // Skip validation and hooks for performance
+            validate: false,
+            hooks: false
+          }
+        );
+        
+        // Success - exit retry loop
+        return;
+      } catch (error) {
+        // Check if it's a lock timeout error
+        const isLockTimeout = error.code === 'ER_LOCK_WAIT_TIMEOUT' || 
+                             error.errno === 1205 ||
+                             error.message?.includes('Lock wait timeout');
+        
+        if (isLockTimeout && attempt < maxRetries) {
+          // Wait before retrying (exponential backoff)
+          const delay = retryDelay * Math.pow(2, attempt - 1);
+          console.warn(`⚠️ Lock timeout updating lastLogin for user ${userId}, retrying in ${delay}ms (attempt ${attempt}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        // If not a lock timeout, or max retries reached, log and throw
+        if (isLockTimeout) {
+          console.error(`❌ Failed to update lastLogin for user ${userId} after ${maxRetries} attempts: Lock timeout`);
+          // Don't throw - lastLogin update failure shouldn't block login
+          return;
+        }
+        
+        // For other errors, log and throw
+        console.error(`❌ Error updating lastLogin for user ${userId}:`, error);
+        throw error;
+      }
     }
   }
 
