@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:learn_traffic_rules/core/theme/app_theme.dart';
 import 'package:learn_traffic_rules/models/user_management_model.dart';
+import 'package:learn_traffic_rules/models/access_code_model.dart';
 import 'package:learn_traffic_rules/services/user_management_service.dart';
 import 'package:learn_traffic_rules/services/network_service.dart';
 import 'package:learn_traffic_rules/widgets/loading_widget.dart';
@@ -545,10 +547,17 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           durationDays: days, // Pass custom days to backend
         );
 
-        if (response.success) {
+        if (response.success && response.data.accessCode.code.isNotEmpty) {
           final l10n = AppLocalizations.of(context);
           _showSuccessSnackBar(
             '${l10n.accessCodeGeneratedFor(user.fullName)} (${days} days)',
+          );
+          // Show access code dialog so admin can copy and share it
+          _showAccessCodeDialog(
+            context,
+            response.data.accessCode,
+            user.fullName,
+            days,
           );
           _loadUsers(); // Refresh the list
         } else {
@@ -567,9 +576,16 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           amount.toDouble(),
         );
 
-        if (response.success) {
+        if (response.success && response.data.accessCode.code.isNotEmpty) {
           final l10n = AppLocalizations.of(context);
           _showSuccessSnackBar(l10n.accessCodeGeneratedFor(user.fullName));
+          // Show access code dialog so admin can copy and share it
+          _showAccessCodeDialog(
+            context,
+            response.data.accessCode,
+            user.fullName,
+            days,
+          );
           _loadUsers(); // Refresh the list
         } else {
           final l10n = AppLocalizations.of(context);
@@ -1030,6 +1046,171 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         _showErrorSnackBar('${l10n.errorDeletingUser}: $e');
       }
     }
+  }
+
+  /// Show access code dialog with copy functionality
+  void _showAccessCodeDialog(
+    BuildContext context,
+    AccessCode accessCode,
+    String userName,
+    int durationDays,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final dateFormat = DateFormat('MMM dd, yyyy');
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.check_circle, color: AppColors.success, size: 24.sp),
+            SizedBox(width: 8.w),
+            Expanded(
+              child: Text(
+                l10n.accessCodeGeneratedFor(userName),
+                style: AppTextStyles.heading3,
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                userName,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Container(
+                padding: EdgeInsets.all(16.w),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    width: 2,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Access Code',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.grey600,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SelectableText(
+                            accessCode.code,
+                            style: AppTextStyles.heading2.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.copy, color: AppColors.primary),
+                          onPressed: () async {
+                            await Clipboard.setData(
+                              ClipboardData(text: accessCode.code),
+                            );
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Access code copied to clipboard'),
+                                  duration: const Duration(seconds: 2),
+                                  backgroundColor: AppColors.success,
+                                ),
+                              );
+                            }
+                          },
+                          tooltip: l10n.copy,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16.h),
+              _buildInfoRow('Duration', '$durationDays days'),
+              _buildInfoRow(
+                'Expires On',
+                dateFormat.format(accessCode.expiresAt),
+              ),
+              _buildInfoRow(
+                'Payment Amount',
+                '${accessCode.paymentAmount.toStringAsFixed(0)} RWF',
+              ),
+              SizedBox(height: 16.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: AppColors.info.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: AppColors.info,
+                      size: 20.sp,
+                    ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Text(
+                        'A notification with this access code has been sent to the user.',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.info,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.close),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8.h),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.grey600,
+            ),
+          ),
+          Text(
+            value,
+            style: AppTextStyles.bodyMedium.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showSuccessSnackBar(String message) {
