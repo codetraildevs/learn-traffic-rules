@@ -468,6 +468,10 @@ const startServer = async () => {
     // Initialize notification service with Socket.IO
     notificationService.setSocketIO(io);
     
+    // ⭐ START CRON JOBS AFTER DATABASE IS READY
+    console.log('🔄 Starting notification service cron jobs...');
+    notificationService.startCronJobs();
+    
     // Socket.IO connection handling
     io.on('connection', (socket) => {
       console.log(`🔌 User connected: ${socket.id}`);
@@ -492,6 +496,7 @@ const startServer = async () => {
       console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🔑 Admin credentials: admin123 / admin123`);
       console.log(`🔌 Socket.IO enabled for real-time notifications`);
+      console.log(`✅ Cron jobs started successfully`);
       
       if (!dbConnected) {
         console.log(`⚠️  WARNING: Database is not connected. Some features may not work.`);
@@ -505,6 +510,21 @@ const startServer = async () => {
         console.error(`❌ Server failed to start:`, err.message);
       }
       process.exit(1);
+    });
+    
+    // Graceful shutdown handlers
+    process.on('SIGTERM', async () => {
+      console.log('🛑 SIGTERM received, shutting down gracefully...');
+      notificationService.stopCronJobs();
+      await require('./src/config/database').sequelize.close();
+      process.exit(0);
+    });
+
+    process.on('SIGINT', async () => {
+      console.log('🛑 SIGINT received, shutting down gracefully...');
+      notificationService.stopCronJobs();
+      await require('./src/config/database').sequelize.close();
+      process.exit(0);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);
