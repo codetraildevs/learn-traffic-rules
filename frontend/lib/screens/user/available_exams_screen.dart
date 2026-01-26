@@ -799,15 +799,17 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
           '📱 Offline: After filtering by type "$_selectedExamType": ${filteredExams.length} exams',
         );
 
-        setState(() {
-          _freeExamData = FreeExamData(
-            exams: filteredExams, // Set filtered exams directly
-            isFreeUser: isFreeUser,
-            freeExamsRemaining: 0,
-            paymentInstructions: offlinePaymentInstructions,
-          );
-          _isLoadingFreeExams = false;
-        });
+        if (mounted) {
+          setState(() {
+            _freeExamData = FreeExamData(
+              exams: filteredExams, // Set filtered exams directly
+              isFreeUser: isFreeUser,
+              freeExamsRemaining: 0,
+              paymentInstructions: offlinePaymentInstructions,
+            );
+            _isLoadingFreeExams = false;
+          });
+        }
 
         // Preload all image paths for the filtered exams
         _preloadImagePaths();
