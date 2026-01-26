@@ -249,8 +249,16 @@ AccessCode.PAYMENT_TIERS = {
 
 AccessCode.getPaymentTierByAmount = function(amount) {
   const tiers = AccessCode.PAYMENT_TIERS;
+  // Convert amount to number for comparison (handles string, decimal, etc.)
+  const numericAmount = Number(amount);
+  
+  if (isNaN(numericAmount)) {
+    return null;
+  }
+  
   for (const [tier, config] of Object.entries(tiers)) {
-    if (config.amount === amount) {
+    // Compare as numbers to handle decimal precision and string conversion
+    if (Math.abs(config.amount - numericAmount) < 0.01) {
       return { tier, ...config };
     }
   }
@@ -260,22 +268,39 @@ AccessCode.getPaymentTierByAmount = function(amount) {
 AccessCode.createWithPayment = async function(userId, generatedByManagerId, paymentAmount, durationDays = null) {
   const { retryDbOperation } = require('../utils/dbRetry');
   
+  // Validate payment amount
+  const numericPaymentAmount = Number(paymentAmount);
+  if (isNaN(numericPaymentAmount) || numericPaymentAmount <= 0) {
+    throw new Error(`Invalid payment amount: ${paymentAmount}. Payment amount must be a positive number.`);
+  }
+  
   let tierConfig = null;
-  let days = durationDays;
+  let days = null;
   let tier = 'CUSTOM';
 
-  // If durationDays is provided, use it for custom dates
-  if (durationDays && durationDays > 0) {
-    days = durationDays;
+  // If durationDays is provided and valid, use it for custom dates
+  if (durationDays !== null && durationDays !== undefined) {
+    const numericDurationDays = Number(durationDays);
+    if (isNaN(numericDurationDays) || numericDurationDays <= 0) {
+      throw new Error(`Invalid duration days: ${durationDays}. Duration must be a positive number.`);
+    }
+    days = numericDurationDays;
     tier = 'CUSTOM';
+    console.log(`📅 Using custom duration: ${days} days for payment amount: ${numericPaymentAmount}`);
   } else {
     // Otherwise, use payment tier logic
-    tierConfig = AccessCode.getPaymentTierByAmount(paymentAmount);
+    tierConfig = AccessCode.getPaymentTierByAmount(numericPaymentAmount);
     if (!tierConfig) {
-      throw new Error('Invalid payment amount. For custom dates, provide durationDays parameter.');
+      const validTiers = Object.values(AccessCode.PAYMENT_TIERS).map(t => t.amount).join(', ');
+      throw new Error(
+        `Invalid payment amount: ${numericPaymentAmount}. ` +
+        `Valid payment tier amounts are: ${validTiers}. ` +
+        `For custom duration, provide both paymentAmount and durationDays parameters.`
+      );
     }
     days = tierConfig.days;
     tier = tierConfig.tier;
+    console.log(`💰 Using payment tier: ${tier} (${days} days) for amount: ${numericPaymentAmount}`);
   }
 
   const expiresAt = new Date();

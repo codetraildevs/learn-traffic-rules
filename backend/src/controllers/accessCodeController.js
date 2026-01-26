@@ -84,19 +84,53 @@ const createAccessCode = async (req, res) => {
     }
 
     // Create access code with payment
-    const accessCode = await AccessCode.createWithPayment(
-      userId,
-      generatedByManagerId,
-      parseFloat(paymentAmount)
-    );
+    let accessCode;
+    try {
+      accessCode = await AccessCode.createWithPayment(
+        userId,
+        generatedByManagerId,
+        parseFloat(paymentAmount)
+      );
+      console.log(`✅ Access code created successfully: ${accessCode.code} for user ${userId}`);
+    } catch (createError) {
+      console.error(`❌ Failed to create access code for user ${userId}:`, createError);
+      
+      // Check if it's a validation error (should return 400, not 500)
+      if (createError.message && (
+        createError.message.includes('Invalid payment amount') ||
+        createError.message.includes('Invalid duration days')
+      )) {
+        return res.status(400).json({
+          success: false,
+          message: createError.message,
+          error: process.env.NODE_ENV === 'development' ? createError.stack : undefined
+        });
+      }
+      
+      // For other errors (including timeouts), return 500
+      return res.status(500).json({
+        success: false,
+        message: createError.message || 'Failed to create access code. Please try again.',
+        error: process.env.NODE_ENV === 'development' ? createError.message : undefined
+      });
+    }
 
     res.status(201).json({
       success: true,
       message: 'Access code created successfully',
-      data: accessCode
+      data: {
+        id: accessCode.id,
+        code: accessCode.code,
+        userId: accessCode.userId,
+        paymentAmount: accessCode.paymentAmount,
+        durationDays: accessCode.durationDays,
+        paymentTier: accessCode.paymentTier,
+        expiresAt: accessCode.expiresAt,
+        isUsed: accessCode.isUsed
+      }
     });
   } catch (error) {
-    console.error('Create access code error:', error);
+    console.error('Create access code error (unexpected):', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error',
