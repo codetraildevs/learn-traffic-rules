@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const { Op } = require('sequelize');
+const { sequelize } = require('../config/database');
 const Notification = require('../models/Notification');
 const StudyReminder = require('../models/StudyReminder');
 const NotificationPreferences = require('../models/NotificationPreferences');
@@ -9,7 +10,12 @@ class NotificationService {
   constructor() {
     this.io = null;
     this.scheduledJobs = new Map();
-    this.initializeCronJobs();
+    this.cronJobs = [];
+    this.isRunning = false;
+    // Overlap protection flags
+    this.isCheckingReminders = false;
+    this.isProcessingNotifications = false;
+    this.isSendingReports = false;
   }
 
   setSocketIO(io) {
@@ -17,25 +23,115 @@ class NotificationService {
   }
 
   /**
-   * Initialize cron jobs for study reminders
+   * Start cron jobs (call this after database connection is established)
    */
-  initializeCronJobs() {
+  startCronJobs() {
+    if (this.isRunning) {
+      console.log('[CRON] Cron jobs already running, skipping start');
+      return;
+    }
+
+    console.log('[CRON] Starting notification service cron jobs...');
+
     // Check for study reminders every minute
-    cron.schedule('* * * * *', async () => {
-      await this.checkStudyReminders();
+    const reminderJob = cron.schedule('* * * * *', async () => {
+      // Overlap protection
+      if (this.isCheckingReminders) {
+        console.log('[CRON] checkStudyReminders already running, skipping this execution');
+        return;
+      }
+
+      this.isCheckingReminders = true;
+      try {
+        console.log('[CRON] Checking study reminders at', new Date().toLocaleTimeString(), 'on', new Date().toLocaleDateString('en-US', { weekday: 'long' }));
+        await Promise.race([
+          this.checkStudyReminders(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('checkStudyReminders timeout')), 30000))
+        ]);
+      } catch (error) {
+        console.error('[CRON] Error in checkStudyReminders:', error.message);
+      } finally {
+        this.isCheckingReminders = false;
+      }
+    }, {
+      scheduled: false, // Don't start immediately
     });
 
     // Check for scheduled notifications every minute
-    cron.schedule('* * * * *', async () => {
-      await this.processScheduledNotifications();
+    const notificationJob = cron.schedule('* * * * *', async () => {
+      // Overlap protection
+      if (this.isProcessingNotifications) {
+        console.log('[CRON] processScheduledNotifications already running, skipping this execution');
+        return;
+      }
+
+      this.isProcessingNotifications = true;
+      try {
+        await Promise.race([
+          this.processScheduledNotifications(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('processScheduledNotifications timeout')), 30000))
+        ]);
+      } catch (error) {
+        console.error('[CRON] Error in processScheduledNotifications:', error.message);
+      } finally {
+        this.isProcessingNotifications = false;
+      }
+    }, {
+      scheduled: false, // Don't start immediately
     });
 
     // Weekly reports every Sunday at 9 AM
-    cron.schedule('0 9 * * 0', async () => {
-      await this.sendWeeklyReports();
+    const reportJob = cron.schedule('0 9 * * 0', async () => {
+      // Overlap protection
+      if (this.isSendingReports) {
+        console.log('[CRON] sendWeeklyReports already running, skipping this execution');
+        return;
+      }
+
+      this.isSendingReports = true;
+      try {
+        await Promise.race([
+          this.sendWeeklyReports(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('sendWeeklyReports timeout')), 60000))
+        ]);
+      } catch (error) {
+        console.error('[CRON] Error in sendWeeklyReports:', error.message);
+      } finally {
+        this.isSendingReports = false;
+      }
+    }, {
+      scheduled: false, // Don't start immediately
     });
 
-    console.log('Notification cron jobs initialized');
+    // Store job references
+    this.cronJobs = [reminderJob, notificationJob, reportJob];
+
+    // Start all jobs
+    reminderJob.start();
+    notificationJob.start();
+    reportJob.start();
+
+    this.isRunning = true;
+    console.log('[CRON] ✅ Notification cron jobs started successfully');
+  }
+
+  /**
+   * Stop cron jobs (useful for graceful shutdown)
+   */
+  stopCronJobs() {
+    if (!this.isRunning) {
+      return;
+    }
+
+    console.log('[CRON] Stopping notification service cron jobs...');
+    this.cronJobs.forEach(job => {
+      if (job && typeof job.stop === 'function') {
+        job.stop();
+      }
+    });
+    this.cronJobs = [];
+    this.isRunning = false;
+    console.log('[CRON] ✅ Notification cron jobs stopped');
   }
 
   /**
@@ -71,45 +167,65 @@ class NotificationService {
    * Get user notifications with pagination
    */
   async getUserNotifications(userId, options = {}) {
-    const {
-      page = 1,
-      limit = 20,
-      unreadOnly = false,
-      type = null,
-      category = null,
-    } = options;
+    try {
+      const {
+        page = 1,
+        limit = 20,
+        unreadOnly = false,
+        type = null,
+        category = null,
+      } = options;
 
-    const offset = (page - 1) * limit;
-    const whereClause = { userId };
+      const offset = (page - 1) * limit;
+      const whereClause = { userId };
 
-    if (unreadOnly) {
-      whereClause.isRead = false;
+      if (unreadOnly) {
+        whereClause.isRead = false;
+      }
+
+      if (type) {
+        whereClause.type = type;
+      }
+
+      if (category) {
+        whereClause.category = category;
+      }
+
+      // Add timeout to prevent hanging queries
+      const { count, rows } = await Promise.race([
+        Notification.findAndCountAll({
+          where: whereClause,
+          order: [['createdAt', 'DESC']],
+          limit: Math.min(parseInt(limit), 100), // Cap at 100
+          offset: offset,
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('getUserNotifications timeout')), 10000)
+        )
+      ]);
+
+      return {
+        notifications: rows,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: count,
+          totalPages: Math.ceil(count / limit),
+        },
+      };
+    } catch (error) {
+      console.error('Get notifications error:', error.name, error.message);
+      // Return empty result on timeout or other errors
+      return {
+        notifications: [],
+        pagination: {
+          page: parseInt(options.page || 1),
+          limit: parseInt(options.limit || 20),
+          total: 0,
+          totalPages: 0,
+        },
+      };
     }
-
-    if (type) {
-      whereClause.type = type;
-    }
-
-    if (category) {
-      whereClause.category = category;
-    }
-
-    const { count, rows } = await Notification.findAndCountAll({
-      where: whereClause,
-      order: [['createdAt', 'DESC']],
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-    });
-
-    return {
-      notifications: rows,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total: count,
-        totalPages: Math.ceil(count / limit),
-      },
-    };
   }
 
   /**
@@ -235,59 +351,97 @@ class NotificationService {
 
   /**
    * Check for study reminders that need to be sent
+   * OPTIMIZED: Only queries reminders that match current time and day
    */
   async checkStudyReminders() {
-    const now = new Date();
-    const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
-    const currentDay = this.getCurrentDayName(now);
+    try {
+      const now = new Date();
+      const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
+      const currentDay = this.getCurrentDayName(now);
 
-    console.log(`[CRON] Checking study reminders at ${currentTime} on ${currentDay}`);
+      console.log(`[CRON] Checking study reminders at ${currentTime} on ${currentDay}`);
 
-    const reminders = await StudyReminder.findAll({
-      where: {
-        isEnabled: true,
-        isActive: true,
-      },
-      include: [{
-        model: User,
-        as: 'user',
-        attributes: ['id', 'fullName', 'phoneNumber'],
-      }],
-    });
+      // OPTIMIZED: Query only reminders that match current time and day
+      // Use TIME comparison for better performance (MySQL TIME type)
+      const currentTimeWithSeconds = `${currentTime}:00`; // Add seconds for TIME comparison
+      const reminders = await StudyReminder.findAll({
+        where: {
+          isEnabled: true,
+          isActive: true,
+          // Use Sequelize.literal for proper TIME comparison in MySQL
+          [Op.and]: [
+            sequelize.where(
+              sequelize.fn('TIME', sequelize.col('reminderTime')),
+              currentTimeWithSeconds
+            )
+          ],
+        },
+        include: [{
+          model: User,
+          as: 'user',
+          attributes: ['id', 'fullName', 'phoneNumber'],
+        }],
+        limit: 100, // Safety limit
+      });
 
-    console.log(`[CRON] Found ${reminders.length} active reminders`);
+      // Filter by day of week in application (since JSON contains array)
+      const matchingReminders = reminders.filter(reminder => {
+        const daysOfWeek = Array.isArray(reminder.daysOfWeek) 
+          ? reminder.daysOfWeek 
+          : JSON.parse(reminder.daysOfWeek || '[]');
+        return daysOfWeek.includes(currentDay);
+      });
 
-    for (const reminder of reminders) {
+      console.log(`[CRON] Found ${matchingReminders.length} matching reminders (out of ${reminders.length} active)`);
+
+      if (matchingReminders.length === 0) {
+        return;
+      }
+
+      // Process in smaller batches to avoid connection pool exhaustion
+      const batchSize = 10;
+      for (let i = 0; i < matchingReminders.length; i += batchSize) {
+        const batch = matchingReminders.slice(i, i + batchSize);
+        await Promise.all(
+          batch.map(reminder => this.processReminder(reminder, currentTime, currentDay, now))
+        );
+      }
+    } catch (error) {
+      console.error('[CRON] Error in checkStudyReminders:', error.message);
+      // Don't throw - allow cron to continue
+    }
+  }
+
+  /**
+   * Process a single reminder
+   * Note: Time and day filtering already done in checkStudyReminders, so all reminders here should match
+   */
+  async processReminder(reminder, currentTime, currentDay, now) {
+    try {
       const reminderTime = reminder.reminderTime.slice(0, 5); // HH:MM format
       const daysOfWeek = Array.isArray(reminder.daysOfWeek) ? reminder.daysOfWeek : JSON.parse(reminder.daysOfWeek || '[]');
       
-      console.log(`[CRON] Checking reminder: ${reminderTime} on ${daysOfWeek.join(', ')}`);
-      console.log(`[CRON] Time match: ${reminderTime} === ${currentTime} ? ${reminderTime === currentTime}`);
-      console.log(`[CRON] Day match: ${currentDay} in [${daysOfWeek.join(', ')}] ? ${daysOfWeek.includes(currentDay)}`);
-      
-      // Check if current time matches reminder time and current day is in the days list
+      // Double-check match (safety check, though should already be filtered)
       if (reminderTime === currentTime && daysOfWeek.includes(currentDay)) {
-        console.log(`[CRON] ✅ MATCH! Sending study reminder to user ${reminder.userId}`);
+        console.log(`[CRON] ✅ Sending study reminder to user ${reminder.userId}`);
         
-        try {
-          await this.sendStudyReminder(reminder);
-          
-          // Update next scheduled time
-          reminder.nextScheduledAt = this.calculateNextReminderTime(
-            reminder.reminderTime,
-            daysOfWeek,
-            reminder.timezone
-          );
-          reminder.lastSentAt = now;
-          await reminder.save();
-          
-          console.log(`[CRON] ✅ Study reminder sent successfully to user ${reminder.userId}`);
-        } catch (error) {
-          console.error(`[CRON] ❌ Error sending study reminder to user ${reminder.userId}:`, error);
-        }
+        await this.sendStudyReminder(reminder);
+        
+        // Update next scheduled time
+        reminder.nextScheduledAt = this.calculateNextReminderTime(
+          reminder.reminderTime,
+          daysOfWeek,
+          reminder.timezone
+        );
+        reminder.lastSentAt = now;
+        await reminder.save();
+        
+        console.log(`[CRON] ✅ Study reminder sent successfully to user ${reminder.userId}`);
       } else {
-        console.log(`[CRON] ❌ No match for reminder ${reminder.id}`);
+        console.log(`[CRON] ⚠️  Reminder ${reminder.id} filtered out (time/day mismatch)`);
       }
+    } catch (error) {
+      console.error(`[CRON] ❌ Error processing reminder ${reminder.id}:`, error.message);
     }
   }
 
@@ -330,19 +484,38 @@ class NotificationService {
    * Process scheduled notifications
    */
   async processScheduledNotifications() {
-    const now = new Date();
-    
-    const notifications = await Notification.findAll({
-      where: {
-        scheduledFor: {
-          [Op.lte]: now,
+    try {
+      const now = new Date();
+      
+      // Limit to 100 notifications per batch to prevent timeout
+      const notifications = await Notification.findAll({
+        where: {
+          scheduledFor: {
+            [Op.lte]: now,
+          },
+          isPushSent: false,
         },
-        isPushSent: false,
-      },
-    });
+        limit: 100,
+        order: [['scheduledFor', 'ASC']],
+      });
 
-    for (const notification of notifications) {
-      await this.sendPushNotification(notification);
+      console.log(`[CRON] Processing ${notifications.length} scheduled notifications`);
+
+      // Process in smaller batches to avoid connection pool exhaustion
+      const batchSize = 10;
+      for (let i = 0; i < notifications.length; i += batchSize) {
+        const batch = notifications.slice(i, i + batchSize);
+        await Promise.all(
+          batch.map(notification => 
+            this.sendPushNotification(notification).catch(err => {
+              console.error(`[CRON] Error sending push notification ${notification.id}:`, err.message);
+            })
+          )
+        );
+      }
+    } catch (error) {
+      console.error('[CRON] Error in processScheduledNotifications:', error.message);
+      // Don't throw - allow cron to continue
     }
   }
 
@@ -574,4 +747,7 @@ class NotificationService {
   }
 }
 
-module.exports = new NotificationService();
+// Export singleton instance (cron jobs will NOT auto-start)
+// Call notificationService.startCronJobs() after database connection is established
+const notificationService = new NotificationService();
+module.exports = notificationService;

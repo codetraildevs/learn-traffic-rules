@@ -25,10 +25,11 @@ const getDatabaseConfig = () => {
       dialect: 'mysql',
       logging: false,
       pool: {
-        max: 5,
-        min: 0,
-        acquire: 30000,
-        idle: 10000
+        max: 20,
+        min: 2,
+        acquire: 60000,
+        idle: 10000,
+        evict: 1000
       },
       retry: {
         match: [
@@ -71,10 +72,11 @@ const getDatabaseConfig = () => {
       dialect: 'mysql',
       logging: false,
       pool: {
-        max: 5,
-        min: 0,
-        acquire: 30000,
-        idle: 10000
+        max: 20,
+        min: 2,
+        acquire: 60000,
+        idle: 10000,
+        evict: 1000
       },
       retry: {
         match: [
@@ -1591,6 +1593,16 @@ const createMySQLTables = async (sequelize) => {
 
 // Initialize database tables
 const initializeTables = async () => {
+  // Check if auto-initialization is disabled (production safety)
+  const autoInit = process.env.AUTO_DB_INIT !== 'false';
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  if (isProduction && !autoInit) {
+    console.log('⚠️  AUTO_DB_INIT=false: Skipping database table initialization in production');
+    console.log('💡 Use migrations or manual initialization for production databases');
+    return;
+  }
+
   try {
     console.log('🔄 Starting database table initialization...');
     
