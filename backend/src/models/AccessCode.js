@@ -153,22 +153,81 @@ AccessCode.prototype.canBeUsed = function() {
 };
 
 AccessCode.prototype.recordFailedAttempt = async function() {
-  this.attemptCount += 1;
-  this.lastAttemptAt = new Date();
+  const { retryDbOperation } = require('../utils/dbRetry');
+  const { sequelize } = require('../config/database');
   
-  // Block after 5 failed attempts for 1 hour
-  if (this.attemptCount >= 5) {
-    this.isBlocked = true;
-    this.blockedUntil = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-  }
+  const attemptCount = this.attemptCount + 1;
+  const lastAttemptAt = new Date();
+  const shouldBlock = attemptCount >= 5;
+  const blockedUntil = shouldBlock ? new Date(Date.now() + 60 * 60 * 1000) : null;
   
-  await this.save();
+  // Use direct UPDATE to avoid lock contention
+  await retryDbOperation(async () => {
+    await sequelize.query(
+      `UPDATE access_codes 
+       SET attemptCount = :attemptCount, 
+           lastAttemptAt = :lastAttemptAt,
+           isBlocked = :isBlocked,
+           blockedUntil = :blockedUntil,
+           updatedAt = :updatedAt
+       WHERE id = :id`,
+      {
+        replacements: {
+          id: this.id,
+          attemptCount,
+          lastAttemptAt,
+          isBlocked: shouldBlock,
+          blockedUntil,
+          updatedAt: new Date()
+        },
+        type: sequelize.QueryTypes.UPDATE
+      }
+    );
+    
+    // Update instance properties
+    this.attemptCount = attemptCount;
+    this.lastAttemptAt = lastAttemptAt;
+    this.isBlocked = shouldBlock;
+    this.blockedUntil = blockedUntil;
+  }, {
+    maxRetries: 3,
+    retryDelay: 100,
+    retryOnLockTimeout: true
+  });
 };
 
 AccessCode.prototype.markAsUsed = async function() {
-  this.isUsed = true;
-  this.usedAt = new Date();
-  await this.save();
+  const { retryDbOperation } = require('../utils/dbRetry');
+  const { sequelize } = require('../config/database');
+  
+  const usedAt = new Date();
+  
+  // Use direct UPDATE to avoid lock contention
+  await retryDbOperation(async () => {
+    await sequelize.query(
+      `UPDATE access_codes 
+       SET isUsed = true, 
+           usedAt = :usedAt,
+           updatedAt = :updatedAt
+       WHERE id = :id`,
+      {
+        replacements: {
+          id: this.id,
+          usedAt,
+          updatedAt: new Date()
+        },
+        type: sequelize.QueryTypes.UPDATE
+      }
+    );
+    
+    // Update instance properties
+    this.isUsed = true;
+    this.usedAt = usedAt;
+  }, {
+    maxRetries: 3,
+    retryDelay: 100,
+    retryOnLockTimeout: true
+  });
 };
 
 // Static methods
@@ -199,6 +258,8 @@ AccessCode.getPaymentTierByAmount = function(amount) {
 };
 
 AccessCode.createWithPayment = async function(userId, generatedByManagerId, paymentAmount, durationDays = null) {
+  const { retryDbOperation } = require('../utils/dbRetry');
+  
   let tierConfig = null;
   let days = durationDays;
   let tier = 'CUSTOM';
@@ -220,14 +281,44 @@ AccessCode.createWithPayment = async function(userId, generatedByManagerId, paym
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + days);
 
-  return AccessCode.create({
-    code: AccessCode.generateCode(),
-    userId,
-    generatedByManagerId,
-    paymentAmount,
-    durationDays: days,
-    paymentTier: tier,
-    expiresAt
+  // Retry on lock timeout with new code generation for duplicate entries
+  return await retryDbOperation(async () => {
+    let code = AccessCode.generateCode();
+    let attempts = 0;
+    const maxCodeAttempts = 5;
+    
+    while (attempts < maxCodeAttempts) {
+      try {
+        return await AccessCode.create({
+          code,
+          userId,
+          generatedByManagerId,
+          paymentAmount,
+          durationDays: days,
+          paymentTier: tier,
+          expiresAt
+        });
+      } catch (error) {
+        // If duplicate code, generate new one and retry immediately
+        if (error.code === 'ER_DUP_ENTRY' || error.errno === 1062) {
+          attempts++;
+          code = AccessCode.generateCode();
+          if (attempts >= maxCodeAttempts) {
+            throw new Error('Failed to generate unique access code after multiple attempts');
+          }
+          continue;
+        }
+        // For other errors (including lock timeout), throw to trigger retry logic
+        throw error;
+      }
+    }
+  }, {
+    maxRetries: 3,
+    retryDelay: 100,
+    retryOnLockTimeout: true,
+    onRetry: (attempt, maxRetries, delay, error) => {
+      console.warn(`⚠️ Lock timeout creating access code for user ${userId}, retrying in ${delay}ms (attempt ${attempt}/${maxRetries})`);
+    }
   });
 };
 

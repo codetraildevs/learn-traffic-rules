@@ -209,14 +209,38 @@ const toggleAccessCodeBlock = async (req, res) => {
       });
     }
 
-    accessCode.isBlocked = isBlocked;
-    if (isBlocked && blockedUntil) {
-      accessCode.blockedUntil = new Date(blockedUntil);
-    } else if (!isBlocked) {
-      accessCode.blockedUntil = null;
-    }
-
-    await accessCode.save();
+    const { retryDbOperation } = require('../utils/dbRetry');
+    const { sequelize } = require('../config/database');
+    
+    const blockedUntilValue = isBlocked && blockedUntil ? new Date(blockedUntil) : null;
+    
+    // Use direct UPDATE to avoid lock contention
+    await retryDbOperation(async () => {
+      await sequelize.query(
+        `UPDATE access_codes 
+         SET isBlocked = :isBlocked,
+             blockedUntil = :blockedUntil,
+             updatedAt = :updatedAt
+         WHERE id = :id`,
+        {
+          replacements: {
+            id: accessCode.id,
+            isBlocked,
+            blockedUntil: blockedUntilValue,
+            updatedAt: new Date()
+          },
+          type: sequelize.QueryTypes.UPDATE
+        }
+      );
+      
+      // Update instance properties
+      accessCode.isBlocked = isBlocked;
+      accessCode.blockedUntil = blockedUntilValue;
+    }, {
+      maxRetries: 3,
+      retryDelay: 100,
+      retryOnLockTimeout: true
+    });
 
     res.json({
       success: true,

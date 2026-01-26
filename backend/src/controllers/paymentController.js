@@ -170,16 +170,13 @@ class PaymentController {
       });
 
       // Generate global access code (unlocks all exams)
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 30); // 30 days from now
-
-      const accessCode = await AccessCode.create({
-        code: AccessCode.generateCode(),
-        userId: paymentRequest.userId,
-        generatedByManagerId: managerId,
-        expiresAt: expiresAt,
-        isUsed: false
-      });
+      // Use createWithPayment for retry logic and proper handling
+      const accessCode = await AccessCode.createWithPayment(
+        paymentRequest.userId,
+        managerId,
+        1500, // Default 1 month payment amount
+        30 // 30 days duration
+      );
 
       // Send notification to user about payment approval
       try {
