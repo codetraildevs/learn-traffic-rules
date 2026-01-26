@@ -1,0 +1,48 @@
+VPS DEPLOYMENT STEPS - Backend Performance Fixes
+================================================
+
+1. SSH into VPS:
+   ssh your-user@your-vps-ip
+   cd /var/www/learn-traffic-rules
+
+2. Pull latest changes:
+   git pull origin main
+
+3. Update .env file:
+   nano backend/.env
+   
+   Add/update:
+   AUTO_DB_INIT=false
+   NODE_ENV=production
+
+4. Update server.js:
+   nano backend/server.js
+   
+   Add after database connection:
+   const notificationService = require('./src/services/notificationService');
+   
+   After initializeTables():
+   notificationService.startCronJobs();
+
+5. Install dependencies (if needed):
+   cd backend
+   npm install
+
+6. Restart application:
+   pm2 restart learn-traffic-rules-backend
+   # OR
+   sudo systemctl restart learn-traffic-rules-backend
+
+7. Verify:
+   pm2 logs learn-traffic-rules-backend
+   
+   Look for:
+   - "Database connected successfully"
+   - "Notification cron jobs started successfully"
+   - "[CRON] Checking study reminders..." (every minute)
+
+8. Test login endpoint:
+   Should respond in < 1 second, no timeout errors
+
+See SERVER_SETUP_EXAMPLE.js for complete server.js pattern.
+
