@@ -176,7 +176,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
 
     // Filter out only the test admin user (0780000000), but show all other users including ADMINs
     filtered = filtered
-        .where((user) => user.phoneNumber.toString() != '0780000000')
+        .where((user) => user.phoneNumber.toString() != '078000000022')
         .toList();
 
     // All filters (search, role, date, access code, call tracking) are now handled by backend
