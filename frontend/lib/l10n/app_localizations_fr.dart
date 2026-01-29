@@ -2934,4 +2934,105 @@ Commencez votre parcours pour devenir un conducteur responsable !
   String get incorrectQuestions => 'Questions incorrectes :';
   @override
   String get practiceExamTitle => 'Pratique Examen';
+
+  // Exam title mappings (descriptive names for Google Play compliance)
+  @override
+  String get examTitleRoadSignRecognitionPractice =>
+      'Systèmes d’éclairage et signaux des véhicules';
+
+  @override
+  String get examTitleTrafficRulesBeginnerQuiz =>
+      'Quiz des règles de base des véhicules';
+
+  @override
+  String get examTitleIntersectionSafetyPractice =>
+      'Sécurité des remorques et du remorquage';
+
+  @override
+  String get examTitleComprehensiveRulesReview =>
+      'Réglementation de la vitesse des véhicules';
+
+  @override
+  String get examTitleDrivingTheoryFundamentals =>
+      'Marquages et symboles routiers';
+
+  @override
+  String get examTitleVehicleControlAndSafetyPractice =>
+      'Utilisation du klaxon';
+
+  @override
+  String get examTitleRoadSafetyPrinciplesQuiz =>
+      'Réglementation des voies de circulation';
+
+  @override
+  String get examTitleDefensiveDrivingConcepts =>
+      'Dispositifs de sécurité réfléchissants';
+
+  @override
+  String get examTitleParkingAndManeuveringPractice =>
+      'Procédures de dépassement';
+
+  @override
+  String get examTitleNightDrivingAndVisibilityRules =>
+      'Équipements de remorquage et câbles de sécurité';
+
+  @override
+  String get examTitleWeatherConditionGuidelines =>
+      'Questions d’examen pratiques';
+
+  @override
+  String get examTitleEmergencySituationProcedures =>
+      'Panneaux d’interdiction et d’information';
+
+  @override
+  String get examTitleWarningAndRegulatorySignsPractice =>
+      'Signaux lumineux de circulation';
+
+  @override
+  String get examTitleTrafficSignIdentificationQuiz =>
+      'Réglementation des bicyclettes';
+
+  @override
+  String get examTitleAdvancedRoadRulesChallenge =>
+      'Techniques de conduite des véhicules';
+
+  @override
+  String get examTitleComplexIntersectionsMasteryTest =>
+      'Panneaux d’interdiction et d’obligation';
+
+  @override
+  String get examTitleHighwayDrivingAndOvertakingQuiz =>
+      'Utilisation correcte des feux des véhicules';
+
+  @override
+  String get examTitleUrbanTrafficScenariosPractice =>
+      'Rétroviseurs et visibilité';
+
+  @override
+  String get examTitleRuralAndMountainRoadsSafetyPractice =>
+      'Panneaux de danger et de priorité';
+
+  @override
+  String get examTitleFullDrivingExamSimulation =>
+      'Comportement et responsabilité du conducteur';
+
+  @override
+  String get examTitleAdvancedTrafficRulesPractice =>
+      'Panneaux avancés de contrôle routier';
+
+  @override
+  String get examTitleMixedRoadSignsAndRulesChallenge =>
+      'Panneaux combinés de danger et de priorité';
+
+  @override
+  String get examTitleComprehensiveDrivingKnowledgeTest =>
+      'Connaissances complètes de la conduite';
+
+  @override
+  String get examTitleScenarioBasedSafetyQuiz =>
+      'Conduite en situations réelles';
+
+  @override
+  String get examTitleComprehensiveTrafficRulesPracticeTest =>
+      'Test complet des panneaux de danger et de priorité';
 }

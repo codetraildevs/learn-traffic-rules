@@ -958,6 +958,33 @@ abstract class AppLocalizations {
   String get incorrectQuestions;
   String get practiceExamTitle;
 
+  // Exam title mappings (descriptive names for Google Play compliance)
+  String get examTitleRoadSignRecognitionPractice;
+  String get examTitleTrafficRulesBeginnerQuiz;
+  String get examTitleIntersectionSafetyPractice;
+  String get examTitleComprehensiveRulesReview;
+  String get examTitleDrivingTheoryFundamentals;
+  String get examTitleVehicleControlAndSafetyPractice;
+  String get examTitleRoadSafetyPrinciplesQuiz;
+  String get examTitleDefensiveDrivingConcepts;
+  String get examTitleParkingAndManeuveringPractice;
+  String get examTitleNightDrivingAndVisibilityRules;
+  String get examTitleWeatherConditionGuidelines;
+  String get examTitleEmergencySituationProcedures;
+  String get examTitleWarningAndRegulatorySignsPractice;
+  String get examTitleTrafficSignIdentificationQuiz;
+  String get examTitleAdvancedRoadRulesChallenge;
+  String get examTitleComplexIntersectionsMasteryTest;
+  String get examTitleHighwayDrivingAndOvertakingQuiz;
+  String get examTitleUrbanTrafficScenariosPractice;
+  String get examTitleRuralAndMountainRoadsSafetyPractice;
+  String get examTitleFullDrivingExamSimulation;
+  String get examTitleAdvancedTrafficRulesPractice;
+  String get examTitleMixedRoadSignsAndRulesChallenge;
+  String get examTitleComprehensiveDrivingKnowledgeTest;
+  String get examTitleScenarioBasedSafetyQuiz;
+  String get examTitleComprehensiveTrafficRulesPracticeTest;
+
   // Factory constructor to get the appropriate localization
   static AppLocalizations of(BuildContext context) {
     return Localizations.of<AppLocalizations>(context, AppLocalizations) ??

@@ -14,6 +14,7 @@ import '../../services/network_service.dart';
 import '../../services/exam_sync_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../utils/exam_title_mapper.dart';
 
 class ProgressScreen extends ConsumerStatefulWidget {
   const ProgressScreen({super.key});
@@ -851,7 +852,10 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                   SizedBox(width: 8.w),
                   Expanded(
                     child: Text(
-                      '${l10n.practiceExamTitle} ${result.exam?.title.replaceAll(RegExp(r'[^0-9]'), '')}',
+                      ExamTitleMapper.mapTitle(
+                        context,
+                        result.exam?.title ?? l10n.exam,
+                      ),
                       style: AppTextStyles.bodyLarge.copyWith(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.bold,

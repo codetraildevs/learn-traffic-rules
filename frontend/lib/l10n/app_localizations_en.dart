@@ -2846,4 +2846,98 @@ Start your journey to becoming a safe driver!
   String get incorrectQuestions => 'Incorrect questions:';
   @override
   String get practiceExamTitle => 'Practice Exam';
+
+  // Exam title mappings (descriptive names for Google Play compliance)
+  @override
+  String get examTitleRoadSignRecognitionPractice =>
+      'Vehicle Lighting Systems and Signals';
+
+  @override
+  String get examTitleTrafficRulesBeginnerQuiz =>
+      'Basic Vehicle Regulations Quiz';
+
+  @override
+  String get examTitleIntersectionSafetyPractice =>
+      'Vehicle Trailers and Towing Safety';
+
+  @override
+  String get examTitleComprehensiveRulesReview => 'Vehicle Speed Regulations';
+
+  @override
+  String get examTitleDrivingTheoryFundamentals => 'Road Markings and Symbols';
+
+  @override
+  String get examTitleVehicleControlAndSafetyPractice => 'Vehicle Horn Usage';
+
+  @override
+  String get examTitleRoadSafetyPrinciplesQuiz => 'Traffic Lane Regulations';
+
+  @override
+  String get examTitleDefensiveDrivingConcepts => 'Reflective Safety Devices';
+
+  @override
+  String get examTitleParkingAndManeuveringPractice => 'Overtaking Procedures';
+
+  @override
+  String get examTitleNightDrivingAndVisibilityRules =>
+      'Towing Equipment and Safety Cables';
+
+  @override
+  String get examTitleWeatherConditionGuidelines =>
+      'Practice Examination Questions';
+
+  @override
+  String get examTitleEmergencySituationProcedures =>
+      'Prohibitory and Informational Road Signs';
+
+  @override
+  String get examTitleWarningAndRegulatorySignsPractice =>
+      'Illuminated Traffic Signals';
+
+  @override
+  String get examTitleTrafficSignIdentificationQuiz => 'Bicycle Regulations';
+
+  @override
+  String get examTitleAdvancedRoadRulesChallenge =>
+      'Vehicle Driving Techniques';
+
+  @override
+  String get examTitleComplexIntersectionsMasteryTest =>
+      'Prohibitory and Mandatory Road Signs';
+
+  @override
+  String get examTitleHighwayDrivingAndOvertakingQuiz =>
+      'Proper Use of Vehicle Lights';
+
+  @override
+  String get examTitleUrbanTrafficScenariosPractice =>
+      'Rear-View Mirrors and Visibility';
+
+  @override
+  String get examTitleRuralAndMountainRoadsSafetyPractice =>
+      'Warning and Priority Road Signs';
+
+  @override
+  String get examTitleFullDrivingExamSimulation =>
+      'Driver Conduct and Responsibility';
+
+  @override
+  String get examTitleAdvancedTrafficRulesPractice =>
+      'Advanced Traffic Control Signs';
+
+  @override
+  String get examTitleMixedRoadSignsAndRulesChallenge =>
+      'Combined Warning and Priority Signs';
+
+  @override
+  String get examTitleComprehensiveDrivingKnowledgeTest =>
+      'Driver Conduct and Road Awareness';
+
+  @override
+  String get examTitleScenarioBasedSafetyQuiz =>
+      'Driver Conduct in Real-Life Situations';
+
+  @override
+  String get examTitleComprehensiveTrafficRulesPracticeTest =>
+      'Comprehensive Warning and Priority Signs Test';
 }

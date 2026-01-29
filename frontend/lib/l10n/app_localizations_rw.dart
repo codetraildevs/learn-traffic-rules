@@ -2914,4 +2914,69 @@ Tangira urugendo rwo kuba umushoferi utekanye!
   String get incorrectQuestions => 'Ibibazo wishe';
   @override
   String get practiceExamTitle => 'Umwitozo wa';
+
+  // Exam title mappings (descriptive names for Google Play compliance)
+  @override
+  String get examTitleRoadSignRecognitionPractice =>
+      'Amatara y\'ibinyabiziga n\'ukumurikwa kwabyo';
+  @override
+  String get examTitleTrafficRulesBeginnerQuiz => 'suzumwa kw\'ibinyabiziga';
+  @override
+  String get examTitleIntersectionSafetyPractice =>
+      'Romoroki zikururwa n\'ibinyabiziga';
+  @override
+  String get examTitleComprehensiveRulesReview => 'Umuvuduko w\'ibinyabiziga';
+  @override
+  String get examTitleDrivingTheoryFundamentals => 'Imitambiko';
+  @override
+  String get examTitleVehicleControlAndSafetyPractice => 'Amahoni';
+  @override
+  String get examTitleRoadSafetyPrinciplesQuiz =>
+      'Imiromo mu nzira nyabagengwa';
+  @override
+  String get examTitleDefensiveDrivingConcepts => 'Utugarurarumuri';
+  @override
+  String get examTitleParkingAndManeuveringPractice => 'Kunyuranaho';
+  @override
+  String get examTitleNightDrivingAndVisibilityRules => 'Ibizirikisho';
+  @override
+  String get examTitleWeatherConditionGuidelines => 'Ibibazo bihimbano';
+  @override
+  String get examTitleEmergencySituationProcedures =>
+      'Ibyapa bibuza n\'ibyapa ndanga';
+  @override
+  String get examTitleWarningAndRegulatorySignsPractice =>
+      'Ibimenyetse bimurika';
+  @override
+  String get examTitleTrafficSignIdentificationQuiz => 'Ibinyamitende';
+  @override
+  String get examTitleAdvancedRoadRulesChallenge => 'Gutwara ibinyabiziga';
+  @override
+  String get examTitleComplexIntersectionsMasteryTest =>
+      'Ibyapa bibuza n\'ibitegeka';
+  @override
+  String get examTitleHighwayDrivingAndOvertakingQuiz =>
+      'Gukoresha amatara y’ibinyabiziga';
+  @override
+  String get examTitleUrbanTrafficScenariosPractice => 'Uturebanyuma';
+  @override
+  String get examTitleRuralAndMountainRoadsSafetyPractice =>
+      'ibyapa biburira n\'ibyapa byo gutambuka mbere';
+  @override
+  String get examTitleFullDrivingExamSimulation =>
+      'Imyitwarire y’umuuyobozi w’ikinyabiziga';
+  @override
+  String get examTitleAdvancedTrafficRulesPractice => 'Ibimenyetso birombereje';
+  @override
+  String get examTitleMixedRoadSignsAndRulesChallenge =>
+      'Ibyapa biburira n\'ibyapa byo gutambuka mbere';
+  @override
+  String get examTitleComprehensiveDrivingKnowledgeTest =>
+      'Imyitwarire y’umuuyobozi w’ikinyabiziga';
+  @override
+  String get examTitleScenarioBasedSafetyQuiz =>
+      'Imyitwarire y’umuuyobozi w’ikinyabiziga';
+  @override
+  String get examTitleComprehensiveTrafficRulesPracticeTest =>
+      'Ibyapa biburira n\'ibyapa byo gutambuka mbere';
 }

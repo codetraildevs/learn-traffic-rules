@@ -7,6 +7,7 @@ import 'package:learn_traffic_rules/screens/home/home_screen.dart';
 import '../../models/exam_result_model.dart';
 import '../../models/exam_model.dart';
 import '../../l10n/app_localizations.dart';
+import '../../utils/exam_title_mapper.dart';
 import 'exam_taking_screen.dart';
 import 'available_exams_screen.dart';
 
@@ -61,7 +62,7 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
       backgroundColor: AppColors.grey50,
       appBar: AppBar(
         title: Text(
-          '${l10n.practiceExamTitle}: ${widget.exam.title.replaceAll(RegExp(r'[^0-9]'), '')}',
+          ExamTitleMapper.mapTitle(context, widget.exam.title),
           style: AppTextStyles.heading3.copyWith(
             fontSize: 16.sp,
             fontWeight: FontWeight.bold,
@@ -551,7 +552,10 @@ class _SecureDetailedAnswersModalState
                   SizedBox(height: 12.h),
                   Text(
                     l10n.detailedAnswersFor(
-                      widget.examResult.exam?.title ?? l10n.exam,
+                      ExamTitleMapper.mapTitle(
+                        context,
+                        widget.examResult.exam?.title ?? l10n.exam,
+                      ),
                     ),
                     style: AppTextStyles.heading3.copyWith(
                       fontSize: 18.sp,

@@ -20,6 +20,7 @@ import '../../widgets/custom_button.dart';
 import '../../models/exam_result_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../utils/exam_title_mapper.dart';
 import 'exam_progress_screen.dart';
 
 class ExamTakingScreen extends ConsumerStatefulWidget {
@@ -120,15 +121,6 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
     );
   }
 
-  void _initializeSecurity() {
-    // Listen to app lifecycle changes
-    WidgetsBinding.instance.addObserver(_AppLifecycleObserver(this));
-
-    // Disable screenshots on Android
-    if (Platform.isAndroid) {
-      _disableScreenshots();
-    }
-  }
 
   Future<void> _disableScreenshots() async {
     try {
@@ -952,7 +944,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${l10n.practiceExamTitle} ${widget.exam.title.replaceAll(RegExp(r'[^0-9]'), '')}',
+                      ExamTitleMapper.mapTitle(context, widget.exam.title),
                       style: AppTextStyles.heading3.copyWith(
                         color: AppColors.primary,
                         fontSize: 18.sp,

@@ -19,6 +19,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/constants/app_constants.dart';
+import '../../utils/exam_title_mapper.dart';
 import 'dart:io';
 import 'exam_taking_screen.dart';
 import 'exam_progress_screen.dart';
@@ -1564,11 +1565,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
 
   Widget _buildExamCard(Exam exam, int index) {
     final l10n = AppLocalizations.of(context);
-    // Extract exam number from title (e.g., "exam 21" -> "21")
-    final examNumber = exam.title.replaceAll(RegExp(r'[^0-9]'), '');
-    final displayTitle = examNumber.isNotEmpty
-        ? '${l10n.practiceExamTitle} $examNumber'
-        : exam.title;
+    final displayTitle = ExamTitleMapper.mapTitle(context, exam.title);
 
     // Get exam image URL - construct full path if it's just a filename
     final imageUrl = exam.examImgUrl != null && exam.examImgUrl!.isNotEmpty
