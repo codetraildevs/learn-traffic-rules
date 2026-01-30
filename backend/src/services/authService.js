@@ -25,12 +25,12 @@ class AuthService {
   /**
    * Update user last login
    * Uses direct UPDATE query to avoid lock contention
-   * Includes retry logic for lock timeouts
+   * Single attempt only - lastLogin is non-critical; failing fast avoids holding connections
    */
   async updateLastLogin(userId) {
-    const maxRetries = 3;
-    const retryDelay = 100; // 100ms
-    
+    const maxRetries = 1;
+    const retryDelay = 100;
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         // Use direct UPDATE instead of fetch-then-save to reduce lock contention

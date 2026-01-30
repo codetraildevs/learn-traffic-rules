@@ -11,53 +11,108 @@ const { withQueryTimeout } = require('../utils/dbRetry');
 const { allQuestionCountsCache, CACHE_KEYS } = require('../utils/cache');
 const { sequelize } = require('../config/database');
 
-class ExamController {
-  /**
-   * Get all question counts in a single query (replaces N+1 pattern)
-   * Returns a Map of examId -> questionCount
-   */
-  async getQuestionCountsMap(examIds) {
-    // Check cache first
-    const cacheKey = CACHE_KEYS.ALL_QUESTION_COUNTS;
-    const cached = allQuestionCountsCache.get(cacheKey);
-    if (cached) {
-      console.log('📦 Using cached question counts');
-      return cached;
-    }
+/**
+ * Get all question counts in a single query (replaces N+1 pattern)
+ * Standalone function to avoid 'this' context loss when passed to Express routes
+ * @returns {Promise<Map>} Map of examId -> questionCount
+ */
+async function getQuestionCountsMap(examIds) {
+  const cacheKey = CACHE_KEYS.ALL_QUESTION_COUNTS;
+  const cached = allQuestionCountsCache.get(cacheKey);
+  if (cached) {
+    console.log('📦 Using cached question counts');
+    return cached;
+  }
 
-    try {
-      // Single aggregated query with GROUP BY - replaces N+1 individual queries
-      const questionCounts = await withQueryTimeout(
-        () => Question.findAll({
-          attributes: [
-            'examId',
-            [sequelize.fn('COUNT', sequelize.col('id')), 'count']
-          ],
-          group: ['examId'],
-          raw: true
-        }),
-        15000, // 15 second timeout
-        'Get all question counts'
-      );
+  try {
+    const questionCounts = await withQueryTimeout(
+      () => Question.findAll({
+        attributes: [
+          'examId',
+          [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+        ],
+        group: ['examId'],
+        raw: true
+      }),
+      15000,
+      'Get all question counts'
+    );
 
-      // Convert to Map for O(1) lookup
-      const countMap = new Map();
-      questionCounts.forEach(q => {
-        countMap.set(q.examId, parseInt(q.count) || 0);
+    const countMap = new Map();
+    questionCounts.forEach(q => {
+      countMap.set(q.examId, parseInt(q.count) || 0);
+    });
+
+    allQuestionCountsCache.set(cacheKey, countMap);
+    console.log(`✅ Cached ${countMap.size} question counts`);
+
+    return countMap;
+  } catch (error) {
+    console.error('❌ Failed to get question counts:', error.message);
+    return new Map();
+  }
+}
+
+/**
+ * Parse CSV file and extract questions
+ * Standalone function to avoid 'this' context loss when passed to Express routes
+ */
+async function parseCSVFile(filePath) {
+  return new Promise((resolve, reject) => {
+    const questions = [];
+
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on('data', (row) => {
+        if (row.question && row.correctAnswer && row.option1 && row.option2) {
+          questions.push({
+            question: row.question.trim(),
+            option1: row.option1.trim(),
+            option2: row.option2.trim(),
+            option3: row.option3 ? row.option3.trim() : '',
+            option4: row.option4 ? row.option4.trim() : '',
+            correctAnswer: row.correctAnswer.trim(),
+            questionImgUrl: row.questionImgUrl ? row.questionImgUrl.trim() : '',
+            points: parseInt(row.points) || 1
+          });
+        }
+      })
+      .on('end', () => resolve(questions))
+      .on('error', (error) => reject(error));
+  });
+}
+
+/**
+ * Parse Excel file and extract questions
+ * Standalone function to avoid 'this' context loss when passed to Express routes
+ */
+async function parseExcelFile(filePath) {
+  const workbook = xlsx.readFile(filePath);
+  const sheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[sheetName];
+  const data = xlsx.utils.sheet_to_json(worksheet);
+
+  const questions = [];
+
+  for (const row of data) {
+    if (row.question && row.correctAnswer && row.option1 && row.option2) {
+      questions.push({
+        question: row.question.trim(),
+        option1: row.option1.trim(),
+        option2: row.option2.trim(),
+        option3: row.option3 ? row.option3.trim() : '',
+        option4: row.option4 ? row.option4.trim() : '',
+        correctAnswer: row.correctAnswer.trim(),
+        questionImgUrl: row.questionImgUrl ? row.questionImgUrl.trim() : '',
+        points: parseInt(row.points) || 1
       });
-
-      // Cache the result
-      allQuestionCountsCache.set(cacheKey, countMap);
-      console.log(`✅ Cached ${countMap.size} question counts`);
-
-      return countMap;
-    } catch (error) {
-      console.error('❌ Failed to get question counts:', error.message);
-      // Return empty map on error - exams will show 0 questions
-      return new Map();
     }
   }
 
+  return questions;
+}
+
+class ExamController {
   /**
    * Get all active exams
    */
@@ -93,7 +148,7 @@ class ExamController {
       }
 
       // Get all question counts in a SINGLE query (instead of N+1 queries)
-      const questionCountMap = await this.getQuestionCountsMap(exams.map(e => e.id));
+      const questionCountMap = await getQuestionCountsMap(exams.map(e => e.id));
 
       // Apply question counts to exams - O(1) lookup per exam
       const examsWithQuestionCounts = exams.map(exam => {
@@ -1475,9 +1530,9 @@ class ExamController {
         let questions = [];
         
         if (fileExtension === '.csv') {
-          questions = await this.parseCSVFile(filePath);
+          questions = await parseCSVFile(filePath);
         } else if (fileExtension === '.xlsx') {
-          questions = await this.parseExcelFile(filePath);
+          questions = await parseExcelFile(filePath);
         } else {
           continue; // Skip unsupported files
         }
@@ -1525,68 +1580,6 @@ class ExamController {
         error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
-  }
-
-  /**
-   * Parse CSV file and extract questions
-   */
-  async parseCSVFile(filePath) {
-    return new Promise((resolve, reject) => {
-      const questions = [];
-      
-      fs.createReadStream(filePath)
-        .pipe(csv())
-        .on('data', (row) => {
-          // Expected CSV format: question,option1,option2,option3,option4,correctAnswer,questionImgUrl,points
-          if (row.question && row.correctAnswer && row.option1 && row.option2) {
-            questions.push({
-              question: row.question.trim(),
-              option1: row.option1.trim(),
-              option2: row.option2.trim(),
-              option3: row.option3 ? row.option3.trim() : '',
-              option4: row.option4 ? row.option4.trim() : '',
-              correctAnswer: row.correctAnswer.trim(),
-              questionImgUrl: row.questionImgUrl ? row.questionImgUrl.trim() : '',
-              points: parseInt(row.points) || 1
-            });
-          }
-        })
-        .on('end', () => {
-          resolve(questions);
-        })
-        .on('error', (error) => {
-          reject(error);
-        });
-    });
-  }
-
-  /**
-   * Parse Excel file and extract questions
-   */
-  async parseExcelFile(filePath) {
-    const workbook = xlsx.readFile(filePath);
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const data = xlsx.utils.sheet_to_json(worksheet);
-    
-    const questions = [];
-    
-    for (const row of data) {
-      if (row.question && row.correctAnswer && row.option1 && row.option2) {
-        questions.push({
-          question: row.question.trim(),
-          option1: row.option1.trim(),
-          option2: row.option2.trim(),
-          option3: row.option3 ? row.option3.trim() : '',
-          option4: row.option4 ? row.option4.trim() : '',
-          correctAnswer: row.correctAnswer.trim(),
-          questionImgUrl: row.questionImgUrl ? row.questionImgUrl.trim() : '',
-          points: parseInt(row.points) || 1
-        });
-      }
-    }
-    
-    return questions;
   }
 
   /**
