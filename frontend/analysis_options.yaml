@@ -9,6 +9,16 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+# Treat style/info lints as ignored so the Problems panel focuses on errors and warnings.
+analyzer:
+  errors:
+    prefer_const_constructors: ignore
+    prefer_const_declarations: ignore
+    prefer_const_literals_to_create_immutables: ignore
+    avoid_redundant_argument_values: ignore
+    use_key_in_widget_constructors: ignore
+    sort_child_properties_last: ignore
+    unnecessary_this: ignore
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`

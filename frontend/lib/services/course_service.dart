@@ -88,29 +88,29 @@ class CourseService {
         final jsonData = json.decode(response.body);
         // Debug logging
         if (kDebugMode) {
-          print('✅ Course API Response: ${jsonData['success']}');
+          debugPrint('✅ Course API Response: ${jsonData['success']}');
         }
         if (kDebugMode) {
-          print(
+          debugPrint(
             '📦 Course Data: ${jsonData['data'] != null ? 'Present' : 'Missing'}',
           );
         }
         if (jsonData['data'] != null && jsonData['data']['contents'] != null) {
           if (kDebugMode) {
-            print(
+            debugPrint(
               '📚 Contents Count: ${(jsonData['data']['contents'] as List).length}',
             );
           }
         } else {
           if (kDebugMode) {
-            print('⚠️ Contents: ${jsonData['data']?['contents']}');
+            debugPrint('⚠️ Contents: ${jsonData['data']?['contents']}');
           }
         }
         return CourseResponse.fromJson(jsonData);
       } else {
         final errorData = json.decode(response.body);
         if (kDebugMode) {
-          print(
+          debugPrint(
             '❌ Course API Error: ${response.statusCode} - ${errorData['message']}',
           );
         }

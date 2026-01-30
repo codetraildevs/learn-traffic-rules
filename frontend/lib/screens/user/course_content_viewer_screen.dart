@@ -66,30 +66,32 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
     });
 
     try {
-      print('🔄 Loading course contents for course: ${widget.course.id}');
-      print('📊 Course contentCount: ${widget.course.contentCount}');
+      debugPrint('🔄 Loading course contents for course: ${widget.course.id}');
+      debugPrint('📊 Course contentCount: ${widget.course.contentCount}');
 
       final response = await _courseService.getCourseById(
         widget.course.id,
         includeContents: true,
       );
 
-      print('✅ API Response Success: ${response.success}');
-      print('📦 Response Data: ${response.data != null}');
+      debugPrint('✅ API Response Success: ${response.success}');
+      debugPrint('📦 Response Data: ${response.data != null}');
 
       if (response.success && response.data != null) {
         final course = response.data!;
-        print(
+        debugPrint(
           '📚 Course contents: ${course.contents != null ? course.contents!.length : 'null'}',
         );
-        print('📊 Course contentCount: ${course.contentCount}');
+        debugPrint('📊 Course contentCount: ${course.contentCount}');
 
         // Check if contents exist (could be empty list or null)
         final hasContents =
             course.contents != null && course.contents!.isNotEmpty;
 
         if (hasContents) {
-          print('✅ Found ${course.contents!.length} contents, displaying...');
+          debugPrint(
+            '✅ Found ${course.contents!.length} contents, displaying...',
+          );
           setState(() {
             _contents = List<CourseContent>.from(course.contents!)
               ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
@@ -101,10 +103,10 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
           // Check if contentCount indicates contents should exist
           final expectedContents =
               course.contentCount != null && course.contentCount! > 0;
-          print('⚠️ No contents in response');
-          print('   - contentCount: ${course.contentCount}');
-          print('   - contents is null: ${course.contents == null}');
-          print(
+          debugPrint('⚠️ No contents in response');
+          debugPrint('   - contentCount: ${course.contentCount}');
+          debugPrint('   - contents is null: ${course.contents == null}');
+          debugPrint(
             '   - contents is empty: ${course.contents != null && course.contents!.isEmpty}',
           );
 
@@ -118,7 +120,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
           });
         }
       } else {
-        print('❌ API Error: ${response.message}');
+        debugPrint('❌ API Error: ${response.message}');
         final l10n = AppLocalizations.of(context);
         setState(() {
           _contents = [];
@@ -127,8 +129,8 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         });
       }
     } catch (e, stackTrace) {
-      print('❌ Exception loading course contents: $e');
-      print('Stack trace: $stackTrace');
+      debugPrint('❌ Exception loading course contents: $e');
+      debugPrint('Stack trace: $stackTrace');
       final l10n = AppLocalizations.of(context);
       setState(() {
         _contents = [];
@@ -143,7 +145,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
     if (_contents.isEmpty) return;
 
     final currentContent = _contents[_currentIndex];
-    
+
     // Dispose previous media
     _videoController?.dispose();
     _videoController = null;
@@ -174,7 +176,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
 
   Future<bool> _validateAudioUrl(String url) async {
     try {
-      print('🔍 AUDIO: Validating URL: $url');
+      debugPrint('🔍 AUDIO: Validating URL: $url');
 
       // Try HEAD request first (lighter, faster)
       try {
@@ -182,16 +184,20 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             .head(Uri.parse(url))
             .timeout(const Duration(seconds: 5));
 
-        print('🔍 AUDIO: HEAD Response status: ${headResponse.statusCode}');
-        print(
+        debugPrint(
+          '🔍 AUDIO: HEAD Response status: ${headResponse.statusCode}',
+        );
+        debugPrint(
           '🔍 AUDIO: Content-Type: ${headResponse.headers['content-type']}',
         );
-        print(
+        debugPrint(
           '🔍 AUDIO: Content-Length: ${headResponse.headers['content-length']}',
         );
 
         if (headResponse.statusCode != 200) {
-          print('❌ AUDIO: File not found (HTTP ${headResponse.statusCode})');
+          debugPrint(
+            '❌ AUDIO: File not found (HTTP ${headResponse.statusCode})',
+          );
           return false;
         }
 
@@ -201,16 +207,18 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         if (contentType.contains('text/html') ||
             contentType.contains('text/plain') ||
             contentType.contains('application/json')) {
-          print('❌ AUDIO: Server returned $contentType instead of audio file');
+          debugPrint(
+            '❌ AUDIO: Server returned $contentType instead of audio file',
+          );
           return false;
         }
 
         // If we get here, the file seems to exist and has a valid content type
-        print('✅ AUDIO: URL validation passed');
+        debugPrint('✅ AUDIO: URL validation passed');
         return true;
       } catch (headError) {
         // HEAD request failed, try GET request with range header (just first bytes)
-        print(
+        debugPrint(
           '⚠️ AUDIO: HEAD request failed, trying GET with range header: $headError',
         );
         try {
@@ -221,8 +229,10 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
               )
               .timeout(const Duration(seconds: 5));
 
-          print('🔍 AUDIO: GET Response status: ${getResponse.statusCode}');
-          print(
+          debugPrint(
+            '🔍 AUDIO: GET Response status: ${getResponse.statusCode}',
+          );
+          debugPrint(
             '🔍 AUDIO: Content-Type: ${getResponse.headers['content-type']}',
           );
 
@@ -232,26 +242,28 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             if (contentType.contains('text/html') ||
                 contentType.contains('text/plain') ||
                 contentType.contains('application/json')) {
-              print(
+              debugPrint(
                 '❌ AUDIO: Server returned $contentType instead of audio file',
               );
               return false;
             }
-            print('✅ AUDIO: URL validation passed (via GET)');
+            debugPrint('✅ AUDIO: URL validation passed (via GET)');
             return true;
           } else {
-            print('❌ AUDIO: File not found (HTTP ${getResponse.statusCode})');
+            debugPrint(
+              '❌ AUDIO: File not found (HTTP ${getResponse.statusCode})',
+            );
             return false;
           }
         } catch (getError) {
-          print('❌ AUDIO: GET request also failed: $getError');
+          debugPrint('❌ AUDIO: GET request also failed: $getError');
           // Don't fail completely - let the player try to load it
           // Some servers might block HEAD/GET but allow streaming
           return true;
         }
       }
     } catch (e) {
-      print('❌ AUDIO URL VALIDATION ERROR: $e');
+      debugPrint('❌ AUDIO URL VALIDATION ERROR: $e');
       // Don't block playback - let the player try and show its own error
       return true;
     }
@@ -266,9 +278,9 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
         final content = _contents[_currentIndex].content;
         final audioUrl = _getFullUrl(content);
 
-        print('🎵 AUDIO: Initializing audio player');
-        print('   Content path: $content');
-        print('   Full URL: $audioUrl');
+        debugPrint('🎵 AUDIO: Initializing audio player');
+        debugPrint('   Content path: $content');
+        debugPrint('   Full URL: $audioUrl');
 
         // Validate URL format
         final l10n = AppLocalizations.of(context);
@@ -311,7 +323,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
               });
             }
 
-            print(
+            debugPrint(
               '🎵 AUDIO: Player state - playing: ${state.playing}, processingState: ${state.processingState}',
             );
           }
@@ -323,7 +335,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             setState(() {
               _audioDuration = duration;
             });
-            print('✅ AUDIO: Duration loaded: ${duration.inSeconds}s');
+            debugPrint('✅ AUDIO: Duration loaded: ${duration.inSeconds}s');
           }
         });
 
@@ -343,7 +355,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             // Errors are caught in the catch block below
           },
           onError: (error) {
-            print('❌ AUDIO PLAYBACK ERROR: $error');
+            debugPrint('❌ AUDIO PLAYBACK ERROR: $error');
             if (mounted) {
               final l10n = AppLocalizations.of(context);
               setState(() {
@@ -367,14 +379,14 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
                   throw Exception(l10n.timeoutLoadingAudioFile);
                 },
               );
-          print('🎵 AUDIO: Audio URL set successfully');
+          debugPrint('🎵 AUDIO: Audio URL set successfully');
 
           // Wait a bit and check if duration was loaded (indicates file is valid)
           await Future.delayed(const Duration(seconds: 2));
           if (_audioPlayer != null && mounted) {
             final duration = _audioPlayer!.duration;
             if (duration == null || duration == Duration.zero) {
-              print('⚠️ AUDIO: Duration is still null after 2 seconds');
+              debugPrint('⚠️ AUDIO: Duration is still null after 2 seconds');
               // Check player state
               final state = _audioPlayer!.playerState;
               if (state.processingState == ProcessingState.idle) {
@@ -382,16 +394,16 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
                 throw Exception(l10n.audioFileCouldNotBeLoaded);
               }
             } else {
-              print('✅ AUDIO: Duration loaded: ${duration.inSeconds}s');
+              debugPrint('✅ AUDIO: Duration loaded: ${duration.inSeconds}s');
             }
           }
         } catch (e) {
-          print('❌ AUDIO SET URL ERROR: $e');
+          debugPrint('❌ AUDIO SET URL ERROR: $e');
           rethrow;
         }
       } catch (e, stackTrace) {
-        print('❌ AUDIO ERROR: $e');
-        print('   Stack trace: $stackTrace');
+        debugPrint('❌ AUDIO ERROR: $e');
+        debugPrint('   Stack trace: $stackTrace');
         if (mounted) {
           final l10n = AppLocalizations.of(context);
           String errorMessage = l10n.errorLoadingAudio;
