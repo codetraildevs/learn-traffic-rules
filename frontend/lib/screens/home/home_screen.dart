@@ -1604,13 +1604,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           );
                         }
 
+                        // Check if it's a local file path or a network URL
+                        final isLocalFile = imagePath.startsWith('/') && 
+                                           !imagePath.startsWith('http');
+                        
+                        if (isLocalFile) {
+                          // Use Image.file for local cached files
+                          return Image.file(
+                            File(imagePath),
+                            width: double.infinity,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              debugPrint(
+                                '❌ Error loading local image: $imagePath - $error',
+                              );
+                              return Container(
+                                color: AppColors.grey100,
+                                child: Icon(icon, size: 40.sp, color: iconColor),
+                              );
+                            },
+                          );
+                        }
+
                         return Image.network(
                           imagePath,
                           width: double.infinity,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) {
                             debugPrint(
-                              '❌ Error loading image: $imagePath - $error',
+                              '❌ Error loading network image: $imagePath - $error',
                             );
                             return Container(
                               color: AppColors.grey100,
