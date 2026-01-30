@@ -4,6 +4,7 @@ const { validationResult } = require('express-validator');
 const csv = require('csv-parser');
 const fs = require('fs');
 const path = require('path');
+const { allQuestionCountsCache, CACHE_KEYS } = require('../utils/cache');
 
 class BulkUploadController {
   /**
@@ -91,6 +92,10 @@ class BulkUploadController {
               // Update exam question count
               const questionCount = await Question.count({ where: { examId: examId } });
               await exam.update({ questionCount: questionCount });
+
+              // Invalidate question count cache
+              allQuestionCountsCache.delete(CACHE_KEYS.ALL_QUESTION_COUNTS);
+              console.log('📦 Invalidated question counts cache after CSV upload');
 
               // Clean up uploaded file
               fs.unlinkSync(csvPath);
@@ -218,6 +223,10 @@ class BulkUploadController {
       // Update exam question count
       const questionCount = await Question.count({ where: { examId: examId } });
       await exam.update({ questionCount: questionCount });
+
+      // Invalidate question count cache
+      allQuestionCountsCache.delete(CACHE_KEYS.ALL_QUESTION_COUNTS);
+      console.log('📦 Invalidated question counts cache after JSON upload');
 
       // Clean up uploaded file
       fs.unlinkSync(jsonPath);

@@ -25,9 +25,9 @@ const getDatabaseConfig = () => {
       dialect: 'mysql',
       logging: false,
       pool: {
-        max: 15,        // Reduced from 20 to avoid MySQL max_connections issues
+        max: 10,        // Reduced - queries are now batched (1-2 queries instead of 43+)
         min: 2,
-        acquire: 30000, // Reduced from 60s to fail faster and retry
+        acquire: 20000, // 20s acquire timeout
         idle: 10000,
         evict: 1000
       },
@@ -77,9 +77,9 @@ const getDatabaseConfig = () => {
       dialect: 'mysql',
       logging: false,
       pool: {
-        max: 15,        // Reduced from 20 to avoid MySQL max_connections issues
+        max: 10,        // Reduced - queries are now batched (1-2 queries instead of 43+)
         min: 2,
-        acquire: 30000, // Reduced from 60s to fail faster and retry
+        acquire: 20000, // 20s acquire timeout
         idle: 10000,
         evict: 1000
       },

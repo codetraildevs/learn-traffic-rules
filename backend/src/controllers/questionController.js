@@ -1,6 +1,7 @@
 const Question = require('../models/Question');
 const Exam = require('../models/Exam');
 const { validationResult } = require('express-validator');
+const { allQuestionCountsCache, CACHE_KEYS } = require('../utils/cache');
 
 class QuestionController {
   /**
@@ -121,6 +122,10 @@ class QuestionController {
       const questionCount = await Question.count({ where: { examId: examId } });
       await exam.update({ questionCount: questionCount });
 
+      // Invalidate question count cache
+      allQuestionCountsCache.delete(CACHE_KEYS.ALL_QUESTION_COUNTS);
+      console.log('📦 Invalidated question counts cache after creating question');
+
       res.status(201).json({
         success: true,
         message: 'Question created successfully',
@@ -207,6 +212,10 @@ class QuestionController {
         const questionCount = await Question.count({ where: { examId: examId } });
         await exam.update({ questionCount: questionCount });
       }
+
+      // Invalidate question count cache
+      allQuestionCountsCache.delete(CACHE_KEYS.ALL_QUESTION_COUNTS);
+      console.log('📦 Invalidated question counts cache after deleting question');
 
       res.json({
         success: true,
@@ -314,6 +323,10 @@ class QuestionController {
       // Update exam question count
       const questionCount = await Question.count({ where: { examId: examId } });
       await exam.update({ questionCount: questionCount });
+
+      // Invalidate question count cache
+      allQuestionCountsCache.delete(CACHE_KEYS.ALL_QUESTION_COUNTS);
+      console.log('📦 Invalidated question counts cache after bulk creating questions');
 
       res.status(201).json({
         success: true,

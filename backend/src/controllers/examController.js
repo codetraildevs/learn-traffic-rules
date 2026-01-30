@@ -8,8 +8,56 @@ const fs = require('fs');
 const csv = require('csv-parser');
 const xlsx = require('xlsx');
 const { withQueryTimeout } = require('../utils/dbRetry');
+const { allQuestionCountsCache, CACHE_KEYS } = require('../utils/cache');
+const { sequelize } = require('../config/database');
 
 class ExamController {
+  /**
+   * Get all question counts in a single query (replaces N+1 pattern)
+   * Returns a Map of examId -> questionCount
+   */
+  async getQuestionCountsMap(examIds) {
+    // Check cache first
+    const cacheKey = CACHE_KEYS.ALL_QUESTION_COUNTS;
+    const cached = allQuestionCountsCache.get(cacheKey);
+    if (cached) {
+      console.log('📦 Using cached question counts');
+      return cached;
+    }
+
+    try {
+      // Single aggregated query with GROUP BY - replaces N+1 individual queries
+      const questionCounts = await withQueryTimeout(
+        () => Question.findAll({
+          attributes: [
+            'examId',
+            [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+          ],
+          group: ['examId'],
+          raw: true
+        }),
+        15000, // 15 second timeout
+        'Get all question counts'
+      );
+
+      // Convert to Map for O(1) lookup
+      const countMap = new Map();
+      questionCounts.forEach(q => {
+        countMap.set(q.examId, parseInt(q.count) || 0);
+      });
+
+      // Cache the result
+      allQuestionCountsCache.set(cacheKey, countMap);
+      console.log(`✅ Cached ${countMap.size} question counts`);
+
+      return countMap;
+    } catch (error) {
+      console.error('❌ Failed to get question counts:', error.message);
+      // Return empty map on error - exams will show 0 questions
+      return new Map();
+    }
+  }
+
   /**
    * Get all active exams
    */
@@ -44,32 +92,21 @@ class ExamController {
         });
       }
 
-      // Get question counts for each exam (with individual timeouts)
-      const examsWithQuestionCounts = await Promise.all(
-        exams.map(async (exam) => {
-          let questionCount = 0;
-          try {
-            questionCount = await withQueryTimeout(
-              () => Question.count({ where: { examId: exam.id } }),
-              5000,  // 5 second timeout per question count
-              `Question count for exam ${exam.id}`
-            );
-          } catch (err) {
-            console.warn(`⚠️ Failed to get question count for exam ${exam.id}:`, err.message);
-            // Continue with 0 count rather than failing
-          }
-          
-          const examData = exam.toJSON();
-          examData.questionCount = questionCount;
-          
-          // Ensure examType is never null - default to 'english' if missing
-          if (!examData.examType) {
-            examData.examType = 'kinyarwanda';
-          }
-          
-          return examData;
-        })
-      );
+      // Get all question counts in a SINGLE query (instead of N+1 queries)
+      const questionCountMap = await this.getQuestionCountsMap(exams.map(e => e.id));
+
+      // Apply question counts to exams - O(1) lookup per exam
+      const examsWithQuestionCounts = exams.map(exam => {
+        const examData = exam.toJSON();
+        examData.questionCount = questionCountMap.get(exam.id) || 0;
+        
+        // Ensure examType is never null - default to 'kinyarwanda' if missing
+        if (!examData.examType) {
+          examData.examType = 'kinyarwanda';
+        }
+        
+        return examData;
+      });
 
       // Convert relative image URLs to full URLs
       const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
@@ -212,24 +249,31 @@ class ExamController {
 
   /**
    * Get exam questions for taking (regular users)
+   * OPTIMIZED: Added timeout wrappers and parallel queries where possible
    */
   async getExamQuestionsForTaking(req, res) {
     try {
       const { id } = req.params;
       const userId = req.user.userId;
+      const { Op } = require('sequelize');
 
-      console.log('🔍 GET EXAM QUESTIONS FOR TAKING DEBUG:');
-      console.log('   Exam ID:', id);
-      console.log('   User ID:', userId);
-      console.log('   Request URL:', req.url);
-      console.log('   Request Method:', req.method);
+      console.log('🔍 GET EXAM QUESTIONS FOR TAKING:', { examId: id, userId });
 
-      // Get exam details
-      const exam = await Exam.findByPk(id);
-      console.log('   Exam found:', !!exam);
-      if (exam) {
-        console.log('   Exam title:', exam.title);
-        console.log('   Exam active:', exam.isActive);
+      // Get exam details with timeout
+      let exam;
+      try {
+        exam = await withQueryTimeout(
+          () => Exam.findByPk(id),
+          10000, // 10 second timeout
+          'Get exam by ID'
+        );
+      } catch (timeoutError) {
+        console.error(`❌ GET EXAM TIMEOUT: ${timeoutError.message}`);
+        return res.status(503).json({
+          success: false,
+          message: 'Service temporarily unavailable. Please try again.',
+          retryAfter: 5
+        });
       }
       
       if (!exam) {
@@ -240,83 +284,82 @@ class ExamController {
         });
       }
 
-      // Check if user has access (either free or paid)
-      const hasAccess = await AccessCode.findOne({
-        where: {
-          userId: userId,
-          isUsed: false,
-          expiresAt: {
-            [require('sequelize').Op.gt]: new Date()
-          }
-        }
-      });
+      // Run access check and same-type exam query in PARALLEL (both needed for access decision)
+      const examType = exam.examType || 'english';
+      
+      let hasAccess, examsOfSameType;
+      try {
+        [hasAccess, examsOfSameType] = await withQueryTimeout(
+          () => Promise.all([
+            // Check if user has access (either free or paid)
+            AccessCode.findOne({
+              where: {
+                userId: userId,
+                isUsed: false,
+                expiresAt: { [Op.gt]: new Date() }
+              }
+            }),
+            // Get first exam of same type to check if this is free exam
+            Exam.findAll({
+              where: { 
+                isActive: true,
+                [Op.or]: [
+                  { examType: examType },
+                  ...(examType === 'english' ? [{ examType: null }] : [])
+                ]
+              },
+              order: [['createdAt', 'ASC']],
+              attributes: ['id'],
+              limit: 1 // Only need the first one to check
+            })
+          ]),
+          15000, // 15 second timeout for parallel queries
+          'Access check and first exam lookup'
+        );
+      } catch (timeoutError) {
+        console.error(`❌ ACCESS CHECK TIMEOUT: ${timeoutError.message}`);
+        return res.status(503).json({
+          success: false,
+          message: 'Service temporarily unavailable. Please try again.',
+          retryAfter: 5
+        });
+      }
 
       console.log('   Has access code:', !!hasAccess);
-      if (hasAccess) {
-        console.log('   Access code expires at:', hasAccess.expiresAt);
-      }
 
-      // Check if this is the first 1 exam of the same type (free with unlimited attempts)
-      // Get the exam type, default to 'english' if null
-      const examType = exam.examType || 'english';
-      console.log('   Exam type:', examType);
-
-      // Get all active exams of the same type, ordered by creation date (oldest first)
-      // Handle NULL examType by using a more flexible query
-      const { Op } = require('sequelize');
-      const examsOfSameType = await Exam.findAll({
-        where: { 
-          isActive: true,
-          [Op.or]: [
-            { examType: examType },
-            // Also include exams with NULL examType if we're looking for 'english' (default)
-            ...(examType === 'english' ? [{ examType: null }] : [])
-          ]
-        },
-        order: [['createdAt', 'ASC']],
-        attributes: ['id', 'title', 'createdAt', 'examType']
-      });
-
-      console.log(`   All active ${examType} exams:`, examsOfSameType.map(e => ({ id: e.id, title: e.title, createdAt: e.createdAt })));
-      console.log(`   First 1 ${examType} exam ID:`, examsOfSameType.length > 0 ? examsOfSameType[0].id : 'none');
-      console.log('   Current exam ID:', id);
-
-      // Check if current exam is the first 1 exam of this type
+      // Check if current exam is the first exam of this type
       const isFirstOneExam = examsOfSameType.length > 0 && examsOfSameType[0].id === id;
-      console.log('   Is first 1 exam of this type:', isFirstOneExam);
-      
-      // Additional debugging for exam access
-      if (examsOfSameType.length >= 2) {
-        console.log(`   First ${examType} exam:`, { id: examsOfSameType[0].id, title: examsOfSameType[0].title });
-        console.log(`   Second ${examType} exam:`, { id: examsOfSameType[1].id, title: examsOfSameType[1].title });
-      } else if (examsOfSameType.length === 1) {
-        console.log(`   Only one ${examType} exam found:`, { id: examsOfSameType[0].id, title: examsOfSameType[0].title });
-      } else {
-        console.log(`   No ${examType} exams found`);
-      }
+      console.log('   Is first exam of type:', isFirstOneExam);
 
-      // Allow access if user has paid access OR if it's the first 1 exam of this type
+      // Allow access if user has paid access OR if it's the first exam of this type
       if (!hasAccess && !isFirstOneExam) {
         console.log('❌ No access to this exam');
-        console.log(`   User doesn't have access code and exam is not the first 1 ${examType} exam`);
         return res.status(403).json({
           success: false,
           message: `This exam requires payment. First ${examType} exam is free with unlimited attempts.`
         });
       }
 
-      if (isFirstOneExam) {
-        console.log(`✅ First 1 ${examType} exam - allowing unlimited attempts`);
-      } else if (hasAccess) {
-        console.log('✅ Paid user - allowing access');
+      // Get questions with timeout
+      let questions;
+      try {
+        questions = await withQueryTimeout(
+          () => Question.findAll({
+            where: { examId: id },
+            order: [['questionOrder', 'ASC']],
+            attributes: ['id', 'question', 'option1', 'option2', 'option3', 'option4', 'correctAnswer', 'points', 'questionImgUrl', 'questionOrder']
+          }),
+          15000, // 15 second timeout
+          'Get exam questions'
+        );
+      } catch (timeoutError) {
+        console.error(`❌ GET QUESTIONS TIMEOUT: ${timeoutError.message}`);
+        return res.status(503).json({
+          success: false,
+          message: 'Service temporarily unavailable. Please try again.',
+          retryAfter: 5
+        });
       }
-
-      // Get questions
-      const questions = await Question.findAll({
-        where: { examId: id },
-        order: [['questionOrder', 'ASC']],
-        attributes: ['id', 'question', 'option1', 'option2', 'option3', 'option4', 'correctAnswer', 'points', 'questionImgUrl', 'questionOrder']
-      });
 
       console.log('   Questions found:', questions.length);
 
@@ -417,6 +460,10 @@ class ExamController {
       // Update exam question count
       const questionCount = await Question.count({ where: { examId: id } });
       await exam.update({ questionCount: questionCount });
+
+      // Invalidate question count cache
+      allQuestionCountsCache.delete(CACHE_KEYS.ALL_QUESTION_COUNTS);
+      console.log('📦 Invalidated question counts cache after adding questions');
 
       res.status(201).json({
         success: true,
@@ -712,6 +759,10 @@ class ExamController {
       // Delete the exam
       await exam.destroy();
 
+      // Invalidate question count cache
+      allQuestionCountsCache.delete(CACHE_KEYS.ALL_QUESTION_COUNTS);
+      console.log('📦 Invalidated question counts cache after deleting exam');
+
       res.json({
         success: true,
         message: 'Exam deleted successfully'
@@ -832,6 +883,7 @@ class ExamController {
 
   /**
    * Submit exam result (for both free and paid exams)
+   * OPTIMIZED: Reduced redundant queries, added timeouts, parallel queries
    */
   async submitExamResult(req, res) {
     try {
@@ -846,90 +898,82 @@ class ExamController {
 
       const { examId, answers, timeSpent, isFreeExam } = req.body;
       const userId = req.user.userId;
+      const { Op } = require('sequelize');
 
-      console.log('🔍 SUBMIT EXAM RESULT DEBUG:');
-      console.log('   Received examId:', examId);
-      console.log('   Received userId:', userId);
-      console.log('   Received answers:', answers);
-      console.log('   Received timeSpent:', timeSpent);
-      console.log('   Received isFreeExam:', isFreeExam);
+      console.log('🔍 SUBMIT EXAM RESULT:', { examId, userId, timeSpent, isFreeExam });
 
-      // Get exam
-      const exam = await Exam.findByPk(examId);
-      if (!exam) {
-        console.log('❌ Exam not found for ID:', examId);
-        return res.status(404).json({
-          success: false,
-          message: 'Exam not found'
-        });
-      }
-      console.log('   Exam found:', exam.title);
+      // OPTIMIZED: Fetch exam, questions, access check, and first exam of type in PARALLEL
+      let exam, questions, hasAccess, firstExamOfType;
+      try {
+        const examType = 'english'; // Default, will be refined after exam fetch
+        
+        [exam, questions] = await withQueryTimeout(
+          () => Promise.all([
+            Exam.findByPk(examId),
+            Question.findAll({ where: { examId: examId } })
+          ]),
+          15000,
+          'Get exam and questions'
+        );
 
-      // Check if this is the first 1 exam of its type (free with unlimited attempts)
-      // Get the exam to check its type
-      const examToCheck = await Exam.findByPk(examId, { attributes: ['id', 'title', 'examType', 'createdAt'] });
-      if (!examToCheck) {
-        return res.status(404).json({
-          success: false,
-          message: 'Exam not found'
-        });
-      }
-
-      const examType = examToCheck.examType || 'english';
-      const examsOfSameType = await Exam.findAll({
-        where: { 
-          isActive: true,
-          [require('sequelize').Op.or]: [
-            { examType: examType },
-            ...(examType === 'english' ? [{ examType: null }] : [])
-          ]
-        },
-        order: [['createdAt', 'ASC']],
-        attributes: ['id', 'title', 'createdAt', 'examType']
-      });
-
-      console.log(`   All active ${examType} exams:`, examsOfSameType.map(e => ({ id: e.id, title: e.title, createdAt: e.createdAt })));
-      console.log(`   First 1 ${examType} exam ID:`, examsOfSameType.length > 0 ? examsOfSameType[0].id : 'none');
-      console.log('   Current exam ID:', examId);
-
-      const isFirstOneExam = examsOfSameType.length > 0 && examsOfSameType[0].id === examId;
-      console.log('   Is first 1 exam of this type:', isFirstOneExam);
-
-      // Check if user has paid access
-      const hasAccess = await AccessCode.findOne({
-        where: {
-          userId: userId,
-          isUsed: false,
-          expiresAt: {
-            [require('sequelize').Op.gt]: new Date()
-          }
+        if (!exam) {
+          console.log('❌ Exam not found for ID:', examId);
+          return res.status(404).json({
+            success: false,
+            message: 'Exam not found'
+          });
         }
-      });
 
-      // Allow if it's the first 1 exam of this type OR if user has paid access
+        // Now fetch access check and first exam of type in parallel
+        const actualExamType = exam.examType || 'english';
+        [hasAccess, firstExamOfType] = await withQueryTimeout(
+          () => Promise.all([
+            AccessCode.findOne({
+              where: {
+                userId: userId,
+                isUsed: false,
+                expiresAt: { [Op.gt]: new Date() }
+              }
+            }),
+            Exam.findOne({
+              where: { 
+                isActive: true,
+                [Op.or]: [
+                  { examType: actualExamType },
+                  ...(actualExamType === 'english' ? [{ examType: null }] : [])
+                ]
+              },
+              order: [['createdAt', 'ASC']],
+              attributes: ['id']
+            })
+          ]),
+          10000,
+          'Access check and first exam lookup'
+        );
+      } catch (timeoutError) {
+        console.error(`❌ SUBMIT EXAM TIMEOUT: ${timeoutError.message}`);
+        return res.status(503).json({
+          success: false,
+          message: 'Service temporarily unavailable. Please try again.',
+          retryAfter: 5
+        });
+      }
+
+      console.log('   Exam found:', exam.title, '| Questions:', questions.length);
+
+      const isFirstOneExam = firstExamOfType && firstExamOfType.id === examId;
+      console.log('   Is first exam:', isFirstOneExam, '| Has access:', !!hasAccess);
+
+      // Allow if it's the first exam of this type OR if user has paid access
       if (!isFirstOneExam && !hasAccess) {
-        console.log('❌ No access to this exam');
+        const examType = exam.examType || 'english';
         return res.status(403).json({
           success: false,
           message: `This exam requires payment. First ${examType} exam is free with unlimited attempts.`
         });
       }
 
-      if (isFirstOneExam) {
-        console.log(`✅ First 1 ${examType} exam - allowing unlimited attempts`);
-      } else if (hasAccess) {
-        console.log('✅ Paid user - allowing access');
-      }
-
-      // Get questions
-      const questions = await Question.findAll({
-        where: { examId: examId }
-      });
-
-      console.log('   Questions found:', questions.length);
-
       if (questions.length === 0) {
-        console.log('❌ No questions found for this exam');
         return res.status(400).json({
           success: false,
           message: 'No questions found for this exam'
@@ -942,21 +986,15 @@ class ExamController {
       const userAnswers = {};
       const questionResults = [];
 
-      console.log('🔍 SCORE CALCULATION DEBUG:');
-      console.log('   Total questions:', totalQuestions);
-      console.log('   User answers received:', answers);
-
       for (const question of questions) {
         const userAnswer = answers[question.id];
         userAnswers[question.id] = userAnswer;
 
-        // Compare user answer directly with correct answer
         const isCorrect = userAnswer === question.correctAnswer;
         if (isCorrect) {
           correctAnswers++;
         }
 
-        // Create detailed question result
         questionResults.push({
           questionId: question.id,
           questionText: question.question,
@@ -977,47 +1015,41 @@ class ExamController {
           points: isCorrect ? (question.points || 1) : 0,
           questionImgUrl: question.questionImgUrl
         });
-
-        console.log(`   Question ${question.id}:`);
-        console.log(`     User answer: "${userAnswer}"`);
-        console.log(`     Correct answer: "${question.correctAnswer}"`);
-        console.log(`     Option A: "${question.option1}"`);
-        console.log(`     Option B: "${question.option2}"`);
-        console.log(`     Option C: "${question.option3}"`);
-        console.log(`     Option D: "${question.option4}"`);
-        console.log(`     Direct comparison: "${userAnswer}" === "${question.correctAnswer}" = ${isCorrect}`);
-        console.log(`     User answer letter: ${userAnswer ? userAnswer.charAt(0) : 'No answer'}`);
-        console.log(`     Correct answer letter: ${question.correctAnswer === question.option1 ? 'a' : 
-                              question.correctAnswer === question.option2 ? 'b' :
-                              question.correctAnswer === question.option3 ? 'c' :
-                              question.correctAnswer === question.option4 ? 'd' : 'Unknown'}`);
       }
 
       const score = Math.round((correctAnswers / totalQuestions) * 100);
       const passed = score >= exam.passingScore;
 
-      console.log('📊 FINAL SCORE CALCULATION:');
-      console.log('   Correct answers:', correctAnswers);
-      console.log('   Total questions:', totalQuestions);
-      console.log('   Calculated score:', score);
-      console.log('   Exam passing score:', exam.passingScore);
-      console.log('   Passed:', passed);
-      console.log('   Question results created:', questionResults.length);
+      console.log('📊 Score:', score, '| Passed:', passed, '| Correct:', correctAnswers, '/', totalQuestions);
 
-      // Create exam result
-      const examResult = await ExamResult.create({
-        userId: userId,
-        examId: examId,
-        score: score,
-        totalQuestions: totalQuestions,
-        correctAnswers: correctAnswers,
-        timeSpent: timeSpent,
-        passed: passed,
-        isFreeExam: isFreeExam,
-        answers: userAnswers,
-        questionResults: questionResults,
-        completedAt: new Date()
-      });
+      // Create exam result with timeout
+      let examResult;
+      try {
+        examResult = await withQueryTimeout(
+          () => ExamResult.create({
+            userId: userId,
+            examId: examId,
+            score: score,
+            totalQuestions: totalQuestions,
+            correctAnswers: correctAnswers,
+            timeSpent: timeSpent,
+            passed: passed,
+            isFreeExam: isFreeExam,
+            answers: userAnswers,
+            questionResults: questionResults,
+            completedAt: new Date()
+          }),
+          10000,
+          'Create exam result'
+        );
+      } catch (timeoutError) {
+        console.error(`❌ CREATE RESULT TIMEOUT: ${timeoutError.message}`);
+        return res.status(503).json({
+          success: false,
+          message: 'Service temporarily unavailable. Please try again.',
+          retryAfter: 5
+        });
+      }
 
       const responseData = {
         id: examResult.id,
@@ -1033,11 +1065,7 @@ class ExamController {
         questionResults: questionResults
       };
 
-      console.log('📤 SENDING RESPONSE TO FRONTEND:');
-      console.log('   Response data keys:', Object.keys(responseData));
-      console.log('   Question results length:', questionResults.length);
-      console.log('   Question results sample:', questionResults.slice(0, 2));
-      console.log('   Full response data:', JSON.stringify(responseData, null, 2));
+      console.log('✅ Exam result created:', examResult.id);
 
       res.json({
         success: true,
@@ -1395,7 +1423,10 @@ class ExamController {
 
       console.log('✅ QUESTION CREATED: Question saved to database');
       console.log('   Question ID:', newQuestion.id);
-      console.log('   Image URL:', finalQuestionImgUrl);
+
+      // Invalidate question count cache
+      allQuestionCountsCache.delete(CACHE_KEYS.ALL_QUESTION_COUNTS);
+      console.log('📦 Invalidated question counts cache after uploading question');
 
       res.status(201).json({
         success: true,
@@ -1473,6 +1504,12 @@ class ExamController {
 
         // Clean up uploaded file
         fs.unlinkSync(filePath);
+      }
+
+      // Invalidate question count cache if any questions were added
+      if (totalQuestionsAdded > 0) {
+        allQuestionCountsCache.delete(CACHE_KEYS.ALL_QUESTION_COUNTS);
+        console.log('📦 Invalidated question counts cache after bulk upload');
       }
 
       res.json({
