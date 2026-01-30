@@ -1092,7 +1092,7 @@ class ExamController {
             questionResults: questionResults,
             completedAt: new Date()
           }),
-          30000, // 30s - ExamResult.create with large JSON can be slow under load
+          60000, // 60s - ExamResult.create with large JSON can be slow under load
           'Create exam result'
         );
       } catch (timeoutError) {

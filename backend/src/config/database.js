@@ -27,7 +27,7 @@ const getDatabaseConfig = () => {
       pool: {
         max: 10,        // Reduced since queries are now batched (1-2 instead of 43+)
         min: 2,
-        acquire: 20000, // 20s acquire timeout
+        acquire: 35000, // 35s acquire timeout (allows time under load)
         idle: 10000,
         evict: 1000
       },
@@ -79,7 +79,7 @@ const getDatabaseConfig = () => {
       pool: {
         max: 10,        // Reduced since queries are now batched (1-2 instead of 43+)
         min: 2,
-        acquire: 20000, // 20s acquire timeout
+        acquire: 35000, // 35s acquire timeout (allows time under load)
         idle: 10000,
         evict: 1000
       },
