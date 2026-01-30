@@ -25,11 +25,16 @@ const getDatabaseConfig = () => {
       dialect: 'mysql',
       logging: false,
       pool: {
-        max: 20,
+        max: 15,        // Reduced from 20 to avoid MySQL max_connections issues
         min: 2,
-        acquire: 60000,
+        acquire: 30000, // Reduced from 60s to fail faster and retry
         idle: 10000,
         evict: 1000
+      },
+      dialectOptions: {
+        connectTimeout: 20000,  // Connection timeout 20s
+        // Query timeout to prevent long-running queries
+        // requestTimeout: 30000
       },
       retry: {
         match: [
@@ -72,11 +77,14 @@ const getDatabaseConfig = () => {
       dialect: 'mysql',
       logging: false,
       pool: {
-        max: 20,
+        max: 15,        // Reduced from 20 to avoid MySQL max_connections issues
         min: 2,
-        acquire: 60000,
+        acquire: 30000, // Reduced from 60s to fail faster and retry
         idle: 10000,
         evict: 1000
+      },
+      dialectOptions: {
+        connectTimeout: 20000,  // Connection timeout 20s
       },
       retry: {
         match: [

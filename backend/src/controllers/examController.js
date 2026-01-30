@@ -7,6 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const csv = require('csv-parser');
 const xlsx = require('xlsx');
+const { withQueryTimeout } = require('../utils/dbRetry');
 
 class ExamController {
   /**
@@ -23,17 +24,40 @@ class ExamController {
         whereClause.examType = examType.toLowerCase();
       }
       
-      const exams = await Exam.findAll({
-        where: whereClause,
-        order: [['createdAt', 'DESC']]
-      });
+      // Use timeout to prevent hanging queries
+      let exams;
+      try {
+        exams = await withQueryTimeout(
+          () => Exam.findAll({
+            where: whereClause,
+            order: [['createdAt', 'DESC']]
+          }),
+          20000,  // 20 second timeout
+          'Get all exams'
+        );
+      } catch (timeoutError) {
+        console.error(`❌ GET EXAMS TIMEOUT: ${timeoutError.message}`);
+        return res.status(503).json({
+          success: false,
+          message: 'Service temporarily unavailable. Please try again.',
+          retryAfter: 5
+        });
+      }
 
-      // Get question counts for each exam
+      // Get question counts for each exam (with individual timeouts)
       const examsWithQuestionCounts = await Promise.all(
         exams.map(async (exam) => {
-          const questionCount = await Question.count({
-            where: { examId: exam.id }
-          });
+          let questionCount = 0;
+          try {
+            questionCount = await withQueryTimeout(
+              () => Question.count({ where: { examId: exam.id } }),
+              5000,  // 5 second timeout per question count
+              `Question count for exam ${exam.id}`
+            );
+          } catch (err) {
+            console.warn(`⚠️ Failed to get question count for exam ${exam.id}:`, err.message);
+            // Continue with 0 count rather than failing
+          }
           
           const examData = exam.toJSON();
           examData.questionCount = questionCount;
@@ -1537,30 +1561,47 @@ class ExamController {
       console.log('🔍 GET USER EXAM RESULTS DEBUG:');
       console.log('   User ID:', userId);
 
-      const results = await ExamResult.findAll({
-        where: { userId: userId },
-        include: [
-          {
-            model: Exam,
-            as: 'Exam',
-            attributes: ['id', 'title', 'category', 'difficulty']
-          }
-        ],
-        order: [['createdAt', 'DESC']],
-        attributes: [
-          'id',
-          'examId', 
-          'userId',
-          'score',
-          'totalQuestions',
-          'correctAnswers',
-          'timeSpent',
-          'passed',
-          'isFreeExam',
-          'questionResults',
-          'createdAt'
-        ]
-      });
+      // Use timeout to prevent hanging queries
+      let results;
+      try {
+        results = await withQueryTimeout(
+          () => ExamResult.findAll({
+            where: { userId: userId },
+            include: [
+              {
+                model: Exam,
+                as: 'Exam',
+                attributes: ['id', 'title', 'category', 'difficulty']
+              }
+            ],
+            order: [['createdAt', 'DESC']],
+            limit: 100,  // Limit results to prevent large queries
+            attributes: [
+              'id',
+              'examId', 
+              'userId',
+              'score',
+              'totalQuestions',
+              'correctAnswers',
+              'timeSpent',
+              'passed',
+              'isFreeExam',
+              'questionResults',
+              'createdAt'
+            ]
+          }),
+          20000,  // 20 second timeout
+          'Get user exam results'
+        );
+      } catch (timeoutError) {
+        console.error(`❌ GET USER RESULTS TIMEOUT: ${timeoutError.message}`);
+        return res.status(503).json({
+          success: false,
+          message: 'Service temporarily unavailable. Please try again.',
+          data: [],
+          retryAfter: 5
+        });
+      }
 
       // Convert to plain objects to ensure associations are included
       const plainResults = results.map(result => result.get({ plain: true }));

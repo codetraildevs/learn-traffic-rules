@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const authService = require('../services/authService');
 const deviceService = require('../services/deviceService');
 const User = require('../models/User');
+const { withQueryTimeout, isConnectionAcquireTimeout } = require('../utils/dbRetry');
 
 class AuthController {
   // Helper: normalize phone numbers and check review allowlist
@@ -289,12 +290,24 @@ class AuthController {
 
       console.log(`🔍 LOGIN ATTEMPT: Phone: ${phoneNumber}, Device: ${deviceId}`);
 
-      // Find user by phone number first
-      let user = await User.findOne({
-        where: {
-          phoneNumber: phoneNumber
-        }
-      });
+      // Find user by phone number first (with timeout to prevent hanging)
+      let user;
+      try {
+        user = await withQueryTimeout(
+          () => User.findOne({
+            where: { phoneNumber: phoneNumber }
+          }),
+          15000,  // 15 second timeout
+          'Login user lookup'
+        );
+      } catch (timeoutError) {
+        console.error(`❌ LOGIN TIMEOUT: ${timeoutError.message}`);
+        return res.status(503).json({
+          success: false,
+          message: 'Service temporarily unavailable. Please try again in a few seconds.',
+          retryAfter: 5
+        });
+      }
 
       if (!user) {
         console.log(`❌ USER NOT FOUND: No user found with phone ${phoneNumber}`);

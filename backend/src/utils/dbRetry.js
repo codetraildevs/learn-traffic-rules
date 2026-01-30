@@ -82,9 +82,36 @@ async function retryDbOperation(operation, options = {}) {
   throw lastError;
 }
 
+/**
+ * Execute a database query with a timeout
+ * @param {Function} queryFn - Async function that executes the query
+ * @param {number} timeoutMs - Timeout in milliseconds (default: 15000)
+ * @param {string} operationName - Name for logging (optional)
+ * @returns {Promise} Result of the query
+ */
+async function withQueryTimeout(queryFn, timeoutMs = 15000, operationName = 'Query') {
+  return Promise.race([
+    queryFn(),
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error(`${operationName} timeout after ${timeoutMs}ms`)), timeoutMs)
+    )
+  ]);
+}
+
+/**
+ * Check if error is a connection acquire timeout
+ */
+function isConnectionAcquireTimeout(error) {
+  return error.name === 'SequelizeConnectionAcquireTimeoutError' ||
+         error.message?.includes('ConnectionAcquireTimeoutError') ||
+         error.message?.includes('connection acquire timeout');
+}
+
 module.exports = {
   retryDbOperation,
   isLockTimeoutError,
-  isDuplicateEntryError
+  isDuplicateEntryError,
+  withQueryTimeout,
+  isConnectionAcquireTimeout
 };
 
