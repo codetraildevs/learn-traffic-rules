@@ -9,8 +9,12 @@
 ehthumbs.db
 Thumbs.db
 
-# IDE and Editor files
-.vscode/
+# IDE and Editor files (track .vscode/settings*.json for branch-specific view)
+.vscode/*
+!.vscode/settings.json
+!.vscode/settings-main.example.json
+!.vscode/settings-frontend.example.json
+!.vscode/README.md
 .idea/
 *.swp
 *.swo
