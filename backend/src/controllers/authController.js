@@ -297,7 +297,7 @@ class AuthController {
           () => User.findOne({
             where: { phoneNumber: phoneNumber }
           }),
-          15000,  // 15 second timeout
+          20000,  // 20s - allow more time when DB is under load
           'Login user lookup'
         );
       } catch (timeoutError) {

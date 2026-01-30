@@ -200,7 +200,7 @@ class NotificationService {
           offset: offset,
         }),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('getUserNotifications timeout')), 10000)
+          setTimeout(() => reject(new Error('getUserNotifications timeout')), 15000)
         )
       ]);
 

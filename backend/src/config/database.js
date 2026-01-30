@@ -25,7 +25,7 @@ const getDatabaseConfig = () => {
       dialect: 'mysql',
       logging: false,
       pool: {
-        max: 10,        // Reduced - queries are now batched (1-2 queries instead of 43+)
+        max: 10,        // Reduced since queries are now batched (1-2 instead of 43+)
         min: 2,
         acquire: 20000, // 20s acquire timeout
         idle: 10000,
@@ -77,7 +77,7 @@ const getDatabaseConfig = () => {
       dialect: 'mysql',
       logging: false,
       pool: {
-        max: 10,        // Reduced - queries are now batched (1-2 queries instead of 43+)
+        max: 10,        // Reduced since queries are now batched (1-2 instead of 43+)
         min: 2,
         acquire: 20000, // 20s acquire timeout
         idle: 10000,

@@ -319,7 +319,7 @@ class ExamController {
       try {
         exam = await withQueryTimeout(
           () => Exam.findByPk(id),
-          10000, // 10 second timeout
+          15000, // 15s - allow more time when DB is under load
           'Get exam by ID'
         );
       } catch (timeoutError) {
@@ -346,7 +346,6 @@ class ExamController {
       try {
         [hasAccess, examsOfSameType] = await withQueryTimeout(
           () => Promise.all([
-            // Check if user has access (either free or paid)
             AccessCode.findOne({
               where: {
                 userId: userId,
@@ -354,7 +353,6 @@ class ExamController {
                 expiresAt: { [Op.gt]: new Date() }
               }
             }),
-            // Get first exam of same type to check if this is free exam
             Exam.findAll({
               where: { 
                 isActive: true,
@@ -365,10 +363,10 @@ class ExamController {
               },
               order: [['createdAt', 'ASC']],
               attributes: ['id'],
-              limit: 1 // Only need the first one to check
+              limit: 1
             })
           ]),
-          15000, // 15 second timeout for parallel queries
+          20000, // 20s for parallel queries under load
           'Access check and first exam lookup'
         );
       } catch (timeoutError) {
@@ -404,7 +402,7 @@ class ExamController {
             order: [['questionOrder', 'ASC']],
             attributes: ['id', 'question', 'option1', 'option2', 'option3', 'option4', 'correctAnswer', 'points', 'questionImgUrl', 'questionOrder']
           }),
-          15000, // 15 second timeout
+          20000, // 20s under load
           'Get exam questions'
         );
       } catch (timeoutError) {
@@ -967,7 +965,7 @@ class ExamController {
             Exam.findByPk(examId),
             Question.findAll({ where: { examId: examId } })
           ]),
-          15000,
+          25000, // 25s - allow more time when DB is under load
           'Get exam and questions'
         );
 
@@ -1002,7 +1000,7 @@ class ExamController {
               attributes: ['id']
             })
           ]),
-          10000,
+          15000, // 15s
           'Access check and first exam lookup'
         );
       } catch (timeoutError) {
@@ -1094,7 +1092,7 @@ class ExamController {
             questionResults: questionResults,
             completedAt: new Date()
           }),
-          10000,
+          30000, // 30s - ExamResult.create with large JSON can be slow under load
           'Create exam result'
         );
       } catch (timeoutError) {
@@ -1620,7 +1618,7 @@ class ExamController {
               'createdAt'
             ]
           }),
-          20000,  // 20 second timeout
+          25000,  // 25s - results list with questionResults can be slow under load
           'Get user exam results'
         );
       } catch (timeoutError) {
