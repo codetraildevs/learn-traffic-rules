@@ -1,0 +1,10 @@
+{
+    "postman.settings.dotenv-detection-notification-visibility": false,
+    "files.exclude": {
+        "backend": true
+    },
+    "problems.exclude": {
+        "**/backend/**": true
+    },
+    "dart.analysisExcludedFolders": ["backend"]
+}
