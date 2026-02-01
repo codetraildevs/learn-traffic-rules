@@ -88,8 +88,12 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   void initState() {
     super.initState();
     _initializeAnimations();
-    //_initializeSecurity();
+    _initializeSecurity();
     _loadQuestions();
+  }
+
+  void _initializeSecurity() {
+    _disableScreenshots();
   }
 
   void _initializeAnimations() {

@@ -178,7 +178,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
 
     // Filter out only the test admin user (0780000000), but show all other users including ADMINs
     filtered = filtered
-        .where((user) => user.phoneNumber.toString() != '078000000022')
+        .where((user) => user.phoneNumber.toString() != '078000000000')
         .toList();
 
     // All filters (search, role, date, access code, call tracking) are now handled by backend
@@ -1057,7 +1057,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   ) {
     final l10n = AppLocalizations.of(context);
     final dateFormat = DateFormat('MMM dd, yyyy');
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1127,7 +1127,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Access code copied to clipboard'),
+                                  content: Text(
+                                    'Access code copied to clipboard',
+                                  ),
                                   duration: const Duration(seconds: 2),
                                   backgroundColor: AppColors.success,
                                 ),
@@ -1198,9 +1200,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         children: [
           Text(
             label,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.grey600,
-            ),
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey600),
           ),
           Text(
             value,
