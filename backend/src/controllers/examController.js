@@ -1599,7 +1599,8 @@ class ExamController {
               {
                 model: Exam,
                 as: 'Exam',
-                attributes: ['id', 'title', 'category', 'difficulty', 'imageUrl']
+                attributes: ['id', 'title', 'category', 'difficulty']
+                // NOTE: imageUrl column doesn't exist in Exam table
               }
             ],
             order: [['createdAt', 'DESC']],
