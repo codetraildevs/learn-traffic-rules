@@ -303,6 +303,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         _calculateUserStats();
         debugPrint('✅ Loaded ${freshExams.length} exams for user dashboard');
 
+        // Clear image caches to ensure fresh images from backend are loaded
+        ImageCacheService.instance.clearAllCaches();
+
         // Cache the data
         await _cacheDashboardData('USER');
       }
@@ -332,6 +335,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       }
 
       _calculateAdminStats();
+
+      // Clear image caches to ensure fresh images from backend are loaded
+      ImageCacheService.instance.clearAllCaches();
 
       // Cache the data
       await _cacheDashboardData('ADMIN');

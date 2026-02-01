@@ -206,4 +206,26 @@ class ImageUrlResolver {
     // Always attach to site root
     return '${AppConstants.siteBaseUrl}$normalized';
   }
+
+  /// Add cache-busting parameter to force image reload
+  /// Use this when you know backend images have been updated
+  static String withCacheBust(String? imageUrl) {
+    final resolved = resolve(imageUrl);
+    if (resolved.isEmpty) return '';
+
+    // Add timestamp as cache-busting parameter
+    final separator = resolved.contains('?') ? '&' : '?';
+    return '$resolved${separator}v=${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  /// Add app version as cache-busting parameter
+  /// More stable than timestamp - only updates when app version changes
+  static String withVersionCache(String? imageUrl, {String version = '1.4.0'}) {
+    final resolved = resolve(imageUrl);
+    if (resolved.isEmpty) return '';
+
+    // Add version as cache-busting parameter
+    final separator = resolved.contains('?') ? '&' : '?';
+    return '$resolved${separator}v=$version';
+  }
 }
