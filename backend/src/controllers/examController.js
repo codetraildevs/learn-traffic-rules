@@ -1599,7 +1599,7 @@ class ExamController {
               {
                 model: Exam,
                 as: 'Exam',
-                attributes: ['id', 'title', 'category', 'difficulty']
+                attributes: ['id', 'title', 'category', 'difficulty', 'imageUrl']
               }
             ],
             order: [['createdAt', 'DESC']],
@@ -1614,11 +1614,13 @@ class ExamController {
               'timeSpent',
               'passed',
               'isFreeExam',
-              'questionResults',
+              'submittedAt',
               'createdAt'
+              // NOTE: questionResults excluded - too large for list view
+              // Fetch individual result details when viewing specific exam result
             ]
           }),
-          25000,  // 25s - results list with questionResults can be slow under load
+          15000,  // 15s - much faster without questionResults
           'Get user exam results'
         );
       } catch (timeoutError) {
@@ -1637,29 +1639,18 @@ class ExamController {
       console.log('   Results found:', results.length);
       console.log('   Results:', results.map(r => ({ id: r.id, examId: r.examId, score: r.score })));
       
-      // Parse questionResults JSON strings to objects
-      const processedResults = plainResults.map(result => {
-        if (result.questionResults && typeof result.questionResults === 'string') {
-          try {
-            result.questionResults = JSON.parse(result.questionResults);
-          } catch (error) {
-            console.error(`Error parsing questionResults for exam ${result.examId}:`, error);
-            result.questionResults = [];
-          }
-        }
-        return result;
-      });
+      // No need to parse questionResults since we excluded it
+      const processedResults = plainResults;
 
-      // Debug exam information
-      for (const result of processedResults) {
-        console.log(`   Exam ${result.examId}:`);
-        console.log(`     Exam data:`, result.Exam);
+      // Debug exam information (first 5 results only)
+      processedResults.slice(0, 5).forEach((result, index) => {
+        console.log(`   Result ${index + 1}/${results.length}:`);
+        console.log(`     Exam ID: ${result.examId}`);
         console.log(`     Title: ${result.Exam?.title || 'No title'}`);
-        console.log(`     Category: ${result.Exam?.category || 'No category'}`);
-        console.log(`     Difficulty: ${result.Exam?.difficulty || 'No difficulty'}`);
-        console.log(`     Question Results:`, result.questionResults);
-        console.log(`     Question Results Length: ${result.questionResults?.length || 0}`);
-      }
+        console.log(`     Score: ${result.score}% (${result.correctAnswers}/${result.totalQuestions})`);
+        console.log(`     Passed: ${result.passed ? 'Yes' : 'No'}`);
+        console.log(`     Date: ${result.submittedAt || result.createdAt}`);
+      });
 
       res.json({
         success: true,
