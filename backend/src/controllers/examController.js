@@ -1614,9 +1614,9 @@ class ExamController {
               'timeSpent',
               'passed',
               'isFreeExam',
-              'submittedAt',
               'createdAt'
               // NOTE: questionResults excluded - too large for list view
+              // NOTE: submittedAt column doesn't exist in DB, using createdAt instead
               // Fetch individual result details when viewing specific exam result
             ]
           }),
