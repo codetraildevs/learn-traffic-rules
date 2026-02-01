@@ -36,35 +36,35 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   String? _error;
   bool _isOffline = false;
   StreamSubscription<ConnectivityResult>? _connectivitySubscription;
-  static const MethodChannel _securityChannel = MethodChannel(
-    'com.trafficrules.master/security',
-  );
+  // static const MethodChannel _securityChannel = MethodChannel(
+  //   'com.trafficrules.master/security',
+  // );
 
   // Track app lifecycle to prevent unnecessary refreshes on screenshots
   DateTime? _lastBackgroundTime;
   static const _minBackgroundDuration = Duration(seconds: 3);
 
-  Future<void> _disableScreenshots() async {
-    if (Platform.isAndroid) {
-      try {
-        await _securityChannel.invokeMethod('disableScreenshots');
-        debugPrint('🔒 Security: Screenshots disabled for detailed answers');
-      } catch (e) {
-        debugPrint('🔒 Security: Failed to disable screenshots: $e');
-      }
-    }
-  }
+  // Future<void> _disableScreenshots() async {
+  //   if (Platform.isAndroid) {
+  //     try {
+  //       await _securityChannel.invokeMethod('disableScreenshots');
+  //       debugPrint('🔒 Security: Screenshots disabled for detailed answers');
+  //     } catch (e) {
+  //       debugPrint('🔒 Security: Failed to disable screenshots: $e');
+  //     }
+  //   }
+  // }
 
-  Future<void> _enableScreenshots() async {
-    if (Platform.isAndroid) {
-      try {
-        await _securityChannel.invokeMethod('enableScreenshots');
-        debugPrint('🔒 Security: Screenshots enabled after detailed answers');
-      } catch (e) {
-        debugPrint('🔒 Security: Failed to enable screenshots: $e');
-      }
-    }
-  }
+  // Future<void> _enableScreenshots() async {
+  //   if (Platform.isAndroid) {
+  //     try {
+  //       await _securityChannel.invokeMethod('enableScreenshots');
+  //       debugPrint('🔒 Security: Screenshots enabled after detailed answers');
+  //     } catch (e) {
+  //       debugPrint('🔒 Security: Failed to enable screenshots: $e');
+  //     }
+  //   }
+  // }
 
   @override
   void initState() {
@@ -952,25 +952,25 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
     );
   }
 
-  void _viewExamResult(ExamResultData result) async {
-    // Disable screenshots before showing detailed answers
-    await _disableScreenshots();
+  // void _viewExamResult(ExamResultData result) async {
+  //   // Disable screenshots before showing detailed answers
+  //   await _disableScreenshots();
 
-    // Show detailed exam result with question-by-question answers
-    if (!mounted) return;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _SecureDetailedAnswersModal(
-        examResult: result,
-        onClose: () async {
-          // Re-enable screenshots when closing
-          await _enableScreenshots();
-        },
-      ),
-    );
-  }
+  //   // Show detailed exam result with question-by-question answers
+  //   if (!mounted) return;
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     backgroundColor: Colors.transparent,
+  //     builder: (context) => _SecureDetailedAnswersModal(
+  //       examResult: result,
+  //       onClose: () async {
+  //         // Re-enable screenshots when closing
+  //         await _enableScreenshots();
+  //       },
+  //     ),
+  //   );
+  // }
 
   String _formatTime(int seconds) {
     final minutes = seconds ~/ 60;

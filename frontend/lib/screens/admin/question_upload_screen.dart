@@ -71,7 +71,7 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
     _optionDController.dispose();
     _correctAnswerController.dispose();
     _imageUrlController.dispose();
-    _animationController?.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -88,7 +88,7 @@ class _QuestionUploadScreenState extends ConsumerState<QuestionUploadScreen>
     }
 
     // Otherwise, prepend the default path
-    return '${AppConstants.defaultQuestionImagePath}${trimmed}';
+    return '${AppConstants.defaultQuestionImagePath}$trimmed';
   }
 
   @override

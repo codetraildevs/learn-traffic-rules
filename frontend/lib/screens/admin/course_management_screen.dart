@@ -644,14 +644,15 @@ class _CourseManagementScreenState
                   .deleteCourse(course.id);
               if (mounted) {
                 if (success) {
-                  if (!mounted) return;
                   AppFlashMessage.showSuccess(
-                    context,
+                    this.context,
                     'Course deleted successfully',
                   );
                 } else {
-                  if (!mounted) return;
-                  AppFlashMessage.showError(context, 'Failed to delete course');
+                  AppFlashMessage.showError(
+                    this.context,
+                    'Failed to delete course',
+                  );
                 }
               }
             },

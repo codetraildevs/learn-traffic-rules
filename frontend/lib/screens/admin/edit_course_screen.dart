@@ -34,7 +34,7 @@ class _EditCourseScreenState extends ConsumerState<EditCourseScreen> {
   bool _isUploadingImage = false;
 
   bool _isSubmitting = false;
-  bool _isLoading = true;
+  final bool _isLoading = true;
 
   @override
   void initState() {
@@ -280,7 +280,7 @@ class _EditCourseScreenState extends ConsumerState<EditCourseScreen> {
                 onChanged: (value) {
                   setState(() => _isActive = value);
                 },
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
               ),
 
               SizedBox(height: 32.h),
@@ -453,7 +453,7 @@ class _EditCourseScreenState extends ConsumerState<EditCourseScreen> {
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),

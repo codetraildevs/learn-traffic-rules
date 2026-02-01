@@ -90,7 +90,7 @@ class UserManagementService {
   }) async {
     try {
       debugPrint(
-        "🔍 Creating access code for user: $userId with amount: $paymentAmount${durationDays != null ? ' (${durationDays} days)' : ''}",
+        "🔍 Creating access code for user: $userId with amount: $paymentAmount${durationDays != null ? ' ($durationDays days)' : ''}",
       );
 
       // Ensure paymentAmount is positive

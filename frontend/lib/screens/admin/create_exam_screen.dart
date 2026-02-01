@@ -65,7 +65,7 @@ class _CreateExamScreenState extends ConsumerState<CreateExamScreen>
     _categoryController.dispose();
     _durationController.dispose();
     _passingScoreController.dispose();
-    _animationController?.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 

@@ -6,13 +6,13 @@ part of 'access_code_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-AccessCodeUser _$AccessCodeUserFromJson(Map<String, dynamic> json) =>
-    AccessCodeUser(
-      id: json['id'] as String,
-      fullName: json['fullName'] as String,
-      phoneNumber: json['phoneNumber'] as String?,
-      role: json['role'] as String,
-    );
+// AccessCodeUser _$AccessCodeUserFromJson(Map<String, dynamic> json) =>
+//     AccessCodeUser(
+//       id: json['id'] as String,
+//       fullName: json['fullName'] as String,
+//       phoneNumber: json['phoneNumber'] as String?,
+//       role: json['role'] as String,
+//     );
 
 Map<String, dynamic> _$AccessCodeUserToJson(AccessCodeUser instance) =>
     <String, dynamic>{

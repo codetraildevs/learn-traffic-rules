@@ -26,13 +26,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   void _initializeAnimations() {
+    // Reduced animation duration to prevent ANR on slow devices
     _logoController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
 
     _textController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
@@ -49,8 +50,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     await _logoController.forward();
     await _textController.forward();
 
-    // Wait a bit before checking auth status
-    await Future.delayed(const Duration(milliseconds: 500));
+    // Reduced delay to improve startup time and prevent ANR
+    await Future.delayed(const Duration(milliseconds: 200));
 
     // The auth provider will handle navigation
     if (mounted) {
@@ -133,7 +134,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 Text(
                                   l10n.educationalStudyPlatform,
                                   style: AppTextStyles.bodyLarge.copyWith(
-                                    color: AppColors.white.withValues(alpha: 0.9),
+                                    color: AppColors.white.withValues(
+                                      alpha: 0.9,
+                                    ),
                                     fontSize: 16.sp,
                                   ),
                                   textAlign: TextAlign.center,

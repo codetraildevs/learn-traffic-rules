@@ -844,7 +844,7 @@ class _AccessCodeManagementScreenState
               Expanded(
                 flex: 3,
                 child: DropdownButtonFormField<String>(
-                  value: _selectedFilter,
+                  initialValue: _selectedFilter,
                   onChanged: (value) => _onFilterChanged(value!),
                   decoration: InputDecoration(
                     labelText: 'Filter by Status',
@@ -869,7 +869,7 @@ class _AccessCodeManagementScreenState
               Expanded(
                 flex: 3,
                 child: DropdownButtonFormField<String>(
-                  value: _selectedSort,
+                  initialValue: _selectedSort,
                   onChanged: (value) => _onSortChanged(value!),
                   decoration: InputDecoration(
                     labelText: 'Sort by',

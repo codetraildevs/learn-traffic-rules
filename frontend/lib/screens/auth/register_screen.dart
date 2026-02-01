@@ -323,8 +323,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     // Check internet connection before attempting registration
     final hasInternet = await _networkService.hasInternetConnection();
     if (!hasInternet) {
-      final l10n = AppLocalizations.of(context);
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Column(

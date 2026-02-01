@@ -51,78 +51,71 @@ void main() async {
   //   debugPrint('⚠️ Firebase initialization failed: $e');
   // }
 
-  // OPTIMIZATION: Make initialization non-blocking to prevent ANR
-  // Initialize shared preferences (lightweight, can be blocking)
+  // CRITICAL ANR FIX: Minimize blocking operations in main()
+  // Only initialize absolute essentials, defer everything else
+
+  // Initialize shared preferences (required for auth)
   await SharedPreferences.getInstance();
 
-  // Initialize API service (lightweight, can be blocking)
+  // Initialize API service tokens (required for auth)
   await ApiService().initialize();
 
-  // OPTIMIZATION: Initialize notification service in background (non-blocking)
-  // Don't block app startup if notification service fails
-  Future.microtask(() async {
+  // CRITICAL ANR FIX: Delay ALL non-essential services until after first frame
+  // This prevents "Skipped 240 frames" error during app startup
+  // Let the UI render FIRST, then initialize services in background
+
+  // Delay by 1500ms to ensure splash animation completes smoothly
+  Future.delayed(const Duration(milliseconds: 1500), () async {
+    // Initialize notification service (non-critical for startup)
     try {
       await NotificationService().initialize();
     } catch (e) {
-      debugPrint(
-        '⚠️ Main notification service failed, using simple fallback: $e',
-      );
+      debugPrint('⚠️ Notification service failed, using fallback: $e');
       try {
         await SimpleNotificationService().initialize();
       } catch (e2) {
         debugPrint('⚠️ Simple notification service also failed: $e2');
-        // Continue anyway - notifications are not critical for app startup
       }
     }
-  });
 
-  // OPTIMIZATION: Start notification polling in background (non-blocking)
-  // Don't await - let it start in background to avoid blocking app startup
-  Future.microtask(() async {
+    // Start notification polling (non-critical)
     try {
       await NotificationPollingService().startPolling();
-      debugPrint('✅ Notification polling service started');
+      debugPrint('✅ Notification polling started');
     } catch (e) {
-      debugPrint('⚠️ Failed to start notification polling service: $e');
+      debugPrint('⚠️ Failed to start notification polling: $e');
+    }
+
+    // Initialize image cache (non-critical)
+    try {
+      await ImageCacheService.instance.initialize();
+      debugPrint('✅ Image cache initialized');
+    } catch (e) {
+      debugPrint('⚠️ Image cache init failed (will retry later): $e');
     }
   });
 
-  // Initialize image cache service (non-blocking, will retry when needed)
-  // Don't wait for it to complete, as it might fail and we want the app to start
-  ImageCacheService.instance.initialize().catchError((e) {
-    debugPrint('⚠️ Image cache initialization failed (will retry later): $e');
-  });
-  debugPrint('📁 Image cache service initialization started');
+  // CRITICAL BACKEND FIX: DISABLE aggressive background sync on startup
+  // This was killing the backend with 100+ simultaneous requests!
+  // Exams will be downloaded on-demand when user actually needs them
 
-  // Initialize offline exam sync (only if internet is available)
-  // Don't block app startup - run in background
-  // Start immediately but with a small delay to let app UI render first
-  Future.delayed(const Duration(milliseconds: 500), () async {
+  // Optional: Very light background check after 30 seconds (not on startup!)
+  Future.delayed(const Duration(seconds: 30), () async {
     try {
       final networkService = NetworkService();
       final hasInternet = await networkService.hasInternetConnection();
 
       if (hasInternet) {
-        debugPrint('📥 Starting background download of all exams and questions...');
-        // Download ALL exams and their questions for offline use in background
-        // This ensures everything is cached before user navigates to exam screen
-        // Use forceDownload=false to only download new/updated exams (more efficient)
-        // But ensure questions are downloaded for all exams
-        final syncService = ExamSyncService();
-        
-        // Start download in background (non-blocking)
-        syncService.downloadAllExams(forceDownload: false).then((_) {
-          debugPrint('✅ All exams and questions downloaded successfully');
-        }).catchError((e) {
-          debugPrint('⚠️ Failed to download exams on startup: $e');
-        });
-        
-        debugPrint('✅ Background exam sync started (non-blocking)');
+        debugPrint(
+          '🔄 Background: On-demand sync ready (won\'t hammer backend)',
+        );
+        // DO NOT call downloadAllExams() here - it overwhelms the backend!
+        // Exams are downloaded individually when user opens them
       } else {
-        debugPrint('📱 No internet on startup, will use offline data');
+        debugPrint('📱 No internet, using offline data');
       }
     } catch (e) {
-      debugPrint('⚠️ Failed to initialize offline sync: $e');
+      debugPrint('⚠️ Background check failed: $e');
     }
   });
 

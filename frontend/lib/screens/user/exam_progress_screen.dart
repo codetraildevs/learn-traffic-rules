@@ -57,7 +57,6 @@ class _ExamProgressScreenState extends State<ExamProgressScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.grey50,
       appBar: AppBar(

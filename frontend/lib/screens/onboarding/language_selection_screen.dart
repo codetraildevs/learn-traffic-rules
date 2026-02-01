@@ -41,6 +41,7 @@ class _LanguageSelectionScreenState
     if (isSelected) return;
 
     // Get device locale
+    if (!mounted) return;
     final deviceLocale = Localizations.localeOf(context);
     final deviceLanguage = deviceLocale.languageCode;
 

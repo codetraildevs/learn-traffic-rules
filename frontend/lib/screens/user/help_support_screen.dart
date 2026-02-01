@@ -756,8 +756,8 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
     return l10n.paymentHelpText;
   }
 
-  String _getAccountHelpText() {
-    final l10n = AppLocalizations.of(context);
-    return l10n.accountHelpText;
-  }
+  // String _getAccountHelpText() {
+  //   final l10n = AppLocalizations.of(context);
+  //   return l10n.accountHelpText;
+  // }
 }

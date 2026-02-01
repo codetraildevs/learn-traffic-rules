@@ -1074,9 +1074,23 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
     debugPrint('🖼️ Finished preloading ${imageUrls.length} image paths');
   }
 
-  /// Pre-download questions for visible exams in background
-  /// This ensures questions are cached before user clicks "Start Exam"
+  /// OPTIMIZATION: Disabled aggressive question pre-downloading
+  /// This was killing the backend with 21+ parallel requests!
+  /// Questions will be downloaded on-demand when user clicks "Start Exam"
   Future<void> _preloadExamQuestions(List<Exam> exams) async {
+    // CRITICAL FIX: DO NOT pre-download questions - it overwhelms backend!
+    // Questions are already downloaded on-demand in exam_taking_screen.dart
+    // This aggressive prefetching was causing:
+    // - 21+ simultaneous API requests
+    // - Backend connection pool exhaustion
+    // - 70+ image cache timeout errors
+    // - Backend crashes requiring pm2 restart
+    
+    debugPrint('✅ On-demand question loading enabled (no prefetch)');
+    return;
+    
+    // Original aggressive code disabled below:
+    /*
     if (exams.isEmpty) return;
 
     // Check internet connection first
@@ -1118,6 +1132,7 @@ class _AvailableExamsScreenState extends ConsumerState<AvailableExamsScreen>
         _preloadingExams.remove(exam.id);
       });
     }
+    */
   }
 
   /// Pre-download questions for a specific exam

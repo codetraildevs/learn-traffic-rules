@@ -32,8 +32,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final authState = ref.watch(authProvider);
-    final user = authState.user;
+    //final authState = ref.watch(authProvider);
 
     return Scaffold(
       appBar: AppBar(

@@ -110,33 +110,39 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
             '   - contents is empty: ${course.contents != null && course.contents!.isEmpty}',
           );
 
+          if (mounted) {
+            final l10n = AppLocalizations.of(context);
+            setState(() {
+              _contents = [];
+              _isLoading = false;
+              _error = expectedContents
+                  ? l10n.contentExistsButFailedToLoad(course.contentCount ?? 0)
+                  : l10n.noContentAvailableForThisCourse;
+            });
+          }
+        }
+      } else {
+        debugPrint('❌ API Error: ${response.message}');
+        if (mounted) {
           final l10n = AppLocalizations.of(context);
           setState(() {
             _contents = [];
             _isLoading = false;
-            _error = expectedContents
-                ? l10n.contentExistsButFailedToLoad(course.contentCount ?? 0)
-                : l10n.noContentAvailableForThisCourse;
+            _error = response.message ?? l10n.failedToLoadCourseContent;
           });
         }
-      } else {
-        debugPrint('❌ API Error: ${response.message}');
-        final l10n = AppLocalizations.of(context);
-        setState(() {
-          _contents = [];
-          _isLoading = false;
-          _error = response.message ?? l10n.failedToLoadCourseContent;
-        });
       }
     } catch (e, stackTrace) {
       debugPrint('❌ Exception loading course contents: $e');
       debugPrint('Stack trace: $stackTrace');
-      final l10n = AppLocalizations.of(context);
-      setState(() {
-        _contents = [];
-        _isLoading = false;
-        _error = l10n.errorLoadingCourseContent(e.toString());
-      });
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        setState(() {
+          _contents = [];
+          _isLoading = false;
+          _error = l10n.errorLoadingCourseContent(e.toString());
+        });
+      }
     }
   }
 
@@ -638,7 +644,7 @@ class _CourseContentViewerScreenState extends State<CourseContentViewerScreen> {
       body: Column(
         children: [
           // Progress Indicator
-          Container(
+          SizedBox(
             height: 4.h,
             child: LinearProgressIndicator(
               value: (_currentIndex + 1) / _contents.length,

@@ -244,7 +244,7 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
                 onChanged: (value) {
                   setState(() => _isActive = value);
                 },
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
               ),
 
               SizedBox(height: 32.h),
@@ -422,7 +422,7 @@ class _CreateCourseScreenState extends ConsumerState<CreateCourseScreen> {
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),

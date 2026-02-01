@@ -62,7 +62,6 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
   @override
   void dispose() {
     _animationController.dispose();
-    _animationController?.dispose();
     super.dispose();
   }
 
@@ -606,7 +605,8 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
                                 : '${AppConstants.baseUrlImage}${exam.examImgUrl}',
                           ),
                           builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
                               return Container(
                                 color: AppColors.grey200,
                                 child: Center(
@@ -643,26 +643,31 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
                                   ),
                                 );
                               },
-                              loadingBuilder: (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return Container(
-                                  color: AppColors.grey200,
-                                  child: Center(
-                                    child: CircularProgressIndicator(
-                                      value:
-                                          loadingProgress.expectedTotalBytes != null
-                                      ? loadingProgress.cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                      : null,
-                                      strokeWidth: 2,
-                                      valueColor:
-                                          const AlwaysStoppedAnimation<Color>(
-                                            AppColors.primary,
-                                          ),
-                                    ),
-                                  ),
-                                );
-                              },
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      color: AppColors.grey200,
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          value:
+                                              loadingProgress
+                                                      .expectedTotalBytes !=
+                                                  null
+                                              ? loadingProgress
+                                                        .cumulativeBytesLoaded /
+                                                    loadingProgress
+                                                        .expectedTotalBytes!
+                                              : null,
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              const AlwaysStoppedAnimation<
+                                                Color
+                                              >(AppColors.primary),
+                                        ),
+                                      ),
+                                    );
+                                  },
                             );
                           },
                         ),
@@ -1085,7 +1090,7 @@ class _ExamManagementScreenState extends ConsumerState<ExamManagementScreen>
               ...availableTypes.map((type) {
                 final displayName = type[0].toUpperCase() + type.substring(1);
                 return _buildFilterChip(type, displayName, exams);
-              }).toList(),
+              }),
             ],
           ),
         ],

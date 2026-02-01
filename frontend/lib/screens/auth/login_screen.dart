@@ -274,8 +274,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         },
       });
 
-      final l10n = AppLocalizations.of(context);
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Column(
@@ -311,8 +311,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     // Check internet connection before attempting login
     final hasInternet = await _networkService.hasInternetConnection();
     if (!hasInternet) {
-      final l10n = AppLocalizations.of(context);
+      debugPrint('🔍 No internet connection');
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Column(

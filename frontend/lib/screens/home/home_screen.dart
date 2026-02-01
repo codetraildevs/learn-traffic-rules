@@ -623,7 +623,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         // Only reload if exams count changed or if we don't have exams loaded
         if (previousExamCount != examState.exams.length || _exams.isEmpty) {
           debugPrint(
-            '🔄 Exam provider changed (${previousExamCount} -> ${examState.exams.length}), reloading dashboard data',
+            '🔄 Exam provider changed ($previousExamCount -> ${examState.exams.length}), reloading dashboard data',
           );
           _loadDashboardData();
         }
@@ -1731,16 +1731,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       debugPrint('✅ WhatsApp group link launched successfully');
     } catch (e) {
       debugPrint('❌ WhatsApp group link launch failed: $e');
-      if (!mounted) return;
-
-      final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.whatsappNotAvailableTryTheseAlternatives),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.whatsappNotAvailableTryTheseAlternatives),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -1857,7 +1857,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildProfileTab() {
-    //disble back button when user are on dashboard screen
+    //disable back button when user are on dashboard screen
     return Scaffold(
       appBar: AppBar(
         title: Builder(
@@ -2034,7 +2034,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       // Navigate immediately without waiting
                       if (mounted) {
                         Navigator.pushNamedAndRemoveUntil(
-                          context,
+                          this.context,
                           '/login',
                           (route) => false, // Remove all previous routes
                         );

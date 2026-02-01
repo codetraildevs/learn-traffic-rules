@@ -548,27 +548,31 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         );
 
         if (response.success && response.data.accessCode.code.isNotEmpty) {
-          final l10n = AppLocalizations.of(context);
-          _showSuccessSnackBar(
-            '${l10n.accessCodeGeneratedFor(user.fullName)} (${days} days)',
-          );
-          // Show access code dialog so admin can copy and share it
-          _showAccessCodeDialog(
-            context,
-            response.data.accessCode,
-            user.fullName,
-            days,
-          );
-          _loadUsers(); // Refresh the list
+          if (mounted) {
+            final l10n = AppLocalizations.of(context);
+            _showSuccessSnackBar(
+              '${l10n.accessCodeGeneratedFor(user.fullName)} ($days days)',
+            );
+            // Show access code dialog so admin can copy and share it
+            _showAccessCodeDialog(
+              context,
+              response.data.accessCode,
+              user.fullName,
+              days,
+            );
+            _loadUsers(); // Refresh the list
+          }
         } else {
-          final l10n = AppLocalizations.of(context);
-          _showErrorSnackBar(
-            '${l10n.failedToGenerateAccessCode}: ${response.message}',
-          );
+          if (mounted) {
+            final l10n = AppLocalizations.of(context);
+            _showErrorSnackBar(
+              '${l10n.failedToGenerateAccessCode}: ${response.message}',
+            );
+          }
         }
       } else {
         debugPrint(
-          '🔍 Selected tier: ${selectedTier['tier']} - $amount RWF (${days} days)',
+          '🔍 Selected tier: ${selectedTier['tier']} - $amount RWF ($days days)',
         );
 
         final response = await _userManagementService.createAccessCodeForUser(
@@ -577,26 +581,32 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         );
 
         if (response.success && response.data.accessCode.code.isNotEmpty) {
-          final l10n = AppLocalizations.of(context);
-          _showSuccessSnackBar(l10n.accessCodeGeneratedFor(user.fullName));
-          // Show access code dialog so admin can copy and share it
-          _showAccessCodeDialog(
-            context,
-            response.data.accessCode,
-            user.fullName,
-            days,
-          );
-          _loadUsers(); // Refresh the list
+          if (mounted) {
+            final l10n = AppLocalizations.of(context);
+            _showSuccessSnackBar(l10n.accessCodeGeneratedFor(user.fullName));
+            // Show access code dialog so admin can copy and share it
+            _showAccessCodeDialog(
+              context,
+              response.data.accessCode,
+              user.fullName,
+              days,
+            );
+            _loadUsers(); // Refresh the list
+          }
         } else {
-          final l10n = AppLocalizations.of(context);
-          _showErrorSnackBar(
-            '${l10n.failedToGenerateAccessCode}: ${response.message}',
-          );
+          if (mounted) {
+            final l10n = AppLocalizations.of(context);
+            _showErrorSnackBar(
+              '${l10n.failedToGenerateAccessCode}: ${response.message}',
+            );
+          }
         }
       }
     } catch (e) {
-      final l10n = AppLocalizations.of(context);
-      _showErrorSnackBar('${l10n.errorGeneratingAccessCode}: $e');
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        _showErrorSnackBar('${l10n.errorGeneratingAccessCode}: $e');
+      }
     }
   }
 
@@ -1032,18 +1042,22 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     if (confirmed == true) {
       try {
         final response = await _userManagementService.deleteUser(user.id);
-        final l10n = AppLocalizations.of(context);
-        if (response['success'] == true) {
-          _showSuccessSnackBar(l10n.userDeletedSuccessfully(user.fullName));
-          _loadUsers(); // Refresh the list
-        } else {
-          _showErrorSnackBar(
-            '${l10n.failedToDeleteUser}: ${response['message'] ?? 'Unknown error'}',
-          );
+        if (mounted) {
+          final l10n = AppLocalizations.of(context);
+          if (response['success'] == true) {
+            _showSuccessSnackBar(l10n.userDeletedSuccessfully(user.fullName));
+            _loadUsers(); // Refresh the list
+          } else {
+            _showErrorSnackBar(
+              '${l10n.failedToDeleteUser}: ${response['message'] ?? 'Unknown error'}',
+            );
+          }
         }
       } catch (e) {
-        final l10n = AppLocalizations.of(context);
-        _showErrorSnackBar('${l10n.errorDeletingUser}: $e');
+        if (mounted) {
+          final l10n = AppLocalizations.of(context);
+          _showErrorSnackBar('${l10n.errorDeletingUser}: $e');
+        }
       }
     }
   }
@@ -1954,7 +1968,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: _selectedFilter,
+                            initialValue: _selectedFilter,
                             onChanged: (value) => _onFilterChanged(value!),
                             decoration: InputDecoration(
                               labelText: AppLocalizations.of(context).filter,
@@ -2042,7 +2056,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: _selectedSort,
+                            initialValue: _selectedSort,
                             onChanged: (value) => _onSortChanged(value!),
                             decoration: InputDecoration(
                               labelText: AppLocalizations.of(context).sort,
@@ -2108,7 +2122,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     Expanded(
                       flex: 2,
                       child: DropdownButtonFormField<String>(
-                        value: _selectedFilter,
+                        initialValue: _selectedFilter,
                         onChanged: (value) => _onFilterChanged(value!),
                         decoration: InputDecoration(
                           labelText: AppLocalizations.of(context).filter,
@@ -2237,16 +2251,22 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         // Sync with backend if online (works offline, syncs when online)
         _syncCallTrackingWithBackend();
 
-        final l10n = AppLocalizations.of(context);
-        _showSuccessSnackBar(l10n.callingUser(user.fullName));
-        debugPrint('📞 Marked user ${user.fullName} (${user.id}) as called');
+        if (mounted) {
+          final l10n = AppLocalizations.of(context);
+          _showSuccessSnackBar(l10n.callingUser(user.fullName));
+          debugPrint('📞 Marked user ${user.fullName} (${user.id}) as called');
+        }
       } else {
-        final l10n = AppLocalizations.of(context);
-        _showErrorSnackBar('${l10n.couldNotMakePhoneCall} $phoneNumber');
+        if (mounted) {
+          final l10n = AppLocalizations.of(context);
+          _showErrorSnackBar('${l10n.couldNotMakePhoneCall} $phoneNumber');
+        }
       }
     } catch (e) {
-      final l10n = AppLocalizations.of(context);
-      _showErrorSnackBar('${l10n.errorMakingPhoneCall}: $e');
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        _showErrorSnackBar('${l10n.errorMakingPhoneCall}: $e');
+      }
     }
   }
 
@@ -2680,24 +2700,29 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         blockReason: blockReason.isNotEmpty ? blockReason : null,
       );
 
-      final l10n = AppLocalizations.of(context);
-      if (response['success'] == true) {
-        _showSuccessSnackBar(
-          isCurrentlyBlocked
-              ? l10n.userUnblockedSuccessfully
-              : l10n.userBlockedSuccessfully,
-        );
-        _loadUsers(); // Refresh the list
-      } else {
-        _showErrorSnackBar(
-          '${isCurrentlyBlocked ? l10n.failedToUnblockUser : l10n.failedToBlockUser}: ${response['message'] ?? 'Unknown error'}',
-        );
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        if (response['success'] == true) {
+          _showSuccessSnackBar(
+            isCurrentlyBlocked
+                ? l10n.userUnblockedSuccessfully
+                : l10n.userBlockedSuccessfully,
+          );
+          _loadUsers(); // Refresh the list
+        } else {
+          _showErrorSnackBar(
+            '${isCurrentlyBlocked ? l10n.failedToUnblockUser : l10n.failedToBlockUser}: ${response['message'] ?? 'Unknown error'}',
+          );
+        }
       }
     } catch (e) {
-      final l10n = AppLocalizations.of(context);
-      _showErrorSnackBar(
-        '${isCurrentlyBlocked ? l10n.errorUnblockingUser : l10n.errorBlockingUser}: $e',
-      );
+      debugPrint('🔍 Error blocking user: $e');
+      if (mounted) {
+        final l10n = AppLocalizations.of(context);
+        _showErrorSnackBar(
+          '${isCurrentlyBlocked ? l10n.errorUnblockingUser : l10n.errorBlockingUser}: $e',
+        );
+      }
     }
   }
 }
