@@ -665,6 +665,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               }
             });
           }
+          // Progress tab (2) refresh is handled by ProgressScreen via
+          // isVisible in didUpdateWidget when tab becomes visible
         },
         type: BottomNavigationBarType.fixed,
         items: [
@@ -1605,9 +1607,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         }
 
                         // Check if it's a local file path or a network URL
-                        final isLocalFile = imagePath.startsWith('/') && 
-                                           !imagePath.startsWith('http');
-                        
+                        final isLocalFile =
+                            imagePath.startsWith('/') &&
+                            !imagePath.startsWith('http');
+
                         if (isLocalFile) {
                           // Use Image.file for local cached files
                           return Image.file(
@@ -1620,7 +1623,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               );
                               return Container(
                                 color: AppColors.grey100,
-                                child: Icon(icon, size: 40.sp, color: iconColor),
+                                child: Icon(
+                                  icon,
+                                  size: 40.sp,
+                                  color: iconColor,
+                                ),
                               );
                             },
                           );
@@ -1838,7 +1845,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final isUser = user?.role == 'USER';
 
     if (isUser) {
-      return const progress_screen.ProgressScreen();
+      return progress_screen.ProgressScreen(isVisible: _currentIndex == 2);
     }
     return const UserManagementScreen();
   }

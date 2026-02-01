@@ -17,7 +17,9 @@ import '../../l10n/app_localizations.dart';
 import '../../utils/exam_title_mapper.dart';
 
 class ProgressScreen extends ConsumerStatefulWidget {
-  const ProgressScreen({super.key});
+  final bool isVisible;
+
+  const ProgressScreen({super.key, this.isVisible = false});
 
   @override
   ConsumerState<ProgressScreen> createState() => _ProgressScreenState();
@@ -70,6 +72,15 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
     WidgetsBinding.instance.addObserver(this);
     _loadExamResults();
     _setupConnectivityListener();
+  }
+
+  @override
+  void didUpdateWidget(ProgressScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isVisible && !oldWidget.isVisible) {
+      debugPrint('🔄 Progress tab became visible, refreshing results...');
+      _loadExamResults();
+    }
   }
 
   void _setupConnectivityListener() {
@@ -819,7 +830,6 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
         ],
       ),
       child: InkWell(
-        onTap: () => _viewExamResult(result),
         borderRadius: BorderRadius.circular(12.r),
         child: Padding(
           padding: EdgeInsets.all(12.w),
@@ -930,12 +940,6 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                               ? AppColors.success
                               : AppColors.error,
                         ),
-                      ),
-                      SizedBox(width: 4.w),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 12.sp,
-                        color: AppColors.grey400,
                       ),
                     ],
                   ),

@@ -121,7 +121,6 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
     );
   }
 
-
   Future<void> _disableScreenshots() async {
     try {
       await _securityChannel.invokeMethod('disableScreenshots');
@@ -564,6 +563,37 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
 
     _timer?.cancel();
     _backgroundTimer?.cancel();
+
+    // Show loading overlay immediately - submit can take 30-60s under load
+    if (mounted) {
+      final l10n = AppLocalizations.of(context);
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => PopScope(
+          canPop: false,
+          child: AlertDialog(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 24),
+                Expanded(
+                  child: Text(
+                    l10n.submittingExamPleaseWait,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     // Clear saved progress when submitting
     await _clearExamProgress();

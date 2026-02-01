@@ -4,7 +4,7 @@ import 'app_localizations.dart';
 
 class AppLocalizationsFr extends AppLocalizations {
   @override
-  String get appName => 'Règles de Circulation du Rwanda 🇷🇼';
+  String get appName => 'Rwanda Traffic Driving School';
 
   @override
   String get welcome => 'Bienvenue';
@@ -656,7 +656,7 @@ class AppLocalizationsFr extends AppLocalizations {
   // Registration specific
   @override
   String get startLearningJourney =>
-      'Commencez votre parcours d\'apprentissage 🇷🇼';
+      'Commencez votre parcours d\'apprentissage';
 
   @override
   String get fillDetailsToCreateAccount =>
@@ -1039,7 +1039,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get progress => 'Progrès';
 
   @override
-  String get viewProfile => 'Voir le profil';
+  String get viewProfile => 'Mon profil';
 
   @override
   String get viewAndManageYourProfileInformation =>
@@ -2928,6 +2928,9 @@ Commencez votre parcours pour devenir un conducteur responsable !
 
   @override
   String get errorSubmittingExam => 'Erreur lors de la soumission de l’examen';
+  @override
+  String get submittingExamPleaseWait =>
+      'Soumission de l\'examen. Veuillez patienter pendant le calcul de vos résultats...';
   @override
   String get correctQuestions => 'Questions correctes :';
   @override

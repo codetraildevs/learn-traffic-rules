@@ -61,7 +61,9 @@ class ApiService {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
     int maxRetries = 3,
+    Duration? requestTimeout,
   }) async {
+    final timeout = requestTimeout ?? const Duration(seconds: 30);
     // Check network connectivity first
     if (!await _networkService.hasInternetConnection()) {
       throw ApiException(
@@ -94,7 +96,7 @@ class ApiService {
             response = await http
                 .get(uri, headers: requestHeaders)
                 .timeout(
-                  const Duration(seconds: 30),
+                  timeout,
                   onTimeout: () {
                     throw Exception('Request timeout');
                   },
@@ -108,7 +110,7 @@ class ApiService {
                   body: body != null ? jsonEncode(body) : null,
                 )
                 .timeout(
-                  const Duration(seconds: 30),
+                  timeout,
                   onTimeout: () {
                     throw Exception('Request timeout');
                   },
@@ -122,7 +124,7 @@ class ApiService {
                   body: body != null ? jsonEncode(body) : null,
                 )
                 .timeout(
-                  const Duration(seconds: 30),
+                  timeout,
                   onTimeout: () {
                     throw Exception('Request timeout');
                   },
@@ -136,7 +138,7 @@ class ApiService {
                   body: body != null ? jsonEncode(body) : null,
                 )
                 .timeout(
-                  const Duration(seconds: 30),
+                  timeout,
                   onTimeout: () {
                     throw Exception('Request timeout');
                   },
@@ -146,7 +148,7 @@ class ApiService {
             response = await http
                 .delete(uri, headers: requestHeaders)
                 .timeout(
-                  const Duration(seconds: 30),
+                  timeout,
                   onTimeout: () {
                     throw Exception('Request timeout');
                   },

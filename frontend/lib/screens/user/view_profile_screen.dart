@@ -66,10 +66,10 @@ class ViewProfileScreen extends ConsumerWidget {
                     l10n.phoneLabel,
                     user?.phoneNumber ?? l10n.noPhoneNumber,
                   ),
-                  _buildInfoRow(
-                    l10n.accountStatus,
-                    user?.isActive == true ? l10n.active : l10n.inactive,
-                  ),
+                  // _buildInfoRow(
+                  //   l10n.accountStatus,
+                  //   user?.isActive == true ? l10n.active : l10n.inactive,
+                  // ),
                   _buildInfoRow(
                     l10n.lastLogin,
                     user?.lastLogin != null

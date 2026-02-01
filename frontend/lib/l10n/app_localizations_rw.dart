@@ -1032,7 +1032,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get progress => 'iterambere';
 
   @override
-  String get viewProfile => 'Reba Profili';
+  String get viewProfile => 'Profili yanjye';
 
   @override
   String get viewAndManageYourProfileInformation =>
@@ -2908,6 +2908,9 @@ Tangira urugendo rwo kuba umushoferi utekanye!
 
   @override
   String get errorSubmittingExam => 'Habaye ikibazo mu kohereza imwitozo';
+  @override
+  String get submittingExamPleaseWait =>
+      'Kohereza imwitozo. Nyamuneka tegereza ubwo dukura amanota yawe...';
   @override
   String get correctQuestions => 'Ibibazo wakoze';
   @override

@@ -954,6 +954,7 @@ abstract class AppLocalizations {
   String get examSavedOffline;
   String get examScoreDescription;
   String get errorSubmittingExam;
+  String get submittingExamPleaseWait;
   String get correctQuestions;
   String get incorrectQuestions;
   String get practiceExamTitle;

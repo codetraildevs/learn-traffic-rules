@@ -1018,7 +1018,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get progress => 'Progress';
 
   @override
-  String get viewProfile => 'View Profile';
+  String get viewProfile => 'My Profile';
 
   @override
   String get viewAndManageYourProfileInformation =>
@@ -2840,6 +2840,9 @@ Start your journey to becoming a safe driver!
 
   @override
   String get errorSubmittingExam => 'Error submitting exam';
+  @override
+  String get submittingExamPleaseWait =>
+      'Submitting exam. Please wait while we calculate your results...';
   @override
   String get correctQuestions => 'Correct questions:';
   @override

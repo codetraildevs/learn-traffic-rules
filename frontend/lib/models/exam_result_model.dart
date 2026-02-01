@@ -68,15 +68,19 @@ class ExamResultData {
       passed: json['passed'] as bool? ?? false,
       isFreeExam: json['isFreeExam'] as bool? ?? false,
       submittedAt:
-          DateTime.tryParse(json['submittedAt'] as String? ?? '') ??
+          DateTime.tryParse(
+            (json['submittedAt'] ?? json['createdAt'])?.toString() ?? '',
+          ) ??
           DateTime.now(),
       questionResults: json['questionResults'] != null
           ? (json['questionResults'] as List<dynamic>)
                 .map((e) => QuestionResult.fromJson(e as Map<String, dynamic>))
                 .toList()
           : null,
-      exam: json['Exam'] != null
-          ? ExamInfo.fromJson(json['Exam'] as Map<String, dynamic>)
+      exam: (json['Exam'] ?? json['exam']) != null
+          ? ExamInfo.fromJson(
+              (json['Exam'] ?? json['exam']) as Map<String, dynamic>,
+            )
           : null,
     );
   }

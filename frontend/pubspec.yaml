@@ -97,20 +97,20 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icons/app-logo.png"
+  image_path: "assets/icons/app_logo_new.png"
   min_sdk_android: 21
   adaptive_icon_background: "#4F46E5"  # Purple gradient start
-  adaptive_icon_foreground: "assets/icons/app-logo.png"
+  adaptive_icon_foreground: "assets/icons/app_logo_new.png"
   web:
     generate: true
-    image_path: "assets/icons/app-logo.png"
+    image_path: "assets/icons/app_logo_new.png"
     background_color: "#4F46E5"
     theme_color: "#7C3AED"
   windows:
     generate: true
-    image_path: "assets/icons/app-logo.png"
+    image_path: "assets/icons/app_logo_new.png"
     icon_size: 48
   macos:
     generate: true
-    image_path: "assets/icons/app-logo.png"
+    image_path: "assets/icons/app_logo_new.png"
   

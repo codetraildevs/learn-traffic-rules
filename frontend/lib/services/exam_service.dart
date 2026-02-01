@@ -135,6 +135,7 @@ class ExamService {
           'timeSpent': timeSpent,
           'isFreeExam': isFreeExam,
         },
+        requestTimeout: const Duration(seconds: 65),
       );
 
       if (response['success'] == true) {
