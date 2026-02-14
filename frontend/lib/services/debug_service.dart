@@ -2,7 +2,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 
 class DebugService {
-  static const String _tag = 'TrafficRulesApp';
+  static const String _tag = 'DriveRwandaPrep';
 
   /// Log authentication events with detailed information
   static void logAuthEvent(String event, Map<String, dynamic> data) {

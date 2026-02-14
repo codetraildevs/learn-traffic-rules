@@ -37,7 +37,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
   bool _isOffline = false;
   StreamSubscription<ConnectivityResult>? _connectivitySubscription;
   // static const MethodChannel _securityChannel = MethodChannel(
-  //   'com.trafficrules.master/security',
+  //   'com.rw.drivingprep/security',
   // );
 
   // Track app lifecycle to prevent unnecessary refreshes on screenshots
@@ -1007,7 +1007,7 @@ class _SecureDetailedAnswersModal extends StatefulWidget {
 class _SecureDetailedAnswersModalState
     extends State<_SecureDetailedAnswersModal> {
   static const MethodChannel _securityChannel = MethodChannel(
-    'com.trafficrules.master/security',
+    'com.rw.drivingprep/security',
   );
 
   @override

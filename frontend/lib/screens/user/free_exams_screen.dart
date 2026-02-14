@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/theme/app_theme.dart';
 import '../../models/free_exam_model.dart';
 import '../../models/exam_model.dart';
 import '../../services/user_management_service.dart';
@@ -71,7 +73,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: const Color(0xFF2E7D32),
+        backgroundColor: AppColors.primary,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -163,14 +165,14 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+          colors: [AppColors.primaryLight, AppColors.primaryDark],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withValues(alpha: 0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -474,7 +476,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
                   text: l10n.contactAdmin,
                   onPressed: _contactAdmin,
                   width: double.infinity,
-                  backgroundColor: Colors.green,
+                  backgroundColor: AppColors.primary,
                 ),
               ),
             ],
@@ -491,7 +493,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(l10n.startingExam(exam.title)),
-        backgroundColor: Colors.green,
+        backgroundColor: AppColors.primary,
       ),
     );
   }
@@ -506,7 +508,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
   }
 
   void _contactAdmin() async {
-    const phoneNumber = '+250788659575';
+    const phoneNumber = AppConstants.supportPhoneRaw;
     final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
 
     final l10n = AppLocalizations.of(context);
@@ -517,7 +519,7 @@ class _FreeExamsScreenState extends State<FreeExamsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.couldNotLaunchPhoneApp),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }

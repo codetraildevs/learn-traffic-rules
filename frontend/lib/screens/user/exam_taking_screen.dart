@@ -68,7 +68,7 @@ class _ExamTakingScreenState extends ConsumerState<ExamTakingScreen>
   // Removed _screenshotAttempts - not needed for current implementation
   bool _isExamCompleted = false;
   static const MethodChannel _securityChannel = MethodChannel(
-    'com.trafficrules.master/security',
+    'com.rw.drivingprep/security',
   );
 
   // Timer

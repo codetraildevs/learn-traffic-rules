@@ -16,7 +16,6 @@ import 'services/api_service.dart';
 import 'services/notification_service.dart';
 import 'services/simple_notification_service.dart';
 import 'services/notification_polling_service.dart';
-import 'services/exam_sync_service.dart';
 import 'services/image_cache_service.dart';
 import 'services/network_service.dart';
 import 'providers/auth_provider.dart';

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
@@ -980,7 +981,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       context,
       title: l10n.privacyPolicyTitle,
       content: l10n.privacyPolicyContent,
-      fullPolicyUrl: 'https://traffic.cyangugudims.com/privacy-policy',
+      fullPolicyUrl: '${AppConstants.siteBaseUrl}/privacy-policy',
     );
   }
 
@@ -991,7 +992,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       context,
       title: l10n.termsConditionsTitle,
       content: l10n.termsConditionsContent,
-      fullPolicyUrl: 'https://traffic.cyangugudims.com/terms-conditions',
+      fullPolicyUrl: '${AppConstants.siteBaseUrl}/terms-conditions',
     );
   }
 }

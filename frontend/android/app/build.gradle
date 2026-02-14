@@ -32,7 +32,7 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace "com.trafficrules.master"
+    namespace "com.rw.drivingprep"
     compileSdk 36
     ndkVersion flutter.ndkVersion
 
@@ -51,7 +51,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.trafficrules.master"
+        applicationId "com.rw.drivingprep"
         minSdkVersion flutter.minSdkVersion
         targetSdk 36
         versionCode flutterVersionCode.toInteger()

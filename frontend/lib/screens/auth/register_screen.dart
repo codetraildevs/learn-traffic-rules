@@ -1074,7 +1074,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       context,
       title: l10n.privacyPolicyTitle,
       content: l10n.privacyPolicyContent,
-      fullPolicyUrl: 'https://traffic.cyangugudims.com/privacy-policy',
+      fullPolicyUrl: '${AppConstants.siteBaseUrl}/privacy-policy',
     );
   }
 
@@ -1085,7 +1085,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       context,
       title: l10n.termsConditionsTitle,
       content: l10n.termsConditionsContent,
-      fullPolicyUrl: 'https://traffic.cyangugudims.com/terms-conditions',
+      fullPolicyUrl: '${AppConstants.siteBaseUrl}/terms-conditions',
     );
   }
 

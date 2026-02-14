@@ -71,10 +71,10 @@ class NotificationService {
   }) async {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
-          'learn_traffic_rules_channel',
-          'Rwanda Traffic Driving School Notifications',
+          'rw_driving_prep_channel',
+          'Drive Rwanda – Prep & Pass Notifications',
           channelDescription:
-              'Notifications for the Rwanda Traffic Driving School app',
+              'Notifications for Drive Rwanda – Prep & Pass',
           importance: Importance.high,
           priority: Priority.high,
           showWhen: true,

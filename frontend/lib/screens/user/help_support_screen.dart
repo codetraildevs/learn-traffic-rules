@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -161,14 +162,14 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
 
                   _buildContactItem(
                     l10n.phoneSupport,
-                    '+250 788 659 575',
+                    AppConstants.supportPhone,
                     Icons.phone,
                     () => _launchPhone(),
                   ),
 
                   _buildContactItem(
                     l10n.whatsappLabel,
-                    '+250 788 659 575',
+                    AppConstants.supportPhone,
                     Icons.chat,
                     () => _launchWhatsApp(),
                   ),
@@ -653,8 +654,8 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
               children: [
                 Text(l10n.emailNotAvailableTryTheseAlternatives),
                 SizedBox(height: 4.h),
-                Text('${l10n.callColon} +250 788 659 575'),
-                Text('${l10n.whatsAppColon} +250 788 659 575'),
+                Text('${l10n.callColon} ${AppConstants.supportPhone}'),
+                Text('${l10n.whatsAppColon} ${AppConstants.supportPhone}'),
                 Text('${l10n.manualColon} engineers.devs@gmail.com'),
               ],
             ),
@@ -672,7 +673,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
   }
 
   void _launchPhone() async {
-    final Uri phoneUri = Uri(scheme: 'tel', path: '+250788659575');
+    final Uri phoneUri = Uri(scheme: 'tel', path: AppConstants.supportPhoneRaw);
     if (await canLaunchUrl(phoneUri)) {
       await launchUrl(phoneUri);
     }
@@ -680,7 +681,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
 
   void _launchWhatsApp() async {
     // Use the specific admin WhatsApp number
-    const cleanNumber = '250788659575';
+    final cleanNumber = AppConstants.supportPhoneRaw;
     final Uri whatsappUri = Uri.parse('https://wa.me/$cleanNumber');
 
     debugPrint('🔍 WhatsApp URL: $whatsappUri');
@@ -723,7 +724,7 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
                 children: [
                   Text(l10n.whatsappNotAvailableTryTheseAlternatives),
                   SizedBox(height: 4.h),
-                  Text('${l10n.callColon} +250 788 659 575'),
+                  Text('${l10n.callColon} ${AppConstants.supportPhone}'),
                   Text('${l10n.whatsAppWebColon} web.whatsapp.com'),
                 ],
               ),

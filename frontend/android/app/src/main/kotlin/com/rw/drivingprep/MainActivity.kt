@@ -1,4 +1,4 @@
-package com.trafficrules.master
+package com.rw.drivingprep
 
 import android.os.Bundle
 import android.view.WindowManager
@@ -10,7 +10,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "com.trafficrules.master/security"
+    private val CHANNEL = "com.rw.drivingprep/security"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

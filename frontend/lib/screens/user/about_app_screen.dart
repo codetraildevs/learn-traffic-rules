@@ -229,7 +229,7 @@ class AboutAppScreen extends StatelessWidget {
                   SizedBox(height: 12.h),
                   _buildInfoRow(
                     label: l10n.contactEmailLabelText,
-                    value: 'codetrail.dev@gmail.com',
+                    value: AppConstants.supportEmail,
                   ),
                 ],
               ),
@@ -246,9 +246,11 @@ class AboutAppScreen extends StatelessWidget {
                   _buildContactRow(
                     icon: Icons.phone_rounded,
                     label: l10n.phoneLabel,
-                    value: '+250 780 494 000',
+                    value: AppConstants.supportPhone,
                     onTap: () async {
-                      final uri = Uri.parse('tel:+250780494000');
+                      final uri = Uri.parse(
+                        'tel:${AppConstants.supportPhoneRaw}',
+                      );
                       if (await canLaunchUrl(uri)) {
                         await launchUrl(uri);
                       }
@@ -258,9 +260,11 @@ class AboutAppScreen extends StatelessWidget {
                   _buildContactRow(
                     icon: Icons.chat_rounded,
                     label: l10n.whatsapp,
-                    value: '+250 780 494 000',
+                    value: AppConstants.supportPhone,
                     onTap: () async {
-                      final uri = Uri.parse('https://wa.me/250780494000');
+                      final uri = Uri.parse(
+                        'https://wa.me/${AppConstants.supportPhoneRaw}',
+                      );
                       if (await canLaunchUrl(uri)) {
                         await launchUrl(uri);
                       }
@@ -270,11 +274,11 @@ class AboutAppScreen extends StatelessWidget {
                   _buildContactRow(
                     icon: Icons.email_rounded,
                     label: l10n.email,
-                    value: 'codetrail.dev@gmail.com',
+                    value: AppConstants.supportEmail,
                     onTap: () async {
                       final uri = Uri(
                         scheme: 'mailto',
-                        path: 'codetrail.dev@gmail.com',
+                        path: AppConstants.supportEmail,
                       );
                       if (await canLaunchUrl(uri)) {
                         await launchUrl(uri);

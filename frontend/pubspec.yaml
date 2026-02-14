@@ -3,7 +3,7 @@ description: Educational app for provisional driving license preparation. Learn 
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.4.0+36
+version: 1.0.0+1
 
 environment:
   sdk: '>=3.8.0 <4.0.0'
@@ -99,13 +99,13 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/icons/app_logo_new.png"
   min_sdk_android: 21
-  adaptive_icon_background: "#4F46E5"  # Purple gradient start
+  adaptive_icon_background: "#1D4ED8"  # Blue (traffic/info signs)
   adaptive_icon_foreground: "assets/icons/app_logo_new.png"
   web:
     generate: true
     image_path: "assets/icons/app_logo_new.png"
-    background_color: "#4F46E5"
-    theme_color: "#7C3AED"
+    background_color: "#1D4ED8"
+    theme_color: "#2563EB"
   windows:
     generate: true
     image_path: "assets/icons/app_logo_new.png"

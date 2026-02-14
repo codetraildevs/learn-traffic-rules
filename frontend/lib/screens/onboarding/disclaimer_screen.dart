@@ -221,7 +221,7 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                                 _hasAcceptedDisclaimer = value ?? false;
                               });
                             },
-                            activeColor: const Color(0xFF4F46E5),
+                            activeColor: const Color(0xFF1D4ED8),
                           ),
                           Expanded(
                             child: Text(

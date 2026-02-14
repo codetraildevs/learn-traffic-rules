@@ -4,7 +4,7 @@ import 'app_localizations.dart';
 
 class AppLocalizationsEn extends AppLocalizations {
   @override
-  String get appName => 'Rwanda Traffic Driving School';
+  String get appName => 'Drive Rwanda – Prep & Pass';
 
   @override
   String get welcome => 'Welcome';
@@ -632,14 +632,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyPolicyContent =>
-      'Rwanda Traffic Driving School is an educational application designed to help users prepare for provisional driving license examinations.\n\n⚠️ IMPORTANT: This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.\n\nOfficial Source: For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to Rwanda National Police (Driving License Services): https://police.gov.rw/home/\n\nWe collect minimal data necessary to provide our educational services:\n• Phone number for account creation and security\n• Device information for fraud prevention\n• Learning progress to personalize your experience\n• App usage data to improve our services\n\nYour privacy is important to us. We use industry-standard security measures to protect your data and never share your personal information with third parties.';
+      'Drive Rwanda – Prep & Pass is an educational application designed to help users prepare for provisional driving license examinations.\n\n⚠️ IMPORTANT: This app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.\n\nOfficial Source: For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to Rwanda National Police (Driving License Services): https://police.gov.rw/home/\n\nWe collect minimal data necessary to provide our educational services:\n• Phone number for account creation and security\n• Device information for fraud prevention\n• Learning progress to personalize your experience\n• App usage data to improve our services\n\nYour privacy is important to us. We use industry-standard security measures to protect your data and never share your personal information with third parties.';
 
   @override
   String get termsConditionsTitle => 'Terms & Conditions';
 
   @override
   String get termsConditionsContent =>
-      'By using Rwanda Traffic Driving School, you agree to these terms:\n\n⚠️ IMPORTANT DISCLAIMER:\nThis app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.\n\nOfficial Source: For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to Rwanda National Police (Driving License Services): https://police.gov.rw/home/\n\nEducational Purpose: This app is designed for educational practice only. While we provide comprehensive study materials, users must complete official government procedures to obtain driving licenses. Always verify information with official sources and consult local authorities.\n\nUser Responsibilities:\n• Provide accurate information during registration\n• Use the app for educational purposes only\n• Respect intellectual property rights\n• Not attempt to reverse engineer the app\n• Verify all information with official government sources\n\nService Availability: We strive to maintain service availability but cannot guarantee uninterrupted access.\n\nAccount Termination: You may delete your account at any time. We reserve the right to suspend accounts that violate these terms.';
+      'By using Drive Rwanda – Prep & Pass, you agree to these terms:\n\n⚠️ IMPORTANT DISCLAIMER:\nThis app is NOT affiliated with, endorsed by, or associated with any government agency, the Government of Rwanda, or any official driving test authority. This is an independent educational tool created for learning purposes only.\n\nOfficial Source: For official traffic rules, regulations, and driving license information (including provisional and permanent driving licenses), please refer to Rwanda National Police (Driving License Services): https://police.gov.rw/home/\n\nEducational Purpose: This app is designed for educational practice only. While we provide comprehensive study materials, users must complete official government procedures to obtain driving licenses. Always verify information with official sources and consult local authorities.\n\nUser Responsibilities:\n• Provide accurate information during registration\n• Use the app for educational purposes only\n• Respect intellectual property rights\n• Not attempt to reverse engineer the app\n• Verify all information with official government sources\n\nService Availability: We strive to maintain service availability but cannot guarantee uninterrupted access.\n\nAccount Termination: You may delete your account at any time. We reserve the right to suspend accounts that violate these terms.';
 
   // Registration specific
   @override
@@ -1594,7 +1594,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'Rwanda Traffic Driving School is a comprehensive educational mobile application designed to help individuals prepare for their provisional driving license examination. This app provides interactive practice tests, comprehensive courses, and study materials with multi-language support to enhance safe driving knowledge development.';
+      'Drive Rwanda – Prep & Pass is a comprehensive educational mobile application designed to help individuals prepare for their provisional driving license examination. This app provides interactive practice tests, comprehensive courses, and study materials with multi-language support to enhance safe driving knowledge development.';
 
   @override
   String get importantNotice => '⚠️ IMPORTANT:';
@@ -2353,7 +2353,7 @@ Privacy:
 
   // New compliance disclaimer keys
   @override
-  String get appNameFull => 'Rwanda Traffic Driving School';
+  String get appNameFull => 'Drive Rwanda – Prep & Pass';
 
   @override
   String get educationalStudyPlatform => 'Educational Study Platform';
@@ -2364,7 +2364,7 @@ Privacy:
 
   @override
   String get disclaimerPrivateEntity =>
-      'This application "Rwanda Traffic Driving School" is developed and operated by a PRIVATE ENTITY (CodeTrail Dev).';
+      'This application "Drive Rwanda – Prep & Pass" is developed and operated by a PRIVATE ENTITY (Publisher Name).';
 
   @override
   String get disclaimerWeAre => 'WE ARE:';
@@ -2415,22 +2415,22 @@ Privacy:
   String get criticalDisclaimer => 'CRITICAL DISCLAIMER';
 
   @override
-  String get aboutAppTitle => 'About Rwanda Traffic Driving School';
+  String get aboutAppTitle => 'About Drive Rwanda – Prep & Pass';
 
   @override
   String get appDescriptionFull =>
-      'Rwanda Traffic Driving School is an independent educational mobile application designed to help learners study Rwanda\'s traffic regulations, road signs, and driving theory through interactive practice materials and study courses.';
+      'Drive Rwanda – Prep & Pass is an independent educational mobile application designed to help learners study Rwanda\'s traffic regulations, road signs, and driving theory through interactive practice materials and study courses.';
 
   @override
   String get developerEntity =>
-      'This application is developed and operated by a PRIVATE ENTITY (CodeTrail Dev). We are:';
+      'This application is developed and operated by a PRIVATE ENTITY (Publisher Name). We are:';
 
   @override
   String get privacyPolicyHeader =>
-      'This privacy policy applies to the "Rwanda Traffic Driving School" mobile application, an independent educational tool developed by CodeTrail Dev (a private entity). This app is NOT affiliated with, endorsed by, or connected to any government agency, the Government of Rwanda, or any official licensing authority.';
+      'This privacy policy applies to the "Drive Rwanda – Prep & Pass" mobile application, an independent educational tool developed by Publisher Name (a private entity). This app is NOT affiliated with, endorsed by, or connected to any government agency, the Government of Rwanda, or any official licensing authority.';
 
   @override
-  String get termsOfUseTitle => 'TERMS OF USE - Rwanda Traffic Driving School';
+  String get termsOfUseTitle => 'TERMS OF USE - Drive Rwanda – Prep & Pass';
 
   @override
   String get termsOfUseHeader =>
@@ -2438,10 +2438,10 @@ Privacy:
 
   @override
   String get termsIndependentApp =>
-      'Rwanda Traffic Driving School is developed and operated by CodeTrail Dev (a PRIVATE ENTITY). We are NOT affiliated with, endorsed by, or connected to the Government of Rwanda, Rwanda National Police, or any official licensing authority. This is a private educational tool for practice and study purposes only. Users must complete all official procedures through authorized government channels.';
+      'Drive Rwanda – Prep & Pass is developed and operated by Publisher Name (a PRIVATE ENTITY). We are NOT affiliated with, endorsed by, or connected to the Government of Rwanda, Rwanda National Police, or any official licensing authority. This is a private educational tool for practice and study purposes only. Users must complete all official procedures through authorized government channels.';
 
   @override
-  String get termsDeveloperInfo => 'CodeTrail Dev';
+  String get termsDeveloperInfo => 'Publisher Name';
 
   @override
   String get appNameLabelText => 'App Name';
@@ -2601,14 +2601,14 @@ Privacy:
 
   @override
   String get termsConditionsSection1Content =>
-      'By downloading, installing, or using the Rwanda Traffic Driving School mobile application, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our app.';
+      'By downloading, installing, or using the Drive Rwanda – Prep & Pass mobile application, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our app.';
 
   @override
   String get termsConditionsSection2Title => '2. Description of Service';
 
   @override
   String get termsConditionsSection2Content =>
-      'Rwanda Traffic Driving School is an educational mobile application that provides:\n\n'
+      'Drive Rwanda – Prep & Pass is an educational mobile application that provides:\n\n'
       '• Interactive traffic rules quizzes and practice exams\n\n'
       '• Progress tracking and performance analytics\n\n'
       '• Educational content about traffic regulations\n\n'
@@ -2768,11 +2768,11 @@ Privacy:
 
   @override
   String get shareAppSubject =>
-      'Rwanda Traffic Driving School - Driving Test Preparation App';
+      'Drive Rwanda – Prep & Pass - Driving Test Preparation App';
 
   @override
   String get shareAppMessage => '''
-🚗 Rwanda Traffic Driving School - Master Your Driving Test!
+🚗 Drive Rwanda – Prep & Pass - Master Your Driving Test!
 
 Download the best app to prepare for your provisional driving license exam.
 
@@ -2790,7 +2790,7 @@ Download the best app to prepare for your provisional driving license exam.
 {playStoreLink}
 
 Start your journey to becoming a safe driver!
-#TrafficRules #DrivingTest #LearnToDrive
+#DriveRwanda #PrepAndPass #RwandaDriving
 ''';
 
   @override

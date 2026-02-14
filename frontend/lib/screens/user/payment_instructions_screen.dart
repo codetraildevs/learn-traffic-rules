@@ -626,7 +626,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    _makeCall('+250788659575');
+                    _makeCall('+${AppConstants.supportPhoneRaw}');
                   },
                   icon: Icon(Icons.phone, size: 16.sp),
                   label: Text(l10n.call),
@@ -761,7 +761,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
     }
 
     // Use the correct phone number as primary, or fallback to provided number
-    const correctPhoneNumber = '+250788659575';
+    final correctPhoneNumber = '+${AppConstants.supportPhoneRaw}';
     final phoneToUse = phoneNumber.isNotEmpty
         ? phoneNumber
         : correctPhoneNumber;
@@ -866,7 +866,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
 
   void _openWhatsApp(String phoneNumber) async {
     // Use the specific admin WhatsApp number
-    const cleanNumber = '250788659575';
+    final cleanNumber = AppConstants.supportPhoneRaw;
     final Uri whatsappUri = Uri.parse('https://wa.me/$cleanNumber');
 
     debugPrint('🔍 WhatsApp URL: $whatsappUri');
@@ -913,7 +913,9 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
                     ).whatsappNotAvailableTryAlternatives,
                   ),
                   SizedBox(height: 4.h),
-                  Text('• ${AppLocalizations.of(context).call}: +250788659575'),
+                  Text(
+                    '• ${AppLocalizations.of(context).call}: ${AppConstants.supportPhone}',
+                  ),
                   const Text('• WhatsApp Web: web.whatsapp.com'),
                 ],
               ),
@@ -922,7 +924,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
               action: SnackBarAction(
                 label: AppLocalizations.of(context).callInstead,
                 textColor: Colors.white,
-                onPressed: () => ('+250788659575'),
+                onPressed: () => _makeCall('+${AppConstants.supportPhoneRaw}'),
               ),
             ),
           );
@@ -934,7 +936,7 @@ class _PaymentInstructionsScreenState extends State<PaymentInstructionsScreen> {
   void _contactAdmin() async {
     if (!mounted) return;
 
-    const phoneNumber = '+250788659575';
+    final phoneNumber = AppConstants.supportPhone;
 
     try {
       final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);

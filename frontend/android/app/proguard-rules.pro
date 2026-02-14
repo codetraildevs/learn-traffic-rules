@@ -49,7 +49,7 @@
 }
 
 # Keep model classes for JSON serialization
--keep class com.trafficrules.master.models.** { *; }
+-keep class com.rw.drivingprep.models.** { *; }
 -keep class * extends com.google.gson.TypeAdapter
 -keep class * implements com.google.gson.TypeAdapterFactory
 -keep class * implements com.google.gson.JsonSerializer
@@ -66,7 +66,7 @@
 -keep class com.dexterous.** { *; }
 
 # Keep device info classes
--keep class com.trafficrules.master.** { *; }
+-keep class com.rw.drivingprep.** { *; }
 
 # Play Core removed - not needed for this app
 # Completely ignore all Play Core references since we don't use deferred components

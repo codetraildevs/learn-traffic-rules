@@ -1,19 +1,13 @@
 class AppConstants {
-  // API Configuration
-  static const String baseUrl = 'https://traffic.cyangugudims.com/api';
-  //static const String baseUrl = 'http://10.102.183.116:3000/api';
-  //static const String baseUrlImage = 'http://10.102.183.116:3000';
+  // API Configuration - REPLACE your-backend-domain.com with your actual backend domain before building
+  static const String baseUrl = 'https://api.your-backend-domain.com/api';
   static const String baseUrlImage =
-      'https://traffic.cyangugudims.com/uploads/images-exams/';
-
+      'https://api.your-backend-domain.com/uploads/images-exams/';
   static const String baseUrlDocument =
-      'https://traffic.cyangugudims.com/uploads/documents/';
+      'https://api.your-backend-domain.com/uploads/documents/';
   static const String imageBaseUrl =
-      'https://traffic.cyangugudims.com/uploads/images/';
-
-  static const String siteBaseUrl = 'https://traffic.cyangugudims.com';
-
-  //https://traffic.cyangugudims.com/uploads/images-exams//uploads/question-images/q390.png
+      'https://api.your-backend-domain.com/uploads/images/';
+  static const String siteBaseUrl = 'https://api.your-backend-domain.com';
 
   // Image Paths
   static const String defaultQuestionImagePath = '/uploads/question-images/';
@@ -32,12 +26,17 @@ class AppConstants {
   static const String notificationPrefsKey = 'notification_preferences';
 
   // App Configuration
-  static const String appName = 'Rwanda Traffic Driving School';
+  static const String appName = 'Drive Rwanda – Prep & Pass';
+  // REPLACE with new publisher contact - used in About screen
+  static const String supportEmail = 'support@your-domain.com';
+  static const String supportPhone = '+250 XXX XXX XXX';
+  static const String supportPhoneRaw =
+      '250000000000'; // Digits only for tel/wa links
   static const String appSubtitle = 'Educational Study Platform';
   static const String appDescription =
       'Independent educational application for studying Rwanda traffic rules and driving theory through interactive practice materials';
-  static const String appVersion = '1.1.1';
-  static const String appBuildNumber = '16';
+  static const String appVersion = '1.0.0';
+  static const String appBuildNumber = '1';
 
   // Exam Configuration
   static const int defaultExamDuration = 30; // minutes
@@ -52,8 +51,9 @@ class AppConstants {
 
   // Notification Configuration
   static const int notificationIdStart = 1000;
-  static const String notificationChannelId = 'traffic_rules_channel';
-  static const String notificationChannelName = 'Traffic Rules Notifications';
+  static const String notificationChannelId = 'rw_driving_prep_channel';
+  static const String notificationChannelName =
+      'Drive Rwanda – Prep & Pass Notifications';
 
   // Achievement Configuration
   static const int pointsPerExam = 10;
@@ -177,7 +177,7 @@ class AppConstants {
   static const String bulkUploadEndpoint = '/bulk-upload';
 
   // Local Database
-  static const String databaseName = 'traffic_rules.db';
+  static const String databaseName = 'rw_driving_prep.db';
   static const int databaseVersion = 1;
 
   // Cache Configuration
@@ -220,7 +220,7 @@ class ImageUrlResolver {
 
   /// Add app version as cache-busting parameter
   /// More stable than timestamp - only updates when app version changes
-  static String withVersionCache(String? imageUrl, {String version = '1.4.0'}) {
+  static String withVersionCache(String? imageUrl, {String version = '1.0.0'}) {
     final resolved = resolve(imageUrl);
     if (resolved.isEmpty) return '';
 

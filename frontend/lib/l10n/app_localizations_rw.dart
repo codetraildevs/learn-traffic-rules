@@ -4,7 +4,7 @@ import 'app_localizations.dart';
 
 class AppLocalizationsRw extends AppLocalizations {
   @override
-  String get appName => 'Rwanda Traffic Driving School';
+  String get appName => 'Drive Rwanda – Prep & Pass';
 
   @override
   String get welcome => 'Murakaza neza';
@@ -551,7 +551,7 @@ class AppLocalizationsRw extends AppLocalizations {
 
   @override
   String get welcomeToApp =>
-      'Murakaza neza kuri  Rwanda Traffic Driving School!';
+      'Murakaza neza kuri  Drive Rwanda – Prep & Pass!';
 
   @override
   String get phoneNumberAlreadyRegistered =>
@@ -603,7 +603,7 @@ class AppLocalizationsRw extends AppLocalizations {
 
   // Splash Screen
   @override
-  String get masterTrafficRules => 'Menya neza Rwanda Traffic Driving School';
+  String get masterTrafficRules => 'Menya neza Drive Rwanda – Prep & Pass';
 
   // Form fields and validation
   @override
@@ -642,14 +642,14 @@ class AppLocalizationsRw extends AppLocalizations {
 
   @override
   String get privacyPolicyContent =>
-      'Rwanda Traffic Driving School ni porogaramu y\'inyigisho yateguwe kugirango ifashe abakoresha bashaka kwitegura imyitozo by\'uruhushya rwagateganyo rwo gutwara.\n\n⚠️ IKURUBA: Iyi porogaramu NTIDUFITE isano na, cyangwa ngo dufashe, leta, Guverinoma y\'u Rwanda, cyangwa ikigo cy\'ibanze cy\'imyitozo byo gukoresha modoka. Iki ni gikoresho cy\'inyigisho gikora ubwacyo gitegurwa gusa kugirango wige.\n\nInkomoko Ishingiro: Kugirango ubone amategeko y\'umuhanda ashingiro, amabwiriza, n\'amakuru y\'uruhushya rwo gukoresha modoka (harimo n\'uruhushya rw\'igihe gito n\'uruhushya rw\'igihe kirekire), nyamuneka reba Polisi y\'u Rwanda (Serivisi z\'Uruhushya rwo Gukoresha Modoka): https://police.gov.rw/home/\n\nDukusanya amakuru make gusa agenewe guha serivisi zacu z\'inyigisho:\n• Numero ya telefoni kugirango wandike konti no gukomeza umutekano\n• Amakuru y\'igikoresho kugirango dukemuke ibinyoma\n• Imbere y\'inyigisho kugirango dukugenerere\n• Amakuru y\'ukoresha porogaramu kugirango dukongere serivisi\n\nUbwigenge bwawe ni ngombwa kuri twe. Dukoresha uburyo bwo gukomeza umutekano bwa kijyambere kugirango dukure amakuru yawe kandi ntidushyire amakuru yawe y\'umuntu ku bandi.';
+      'Drive Rwanda – Prep & Pass ni porogaramu y\'inyigisho yateguwe kugirango ifashe abakoresha bashaka kwitegura imyitozo by\'uruhushya rwagateganyo rwo gutwara.\n\n⚠️ IKURUBA: Iyi porogaramu NTIDUFITE isano na, cyangwa ngo dufashe, leta, Guverinoma y\'u Rwanda, cyangwa ikigo cy\'ibanze cy\'imyitozo byo gukoresha modoka. Iki ni gikoresho cy\'inyigisho gikora ubwacyo gitegurwa gusa kugirango wige.\n\nInkomoko Ishingiro: Kugirango ubone amategeko y\'umuhanda ashingiro, amabwiriza, n\'amakuru y\'uruhushya rwo gukoresha modoka (harimo n\'uruhushya rw\'igihe gito n\'uruhushya rw\'igihe kirekire), nyamuneka reba Polisi y\'u Rwanda (Serivisi z\'Uruhushya rwo Gukoresha Modoka): https://police.gov.rw/home/\n\nDukusanya amakuru make gusa agenewe guha serivisi zacu z\'inyigisho:\n• Numero ya telefoni kugirango wandike konti no gukomeza umutekano\n• Amakuru y\'igikoresho kugirango dukemuke ibinyoma\n• Imbere y\'inyigisho kugirango dukugenerere\n• Amakuru y\'ukoresha porogaramu kugirango dukongere serivisi\n\nUbwigenge bwawe ni ngombwa kuri twe. Dukoresha uburyo bwo gukomeza umutekano bwa kijyambere kugirango dukure amakuru yawe kandi ntidushyire amakuru yawe y\'umuntu ku bandi.';
 
   @override
   String get termsConditionsTitle => 'Amategeko n\'amabwiriza';
 
   @override
   String get termsConditionsContent =>
-      'Ukoresha Rwanda Traffic Driving School, aba yemeye amabwiriza:\n\n⚠️ IKURUBA:\nIyi porogaramu NTIDUFITE isano na, cyangwa ngo dufashe, leta, Guverinoma y\'u Rwanda, cyangwa ikigo cy\'ibanze cy\'ibizamini cyo gukoresha modoka. Iki ni gikoresho cy\'inyigisho gikora ubwacyo gitegurwa gusa kugirango wige.\n\nInkomoko Ishingiro: Kugirango ubone amategeko y\'imihanda ashingiro, amabwiriza, n\'amakuru y\'uruhushya rwo gukoresha modoka (harimo n\'uruhushya rw\'igihe gito n\'uruhushya rw\'igihe kirekire), nyamuneka reba Polisi y\'u Rwanda (Serivisi z\'Uruhushya rwo Gukoresha Modoka): https://police.gov.rw/home/\n\nIntego y\'Inyigisho: Iyi porogaramu yateguwe gusa kugirango wige. Nubwo duha ibyifuzo byuzuye byo kwiga, abakoresha bagomba gukomeza imikorere y\'ibanze ya leta kugirango bafate uruhushya rwo gukoresha modoka. Buri gihe menya neza amakuru n\'inama z\'ibanze.\n\nInshingano z\'Umukoresha:\n• Tanga amakuru ukuri mu gihe cyo kwiyandikisha\n• Koresha porogaramu gusa kugirango wige\n• Kunda uburenganzira bwo gukoresha ubwoba\n• Ntukagerageze guhindura porogaramu\n• Menya neza amakuru yose n\'inama z\'ibanze za leta\n\nKuboneka kwa Serivisi: Dushishikariza gukomeza kuboneka kwa serivisi ariko ntidushobora kwemeza ko hazaba ubwoba bukomeza.\n\nGusiba Konti: Urashobora gusiba konti yawe igihe icyo ari cyo cyose. Dufite uburenganzira bwo guhagarika konti zirenganyije amabwiriza.';
+      'Ukoresha Drive Rwanda – Prep & Pass, aba yemeye amabwiriza:\n\n⚠️ IKURUBA:\nIyi porogaramu NTIDUFITE isano na, cyangwa ngo dufashe, leta, Guverinoma y\'u Rwanda, cyangwa ikigo cy\'ibanze cy\'ibizamini cyo gukoresha modoka. Iki ni gikoresho cy\'inyigisho gikora ubwacyo gitegurwa gusa kugirango wige.\n\nInkomoko Ishingiro: Kugirango ubone amategeko y\'imihanda ashingiro, amabwiriza, n\'amakuru y\'uruhushya rwo gukoresha modoka (harimo n\'uruhushya rw\'igihe gito n\'uruhushya rw\'igihe kirekire), nyamuneka reba Polisi y\'u Rwanda (Serivisi z\'Uruhushya rwo Gukoresha Modoka): https://police.gov.rw/home/\n\nIntego y\'Inyigisho: Iyi porogaramu yateguwe gusa kugirango wige. Nubwo duha ibyifuzo byuzuye byo kwiga, abakoresha bagomba gukomeza imikorere y\'ibanze ya leta kugirango bafate uruhushya rwo gukoresha modoka. Buri gihe menya neza amakuru n\'inama z\'ibanze.\n\nInshingano z\'Umukoresha:\n• Tanga amakuru ukuri mu gihe cyo kwiyandikisha\n• Koresha porogaramu gusa kugirango wige\n• Kunda uburenganzira bwo gukoresha ubwoba\n• Ntukagerageze guhindura porogaramu\n• Menya neza amakuru yose n\'inama z\'ibanze za leta\n\nKuboneka kwa Serivisi: Dushishikariza gukomeza kuboneka kwa serivisi ariko ntidushobora kwemeza ko hazaba ubwoba bukomeza.\n\nGusiba Konti: Urashobora gusiba konti yawe igihe icyo ari cyo cyose. Dufite uburenganzira bwo guhagarika konti zirenganyije amabwiriza.';
 
   // Registration specific
   @override
@@ -1575,7 +1575,7 @@ class AppLocalizationsRw extends AppLocalizations {
   String get developerInformation => 'Amakuru y\'Abashyushanyije';
 
   @override
-  String get appNameLabel => 'Rwanda Traffic Driving School';
+  String get appNameLabel => 'Drive Rwanda – Prep & Pass';
 
   @override
   String get descriptionLabel => 'Ibisobanuro';
@@ -1621,7 +1621,7 @@ class AppLocalizationsRw extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'Rwanda Traffic Driving School ni porogaramu y\'umukoresha w\'amashanyarazi y\'inyigisho yuzuye yateguwe kugira ngo ifashe abantu kwitegura kuri imwitozo cyabo cy\'urupapuro rwo gukoresha modoka. Iyi porogaramu itanga amahugurwa agufasha, inyigisho zuzuye, na materiyali z\'kwiga zifite gushyigikira indimi nyinshi kugira ngo zongere ubumenyi bwo gukoresha modoka bwiza.';
+      'Drive Rwanda – Prep & Pass ni porogaramu y\'umukoresha w\'amashanyarazi y\'inyigisho yuzuye yateguwe kugira ngo ifashe abantu kwitegura kuri imwitozo cyabo cy\'urupapuro rwo gukoresha modoka. Iyi porogaramu itanga amahugurwa agufasha, inyigisho zuzuye, na materiyali z\'kwiga zifite gushyigikira indimi nyinshi kugira ngo zongere ubumenyi bwo gukoresha modoka bwiza.';
 
   @override
   String get importantNotice => '⚠️ NGENDAHORO:';
@@ -2411,7 +2411,7 @@ Ubwoba:
 
   // New compliance disclaimer keys
   @override
-  String get appNameFull => 'Rwanda Traffic Driving School';
+  String get appNameFull => 'Drive Rwanda – Prep & Pass';
 
   @override
   String get educationalStudyPlatform => 'Porogaramu y\'Amashuri';
@@ -2422,7 +2422,7 @@ Ubwoba:
 
   @override
   String get disclaimerPrivateEntity =>
-      'Iyi porogaramu "Rwanda Traffic Driving School" yategurwa kandi ikoreshwa na ENTITE YITABIRIYE (CodeTrail Dev).';
+      'Iyi porogaramu "Drive Rwanda – Prep & Pass" yategurwa kandi ikoreshwa na ENTITE YITABIRIYE (Publisher Name).';
 
   @override
   String get disclaimerWeAre => 'TURI:';
@@ -2474,23 +2474,23 @@ Ubwoba:
   String get criticalDisclaimer => 'ICYEMEZO CY\'INGENZI';
 
   @override
-  String get aboutAppTitle => 'Ibyerekeye Rwanda Traffic Driving School';
+  String get aboutAppTitle => 'Ibyerekeye Drive Rwanda – Prep & Pass';
 
   @override
   String get appDescriptionFull =>
-      'Rwanda Traffic Driving School ni porogaramu y\'amashanyarazi y\'amashuri itabiriye yateguwe kugira ngo ifashe abanyeshuri kwiga amategeko y\'umuhanda y\'u Rwanda, ibimenyetso by\'umuhanda, na teyori yo gutwara binyuze mu materiyali yo kwitegura n\'amashuri.';
+      'Drive Rwanda – Prep & Pass ni porogaramu y\'amashanyarazi y\'amashuri itabiriye yateguwe kugira ngo ifashe abanyeshuri kwiga amategeko y\'umuhanda y\'u Rwanda, ibimenyetso by\'umuhanda, na teyori yo gutwara binyuze mu materiyali yo kwitegura n\'amashuri.';
 
   @override
   String get developerEntity =>
-      'Iyi porogaramu yategurwa kandi ikoreshwa na ENTITE YITABIRIYE (CodeTrail Dev). Turi:';
+      'Iyi porogaramu yategurwa kandi ikoreshwa na ENTITE YITABIRIYE (Publisher Name). Turi:';
 
   @override
   String get privacyPolicyHeader =>
-      'Iyi politiki y\'ubwige ikoresha porogaramu y\'amashanyarazi "Rwanda Traffic Driving School", gikoresho cy\'amashuri kitabiriye cyateguwe na CodeTrail Dev (entite yitabiriye). Iyi porogaramu NTIDUFITE isano na, cyangwa ngo dufashe, ikigo cya Leta, Guverinoma y\'u Rwanda, cyangwa kigo cy\'ibanze cy\'uruhushya.';
+      'Iyi politiki y\'ubwige ikoresha porogaramu y\'amashanyarazi "Drive Rwanda – Prep & Pass", gikoresho cy\'amashuri kitabiriye cyateguwe na Publisher Name (entite yitabiriye). Iyi porogaramu NTIDUFITE isano na, cyangwa ngo dufashe, ikigo cya Leta, Guverinoma y\'u Rwanda, cyangwa kigo cy\'ibanze cy\'uruhushya.';
 
   @override
   String get termsOfUseTitle =>
-      'AMABWIRIZA YO GUKORESHA - Rwanda Traffic Driving School';
+      'AMABWIRIZA YO GUKORESHA - Drive Rwanda – Prep & Pass';
 
   @override
   String get termsOfUseHeader =>
@@ -2498,10 +2498,10 @@ Ubwoba:
 
   @override
   String get termsIndependentApp =>
-      'Rwanda Traffic Driving School yategurwa kandi ikoreshwa na CodeTrail Dev (ENTITE YITABIRIYE). NTIDUFITE isano na, cyangwa ngo dufashe, Guverinoma y\'u Rwanda, Polisi y\'u Rwanda, cyangwa kigo cy\'ibanze cy\'uruhushya. Iki ni gikoresho cy\'amashuri kitabiriye gusa kugirango wige no kwitegura. Abakoresha bagomba gukomeza imikorere yose y\'ibanze binyuze mu nzira z\'ibanze za Leta.';
+      'Drive Rwanda – Prep & Pass yategurwa kandi ikoreshwa na Publisher Name (ENTITE YITABIRIYE). NTIDUFITE isano na, cyangwa ngo dufashe, Guverinoma y\'u Rwanda, Polisi y\'u Rwanda, cyangwa kigo cy\'ibanze cy\'uruhushya. Iki ni gikoresho cy\'amashuri kitabiriye gusa kugirango wige no kwitegura. Abakoresha bagomba gukomeza imikorere yose y\'ibanze binyuze mu nzira z\'ibanze za Leta.';
 
   @override
-  String get termsDeveloperInfo => 'CodeTrail Dev';
+  String get termsDeveloperInfo => 'Publisher Name';
 
   @override
   String get appNameLabelText => 'Izina ry\'Porogaramu';
@@ -2663,14 +2663,14 @@ Ubwoba:
 
   @override
   String get termsConditionsSection1Content =>
-      'Mu gukurura (download), gushyira kuri telefone (install), cyangwa gukoresha porogaramu ya Rwanda Traffic Driving School, uba wemeye gukurikiza aya Mategeko n’Amabwiriza. Niba utayemera, nyamuneka ntukoreshe iyi porogaramu.';
+      'Mu gukurura (download), gushyira kuri telefone (install), cyangwa gukoresha porogaramu ya Drive Rwanda – Prep & Pass, uba wemeye gukurikiza aya Mategeko n’Amabwiriza. Niba utayemera, nyamuneka ntukoreshe iyi porogaramu.';
 
   @override
   String get termsConditionsSection2Title => '2. Ibisobanuro bya Serivisi';
 
   @override
   String get termsConditionsSection2Content =>
-      'Rwanda Traffic Driving School ni porogaramu y’uburezi irimo ibi bikurikira:\n\n'
+      'Drive Rwanda – Prep & Pass ni porogaramu y’uburezi irimo ibi bikurikira:\n\n'
       '• Ibibazo by’imyitozo n’imyitozo ku mategeko y’umuhanda\n\n'
       '• Gukurikirana aho ugeze n’isesengura ry’imikorere\n\n'
       '• Amasomo ajyanye n’amategeko y’umuhanda\n\n'
@@ -2833,11 +2833,11 @@ Ubwoba:
 
   @override
   String get shareAppSubject =>
-      'Rwanda Traffic Driving School - Sangiza porogaramu yo kwitegura imwitozo cyo Gutwara';
+      'Drive Rwanda – Prep & Pass - Sangiza porogaramu yo kwitegura imwitozo cyo Gutwara';
 
   @override
   String get shareAppMessage => '''
-🚗 Rwanda Traffic Driving School - Tsinda imwitozo cyo gutwara!
+🚗 Drive Rwanda – Prep & Pass - Tsinda imwitozo cyo gutwara!
 
 iyi ni porogaramu nziza igufasha kwitegura imwitozo cy’uruhushya rw’agateganyo rwo gutwara moto cyangwa imodoka.
 

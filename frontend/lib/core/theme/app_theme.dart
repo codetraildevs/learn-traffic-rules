@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Primary Colors
+  // Primary Colors - Blue (traffic/info signs, trust, professional)
   static const Color secondary = Color(0xFFFF930F); // Orange
   static const Color secondaryLight = Color(0xFFFFB700); // Light Orange
-  static const Color primary = Color(0xFF632a9f); // Purple
-  static const Color primaryLight = Color(0xFF8062D6); // Light Purple
-  static const Color primaryDark = Color(0xFF4A3C8C); // Dark Purple
+  static const Color primary = Color(0xFF1D4ED8); // Blue
+  static const Color primaryLight = Color(0xFF2563EB); // Light Blue
+  static const Color primaryDark = Color(0xFF1E40AF); // Dark Blue
   static const Color secondaryDark = Color(0xFFE53E3E); // Dark Orange
   static const Color black = Color(0xFF000000); // Black
   static const Color white = Color(0xFFFFFFFF); // White
@@ -29,9 +29,9 @@ class AppColors {
   static const Color grey800 = Color(0xFF1A202C);
   static const Color grey900 = Color(0xFF171923);
 
-  // Gradient Colors
+  // Gradient Colors (blue gradient for splash and headers)
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [grey500, primaryDark],
+    colors: [primaryLight, primaryDark],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

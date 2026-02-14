@@ -2060,7 +2060,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       final version = packageInfo.version;
       final buildNumber = packageInfo.buildNumber;
       const playStoreLink =
-          'https://play.google.com/store/apps/details?id=com.trafficrules.master';
+          'https://play.google.com/store/apps/details?id=com.rw.drivingprep';
 
       // Get localized share message and replace placeholders
       final shareText = l10n.shareAppMessage
