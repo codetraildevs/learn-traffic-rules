@@ -115,9 +115,9 @@ const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Traffic Rules Practice App API',
+      title: 'Drive Rwanda - Prep & Pass API',
       version: '1.0.0',
-      description: 'API documentation for Traffic Rules Practice App with manual payment processing and device ID validation',
+      description: 'API documentation for Drive Rwanda - Prep & Pass with manual payment processing and device ID validation',
       contact: {
         name: 'API Support',
       },
@@ -132,7 +132,7 @@ const swaggerOptions = {
         description: 'Development server'
       },
       {
-        url: 'https://api.trafficrules.com',
+        url: 'https://drive-rwanda-prep.cyangugudims.com',
         description: 'Production server'
       }
     ],
@@ -427,7 +427,7 @@ app.use((err, req, res, next) => {
 app.get('/', (req, res) => {
   res.json({
     success: true,
-    message: 'Welcome to Traffic Rules Practice App API',
+    message: 'Welcome to Drive Rwanda - Prep & Pass API',
     version: '1.0.0',
     documentation: '/api-docs',
     health: '/health'

@@ -1,7 +1,7 @@
 {
-  "name": "traffic-rules-backend",
+  "name": "drive-rwanda-prep-backend",
   "version": "1.0.0",
-  "description": "Backend API for Traffic Rules Practice App",
+  "description": "Backend API for Drive Rwanda - Prep & Pass",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -17,7 +17,7 @@
     "migrate:status": "NODE_ENV=production npx sequelize-cli db:migrate:status"
   },
   "keywords": [
-    "traffic-rules",
+    "drive-rwanda-prep",
     "exam",
     "api",
     "nodejs",
