@@ -61,7 +61,7 @@ const getDatabaseConfig = () => {
     // Production without DATABASE_URL - use individual env vars
     console.log('🐬 Using MySQL configuration with individual env vars');
     console.log('🔍 Database config:', {
-      database: process.env.DB_NAME || 'traffic_rules_db',
+      database: process.env.DB_NAME || 'rw_driving_prep_db',
       username: process.env.DB_USER || 'root',
       host: process.env.DB_HOST || 'localhost',
       port: process.env.DB_PORT || 3306,
@@ -69,7 +69,7 @@ const getDatabaseConfig = () => {
     });
     
     return {
-      database: process.env.DB_NAME || 'traffic_rules_db',
+      database: process.env.DB_NAME || 'rw_driving_prep_db',
       username: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD || '',
       host: process.env.DB_HOST || 'localhost',
@@ -111,7 +111,7 @@ const getDatabaseConfig = () => {
     // Development MySQL configuration
     console.log('🐬 Using MySQL configuration for development');
     return {
-      database: process.env.DB_NAME || 'traffic_rules_db',
+      database: process.env.DB_NAME || 'rw_driving_prep_db',
       username: process.env.DB_USER || 'root',
       password: process.env.DB_PASSWORD || '',
       host: process.env.DB_HOST || 'localhost',
