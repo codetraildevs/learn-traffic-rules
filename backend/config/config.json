@@ -18,7 +18,7 @@
   "production": {
     "username": "cdims_user",
     "password": "password@123",
-    "database": "learn_traffic_rules",
+    "database": "rw_driving_prep_db",
     "host": "localhost",
     "port": 3306,
     "dialect": "mysql"

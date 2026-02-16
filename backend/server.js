@@ -579,7 +579,7 @@ const createDefaultAdmin = async () => {
     await User.create({
       id: uuidv4(),
       fullName: 'System Administrator',
-      phoneNumber: '+1234567890',
+      phoneNumber: '0782828282',
       password: hashedPassword,
       role: 'ADMIN',
       deviceId: 'admin-device-bypass',
