@@ -63,7 +63,8 @@ class ApiService {
     int maxRetries = 3,
     Duration? requestTimeout,
   }) async {
-    final timeout = requestTimeout ?? const Duration(seconds: 30);
+    final timeout =
+        requestTimeout ?? Duration(milliseconds: AppConstants.receiveTimeout);
     // Check network connectivity first
     if (!await _networkService.hasInternetConnection()) {
       throw ApiException(

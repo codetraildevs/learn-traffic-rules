@@ -34,7 +34,10 @@ class ExamService {
       final response = await _apiService.makeRequest(
         'GET',
         '/exams/$examId/take-exam',
-        maxRetries: 2, // Reduce retries for exam questions
+        maxRetries: 3,
+        requestTimeout: const Duration(
+          seconds: 90,
+        ), // Heavy payload on slow links
       );
 
       debugPrint('🔍 FRONTEND DEBUG - API Response received:');
@@ -155,6 +158,7 @@ class ExamService {
       final response = await _apiService.makeRequest(
         'GET',
         '/exams/user-results',
+        requestTimeout: const Duration(seconds: 60),
       );
 
       if (response['success'] == true) {
@@ -177,7 +181,11 @@ class ExamService {
     try {
       await _apiService.initialize();
 
-      final response = await _apiService.makeRequest('GET', '/exams');
+      final response = await _apiService.makeRequest(
+        'GET',
+        '/exams',
+        requestTimeout: const Duration(seconds: 60),
+      );
 
       if (response['success'] == true) {
         final examsData = response['data'] as List<dynamic>;

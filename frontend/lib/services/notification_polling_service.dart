@@ -48,14 +48,14 @@ class NotificationPollingService {
 
   Future<void> _checkForNewNotifications() async {
     try {
-      // OPTIMIZATION: Add timeout to prevent ANR (max 5 seconds)
+      // Timeout for background check (allow 25s on slow connections)
       final response = await _apiService
           .getNotifications(
             page: 1,
             limit: 5, // Only check the latest 5 notifications
           )
           .timeout(
-            const Duration(seconds: 5),
+            const Duration(seconds: 25),
             onTimeout: () {
               debugPrint('⏱️ Notification check timed out');
               return <String, dynamic>{'success': false};

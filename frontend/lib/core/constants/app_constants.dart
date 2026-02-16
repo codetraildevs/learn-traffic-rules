@@ -1,20 +1,22 @@
 class AppConstants {
-  // API Configuration - REPLACE your-backend-domain.com with your actual backend domain before building
-  static const String baseUrl = 'https://api.your-backend-domain.com/api';
+  // API Configuration - Backend at drive-rwanda-prep.cyangugudims.com
+  static const String baseUrl =
+      'https://drive-rwanda-prep.cyangugudims.com/api';
   static const String baseUrlImage =
-      'https://api.your-backend-domain.com/uploads/images-exams/';
+      'https://drive-rwanda-prep.cyangugudims.com/uploads/images-exams/';
   static const String baseUrlDocument =
-      'https://api.your-backend-domain.com/uploads/documents/';
+      'https://drive-rwanda-prep.cyangugudims.com/uploads/documents/';
   static const String imageBaseUrl =
-      'https://api.your-backend-domain.com/uploads/images/';
-  static const String siteBaseUrl = 'https://api.your-backend-domain.com';
+      'https://drive-rwanda-prep.cyangugudims.com/uploads/images/';
+  static const String siteBaseUrl =
+      'https://drive-rwanda-prep.cyangugudims.com';
 
   // Image Paths
   static const String defaultQuestionImagePath = '/uploads/question-images/';
 
   static const String apiVersion = 'v1';
-  static const int connectionTimeout = 30000;
-  static const int receiveTimeout = 30000;
+  static const int connectionTimeout = 60000; // 60s for slow mobile/VPS latency
+  static const int receiveTimeout = 60000;
 
   // Storage Keys
   static const String tokenKey = 'auth_token';
