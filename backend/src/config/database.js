@@ -1472,40 +1472,33 @@ const createMySQLTables = async (sequelize) => {
     const examCount = await sequelize.query('SELECT COUNT(*) as count FROM exams', { type: Sequelize.QueryTypes.SELECT });
     const questionCount = await sequelize.query('SELECT COUNT(*) as count FROM questions', { type: Sequelize.QueryTypes.SELECT });
     
-    if (userCount[0].count <= 1 || examCount[0].count === 0 || questionCount[0].count === 0) {
-      console.log('📊 Importing data from SQL file...');
-      try {
-        const { spawn } = require('child_process');
-        const path = require('path');
-        
-        await new Promise((resolve, reject) => {
-          const importer = spawn('node', [path.join(__dirname, '../../import-data-from-sql.js')], {
-            stdio: 'inherit',
-            env: process.env
-          });
-          
-          importer.on('close', (code) => {
-            if (code === 0) {
-              console.log('✅ Data imported successfully from SQL file');
-              resolve();
-            } else {
-              console.log('⚠️  Data import failed, continuing without data');
-              resolve(); // Don't fail the server startup
-            }
-          });
-          
-          importer.on('error', (error) => {
-            console.log('⚠️  Data importer error:', error.message);
-            resolve(); // Don't fail the server startup
-          });
+    // ✅ Never import seed data in production
+if (process.env.NODE_ENV !== 'production') {
+  if (userCount[0].count <= 1 || examCount[0].count === 0 || questionCount[0].count === 0) {
+    console.log('📊 Importing data from SQL file (DEV only)...');
+    try {
+      const { spawn } = require('child_process');
+      const path = require('path');
+
+      await new Promise((resolve) => {
+        const importer = spawn('node', [path.join(__dirname, '../../import-data-from-sql.js')], {
+          stdio: 'inherit',
+          env: process.env
         });
-      } catch (error) {
-        console.log('⚠️  Data import failed:', error.message);
-      }
-    } else {
-      console.log('✅ Data already exists, skipping import');
+
+        importer.on('close', () => resolve());
+        importer.on('error', () => resolve());
+      });
+    } catch (error) {
+      console.log('⚠️  Data import failed:', error.message);
     }
-    
+  } else {
+    console.log('✅ Data already exists, skipping import');
+  }
+} else {
+  console.log('✅ Production: skipping SQL import completely');
+}
+
     
     // Create sample exams and questions if they don't exist
     console.log('📚 Ensuring sample data exists...');
@@ -1628,6 +1621,8 @@ const initializeTables = async () => {
     const CourseContent = require('../models/CourseContent');
     const CourseProgress = require('../models/CourseProgress');
     const CourseContentProgress = require('../models/CourseContentProgress');
+
+
 
     console.log('✅ All models imported successfully');
 
