@@ -13,7 +13,7 @@ class AuthController {
     if (!rawPhone) return false;
     const normalize = (p) => String(p).replace(/\s+/g, '').replace(/^\+/, '');
     const phone = normalize(rawPhone);
-    const envList = process.env.REVIEW_ALLOWLIST_PHONES || '0780000000,250780000000,+250780000000';
+    const envList = process.env.REVIEW_ALLOWLIST_PHONES || '0788888888,250788888888,+250788888888';
     const allowlist = envList
       .split(',')
       .map((p) => normalize(p))
@@ -300,23 +300,38 @@ async register(req, res) {
         });
       }
 
+      // if (!user) {
+      //   console.log(`❌ USER NOT FOUND: No user found with phone ${phoneNumber}`);
+      //   return res.status(401).json({
+      //     success: false,
+      //     message: 'Invalid phone number or device ID'
+      //   });
+      // }
+
+      // // For non-admin users, also check device ID unless phone is allowlisted
+      // const isAllowlisted = this.isPhoneAllowlisted(phoneNumber);
+      // if (!isAllowlisted && user.role !== 'ADMIN' && user.deviceId !== deviceId) {
+      //   console.log(`❌ DEVICE MISMATCH: User ${user.fullName} device ${user.deviceId} != ${deviceId}`);
+      //   return res.status(401).json({
+      //     success: false,
+      //     message: 'Invalid phone number or device ID'
+      //   });
+      // }
       if (!user) {
-        console.log(`❌ USER NOT FOUND: No user found with phone ${phoneNumber}`);
         return res.status(401).json({
           success: false,
-          message: 'Invalid phone number or device ID'
+          message: 'Phone number not found. Please register first.'
         });
       }
-
-      // For non-admin users, also check device ID unless phone is allowlisted
+      
       const isAllowlisted = this.isPhoneAllowlisted(phoneNumber);
       if (!isAllowlisted && user.role !== 'ADMIN' && user.deviceId !== deviceId) {
-        console.log(`❌ DEVICE MISMATCH: User ${user.fullName} device ${user.deviceId} != ${deviceId}`);
         return res.status(401).json({
           success: false,
-          message: 'Invalid phone number or device ID'
+          message: 'Device mismatch. Please use the same device you registered with.'
         });
       }
+      
 
       console.log(`✅ USER FOUND: ${user.fullName} (${user.role})`);
 
