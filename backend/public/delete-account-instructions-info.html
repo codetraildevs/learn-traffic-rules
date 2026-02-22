@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delete Account - Drive Rwanda – Prep & Pass</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+
+  <style>
+    :root{
+      --bg: #0b1020;
+      --panel: rgba(255,255,255,.08);
+      --panel-2: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.14);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.72);
+      --muted-2: rgba(255,255,255,.55);
+
+      --danger: #ff3b3b;
+      --danger-2: #ff6b6b;
+      --brand: #6d8bff;
+      --brand-2: #b86bff;
+      --ok: #22c55e;
+      --warn: #fbbf24;
+
+      --shadow: 0 20px 50px rgba(0,0,0,.35);
+      --shadow2: 0 10px 25px rgba(0,0,0,.25);
+      --radius: 18px;
+
+      --grad-brand: linear-gradient(135deg, var(--brand), var(--brand-2));
+      --grad-danger: linear-gradient(135deg, var(--danger), var(--danger-2));
+      --grad-ambient: radial-gradient(1200px 600px at 10% 10%, rgba(109,139,255,.30), transparent 60%),
+                      radial-gradient(900px 500px at 90% 20%, rgba(184,107,255,.25), transparent 60%),
+                      radial-gradient(900px 700px at 50% 90%, rgba(255,59,59,.22), transparent 60%);
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background + subtle noise */
+    .bg{
+      position:fixed; inset:0;
+      background: var(--grad-ambient);
+      z-index:-2;
+      filter:saturate(1.15);
+    }
+    .noise{
+      position:fixed; inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.13'/%3E%3C/svg%3E");
+      mix-blend-mode: overlay;
+      opacity:.35;
+      z-index:-1;
+      pointer-events:none;
+    }
+
+    /* Top progress */
+    .progress{
+      position:fixed; left:0; top:0; width:100%; height:4px;
+      background: rgba(255,255,255,.08);
+      z-index: 999;
+    }
+    .progress > span{
+      display:block; height:100%; width:0%;
+      background: var(--grad-danger);
+      box-shadow: 0 0 18px rgba(255,59,59,.6);
+      transition: width .15s linear;
+    }
+
+    /* Layout */
+    .container{max-width:1100px;margin:0 auto;padding:0 20px}
+    .header{
+      position:sticky; top:0; z-index:100;
+      backdrop-filter: blur(14px);
+      background: rgba(11,16,32,.55);
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+    .header-inner{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 0;
+      gap:14px;
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      font-weight:800;
+      letter-spacing:.2px;
+      text-decoration:none;
+      color: var(--text);
+    }
+    .brand-badge{
+      width:42px; height:42px;
+      border-radius: 14px;
+      background: var(--grad-brand);
+      display:grid; place-items:center;
+      box-shadow: var(--shadow2);
+      border: 1px solid rgba(255,255,255,.18);
+    }
+    .brand-badge i{font-size:18px}
+    .brand span{font-size:15px}
+    .brand small{display:block;color:var(--muted-2);font-weight:600;margin-top:-2px}
+
+    .nav{
+      display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;
+    }
+    .nav a{
+      color: var(--muted);
+      text-decoration:none;
+      font-weight:600;
+      font-size:13px;
+      padding:10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      transition: transform .2s ease, background .2s ease, border-color .2s ease, color .2s ease;
+    }
+    .nav a:hover{
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,255,255,.22);
+      transform: translateY(-1px);
+      color: #fff;
+    }
+
+    /* Hero */
+    .hero{
+      padding: 46px 0 26px;
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .hero-card{
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border-radius: calc(var(--radius) + 6px);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      position: relative;
+      overflow:hidden;
+    }
+    .hero-card:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(700px 220px at 20% 0%, rgba(255,59,59,.26), transparent 60%),
+                  radial-gradient(700px 260px at 90% 10%, rgba(109,139,255,.22), transparent 60%);
+      z-index:0;
+    }
+    .hero-card > *{position:relative; z-index:1}
+
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.14);
+      color: var(--muted);
+      font-weight:700;
+      font-size: 12px;
+    }
+    .chip i{color: var(--warn)}
+    h1{
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.12;
+      margin: 14px 0 10px;
+      letter-spacing: -0.8px;
+    }
+    .subtitle{
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 62ch;
+    }
+
+    .hero-actions{
+      display:flex; gap:12px; flex-wrap:wrap;
+      margin-top: 18px;
+    }
+    .btn{
+      display:inline-flex; align-items:center; gap:10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      color: #fff;
+      text-decoration:none;
+      font-weight:700;
+      font-size: 13px;
+      transition: transform .2s ease, background .2s ease, border-color .2s ease;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:hover{transform: translateY(-2px); background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.22)}
+    .btn-danger{
+      background: rgba(255,59,59,.12);
+      border-color: rgba(255,59,59,.35);
+    }
+    .btn-danger:hover{
+      background: rgba(255,59,59,.18);
+      border-color: rgba(255,59,59,.55);
+    }
+    .btn i{opacity:.95}
+
+    .hero-side{
+      display:flex; flex-direction:column; gap:14px;
+    }
+    .mini{
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow2);
+    }
+    .mini h3{font-size:14px; margin-bottom:8px; letter-spacing:-.2px}
+    .mini p{color: var(--muted); font-size: 13px}
+    .mini .row{
+      display:flex; align-items:center; gap:12px;
+      margin-bottom: 10px;
+    }
+    .iconbox{
+      width:40px; height:40px; border-radius: 14px;
+      display:grid; place-items:center;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+    }
+    .iconbox.danger{background: rgba(255,59,59,.14); border-color: rgba(255,59,59,.28)}
+    .iconbox.brand{background: rgba(109,139,255,.14); border-color: rgba(109,139,255,.28)}
+    .iconbox i{font-size:16px}
+
+    /* Sections */
+    section.block{
+      margin: 18px 0;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      border-radius: calc(var(--radius) + 4px);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+    }
+    .block-head{
+      padding: 18px 20px;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:14px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
+    .block-title{
+      display:flex; align-items:center; gap:12px;
+    }
+    .block-title h2{
+      font-size: 16px;
+      letter-spacing:-.2px;
+    }
+    .pill{
+      font-size: 12px;
+      font-weight: 800;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+    }
+    .pill.danger{border-color: rgba(255,59,59,.35); background: rgba(255,59,59,.12); color: rgba(255,255,255,.9)}
+    .pill.info{border-color: rgba(109,139,255,.35); background: rgba(109,139,255,.12); color: rgba(255,255,255,.9)}
+
+    .block-body{padding: 18px 20px 22px}
+
+    /* Callouts */
+    .callout{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      padding: 16px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      margin: 14px 0;
+    }
+    .callout .lead{
+      font-weight:800;
+      margin-bottom:4px;
+      letter-spacing:-.2px;
+    }
+    .callout p{color: var(--muted); font-size: 13px}
+    .callout .ico{
+      width:40px; height:40px; border-radius: 14px;
+      display:grid; place-items:center;
+      flex:0 0 auto;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+    }
+    .callout.danger{
+      border-color: rgba(255,59,59,.28);
+      background: linear-gradient(180deg, rgba(255,59,59,.14), rgba(255,255,255,.04));
+    }
+    .callout.danger .ico{background: rgba(255,59,59,.18); border-color: rgba(255,59,59,.35)}
+    .callout.info{
+      border-color: rgba(109,139,255,.28);
+      background: linear-gradient(180deg, rgba(109,139,255,.14), rgba(255,255,255,.04));
+    }
+    .callout.info .ico{background: rgba(109,139,255,.18); border-color: rgba(109,139,255,.35)}
+
+    /* Two-column grids */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    /* Deletion list cards */
+    .cards{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .card{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      padding: 14px;
+      transition: transform .2s ease, background .2s ease, border-color .2s ease;
+      cursor: default;
+      min-height: 120px;
+    }
+    .card:hover{
+      transform: translateY(-3px);
+      background: rgba(255,255,255,.08);
+      border-color: rgba(255,255,255,.20);
+    }
+    .card .top{
+      display:flex; gap:10px; align-items:center;
+      margin-bottom: 10px;
+    }
+    .card .badge{
+      width:38px; height:38px; border-radius: 14px;
+      display:grid; place-items:center;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.14);
+    }
+    .card h4{font-size: 14px; letter-spacing:-.2px}
+    .card p{color: var(--muted); font-size: 13px}
+
+    /* Steps (timeline accordion style) */
+    .steps{
+      display:grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    details.step{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      overflow:hidden;
+      transition: border-color .2s ease, background .2s ease;
+    }
+    details.step[open]{
+      background: rgba(255,255,255,.07);
+      border-color: rgba(255,255,255,.22);
+    }
+    summary{
+      list-style:none;
+      cursor:pointer;
+      padding: 14px 14px;
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      user-select:none;
+    }
+    summary::-webkit-details-marker{display:none}
+    .num{
+      width:38px; height:38px; border-radius: 14px;
+      display:grid; place-items:center;
+      font-weight:900;
+      background: rgba(255,59,59,.14);
+      border: 1px solid rgba(255,59,59,.28);
+    }
+    .step-title{
+      font-weight:800;
+      letter-spacing:-.2px;
+      font-size: 14px;
+    }
+    .chev{
+      margin-left:auto;
+      color: var(--muted-2);
+      transition: transform .2s ease;
+    }
+    details[open] .chev{transform: rotate(180deg)}
+    .step-body{
+      padding: 0 14px 14px 64px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* Contact CTA */
+    .cta{
+      border-radius: calc(var(--radius) + 6px);
+      border: 1px solid rgba(255,255,255,.14);
+      background: linear-gradient(135deg, rgba(255,59,59,.22), rgba(109,139,255,.18));
+      padding: 22px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow:hidden;
+    }
+    .cta:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(700px 260px at 20% 0%, rgba(255,255,255,.20), transparent 60%),
+                  radial-gradient(900px 300px at 90% 20%, rgba(255,255,255,.12), transparent 60%);
+      z-index:0;
+    }
+    .cta > *{position:relative; z-index:1}
+    .cta h2{
+      font-size: 18px;
+      letter-spacing:-.3px;
+      margin-bottom: 6px;
+    }
+    .cta p{color: rgba(255,255,255,.86); font-size: 13px}
+    .cta-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .cta-item{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.12);
+      padding: 14px;
+      display:flex; gap:12px; align-items:flex-start;
+    }
+    .cta-item .ico{
+      width:40px; height:40px; border-radius: 14px;
+      display:grid; place-items:center;
+      border: 1px solid rgba(255,255,255,.20);
+      background: rgba(255,255,255,.10);
+      flex:0 0 auto;
+    }
+    .cta-item b{display:block; font-size: 14px; letter-spacing:-.2px}
+    .cta-item span{display:block; color: rgba(255,255,255,.82); font-size: 13px}
+
+    /* Footer */
+    footer{
+      margin-top: 26px;
+      padding: 26px 0 40px;
+      color: var(--muted-2);
+      text-align:center;
+    }
+    footer .footbrand{
+      display:inline-flex; align-items:center; gap:10px;
+      font-weight: 900;
+      color: rgba(255,255,255,.88);
+      margin-bottom: 10px;
+    }
+    footer .footbrand i{
+      width:40px; height:40px; border-radius: 14px;
+      display:grid; place-items:center;
+      background: var(--grad-brand);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: var(--shadow2);
+    }
+    footer p{font-size: 12.5px}
+
+    /* Scroll top */
+    .toTop{
+      position:fixed;
+      right: 18px;
+      bottom: 18px;
+      width:48px; height:48px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      color: #fff;
+      display:grid; place-items:center;
+      box-shadow: var(--shadow2);
+      cursor:pointer;
+      opacity:0; transform: translateY(8px);
+      pointer-events:none;
+      transition: opacity .2s ease, transform .2s ease, background .2s ease;
+      z-index: 999;
+    }
+    .toTop.show{
+      opacity:1; transform: translateY(0);
+      pointer-events:auto;
+    }
+    .toTop:hover{background: rgba(255,255,255,.10)}
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .hero{grid-template-columns: 1fr; }
+      .cards{grid-template-columns: 1fr 1fr;}
+    }
+    @media (max-width: 640px){
+      .nav{display:none;}
+      .cards{grid-template-columns: 1fr;}
+      .grid{grid-template-columns: 1fr;}
+      .cta-grid{grid-template-columns: 1fr;}
+      .hero-card{padding: 20px}
+      .mini{padding: 16px}
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      *{scroll-behavior:auto !important; transition:none !important}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg"></div>
+  <div class="noise"></div>
+
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+  <header class="header">
+    <div class="container">
+      <div class="header-inner">
+        <a class="brand" href="#">
+          <div class="brand-badge" aria-hidden="true"><i class="fa-solid fa-car"></i></div>
+          <div>
+            <span>Drive Rwanda – Prep & Pass</span>
+            <small>Account Deletion Guide</small>
+          </div>
+        </a>
+
+        <nav class="nav" aria-label="Page navigation">
+          <a href="#overview"><i class="fa-solid fa-circle-info"></i> Overview</a>
+          <a href="#data"><i class="fa-solid fa-trash-can"></i> Data</a>
+          <a href="#steps"><i class="fa-solid fa-list-check"></i> Steps</a>
+          <a href="#contact"><i class="fa-solid fa-headset"></i> Contact</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- HERO -->
+    <section class="hero" aria-label="Hero">
+      <div class="hero-card">
+        <span class="chip"><i class="fa-solid fa-triangle-exclamation"></i> Permanent action • cannot be undone</span>
+        <h1>Delete your account</h1>
+        <p class="subtitle">
+          This page explains how to permanently delete your Drive Rwanda – Prep & Pass account and what information will be removed.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn btn-danger" href="#steps"><i class="fa-solid fa-bolt"></i> Jump to steps</a>
+          <button class="btn" id="copySupportEmail" type="button">
+            <i class="fa-solid fa-copy"></i> Copy support email
+          </button>
+          <a class="btn" href="#contact"><i class="fa-solid fa-life-ring"></i> Get help</a>
+        </div>
+      </div>
+
+      <aside class="hero-side" aria-label="Quick facts">
+        <div class="mini">
+          <div class="row">
+            <div class="iconbox danger"><i class="fa-solid fa-lock"></i></div>
+            <div>
+              <h3>Irreversible</h3>
+              <p>Once deleted, your data cannot be recovered.</p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="iconbox brand"><i class="fa-solid fa-shield-halved"></i></div>
+            <div>
+              <h3>Privacy-first</h3>
+              <p>Account deletion removes your profile and learning records.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mini">
+          <div class="row">
+            <div class="iconbox brand"><i class="fa-solid fa-graduation-cap"></i></div>
+            <div>
+              <h3>Educational app</h3>
+              <p>Independent practice tool (not affiliated with government agencies).</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- OVERVIEW -->
+    <section id="overview" class="block">
+      <div class="block-head">
+        <div class="block-title">
+          <div class="iconbox danger"><i class="fa-solid fa-circle-info"></i></div>
+          <h2>Important information</h2>
+        </div>
+        <span class="pill danger">Read before deleting</span>
+      </div>
+
+      <div class="block-body">
+        <div class="callout danger">
+          <div class="ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div>
+            <div class="lead">This action cannot be undone</div>
+            <p>
+              Deleting your account permanently removes your profile, learning progress, exam results, settings, and related data from our systems.
+            </p>
+          </div>
+        </div>
+
+        <div class="callout info">
+          <div class="ico"><i class="fa-solid fa-graduation-cap"></i></div>
+          <div>
+            <div class="lead">Educational purpose & disclaimer</div>
+            <p>
+              <b>Drive Rwanda – Prep & Pass</b> is an independent educational application for practice purposes only.
+              It is <b>NOT affiliated with, endorsed by, associated with, or authorized by</b>:
+              the Government of Rwanda, Rwanda National Police, any official driving test authority, or any government agency.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="callout">
+            <div class="ico"><i class="fa-solid fa-circle-check" style="color: var(--ok)"></i></div>
+            <div>
+              <div class="lead">Before you delete</div>
+              <p>Consider exporting any info you need (screenshots of results, notes, or achievements).</p>
+            </div>
+          </div>
+          <div class="callout">
+            <div class="ico"><i class="fa-solid fa-circle-question" style="color: var(--warn)"></i></div>
+            <div>
+              <div class="lead">Need a pause?</div>
+              <p>If you just want to stop notifications, change settings instead of deleting.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHAT WILL BE DELETED -->
+    <section id="data" class="block">
+      <div class="block-head">
+        <div class="block-title">
+          <div class="iconbox danger"><i class="fa-solid fa-trash-can"></i></div>
+          <h2>What will be deleted</h2>
+        </div>
+        <span class="pill">Data removal</span>
+      </div>
+
+      <div class="block-body">
+        <p style="color: var(--muted); font-size: 13px;">
+          This is what gets removed from your account when deletion is confirmed:
+        </p>
+
+        <div class="cards">
+          <div class="card">
+            <div class="top">
+              <div class="badge"><i class="fa-solid fa-user"></i></div>
+              <h4>Account information</h4>
+            </div>
+            <p>username, phone number, device ID, and profile data.</p>
+          </div>
+
+          <div class="card">
+            <div class="top">
+              <div class="badge"><i class="fa-solid fa-chart-line"></i></div>
+              <h4>Learning progress</h4>
+            </div>
+            <p>Study history, exam scores, and performance metrics.</p>
+          </div>
+
+          <div class="card">
+            <div class="top">
+              <div class="badge"><i class="fa-solid fa-trophy"></i></div>
+              <h4>Achievements</h4>
+            </div>
+            <p>Badges, milestones, and completion records.</p>
+          </div>
+
+          <div class="card">
+            <div class="top">
+              <div class="badge"><i class="fa-solid fa-gear"></i></div>
+              <h4>App settings</h4>
+            </div>
+            <p>Preferences, notification settings, and customizations.</p>
+          </div>
+
+          <div class="card">
+            <div class="top">
+              <div class="badge"><i class="fa-solid fa-comments"></i></div>
+              <h4>Support history</h4>
+            </div>
+            <p>Support requests and past communications (if any).</p>
+          </div>
+
+          <div class="card">
+            <div class="top">
+              <div class="badge"><i class="fa-solid fa-clock"></i></div>
+              <h4>Usage data</h4>
+            </div>
+            <p>Sessions, feature usage, and analytics linked to your account.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEPS -->
+    <section id="steps" class="block">
+      <div class="block-head">
+        <div class="block-title">
+          <div class="iconbox danger"><i class="fa-solid fa-list-check"></i></div>
+          <h2>How to delete your account</h2>
+        </div>
+        <span class="pill info">Step-by-step</span>
+      </div>
+
+      <div class="block-body">
+        <p style="color: var(--muted); font-size: 13px;">
+          Click each step to expand details.
+        </p>
+
+        <div class="steps">
+          <details class="step" open>
+            <summary>
+              <span class="num">1</span>
+              <span class="step-title">Open the app</span>
+              <i class="fa-solid fa-chevron-down chev" aria-hidden="true"></i>
+            </summary>
+            <div class="step-body">Launch the Drive Rwanda – Prep & Pass app and log in to your account.</div>
+          </details>
+
+          <details class="step">
+            <summary>
+              <span class="num">2</span>
+              <span class="step-title">Go to Settings</span>
+              <i class="fa-solid fa-chevron-down chev" aria-hidden="true"></i>
+            </summary>
+            <div class="step-body">Open your profile/settings area, then choose “Account Settings” or “Profile Settings”.</div>
+          </details>
+
+          <details class="step">
+            <summary>
+              <span class="num">3</span>
+              <span class="step-title">Find “Delete Account”</span>
+              <i class="fa-solid fa-chevron-down chev" aria-hidden="true"></i>
+            </summary>
+            <div class="step-body">Scroll to the bottom of settings to find “Delete Account” / “Account Deletion”.</div>
+          </details>
+
+          <details class="step">
+            <summary>
+              <span class="num">4</span>
+              <span class="step-title">Confirm your identity</span>
+              <i class="fa-solid fa-chevron-down chev" aria-hidden="true"></i>
+            </summary>
+            <div class="step-body">Enter your password or confirm identity as requested to continue.</div>
+          </details>
+
+          <details class="step">
+            <summary>
+              <span class="num">5</span>
+              <span class="step-title">Read the warning carefully</span>
+              <i class="fa-solid fa-chevron-down chev" aria-hidden="true"></i>
+            </summary>
+            <div class="step-body">Make sure you understand what data will be deleted and that the action is irreversible.</div>
+          </details>
+
+          <details class="step">
+            <summary>
+              <span class="num">6</span>
+              <span class="step-title">Type confirmation text</span>
+              <i class="fa-solid fa-chevron-down chev" aria-hidden="true"></i>
+            </summary>
+            <div class="step-body">Type <b>DELETE</b> in the confirmation field to acknowledge the consequences.</div>
+          </details>
+
+          <details class="step">
+            <summary>
+              <span class="num">7</span>
+              <span class="step-title">Final confirmation</span>
+              <i class="fa-solid fa-chevron-down chev" aria-hidden="true"></i>
+            </summary>
+            <div class="step-body">Tick the checkbox (if shown) and press the “Delete Account” button to complete deletion.</div>
+          </details>
+
+          <details class="step">
+            <summary>
+              <span class="num">8</span>
+              <span class="step-title">Account deleted</span>
+              <i class="fa-solid fa-chevron-down chev" aria-hidden="true"></i>
+            </summary>
+            <div class="step-body">You will be logged out and redirected to the login screen. Data removal is permanent.</div>
+          </details>
+        </div>
+
+        <div class="callout danger" style="margin-top:16px">
+          <div class="ico"><i class="fa-solid fa-ban"></i></div>
+          <div>
+            <div class="lead">No data recovery</div>
+            <p>After deletion, we cannot restore learning progress, scores, profile details, or settings.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ALTERNATIVES -->
+    <section class="block">
+      <div class="block-head">
+        <div class="block-title">
+          <div class="iconbox brand"><i class="fa-solid fa-life-ring"></i></div>
+          <h2>Alternative methods</h2>
+        </div>
+        <span class="pill">If the button is missing</span>
+      </div>
+
+      <div class="block-body">
+        <div class="grid">
+          <div class="callout info">
+            <div class="ico"><i class="fa-solid fa-headset"></i></div>
+            <div>
+              <div class="lead">Contact support</div>
+              <p>If you can’t delete inside the app, support can help you delete the account manually.</p>
+            </div>
+          </div>
+
+          <div class="callout info">
+            <div class="ico"><i class="fa-solid fa-envelope"></i></div>
+            <div>
+              <div class="lead">Email request</div>
+              <p>Send an email to <b id="supportEmailText">iamlearningtrafficrules.edu@gmail.com</b> with subject “Account Deletion Request”.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="cta">
+      <h2><i class="fa-solid fa-headset"></i> Need help?</h2>
+      <p>If you have questions about deletion, contact support using one of the options below.</p>
+
+      <div class="cta-grid">
+        <div class="cta-item">
+          <div class="ico"><i class="fa-solid fa-envelope"></i></div>
+          <div>
+            <b>Email Support</b>
+            <span>iamlearningtrafficrules.edu@gmail.com</span>
+          </div>
+        </div>
+
+        <div class="cta-item">
+          <div class="ico"><i class="fa-brands fa-whatsapp"></i></div>
+          <div>
+            <b>WhatsApp</b>
+            <span>+250791347174</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DISCLAIMER -->
+    <section class="block" style="margin-top:16px">
+      <div class="block-head">
+        <div class="block-title">
+          <div class="iconbox brand"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h2>Educational disclaimer</h2>
+        </div>
+        <span class="pill">Important</span>
+      </div>
+
+      <div class="block-body">
+        <div class="callout info">
+          <div class="ico"><i class="fa-solid fa-circle-info"></i></div>
+          <div>
+            <div class="lead">Independent educational tool</div>
+            <p>
+              <b>Drive Rwanda – Prep & Pass</b> is a practice app and is <b>NOT affiliated with, endorsed by, associated with, or authorized by</b>:
+              the Government of Rwanda, Rwanda National Police, any official driving test authority, or any government agency.
+            </p>
+            <p style="margin-top:10px">
+              For official information, visit:
+              <a href="https://police.gov.rw/resources/publications/" target="_blank" rel="noopener noreferrer" style="color:#fff;text-decoration:underline;font-weight:800">
+                Police.gov.rw/publications
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="footbrand">
+        <i class="fa-solid fa-car"></i>
+        <span>Drive Rwanda – Prep & Pass</span>
+      </div>
+      <p>This page was last updated on <span id="lastUpdated"></span></p>
+      <p>Version 1.0.0 • Independent Educational Traffic Rules Learning Application • Not affiliated with any government agency</p>
+    </footer>
+  </main>
+
+  <button class="toTop" id="toTop" type="button" aria-label="Scroll to top">
+    <i class="fa-solid fa-arrow-up"></i>
+  </button>
+
+  <script>
+    // Last updated
+    document.getElementById('lastUpdated').textContent = new Date('2026-02-22').toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    // Progress bar + scroll top
+    const bar = document.getElementById('progressBar');
+    const toTop = document.getElementById('toTop');
+
+    function onScroll(){
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      bar.style.width = pct + '%';
+
+      if(scrollTop > 380) toTop.classList.add('show');
+      else toTop.classList.remove('show');
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    toTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Smooth anchor scrolling
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const id = a.getAttribute('href');
+        const target = document.querySelector(id);
+        if(target){
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Copy support email
+    const btnCopy = document.getElementById('copySupportEmail');
+    const email = document.getElementById('supportEmailText').textContent.trim();
+    btnCopy.addEventListener('click', async () => {
+      try{
+        await navigator.clipboard.writeText(email);
+        btnCopy.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        setTimeout(() => btnCopy.innerHTML = '<i class="fa-solid fa-copy"></i> Copy support email', 1400);
+      }catch(e){
+        // fallback
+        const tmp = document.createElement('textarea');
+        tmp.value = email;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        tmp.remove();
+        btnCopy.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        setTimeout(() => btnCopy.innerHTML = '<i class="fa-solid fa-copy"></i> Copy support email', 1400);
+      }
+    });
+  </script>
+</body>
+</html>

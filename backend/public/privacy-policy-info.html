@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy - Drive Rwanda – Prep & Pass</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+
+  <style>
+    :root{
+      /* PRIMARY requested */
+      --primary: #0169cc;
+
+      /* supporting palette */
+      --bg: #070b17;
+      --panel: rgba(255,255,255,.08);
+      --panel2: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.14);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.72);
+      --muted2: rgba(255,255,255,.55);
+
+      --danger: #ff3b3b;
+      --warning: #fbbf24;
+      --success: #22c55e;
+
+      --shadow: 0 20px 50px rgba(0,0,0,.35);
+      --shadow2: 0 10px 25px rgba(0,0,0,.25);
+      --radius: 18px;
+
+      --grad-primary: linear-gradient(135deg, var(--primary), #39a7ff);
+      --grad-ambient: radial-gradient(1100px 520px at 12% 12%, rgba(1,105,204,.36), transparent 60%),
+                      radial-gradient(900px 520px at 90% 18%, rgba(57,167,255,.22), transparent 60%),
+                      radial-gradient(900px 650px at 50% 92%, rgba(255,59,59,.14), transparent 60%);
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background + subtle noise */
+    .bg{
+      position:fixed; inset:0;
+      background: var(--grad-ambient);
+      z-index:-2;
+      filter:saturate(1.1);
+    }
+    .noise{
+      position:fixed; inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.13'/%3E%3C/svg%3E");
+      mix-blend-mode: overlay;
+      opacity:.35;
+      z-index:-1;
+      pointer-events:none;
+    }
+
+    /* Top progress */
+    .progress{
+      position:fixed; left:0; top:0; width:100%; height:4px;
+      background: rgba(255,255,255,.08);
+      z-index: 999;
+    }
+    .progress > span{
+      display:block; height:100%; width:0%;
+      background: var(--grad-primary);
+      box-shadow: 0 0 18px rgba(1,105,204,.55);
+      transition: width .15s linear;
+    }
+
+    /* Layout */
+    .container{max-width:1100px;margin:0 auto;padding:0 20px}
+    .header{
+      position:sticky; top:0; z-index:100;
+      backdrop-filter: blur(14px);
+      background: rgba(7,11,23,.58);
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+    .header-inner{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 0;
+      gap:14px;
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      font-weight:800;
+      letter-spacing:.2px;
+      text-decoration:none;
+      color: var(--text);
+    }
+    .brand-badge{
+      width:42px; height:42px;
+      border-radius: 14px;
+      background: var(--grad-primary);
+      display:grid; place-items:center;
+      box-shadow: var(--shadow2);
+      border: 1px solid rgba(255,255,255,.18);
+    }
+    .brand-badge i{font-size:18px}
+    .brand span{font-size:15px}
+    .brand small{display:block;color:var(--muted2);font-weight:600;margin-top:-2px}
+
+    .nav{
+      display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;
+    }
+    .nav a{
+      color: var(--muted);
+      text-decoration:none;
+      font-weight:700;
+      font-size:13px;
+      padding:10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      transition: transform .2s ease, background .2s ease, border-color .2s ease, color .2s ease;
+    }
+    .nav a:hover{
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,255,255,.22);
+      transform: translateY(-1px);
+      color: #fff;
+    }
+
+    /* Hero */
+    .hero{
+      padding: 46px 0 18px;
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .hero-card{
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border-radius: calc(var(--radius) + 6px);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      position: relative;
+      overflow:hidden;
+    }
+    .hero-card:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(800px 260px at 20% 0%, rgba(1,105,204,.28), transparent 60%),
+                  radial-gradient(800px 240px at 90% 10%, rgba(57,167,255,.18), transparent 60%);
+      z-index:0;
+    }
+    .hero-card > *{position:relative; z-index:1}
+
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.14);
+      color: var(--muted);
+      font-weight:800;
+      font-size: 12px;
+    }
+    .chip i{color: #7dd3fc}
+    h1{
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.12;
+      margin: 14px 0 10px;
+      letter-spacing: -0.8px;
+    }
+    .subtitle{
+      color: var(--muted);
+      font-size: 15px;
+      max-width: 70ch;
+    }
+
+    .hero-actions{
+      display:flex; gap:12px; flex-wrap:wrap;
+      margin-top: 18px;
+    }
+    .btn{
+      display:inline-flex; align-items:center; gap:10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      color: #fff;
+      text-decoration:none;
+      font-weight:800;
+      font-size: 13px;
+      transition: transform .2s ease, background .2s ease, border-color .2s ease;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:hover{transform: translateY(-2px); background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.22)}
+    .btn-primary{
+      background: rgba(1,105,204,.18);
+      border-color: rgba(1,105,204,.42);
+    }
+    .btn-primary:hover{
+      background: rgba(1,105,204,.26);
+      border-color: rgba(1,105,204,.60);
+    }
+
+    .hero-side{
+      display:flex; flex-direction:column; gap:14px;
+    }
+    .mini{
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow2);
+    }
+    .mini h3{font-size:14px; margin-bottom:8px; letter-spacing:-.2px}
+    .mini p{color: var(--muted); font-size: 13px}
+    .mini .row{
+      display:flex; align-items:center; gap:12px;
+      margin-bottom: 10px;
+    }
+    .iconbox{
+      width:40px; height:40px; border-radius: 14px;
+      display:grid; place-items:center;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+    }
+    .iconbox.primary{background: rgba(1,105,204,.16); border-color: rgba(1,105,204,.30)}
+    .iconbox.warn{background: rgba(251,191,36,.12); border-color: rgba(251,191,36,.28)}
+    .iconbox i{font-size:16px}
+
+    /* Blocks */
+    section.block{
+      margin: 18px 0;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      border-radius: calc(var(--radius) + 4px);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+    }
+    .block-head{
+      padding: 18px 20px;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:14px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
+    .block-title{
+      display:flex; align-items:center; gap:12px;
+    }
+    .block-title h2{
+      font-size: 16px;
+      letter-spacing:-.2px;
+    }
+    .pill{
+      font-size: 12px;
+      font-weight: 900;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+    }
+    .pill.primary{border-color: rgba(1,105,204,.42); background: rgba(1,105,204,.16); color: rgba(255,255,255,.9)}
+    .pill.warn{border-color: rgba(251,191,36,.38); background: rgba(251,191,36,.12); color: rgba(255,255,255,.9)}
+    .block-body{padding: 18px 20px 22px}
+
+    /* Callouts */
+    .callout{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      padding: 16px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      margin: 14px 0;
+    }
+    .callout .lead{
+      font-weight:900;
+      margin-bottom:4px;
+      letter-spacing:-.2px;
+    }
+    .callout p{color: var(--muted); font-size: 13px}
+    .callout .ico{
+      width:40px; height:40px; border-radius: 14px;
+      display:grid; place-items:center;
+      flex:0 0 auto;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+    }
+    .callout.primary{
+      border-color: rgba(1,105,204,.28);
+      background: linear-gradient(180deg, rgba(1,105,204,.16), rgba(255,255,255,.04));
+    }
+    .callout.primary .ico{background: rgba(1,105,204,.18); border-color: rgba(1,105,204,.35)}
+    .callout.warn{
+      border-color: rgba(251,191,36,.24);
+      background: linear-gradient(180deg, rgba(251,191,36,.14), rgba(255,255,255,.04));
+    }
+    .callout.warn .ico{background: rgba(251,191,36,.16); border-color: rgba(251,191,36,.32)}
+    .callout.danger{
+      border-color: rgba(255,59,59,.24);
+      background: linear-gradient(180deg, rgba(255,59,59,.14), rgba(255,255,255,.04));
+    }
+    .callout.danger .ico{background: rgba(255,59,59,.16); border-color: rgba(255,59,59,.32)}
+
+    /* Grids */
+    .grid{display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 12px}
+
+    /* Lists */
+    .list{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .li{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      padding: 12px 12px;
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+      transition: transform .2s ease, background .2s ease, border-color .2s ease;
+    }
+    .li:hover{
+      transform: translateY(-2px);
+      background: rgba(255,255,255,.08);
+      border-color: rgba(255,255,255,.20);
+    }
+    .li .b{
+      width:34px; height:34px;
+      border-radius: 14px;
+      display:grid; place-items:center;
+      background: rgba(1,105,204,.16);
+      border: 1px solid rgba(1,105,204,.30);
+      flex:0 0 auto;
+    }
+    .li .b i{font-size:14px}
+    .li b{display:block;font-size:14px;letter-spacing:-.2px}
+    .li span{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+
+    /* FAQ Accordion */
+    details.faq{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      overflow:hidden;
+      margin-top: 10px;
+    }
+    details.faq[open]{background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.22)}
+    summary.faqsum{
+      list-style:none;
+      cursor:pointer;
+      padding: 14px 14px;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      user-select:none;
+      font-weight:900;
+      font-size: 14px;
+      letter-spacing:-.2px;
+    }
+    summary.faqsum::-webkit-details-marker{display:none}
+    .chev{margin-left:auto;color:var(--muted2);transition: transform .2s ease}
+    details[open] .chev{transform: rotate(180deg)}
+    .faqbody{padding: 0 14px 14px 14px; color: var(--muted); font-size: 13px}
+
+    /* Contact CTA */
+    .cta{
+      border-radius: calc(var(--radius) + 6px);
+      border: 1px solid rgba(255,255,255,.14);
+      background: linear-gradient(135deg, rgba(1,105,204,.26), rgba(57,167,255,.12));
+      padding: 22px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow:hidden;
+      margin-top: 18px;
+    }
+    .cta:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(700px 260px at 20% 0%, rgba(255,255,255,.20), transparent 60%),
+                  radial-gradient(900px 300px at 90% 20%, rgba(255,255,255,.10), transparent 60%);
+      z-index:0;
+    }
+    .cta > *{position:relative; z-index:1}
+    .cta h2{font-size: 18px; letter-spacing:-.3px; margin-bottom: 6px}
+    .cta p{color: rgba(255,255,255,.86); font-size: 13px}
+    .cta-grid{display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 14px}
+    .cta-item{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.12);
+      padding: 14px;
+      display:flex; gap:12px; align-items:flex-start;
+    }
+    .cta-item .ico{
+      width:40px; height:40px; border-radius: 14px;
+      display:grid; place-items:center;
+      border: 1px solid rgba(255,255,255,.20);
+      background: rgba(255,255,255,.10);
+      flex:0 0 auto;
+    }
+    .cta-item b{display:block; font-size: 14px; letter-spacing:-.2px}
+    .cta-item span{display:block; color: rgba(255,255,255,.82); font-size: 13px}
+
+    /* Footer */
+    footer{
+      margin-top: 22px;
+      padding: 26px 0 40px;
+      color: var(--muted2);
+      text-align:center;
+    }
+    footer .footbrand{
+      display:inline-flex; align-items:center; gap:10px;
+      font-weight: 900;
+      color: rgba(255,255,255,.88);
+      margin-bottom: 10px;
+    }
+    footer .footbrand i{
+      width:40px; height:40px; border-radius: 14px;
+      display:grid; place-items:center;
+      background: var(--grad-primary);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: var(--shadow2);
+    }
+    footer p{font-size: 12.5px}
+
+    /* Scroll top */
+    .toTop{
+      position:fixed;
+      right: 18px;
+      bottom: 18px;
+      width:48px; height:48px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      color: #fff;
+      display:grid; place-items:center;
+      box-shadow: var(--shadow2);
+      cursor:pointer;
+      opacity:0; transform: translateY(8px);
+      pointer-events:none;
+      transition: opacity .2s ease, transform .2s ease, background .2s ease;
+      z-index: 999;
+    }
+    .toTop.show{opacity:1; transform: translateY(0); pointer-events:auto}
+    .toTop:hover{background: rgba(255,255,255,.10)}
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .hero{grid-template-columns: 1fr;}
+      .list{grid-template-columns: 1fr;}
+      .cta-grid{grid-template-columns: 1fr;}
+    }
+    @media (max-width: 640px){
+      .nav{display:none;}
+      .hero-card{padding: 20px}
+      .mini{padding: 16px}
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *{scroll-behavior:auto !important; transition:none !important}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg"></div>
+  <div class="noise"></div>
+
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+  <header class="header">
+    <div class="container">
+      <div class="header-inner">
+        <a class="brand" href="#">
+          <div class="brand-badge" aria-hidden="true"><i class="fa-solid fa-car"></i></div>
+          <div>
+            <span>Drive Rwanda – Prep & Pass</span>
+            <small>Privacy Policy</small>
+          </div>
+        </a>
+
+        <nav class="nav" aria-label="Page navigation">
+          <a href="#overview"><i class="fa-solid fa-circle-info"></i> Overview</a>
+          <a href="#collection"><i class="fa-solid fa-database"></i> Collection</a>
+          <a href="#usage"><i class="fa-solid fa-gears"></i> Use</a>
+          <a href="#security"><i class="fa-solid fa-lock"></i> Security</a>
+          <a href="#rights"><i class="fa-solid fa-user-shield"></i> Rights</a>
+          <a href="#contact"><i class="fa-solid fa-headset"></i> Contact</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- HERO -->
+    <section class="hero" aria-label="Hero">
+      <div class="hero-card">
+        <span class="chip"><i class="fa-solid fa-shield-halved"></i> Data protection • transparency</span>
+        <h1>Privacy Policy</h1>
+        <p class="subtitle">
+          This Privacy Policy explains what we collect, why we collect it, how we protect it, and your choices.
+        </p>
+
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#collection"><i class="fa-solid fa-database"></i> What we collect</a>
+          <button class="btn" id="copyDpoEmail" type="button"><i class="fa-solid fa-copy"></i> Copy DPO email</button>
+          <a class="btn" href="#contact"><i class="fa-solid fa-life-ring"></i> Contact support</a>
+        </div>
+      </div>
+
+      <aside class="hero-side" aria-label="Quick facts">
+        <div class="mini">
+          <div class="row">
+            <div class="iconbox warn"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div>
+              <h3>Important disclaimer</h3>
+              <p>Independent educational app — not affiliated with Rwanda National Police or any government agency.</p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="iconbox primary"><i class="fa-solid fa-eye"></i></div>
+            <div>
+              <h3>You control your data</h3>
+              <p>Request access, correction, deletion, or export.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mini">
+          <div class="row">
+            <div class="iconbox primary"><i class="fa-solid fa-calendar-check"></i></div>
+            <div>
+              <h3>Last updated</h3>
+              <p><span id="lastUpdatedInline"></span></p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- OVERVIEW -->
+    <section id="overview" class="block">
+      <div class="block-head">
+        <div class="block-title">
+          <div class="iconbox warn"><i class="fa-solid fa-circle-info"></i></div>
+          <h2>Overview</h2>
+        </div>
+        <span class="pill warn">Read this first</span>
+      </div>
+
+      <div class="block-body">
+        <div class="callout danger">
+          <div class="ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div>
+            <div class="lead">IMPORTANT DISCLAIMER</div>
+            <p>
+              <b>Drive Rwanda – Prep & Pass</b> is an independent educational application designed to help users practice for
+              provisional driving license examinations.
+              This app is <b>NOT affiliated with, endorsed by, associated with, or authorized by</b>:
+              the Government of Rwanda, Rwanda National Police, any official driving test authority, or any government agency.
+            </p>
+            <p style="margin-top:10px">
+              Official source: 
+              <a href="https://police.gov.rw/resources/publications/" target="_blank" rel="noopener noreferrer"
+                 style="color:#fff;text-decoration:underline;font-weight:900">
+                Police.gov.rw/publications
+              </a>
+            </p>
+          </div>
+        </div>
+
+        <p style="color: var(--muted); font-size: 13px; margin-top:12px">
+          We value your privacy. We only collect data needed to provide the learning experience, keep the app secure,
+          and improve features. We do not sell your personal data.
+        </p>
+
+        <details class="faq">
+          <summary class="faqsum">
+            <i class="fa-solid fa-circle-question"></i>
+            Quick summary (what matters most)
+            <i class="fa-solid fa-chevron-down chev" aria-hidden="true"></i>
+          </summary>
+          <div class="faqbody">
+            <ul style="margin-left:18px; margin-top:10px">
+              <li>We collect basic account + learning progress data to provide the service.</li>
+              <li>We use limited device/usage data to improve stability and performance.</li>
+              <li>You can request access, correction, export, or deletion of your data.</li>
+              <li>Account deletion permanently removes your account data (see Delete Account page).</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- DATA COLLECTION -->
+    <section id="collection" class="block">
+      <div class="block-head">
+        <div class="block-title">
+          <div class="iconbox primary"><i class="fa-solid fa-database"></i></div>
+          <h2>Data Collection</h2>
+        </div>
+        <span class="pill primary">What we collect</span>
+      </div>
+
+      <div class="block-body">
+        <div class="callout primary">
+          <div class="ico"><i class="fa-solid fa-list-check"></i></div>
+          <div>
+            <div class="lead">Information we collect</div>
+            <p>We may collect the following categories of information, depending on how you use the app.</p>
+          </div>
+        </div>
+
+        <div class="list">
+          <div class="li">
+            <div class="b"><i class="fa-solid fa-user"></i></div>
+            <div>
+              <b>Account information</b>
+              <span>Names, phone number and device ID  (stored securely).</span>
+            </div>
+          </div>
+
+          <div class="li">
+            <div class="b"><i class="fa-solid fa-chart-line"></i></div>
+            <div>
+              <b>Learning progress</b>
+              <span>Scores, study history, performance metrics.</span>
+            </div>
+          </div>
+
+          <div class="li">
+            <div class="b"><i class="fa-solid fa-mobile-screen"></i></div>
+            <div>
+              <b>Device information</b>
+              <span>Device type, OS version, app version.</span>
+            </div>
+          </div>
+
+          <div class="li">
+            <div class="b"><i class="fa-solid fa-clock"></i></div>
+            <div>
+              <b>Usage data</b>
+              <span>Session duration, feature interactions, crash/performance signals.</span>
+            </div>
+          </div>
+
+          <div class="li">
+            <div class="b"><i class="fa-solid fa-gear"></i></div>
+            <div>
+              <b>Preferences</b>
+              <span>Settings, language, and notification preferences.</span>
+            </div>
+          </div>
+
+          <div class="li">
+            <div class="b"><i class="fa-solid fa-headset"></i></div>
+            <div>
+              <b>Support communications</b>
+              <span>Messages you send to support (optional).</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DATA USAGE -->
+    <section id="usage" class="block">
+      <div class="block-head">
+        <div class="block-title">
+          <div class="iconbox primary"><i class="fa-solid fa-gears"></i></div>
+          <h2>How We Use Information</h2>
+        </div>
+        <span class="pill primary">Why we collect</span>
+      </div>
+
+      <div class="block-body">
+        <div class="grid">
+          <div class="callout primary">
+            <div class="ico"><i class="fa-solid fa-graduation-cap"></i></div>
+            <div>
+              <div class="lead">Educational services</div>
+              <p>To provide personalized learning features, track progress, and show results.</p>
+            </div>
+          </div>
+
+          <div class="callout primary">
+            <div class="ico"><i class="fa-solid fa-chart-column"></i></div>
+            <div>
+              <div class="lead">App improvement</div>
+              <p>To fix bugs, improve performance, and enhance user experience.</p>
+            </div>
+          </div>
+
+          <div class="callout primary">
+            <div class="ico"><i class="fa-solid fa-bell"></i></div>
+            <div>
+              <div class="lead">Notifications</div>
+              <p>To send study reminders or educational updates (based on your settings).</p>
+            </div>
+          </div>
+
+          <div class="callout primary">
+            <div class="ico"><i class="fa-solid fa-shield-halved"></i></div>
+            <div>
+              <div class="lead">Security</div>
+              <p>To protect accounts, prevent abuse, and maintain service integrity.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <div class="ico"><i class="fa-solid fa-hand"></i></div>
+          <div>
+            <div class="lead">We do not sell your personal data</div>
+            <p>We do not sell your personal information to third parties.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECURITY -->
+    <section id="security" class="block">
+      <div class="block-head">
+        <div class="block-title">
+          <div class="iconbox primary"><i class="fa-solid fa-lock"></i></div>
+          <h2>Data Security</h2>
+        </div>
+        <span class="pill primary">How we protect</span>
+      </div>
+
+      <div class="block-body">
+        <div class="callout primary">
+          <div class="ico"><i class="fa-solid fa-shield"></i></div>
+          <div>
+            <div class="lead">Security measures</div>
+            <p>We use industry-standard safeguards to protect your data. No system is 100% secure, but we work continuously to improve.</p>
+          </div>
+        </div>
+
+        <div class="list">
+          <div class="li">
+            <div class="b"><i class="fa-solid fa-key"></i></div>
+            <div>
+              <b>Encryption</b>
+              <span>Protecting sensitive data in transit and, where applicable, at rest.</span>
+            </div>
+          </div>
+
+          <div class="li">
+            <div class="b"><i class="fa-solid fa-server"></i></div>
+            <div>
+              <b>Secure infrastructure</b>
+              <span>Regular updates, patching, and hardening of server components.</span>
+            </div>
+          </div>
+
+          <div class="li">
+            <div class="b"><i class="fa-solid fa-user-shield"></i></div>
+            <div>
+              <b>Access controls</b>
+              <span>Restricted access and authentication mechanisms.</span>
+            </div>
+          </div>
+
+          <div class="li">
+            <div class="b"><i class="fa-solid fa-eye"></i></div>
+            <div>
+              <b>Monitoring</b>
+              <span>Monitoring and audits to detect suspicious activity.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHTS -->
+    <section id="rights" class="block">
+      <div class="block-head">
+        <div class="block-title">
+          <div class="iconbox primary"><i class="fa-solid fa-user-shield"></i></div>
+          <h2>Your Rights</h2>
+        </div>
+        <span class="pill primary">Your choices</span>
+      </div>
+
+      <div class="block-body">
+        <p style="color: var(--muted); font-size: 13px;">
+          Depending on your location and applicable laws, you may have the following rights:
+        </p>
+
+        <div class="list">
+          <div class="li">
+            <div class="b"><i class="fa-solid fa-eye"></i></div>
+            <div>
+              <b>Access</b>
+              <span>Request a copy of your personal data.</span>
+            </div>
+          </div>
+
+          <div class="li">
+            <div class="b"><i class="fa-solid fa-pen-to-square"></i></div>
+            <div>
+              <b>Correction</b>
+              <span>Request correction of inaccurate data.</span>
+            </div>
+          </div>
+
+          <div class="li">
+            <div class="b"><i class="fa-solid fa-trash"></i></div>
+            <div>
+              <b>Deletion</b>
+              <span>Request deletion of your data (or delete via the app if available).</span>
+            </div>
+          </div>
+
+          <div class="li">
+            <div class="b"><i class="fa-solid fa-download"></i></div>
+            <div>
+              <b>Portability</b>
+              <span>Request export in a portable format where feasible.</span>
+            </div>
+          </div>
+        </div>
+
+        <details class="faq">
+          <summary class="faqsum">
+            <i class="fa-solid fa-circle-question"></i>
+            How do I request deletion?
+            <i class="fa-solid fa-chevron-down chev" aria-hidden="true"></i>
+          </summary>
+          <div class="faqbody">
+            You can request deletion by contacting support (see Contact section), or by using the in-app Delete Account option if available.
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="cta">
+      <h2><i class="fa-solid fa-headset"></i> Contact Us</h2>
+      <p>If you have questions about this Privacy Policy or want to exercise your rights, contact us:</p>
+
+      <div class="cta-grid">
+        <div class="cta-item">
+          <div class="ico"><i class="fa-solid fa-envelope"></i></div>
+          <div>
+            <b>Email Support</b>
+            <span id="supportEmail">iamlearningtrafficrules.edu@gmail.com</span>
+          </div>
+        </div>
+
+        <div class="cta-item">
+          <div class="ico"><i class="fa-brands fa-whatsapp"></i></div>
+          <div>
+            <b>WhatsApp</b>
+            <span>+250791347174</span>
+          </div>
+        </div>
+
+        <div class="cta-item">
+          <div class="ico"><i class="fa-solid fa-user-shield"></i></div>
+          <div>
+            <b>Data Protection (DPO)</b>
+            <span id="dpoEmailText">iamlearningtrafficrules.edu@gmail.com</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap">
+        <button class="btn btn-primary" id="copySupportEmail" type="button"><i class="fa-solid fa-copy"></i> Copy support email</button>
+        <button class="btn btn-primary" id="copyDpoEmail2" type="button"><i class="fa-solid fa-copy"></i> Copy DPO email</button>
+      </div>
+    </section>
+
+    <!-- DISCLAIMER (again, clearer) -->
+    <section class="block">
+      <div class="block-head">
+        <div class="block-title">
+          <div class="iconbox warn"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h2>Educational Disclaimer</h2>
+        </div>
+        <span class="pill warn">Not affiliated</span>
+      </div>
+
+      <div class="block-body">
+        <div class="callout danger">
+          <div class="ico"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div>
+            <div class="lead">Important notice</div>
+            <p>
+              <b>Drive Rwanda – Prep & Pass</b> is an independent educational practice tool.
+              It is <b>NOT affiliated with, endorsed by, associated with, or authorized by</b>:
+              the Government of Rwanda, Rwanda National Police, any official driving test authority, or any government agency.
+            </p>
+            <p style="margin-top:10px">
+              For official information, visit:
+              <a href="https://police.gov.rw/resources/publications/" target="_blank" rel="noopener noreferrer"
+                 style="color:#fff;text-decoration:underline;font-weight:900">
+                Police.gov.rw/publications
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="footbrand">
+        <i class="fa-solid fa-car"></i>
+        <span>Drive Rwanda – Prep & Pass</span>
+      </div>
+      <p>This privacy policy was last updated on <span id="lastUpdated"></span></p>
+      <p>Version 1.0.0 • Independent Educational Traffic Rules Learning Application • Not affiliated with any government agency</p>
+    </footer>
+  </main>
+
+  <button class="toTop" id="toTop" type="button" aria-label="Scroll to top">
+    <i class="fa-solid fa-arrow-up"></i>
+  </button>
+
+  <script>
+    // Last updated
+    const formatted = new Date('2026-02-21').toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+    document.getElementById('lastUpdated').textContent = formatted;
+    document.getElementById('lastUpdatedInline').textContent = formatted;
+
+    // Progress bar + scroll top
+    const bar = document.getElementById('progressBar');
+    const toTop = document.getElementById('toTop');
+
+    function onScroll(){
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      bar.style.width = pct + '%';
+      if(scrollTop > 380) toTop.classList.add('show');
+      else toTop.classList.remove('show');
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    // Smooth anchor scrolling
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const id = a.getAttribute('href');
+        const target = document.querySelector(id);
+        if(target){
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Copy helpers
+    async function copyText(text, btn){
+      try{
+        await navigator.clipboard.writeText(text);
+      }catch(e){
+        const tmp = document.createElement('textarea');
+        tmp.value = text;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        tmp.remove();
+      }
+      const old = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+      setTimeout(() => btn.innerHTML = old, 1400);
+    }
+
+    const supportEmail = document.getElementById('supportEmail').textContent.trim();
+    const dpoEmail = document.getElementById('dpoEmailText').textContent.trim();
+
+    document.getElementById('copySupportEmail').addEventListener('click', () => copyText(supportEmail, document.getElementById('copySupportEmail')));
+    document.getElementById('copyDpoEmail').addEventListener('click', () => copyText(dpoEmail, document.getElementById('copyDpoEmail')));
+    document.getElementById('copyDpoEmail2').addEventListener('click', () => copyText(dpoEmail, document.getElementById('copyDpoEmail2')));
+  </script>
+</body>
+</html>
