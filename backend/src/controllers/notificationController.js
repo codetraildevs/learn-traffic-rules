@@ -442,7 +442,7 @@ class NotificationController {
     notifications.push({
       id: 'welcome_notification',
       type: 'SYSTEM',
-      title: 'Welcome to Traffic Rules App! 🚦',
+      title: 'Welcome to Drive Rwanda Prep! 🚦',
       message: 'Start your journey to becoming a better driver. Take your first exam today!',
       data: {},
       isRead: false,

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: traffic-rules-backend
+    name: drive-rwanda-prep-backend
     env: node
     plan: free
     buildCommand: npm install
@@ -27,14 +27,14 @@ services:
       - key: UPLOAD_PATH
         value: ./uploads
       - key: SWAGGER_TITLE
-        value: Traffic Rules Practice App API
+        value: Drive Rwanda Prep API
       - key: SWAGGER_VERSION
         value: 1.0.0
       - key: SWAGGER_DESCRIPTION
-        value: API documentation for Traffic Rules Practice App
+        value: API documentation for Drive Rwanda – Prep & Pass
 
 databases:
-  - name: traffic-rules-postgres
+  - name: drive-rwanda-prep-postgres
     plan: free
-    databaseName: traffic_rules_db
-    user: traffic_rules_user
+    databaseName: rw_driving_prep_db
+    user: rw_driving_prep_user

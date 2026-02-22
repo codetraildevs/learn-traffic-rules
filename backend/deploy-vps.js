@@ -42,8 +42,8 @@ try {
   // Step 3: Optional - Restart application
   console.log('🔄 Step 3: Deployment completed!');
   console.log('\n📝 Next steps:');
-  console.log('   - If using PM2: pm2 restart learn-traffic-rules');
-  console.log('   - If using systemd: sudo systemctl restart learn-traffic-rules');
+  console.log('   - If using PM2: pm2 restart drive-rwanda-prep-backend');
+  console.log('   - If using systemd: sudo systemctl restart drive-rwanda-prep');
   console.log('   - If using direct node: Restart your node process manually');
   console.log('\n✅ Deployment script completed successfully!');
 

@@ -3,7 +3,7 @@ module.exports = {
     name: 'drive-rwanda-prep-backend',
     script: 'npm',
     args: 'start',
-    cwd: '/var/www/learn-traffic-rules/backend',
+    cwd: '/var/www/drive-rwanda-prep/backend',
     instances: 1,
     exec_mode: 'fork',
     autorestart: true,

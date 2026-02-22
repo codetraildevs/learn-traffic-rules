@@ -1,6 +1,6 @@
-# Traffic Rules Practice App - Backend API
+# Drive Rwanda Prep - Backend API
 
-A simple Node.js + Express.js backend API for the Traffic Rules Practice App with MySQL database.
+Node.js + Express backend API for Drive Rwanda – Prep & Pass with MySQL database.
 
 ## Features
 
@@ -23,7 +23,7 @@ npm install
 ### 2. Database Setup
 
 1. Install MySQL on your system
-2. Create a database named `traffic_rules_db`
+2. Create a database named `rw_driving_prep_db` (or value from env)
 3. Update the database credentials in `.env` file
 
 ### 3. Environment Configuration
@@ -38,7 +38,7 @@ Update the following values in `.env`:
 - `DB_HOST`: MySQL host (default: localhost)
 - `DB_USER`: MySQL username (default: root)
 - `DB_PASSWORD`: MySQL password
-- `DB_NAME`: Database name (default: traffic_rules_db)
+- `DB_NAME`: Database name (e.g. rw_driving_prep_db)
 - `JWT_SECRET`: Your secret key for JWT tokens
 
 ### 4. Seed the Database (Optional)

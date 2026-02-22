@@ -1,6 +1,6 @@
-# 🚦 Learn Traffic Rules - Mobile App
+# Drive Rwanda – Prep & Pass
 
-A comprehensive traffic rules learning application for driving license exam preparation with role-based access control and manual payment system.
+A driving exam prep application for Rwanda with role-based access control and manual payment system.
 
 ## 🏗️ Architecture
 
@@ -62,8 +62,8 @@ A comprehensive traffic rules learning application for driving license exam prep
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/learn-traffic-rules.git
-   cd learn-traffic-rules/backend
+   git clone <your-repo-url>
+   cd <repo>/backend
    ```
 
 2. **Install dependencies**
@@ -80,7 +80,7 @@ A comprehensive traffic rules learning application for driving license exam prep
    ```env
    DB_HOST=localhost
    DB_PORT=3306
-   DB_NAME=traffic_rules_db
+   DB_NAME=rw_driving_prep_db
    DB_USER=root
    DB_PASSWORD=your_password
    JWT_SECRET=your_jwt_secret
@@ -95,7 +95,7 @@ A comprehensive traffic rules learning application for driving license exam prep
    ```bash
    # Create database
    mysql -u root -p
-   CREATE DATABASE traffic_rules_db;
+   CREATE DATABASE rw_driving_prep_db;
    ```
 
 5. **Run the application**
@@ -136,7 +136,7 @@ A comprehensive traffic rules learning application for driving license exam prep
 ## 📁 Project Structure
 
 ```
-learn-traffic-rules/
+<repo>/
 ├── backend/
 │   ├── src/
 │   │   ├── config/
@@ -261,7 +261,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-For support, email support@learntrafficrules.com or create an issue in the repository.
+For support, email the address listed in the app (Settings / Legal) or open an issue in the repository.
 
 ## 🎯 Roadmap
 

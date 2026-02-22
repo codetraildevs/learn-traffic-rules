@@ -1,4 +1,4 @@
-// Main backend (traffic.cyangugudims.com) - port 5001, DB learn_traffic_rules
+// Main backend - port 5001
 // Start: cd /var/www/learn-traffic-rules/backend && pm2 start ecosystem-main.config.js
 
 module.exports = {

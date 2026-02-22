@@ -26,10 +26,10 @@ fi
 
 # Restart the application (adjust based on your process manager)
 # For PM2:
-# pm2 restart learn-traffic-rules || pm2 start server.js --name learn-traffic-rules
+# pm2 restart drive-rwanda-prep-backend || pm2 start server.js --name drive-rwanda-prep-backend
 
 # For systemd:
-# sudo systemctl restart learn-traffic-rules
+# sudo systemctl restart drive-rwanda-prep
 
 # For direct node:
 # pkill -f "node.*server.js" && nohup node server.js > server.log 2>&1 &

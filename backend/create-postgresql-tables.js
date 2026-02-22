@@ -6,8 +6,8 @@ const { Sequelize } = require('sequelize');
 
 // Database configuration
 const config = {
-  database: process.env.DB_NAME || 'traffic_rules_db_6j3n',
-  username: process.env.DB_USER || 'traffic_rules_db_user',
+  database: process.env.DB_NAME || 'rw_driving_prep_db',
+  username: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD,
   host: process.env.DB_HOST || 'dpg-d3cenur7mgec73aeevcg-a.ohio-postgres.render.com',
   port: process.env.DB_PORT || 5432,
@@ -132,7 +132,7 @@ async function createPostgreSQLTables() {
           INSERT INTO notifications (id, "userId", type, title, message, data, "isRead", "isPushSent", priority, category, "createdAt", "updatedAt")
           VALUES 
             (gen_random_uuid(), $1, 'STUDY_REMINDER', 'Time to Study! 📖', 'Haven''t studied today? Take a practice exam to keep your skills sharp!', '{"studyGoalMinutes":30}', false, false, 'MEDIUM', 'STUDY', NOW(), NOW()),
-            (gen_random_uuid(), $1, 'SYSTEM_UPDATE', 'Welcome to Traffic Rules App! 🚗', 'Welcome! Start your learning journey with our comprehensive traffic rules course.', '{}', false, false, 'HIGH', 'SYSTEM', NOW(), NOW())
+            (gen_random_uuid(), $1, 'SYSTEM_UPDATE', 'Welcome to Drive Rwanda Prep! 🚗', 'Welcome! Start your learning journey with our driving exam prep course.', '{}', false, false, 'HIGH', 'SYSTEM', NOW(), NOW())
           ON CONFLICT (id) DO NOTHING
         `, {
           replacements: [userId]

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Quick Deployment Script for Learn Traffic Rules Backend
+# Quick Deployment Script for Drive Rwanda Prep Backend
 # Usage: ./DEPLOY_QUICK.sh
 
 set -e  # Exit on error
@@ -13,15 +13,15 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-PROJECT_DIR="/var/www/learn-traffic-rules"
+PROJECT_DIR="/var/www/drive-rwanda-prep"
 BACKEND_DIR="$PROJECT_DIR/backend"
-PM2_NAME="learn-traffic-rules-backend"
+PM2_NAME="drive-rwanda-prep-backend"
 DB_USER="${DB_USER:-your_db_user}"
-DB_NAME="${DB_NAME:-your_database_name}"
-BACKUP_DIR="/var/backups/learn-traffic-rules"
+DB_NAME="${DB_NAME:-rw_driving_prep_db}"
+BACKUP_DIR="/var/backups/drive-rwanda-prep"
 
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}  Learn Traffic Rules - Deployment${NC}"
+echo -e "${BLUE}  Drive Rwanda Prep - Deployment${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
